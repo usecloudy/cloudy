@@ -1,0 +1,11 @@
+{
+    "imports": {
+        "zod": "npm:zod@3.23.8",
+        "ai": "npm:ai@3.3.9",
+        "@ai-sdk/anthropic": "npm:@ai-sdk/anthropic@0.0.43",
+        "@ai-sdk/openai": "npm:@ai-sdk/openai@0.0.48",
+        "langsmith": "npm:langsmith@0.1.41",
+        "langsmith/traceable": "npm:langsmith@0.1.41/traceable",
+        "langsmith/wrappers/vercel": "npm:langsmith@0.1.41/wrappers/vercel"
+    }
+}

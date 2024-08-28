@@ -1,0 +1,14 @@
+{
+    "name": "cloudy-supabase",
+    "version": "1.0.0",
+    "scripts": {
+        "sync": "supabase gen types --lang=typescript --project-id \"tdpwkwzytyfwpojbbsyt\" --schema public > supabase/functions/_shared/database.types.ts",
+        "deploy:function": "supabase functions deploy",
+        "dev": "supabase start"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "supabase": "^1.187.10"
+    }
+}
