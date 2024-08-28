@@ -21,7 +21,7 @@ const ProtectedLayout: FC = () => {
 		return <Navigate to="/auth" />;
 	}
 	return (
-		<div className="h-screen w-screen flex flex-col">
+		<div className="h-dvh w-screen flex flex-col">
 			<Navbar />
 			<Outlet />
 		</div>
