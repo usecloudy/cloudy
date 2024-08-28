@@ -272,6 +272,7 @@ export type Database = {
           title: string | null
           title_ts: string
           updated_at: string
+          user_intent: string | null
         }
         Insert: {
           author_id?: string
@@ -289,6 +290,7 @@ export type Database = {
           title?: string | null
           title_ts?: string
           updated_at?: string
+          user_intent?: string | null
         }
         Update: {
           author_id?: string
@@ -306,6 +308,7 @@ export type Database = {
           title?: string | null
           title_ts?: string
           updated_at?: string
+          user_intent?: string | null
         }
         Relationships: [
           {

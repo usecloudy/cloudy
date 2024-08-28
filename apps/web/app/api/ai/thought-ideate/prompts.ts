@@ -1,7 +1,7 @@
 import { CoreMessage } from "ai";
 
 import { MarkdownChunk } from "app/api/utils/relatedChunks";
-import { thoughtToPrompt } from "app/api/utils/thoughts";
+import { thoughtIntentToPrompt, thoughtToPrompt } from "app/api/utils/thoughts";
 
 interface Comment {
 	id: string;
@@ -18,6 +18,7 @@ export const makeThoughtIdeatePrompts = ({
 	thought: {
 		title?: string | null;
 		contentMd: string;
+		intent?: string | null;
 	};
 	comments: Comment[];
 }): CoreMessage[] => {
@@ -59,7 +60,7 @@ ${relatedChunks.map(chunk => `<note>\n${chunk.chunk}\n</note>`).join("\n")}
 		{
 			role: "user",
 			content: `${relatedChunksText}The user is currently in the process of writing the below note, a diff has been provided to show the changes. Focus your new comments on what the user has recently written:
-${thoughtToPrompt(thought)}
+${thoughtToPrompt(thought)}${thoughtIntentToPrompt(thought.intent)}
 
 ${commentsText}
 

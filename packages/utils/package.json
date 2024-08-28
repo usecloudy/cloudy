@@ -1,0 +1,20 @@
+{
+    "name": "@cloudy/utils",
+    "version": "1.0.0",
+    "description": "",
+    "type": "module",
+    "scripts": {
+        "dev": "tsc --watch",
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.45.2",
+        "@repo/typescript-config": "*"
+    },
+    "exports": {
+        "./common": "./src/common/index.ts"
+    },
+    "devDependencies": {
+        "typescript": "^5.5.4"
+    }
+}

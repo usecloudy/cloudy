@@ -1,3 +1,4 @@
+import { handleSupabaseError } from "@cloudy/utils/common";
 import { SupabaseClient } from "@supabase/supabase-js";
 import * as jsdiff from "diff";
 import { distance } from "fastest-levenshtein";
@@ -5,8 +6,7 @@ import { LangfuseExporter } from "langfuse-vercel";
 import { NextResponse } from "next/server";
 
 import { getRelatedChunkContentsForThought } from "app/api/utils/relatedChunks";
-import { getSupabase, handleSupabaseError } from "app/api/utils/supabase";
-import { Database } from "app/db/database.types";
+import { getSupabase } from "app/api/utils/supabase";
 
 import { checkIfDiffIsSignificant, generateComments, markThoughtAsIdle, markThoughtAsProcessing } from "./utils";
 
@@ -24,11 +24,11 @@ export const POST = async (req: Request) => {
 	return processThought(payload.thoughtId, supabase);
 };
 
-const processThought = async (thoughtId: string, supabase: SupabaseClient<Database>) => {
+const processThought = async (thoughtId: string, supabase: SupabaseClient) => {
 	const thought = handleSupabaseError(
 		await supabase
 			.from("thoughts")
-			.select("id, title, content_md, last_suggestion_content_md, suggestion_index")
+			.select("id, title, content_md, last_suggestion_content_md, suggestion_index, user_intent")
 			.eq("id", thoughtId)
 			.single(),
 	);
@@ -83,6 +83,7 @@ const processThought = async (thoughtId: string, supabase: SupabaseClient<Databa
 		relatedChunks,
 		title: thought.title,
 		contentOrDiff,
+		intent: thought.user_intent,
 		comments: existingComments,
 	});
 

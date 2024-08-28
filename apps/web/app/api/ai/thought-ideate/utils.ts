@@ -5,7 +5,7 @@ import { generateObject, generateText, tool } from "ai";
 import { z } from "zod";
 
 import { MarkdownChunk } from "app/api/utils/relatedChunks";
-import { Database } from "app/db/database.types";
+import { Database } from "@repo/db";
 
 import { makeThoughtIdeateDiffChangePrompts, makeThoughtIdeatePrompts } from "./prompts";
 
@@ -32,11 +32,11 @@ const ResponseSchema = z.object({
 	commentsToAdd: z.array(IdeaCommentSchema),
 });
 
-export const markThoughtAsProcessing = async (thoughtId: string, supabase: SupabaseClient<Database>) => {
+export const markThoughtAsProcessing = async (thoughtId: string, supabase: SupabaseClient) => {
 	await supabase.from("thoughts").update({ suggestion_status: "processing" }).eq("id", thoughtId);
 };
 
-export const markThoughtAsIdle = async (thoughtId: string, supabase: SupabaseClient<Database>) => {
+export const markThoughtAsIdle = async (thoughtId: string, supabase: SupabaseClient) => {
 	await supabase.from("thoughts").update({ suggestion_status: "idle" }).eq("id", thoughtId);
 };
 
@@ -44,11 +44,13 @@ export const generateComments = async ({
 	relatedChunks,
 	title,
 	contentOrDiff,
+	intent,
 	comments,
 }: {
 	relatedChunks: MarkdownChunk[];
 	title?: string | null;
 	contentOrDiff: string;
+	intent?: string | null;
 	comments: Comment[];
 }) => {
 	const commentsToArchive: string[] = [];
@@ -87,6 +89,7 @@ export const generateComments = async ({
 			thought: {
 				title,
 				contentMd: contentOrDiff,
+				intent,
 			},
 			comments: comments.map(comment => ({
 				id: comment.id,

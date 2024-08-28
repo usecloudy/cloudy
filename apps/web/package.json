@@ -2,14 +2,11 @@
 	"name": "next-enterprise",
 	"version": "0.0.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "cross-env FORCE_COLOR=1 PORT=3001 next dev",
 		"build": "next build",
 		"start": "next start",
-		"lint": "next lint",
-		"lint:fix": "next lint --fix",
-		"prettier": "prettier --check \"**/*.{js,jsx,ts,tsx}\"",
-		"prettier:fix": "prettier --write \"**/*.{js,jsx,ts,tsx}\"",
 		"analyze": "cross-env ANALYZE=true yarn build",
 		"storybook": "cross-env FORCE_COLOR=1 storybook dev -p 6006",
 		"test-storybook": "cross-env FORCE_COLOR=1 test-storybook",
@@ -24,6 +21,8 @@
 		"db:sync:local": "supabase gen types typescript --db-url postgresql://postgres:postgres@127.0.0.1:54322/postgres > app/db/database.types.ts"
 	},
 	"dependencies": {
+		"@repo/db": "*",
+		"@cloudy/utils": "*",
 		"@ai-sdk/anthropic": "^0.0.43",
 		"@ai-sdk/openai": "^0.0.49",
 		"@next/bundle-analyzer": "^14.2.3",
