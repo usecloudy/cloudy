@@ -1,0 +1,1 @@
+alter table "public"."thoughts" add column "user_intent" text;
