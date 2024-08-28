@@ -15,7 +15,7 @@ export const AuthView = () => {
 
 	return (
 		<SimpleLayout>
-			<div className="mx-auto flex w-full max-w-md flex-col items-center justify-center py-8">
+			<div className="px-8 flex w-full max-w-md flex-col items-center justify-center py-8">
 				<div className="flex flex-col items-center justify-center gap-4">
 					<img src="/logo.png" className="w-24" alt="Cloudy" />
 					<div className="text-2xl font-bold font-display text-center">Supercharge your thoughts.</div>
