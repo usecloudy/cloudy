@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { TrashIcon } from "lucide-react";
+import { FileSymlinkIcon, MessageCircleIcon, TrashIcon, ZapIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useUnmount } from "react-use";
 
@@ -13,6 +13,7 @@ import { fixOneToOne } from "src/utils";
 import { Button } from "../../components/Button";
 import { AiCommentThread } from "./AiCommentThread";
 import { AiFeed } from "./AiFeed";
+import { IntentDialog } from "./IntentDialog";
 import { useThreadStore } from "./threadStore";
 
 const useThoughtEmbeddings = (thoughtId?: string) => {
@@ -168,7 +169,10 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 						/>
 						<div className="flex flex-col md:w-1/2 lg:w-full gap-4 w-full">
 							<div className="border-border flex flex-col w-full gap-2 rounded-md border p-4">
-								<h4 className="mb-2 text-sm font-medium text-secondary">Related Notes</h4>
+								<div className="flex items-center gap-1 mb-2 ">
+									<FileSymlinkIcon className="h-4 w-4 text-secondary" />
+									<h4 className="text-sm font-medium text-secondary">Related Notes</h4>
+								</div>
 								{isLoading ? (
 									<div className="flex w-full justify-center py-4">
 										<LoadingSpinner size="sm" />
@@ -185,11 +189,11 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 							</div>
 							{thoughtId && (
 								<div className="border-border flex flex-col w-full rounded-md border p-4">
-									<h4 className="text-sm font-medium text-secondary mb-1">Note Actions</h4>
-									{/* <Button variant="ghost" className="justify-start">
-								<MessageCircleIcon className="h-4 w-4" />
-								<span>Set intent</span>
-							</Button> */}
+									<IntentDialog thoughtId={thoughtId} />
+									<div className="flex items-center gap-1 mb-0.5 mt-4">
+										<ZapIcon className="h-4 w-4 text-secondary" />
+										<h4 className="text-sm font-medium text-secondary">Note Actions</h4>
+									</div>
 									<Button
 										variant="ghost"
 										className="justify-start text-red-600 hover:bg-red-600"
