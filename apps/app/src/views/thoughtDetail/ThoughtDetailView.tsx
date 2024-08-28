@@ -30,8 +30,8 @@ import { processSearches } from "src/utils/tiptapSearchAndReplace";
 import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
-import { AiColumn } from "./AiColumn";
 import { CollectionCarousel } from "./CollectionCarousel";
+import { ControlColumn } from "./ControlColumn";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { usePreviewContentStore } from "./previewContentStore";
 import { useThoughtStore } from "./thoughtStore";
@@ -109,22 +109,6 @@ const useTriggerAiTitleSuggestion = (thoughtId?: string) => {
 	});
 };
 
-const useDeleteThought = (thoughtId?: string) => {
-	return useMutation({
-		mutationFn: async () => {
-			if (!thoughtId) {
-				return;
-			}
-			return supabase.from("thoughts").delete().eq("id", thoughtId);
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["thoughts"],
-			});
-		},
-	});
-};
-
 export const ThoughtDetailView = () => {
 	const { thoughtId } = useParams<{ thoughtId: string }>();
 
@@ -161,7 +145,7 @@ const ThoughtDetailViewExisting = ({ thoughtId, isNewMode }: { thoughtId?: strin
 	const { data: thought, isLoading } = useThought(thoughtId);
 
 	return (
-		<SimpleLayout isLoading={Boolean(isLoading && !isNewMode)}>
+		<SimpleLayout isLoading={Boolean(isLoading && !isNewMode)} className="lg:overflow-hidden">
 			<ThoughtDetailViewInner thoughtId={thoughtId} thought={thought ?? undefined} />
 		</SimpleLayout>
 	);
@@ -169,7 +153,6 @@ const ThoughtDetailViewExisting = ({ thoughtId, isNewMode }: { thoughtId?: strin
 
 const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; thought?: Thought }) => {
 	const { mutateAsync: editThought } = useEditThought(thoughtId);
-	const { mutateAsync: deleteThought } = useDeleteThought(thoughtId);
 
 	const { mutateAsync: triggerAiSuggestion } = useTriggerAiSuggestion(thoughtId);
 	const { mutateAsync: triggerAiTitleSuggestion } = useTriggerAiTitleSuggestion(thoughtId);
@@ -211,10 +194,6 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 		onChangeAiSuggestion();
 	};
 
-	const handleDeleteThought = () => {
-		deleteThought();
-	};
-
 	const headTitle = title ? makeHeadTitle(ellipsizeText(title, 16)) : makeHeadTitle("New Thought");
 
 	useEffect(() => {
@@ -236,7 +215,7 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 			<Helmet>
 				<title>{headTitle}</title>
 			</Helmet>
-			<div className="flex w-full flex-col lg:flex-row gap-4">
+			<div className="flex w-full flex-col lg:flex-row gap-4 lg:h-full">
 				<EditorView
 					thoughtId={thoughtId}
 					collections={thought?.collections ?? []}
@@ -246,11 +225,8 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 					latestRemoteTitleTs={thought?.title_ts ?? undefined}
 					onChange={onChange}
 					onChangeAiSuggestion={handleWillTriggerAiSuggestion}
-					deleteThought={handleDeleteThought}
 				/>
-				<SimpleLayout.View>
-					<AiColumn thoughtId={thoughtId} />
-				</SimpleLayout.View>
+				<ControlColumn thoughtId={thoughtId} />
 			</div>
 		</>
 	);
@@ -290,7 +266,6 @@ const EditorView = ({
 	collections,
 	onChange,
 	onChangeAiSuggestion,
-	deleteThought,
 }: {
 	thoughtId?: string;
 	remoteContent?: string;
@@ -300,7 +275,6 @@ const EditorView = ({
 	collections: Collection[];
 	onChange: (payload: { title?: string; content?: string; contentMd?: string }) => void;
 	onChangeAiSuggestion: () => void;
-	deleteThought: () => void;
 }) => {
 	const { highlights } = useHighlightStore();
 	const { lastLocalThoughtContentTs, lastLocalThoughtTitleTs, setCurrentContent } = useThoughtStore();
@@ -504,7 +478,7 @@ const EditorView = ({
 	};
 
 	return (
-		<SimpleLayout.View className="flex-1 pt-10">
+		<div className="flex flex-col flex-1 px-6 pt-8 lg:py-8 lg:pl-8 box-border lg:overflow-y-scroll no-scrollbar">
 			<div className="flex flex-col gap-2 pb-4">
 				<div className="flex w-full flex-row items-start justify-between gap-2">
 					<TextareaAutosize
@@ -517,27 +491,6 @@ const EditorView = ({
 						}}
 						suppressContentEditableWarning
 					/>
-					{thoughtId && (
-						<Dropdown
-							trigger={
-								<Button variant="ghost" size="icon" className="mt-0.5">
-									<MoreHorizontalIcon className="h-6 w-6" />
-								</Button>
-							}
-							className="w-56">
-							<DropdownItem
-								className="text-red-600"
-								onClick={() => {
-									if (thoughtId) {
-										deleteThought();
-										window.history.back();
-									}
-								}}>
-								<TrashIcon className="h-4 w-4" />
-								<span>Delete Thought</span>
-							</DropdownItem>
-						</Dropdown>
-					)}
 				</div>
 				<div className="pr-4">
 					<CollectionCarousel thoughtId={thoughtId} collections={collections} />
@@ -555,6 +508,6 @@ const EditorView = ({
 				editor={editor}
 				className={cn("w-full pb-8 pr-4", isAiWriting && "pointer-events-none opacity-70")}
 			/>
-		</SimpleLayout.View>
+		</div>
 	);
 };

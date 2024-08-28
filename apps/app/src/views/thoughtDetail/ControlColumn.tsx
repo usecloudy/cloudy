@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { MessageCircleIcon } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { TrashIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useUnmount } from "react-use";
 
@@ -10,6 +10,7 @@ import { ThoughtCard } from "src/components/ThoughtCard";
 import { useSuggestedCollectionsStore } from "src/stores/suggestedCollection";
 import { fixOneToOne } from "src/utils";
 
+import { Button } from "../../components/Button";
 import { AiCommentThread } from "./AiCommentThread";
 import { AiFeed } from "./AiFeed";
 import { useThreadStore } from "./threadStore";
@@ -110,8 +111,25 @@ const useThoughtEmbeddings = (thoughtId?: string) => {
 	});
 };
 
-export const AiColumn = ({ thoughtId }: { thoughtId?: string }) => {
+const useDeleteThought = (thoughtId?: string) => {
+	return useMutation({
+		mutationFn: async () => {
+			if (!thoughtId) {
+				return;
+			}
+			return supabase.from("thoughts").delete().eq("id", thoughtId);
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["thoughts"],
+			});
+		},
+	});
+};
+
+export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 	const { data: relatedThoughts, isLoading, dataUpdatedAt } = useThoughtEmbeddings(thoughtId);
+	const { mutateAsync: deleteThought } = useDeleteThought(thoughtId);
 
 	const { setSuggestedCollections } = useSuggestedCollectionsStore();
 	const { activeThreadCommentId, setActiveThreadCommentId } = useThreadStore();
@@ -137,8 +155,8 @@ export const AiColumn = ({ thoughtId }: { thoughtId?: string }) => {
 	});
 
 	return (
-		<div className="relative flex w-full lg:w-[28rem]">
-			<div className="relative lg:max-h-[calc(100vh-10rem)] overflow-y-scroll lg:fixed flex w-full lg:w-[28rem] rounded-lg md:border border-border md:p-4 lg:p-8 no-scrollbar">
+		<div className="relative h-full box-border overflow-y-auto flex w-full lg:w-[28rem] no-scrollbar ">
+			<div className="w-full px-6 md:px-4 md:pt-4 lg:px-8 lg:pt-8">
 				{activeThreadCommentId ? (
 					<AiCommentThread commentId={activeThreadCommentId} />
 				) : (
@@ -148,27 +166,46 @@ export const AiColumn = ({ thoughtId }: { thoughtId?: string }) => {
 							isViewingArchive={isViewingArchive}
 							setIsViewingArchive={setIsViewingArchive}
 						/>
-						<div className="border-border flex flex-col md:w-1/2 lg:w-full gap-2 rounded-md border p-4">
-							<div className="mb-2 flex flex-row items-center gap-1">
-								<MessageCircleIcon className="text-tertiary h-4 w-4" />
-								<h4 className="text-sm font-medium text-secondary">Related Thoughts</h4>
+						<div className="flex flex-col md:w-1/2 lg:w-full gap-4 w-full">
+							<div className="border-border flex flex-col w-full gap-2 rounded-md border p-4">
+								<h4 className="mb-2 text-sm font-medium text-secondary">Related Notes</h4>
+								{isLoading ? (
+									<div className="flex w-full justify-center py-4">
+										<LoadingSpinner size="sm" />
+									</div>
+								) : relatedThoughts && relatedThoughts.length > 0 ? (
+									<div>
+										{relatedThoughts.map(thought => (
+											<ThoughtCard key={thought.id} thought={thought} variant="compact" />
+										))}
+									</div>
+								) : (
+									<div className="text-tertiary text-sm">No related notes (yet, keep typing!)</div>
+								)}
 							</div>
-							{isLoading ? (
-								<div className="flex w-full justify-center py-4">
-									<LoadingSpinner size="sm" />
+							{thoughtId && (
+								<div className="border-border flex flex-col w-full rounded-md border p-4">
+									<h4 className="text-sm font-medium text-secondary mb-1">Note Actions</h4>
+									{/* <Button variant="ghost" className="justify-start">
+								<MessageCircleIcon className="h-4 w-4" />
+								<span>Set intent</span>
+							</Button> */}
+									<Button
+										variant="ghost"
+										className="justify-start text-red-600 hover:bg-red-600"
+										onClick={() => {
+											deleteThought();
+											window.history.back();
+										}}>
+										<TrashIcon className="h-4 w-4" />
+										<span>Delete note</span>
+									</Button>
 								</div>
-							) : relatedThoughts && relatedThoughts.length > 0 ? (
-								<div>
-									{relatedThoughts.map(thought => (
-										<ThoughtCard key={thought.id} thought={thought} variant="compact" />
-									))}
-								</div>
-							) : (
-								<div className="text-tertiary text-sm">No related thoughts (yet, keep typing!)</div>
 							)}
 						</div>
 					</div>
 				)}
+				<div className="h-8" />
 			</div>
 		</div>
 	);

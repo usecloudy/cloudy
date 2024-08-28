@@ -36,7 +36,7 @@ export const CollectionsColumn = () => {
 							<Link key={collection.id} to={`/collections/${collection.id}`}>
 								<div className="flex flex-col hover:bg-card rounded py-2 px-3 cursor-pointer">
 									<div className="text-xs text-secondary">
-										{`${makeHumanizedTime(collection.updated_at ?? collection.created_at)} • ${pluralize(collection.thoughtsCount, "thought")}`}
+										{`${makeHumanizedTime(collection.updated_at ?? collection.created_at)} • ${pluralize(collection.thoughtsCount, "note")}`}
 									</div>
 									<div className="font-medium">{collection.title}</div>
 								</div>
