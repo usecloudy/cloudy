@@ -4,7 +4,8 @@
     "scripts": {
         "sync": "supabase gen types --lang=typescript --project-id \"tdpwkwzytyfwpojbbsyt\" --schema public > supabase/functions/_shared/database.types.ts",
         "deploy:function": "supabase functions deploy",
-        "dev": "supabase start"
+        "dev": "supabase start",
+        "stop": "supabase stop"
     },
     "author": "",
     "license": "ISC",

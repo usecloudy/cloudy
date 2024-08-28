@@ -1,0 +1,12 @@
+{
+    "name": "@repo/db",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "sync": "supabase gen types typescript --project-id tdpwkwzytyfwpojbbsyt > src/database.types.ts",
+        "sync:local": "supabase gen types typescript --db-url postgresql://postgres:postgres@127.0.0.1:54322/postgres > src/database.types.ts"
+    },
+    "exports": {
+        ".": "./src/database.types.ts"
+    }
+}

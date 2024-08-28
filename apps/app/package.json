@@ -27,6 +27,7 @@
 		"wait-on": "^6.0.1"
 	},
 	"dependencies": {
+		"@repo/db": "*",
 		"@amplitude/analytics-browser": "^2.11.0",
 		"@electron/remote": "^2.0.8",
 		"@floating-ui/react": "^0.26.23",
@@ -95,8 +96,6 @@
 		"dev": "cross-env BROWSER=none craco start",
 		"dev:prod": "cross-env BROWSER=none craco start --mode production",
 		"format": "prettier --write .",
-		"sync": "supabase gen types typescript --project-id tdpwkwzytyfwpojbbsyt > src/database.types.ts",
-		"sync:local": "supabase gen types typescript --db-url postgresql://postgres:postgres@127.0.0.1:54322/postgres > src/database.types.ts",
 		"sentry:sourcemaps": "sentry-cli sourcemaps inject --org cloudy-zo --project cra-app ./build && sentry-cli sourcemaps upload --org cloudy-zo --project cra-app ./build"
 	},
 	"build": {

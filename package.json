@@ -5,7 +5,9 @@
         "build": "turbo build",
         "dev": "turbo dev",
         "lint": "turbo lint",
-        "format": "prettier --write \"**/*.{ts,tsx,md}\""
+        "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+        "db:sync": "cd packages/db && npm run sync",
+        "db:sync:local": "cd packages/db && npm run sync:local"
     },
     "devDependencies": {
         "prettier": "^3.2.5",

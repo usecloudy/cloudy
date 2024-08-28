@@ -45,3 +45,26 @@ Put it in the `apps/app/.env.development` and `apps/web/.env` files.
 ```bash
 turbo dev
 ```
+
+### Sync DB
+
+#### Sync from prod db
+
+```bash
+npm run db:sync
+```
+
+#### Sync from local db
+
+```bash
+npm run db:sync:local
+```
+
+### Stop Supabase
+
+Because Supabase is run in the background, you'll need to stop it when you're done.
+
+```bash
+cd apps/supabase
+npm run stop
+```

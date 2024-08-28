@@ -1,3 +1,4 @@
+import { Database } from "@repo/db";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
 	ArchiveIcon,
@@ -28,7 +29,6 @@ import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Dropdown, DropdownItem } from "src/components/Dropdown";
 import LoadingSpinner from "src/components/LoadingSpinner";
-import { Database } from "src/database.types";
 import { useAiSuggestionStore } from "src/stores/aiSuggestion";
 import { useHighlightStore } from "src/stores/highlight";
 import { cn } from "src/utils";
