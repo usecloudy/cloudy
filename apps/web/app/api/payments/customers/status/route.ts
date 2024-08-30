@@ -20,6 +20,8 @@ export const GET = async (req: NextRequest) => {
 
 	const postgresUser = handleSupabaseError(await supabase.from("users").select("*").eq("id", user.id).single());
 
+	console.log("postgresUser", postgresUser);
+
 	if (!postgresUser.stripe_customer_id) {
 		return NextResponse.json({
 			uid: user.id,
