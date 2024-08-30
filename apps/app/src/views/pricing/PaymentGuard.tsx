@@ -53,8 +53,12 @@ const useCheckout = () => {
 };
 
 export const PaymentGuard = () => {
-	const { data: customerStatus, isLoading: isCustomerStatusLoading } = useCustomerStatus();
-	const { data, isLoading } = useProducts();
+	const {
+		data: customerStatus,
+		isLoading: isCustomerStatusLoading,
+		isFetched: isCustomerStatusFetched,
+	} = useCustomerStatus();
+	const { data, isLoading: isProductsLoading } = useProducts();
 	const { mutate: checkout, isPending: isCheckoutLoading } = useCheckout();
 	const { mutateAsync: startTrial, isPending: isStartTrialLoading } = useStartTrial();
 
@@ -66,7 +70,7 @@ export const PaymentGuard = () => {
 	const products = data?.products;
 	const allowClose = showSubscriptionModal;
 
-	const handleSubscribe = (priceId: string) => {
+	const handleSubscribe = async (priceId: string) => {
 		checkout(priceId, {
 			onSuccess: url => {
 				window.location.href = url;
@@ -99,6 +103,9 @@ export const PaymentGuard = () => {
 		}
 	};
 
+	const missingCustomerStatus = !isCustomerStatusLoading && !customerStatus?.customerStatus;
+	const isLoading = isProductsLoading || isCustomerStatusLoading || !isCustomerStatusFetched;
+
 	return (
 		<Dialog
 			open={isOpen}
@@ -118,6 +125,23 @@ export const PaymentGuard = () => {
 				{isLoading ? (
 					<div>
 						<LoadingSpinner />
+					</div>
+				) : missingCustomerStatus ? (
+					<div>
+						<h3 className="font-medium text-lg text-center">Something went wrong</h3>
+						<p className="text-secondary text-sm text-center">
+							Woah this isn't supposed to happen. Please contact us at{" "}
+							<a href="mailto:founders@usecloudy.com" className="text-accent">
+								founders@usecloudy.com
+							</a>
+							.
+						</p>
+						<p className="text-secondary text-sm text-center">
+							For a faster response, DM the CTO Jenn on X:{" "}
+							<a href="https://x.com/jennmueng" className="text-accent">
+								@jennmueng
+							</a>
+						</p>
 					</div>
 				) : (
 					<div>
@@ -180,6 +204,11 @@ export const PaymentGuard = () => {
 										founders@usecloudy.com
 									</a>
 								</div>
+								<a
+									className="text-accent text-xs text-center hover:underline cursor-pointer font-medium active:text-accent/80"
+									href="/signout">
+									Sign out
+								</a>
 							</div>
 						))}
 					</div>

@@ -1,7 +1,9 @@
+import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, CircleFadingArrowUpIcon, CreditCardIcon, Home, LogOut, MenuIcon, Plus } from "lucide-react";
 import { FC } from "react";
 import { Link, useLocation } from "react-router-dom";
 
+import { apiClient } from "src/api/client";
 import { supabase } from "src/clients/supabase";
 import { useUser } from "src/stores/user";
 import { pluralize } from "src/utils/strings";
@@ -10,15 +12,35 @@ import { useCustomerStatus } from "src/utils/useCustomerStatus";
 import { Button } from "./Button";
 import { Dropdown, DropdownItem } from "./Dropdown";
 
+const useBillingPortal = () => {
+	return useMutation({
+		mutationFn: async () => {
+			const res = await apiClient.get<{ url: string }>(`/api/payments/billing`, {
+				params: {
+					returnUrl: window.location.href,
+				},
+			});
+			return res.data;
+		},
+	});
+};
+
 export const Navbar: FC = () => {
 	const user = useUser();
 	const { data } = useCustomerStatus();
+	const { mutateAsync: getBillingPortalUrl } = useBillingPortal();
+
 	const customerStatus = data?.customerStatus;
 	const location = useLocation();
 	const isHomePage = location.pathname === "/";
 
 	const handleOpenSubscriptionModal = () => {
 		window.location.href = "/?showSubscriptionModal=true";
+	};
+
+	const handleOpenBillingPortal = async () => {
+		const { url } = await getBillingPortalUrl();
+		window.location.href = url;
 	};
 
 	const handleSignOut = () => {
@@ -93,12 +115,10 @@ export const Navbar: FC = () => {
 						</DropdownItem>
 					)}
 					{customerStatus?.isActive && (
-						<a href="https://billing.stripe.com/p/login/4gw1575737nVdna288">
-							<DropdownItem>
-								<CreditCardIcon className="h-4 w-4" />
-								<span>Manage Subscription</span>
-							</DropdownItem>
-						</a>
+						<DropdownItem onSelect={handleOpenBillingPortal}>
+							<CreditCardIcon className="h-4 w-4" />
+							<span>Manage Subscription</span>
+						</DropdownItem>
 					)}
 					<DropdownItem onSelect={handleSignOut}>
 						<LogOut className="h-4 w-4" />

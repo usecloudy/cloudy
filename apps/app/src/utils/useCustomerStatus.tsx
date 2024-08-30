@@ -5,12 +5,13 @@ import { apiClient } from "src/api/client";
 import { useUserGuard } from "src/stores/user";
 
 export const useCustomerStatus = () => {
-	const { user } = useUserGuard();
+	const { user, isReady } = useUserGuard();
 
 	return useQuery({
 		queryKey: ["payments", "customers", "status"],
 		queryFn: () =>
 			apiClient.get<PaymentsCustomersStatusGetResponse>("/api/payments/customers/status").then(res => res.data),
-		enabled: Boolean(user),
+		enabled: Boolean(user && isReady),
+		retry: 3,
 	});
 };

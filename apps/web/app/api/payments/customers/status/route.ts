@@ -5,6 +5,7 @@ import { getCustomerSubscriptionStatus } from "app/api/utils/stripe";
 import { getSupabase } from "app/api/utils/supabase";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 export const GET = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
@@ -22,18 +23,18 @@ export const GET = async (req: NextRequest) => {
 		await supabase.from("users").select("stripe_customer_id").eq("id", user.id).single(),
 	);
 
-	console.log("stripe_customer_id", user.id, stripe_customer_id);
+	console.log("stripe_customer_id", stripe_customer_id);
 
 	if (!stripe_customer_id) {
-		return NextResponse.json({
-			uid: user.id,
-			customerStatus: null,
-		} satisfies PaymentsCustomersStatusGetResponse);
+		return NextResponse.json(
+			{
+				error: "User does not have a stripe customer id",
+			},
+			{ status: 400 },
+		);
 	}
 
 	const customerStatus = await getCustomerSubscriptionStatus(stripe_customer_id);
-
-	console.log("customerStatus", customerStatus);
 
 	return NextResponse.json({
 		uid: user.id,

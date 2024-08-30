@@ -1,7 +1,7 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { NextRequest, NextResponse } from "next/server";
 
-import { getCustomerSubscriptionStatus, stripe } from "app/api/utils/stripe";
+import { stripe } from "app/api/utils/stripe";
 import { getSupabase } from "app/api/utils/supabase";
 
 export const dynamic = "force-dynamic";
@@ -11,9 +11,9 @@ export const GET = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
 	const { searchParams } = new URL(req.url);
-	const priceId = searchParams.get("priceId");
+	const returnUrl = searchParams.get("returnUrl");
 
-	if (!priceId) {
+	if (!returnUrl) {
 		return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
 	}
 
@@ -32,27 +32,14 @@ export const GET = async (req: NextRequest) => {
 		return NextResponse.json({ error: "User does not have a stripe customer id" }, { status: 400 });
 	}
 
-	const customerStatus = await getCustomerSubscriptionStatus(postgresUser.stripe_customer_id);
-
-	if (!customerStatus.isEligibleForTrial) {
-		return NextResponse.json({ error: "User is not eligible for a trial" }, { status: 400 });
-	}
-
-	await stripe.subscriptions.create({
+	const billingPortalSession = await stripe.billingPortal.sessions.create({
 		customer: postgresUser.stripe_customer_id,
-		items: [
-			{
-				price: priceId,
-				quantity: 1,
-			},
-		],
-		trial_period_days: 7,
-		trial_settings: {
-			end_behavior: {
-				missing_payment_method: "cancel",
-			},
-		},
+		return_url: returnUrl,
 	});
 
-	return NextResponse.json({ success: true });
+	if (!billingPortalSession.url) {
+		return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 });
+	}
+
+	return NextResponse.json({ url: billingPortalSession.url });
 };

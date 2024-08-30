@@ -1,10 +1,11 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { NextRequest, NextResponse } from "next/server";
 
-import { stripe } from "app/api/utils/stripe";
+import { getCustomerSubscriptionStatus, stripe } from "app/api/utils/stripe";
 import { getSupabase } from "app/api/utils/supabase";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 export const GET = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
@@ -33,6 +34,8 @@ export const GET = async (req: NextRequest) => {
 		return NextResponse.json({ error: "User does not have a stripe customer id" }, { status: 400 });
 	}
 
+	const status = await getCustomerSubscriptionStatus(postgresUser.stripe_customer_id);
+
 	const checkoutSession = await stripe.checkout.sessions.create({
 		mode: "subscription",
 		customer: postgresUser.stripe_customer_id,
@@ -45,9 +48,10 @@ export const GET = async (req: NextRequest) => {
 		subscription_data: {
 			trial_settings: {
 				end_behavior: {
-					missing_payment_method: "pause",
+					missing_payment_method: "cancel",
 				},
 			},
+			trial_period_days: status.isEligibleForTrial ? 7 : undefined,
 		},
 		payment_method_collection: "if_required",
 		allow_promotion_codes: true,
