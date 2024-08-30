@@ -18,18 +18,20 @@ export const GET = async (req: NextRequest) => {
 		return NextResponse.json({ error: "Failed to get user" }, { status: 500 });
 	}
 
-	const postgresUser = handleSupabaseError(await supabase.from("users").select("*").eq("id", user.id).single());
+	const { stripe_customer_id } = handleSupabaseError(
+		await supabase.from("users").select("stripe_customer_id").eq("id", user.id).single(),
+	);
 
-	console.log("postgresUser", postgresUser);
+	console.log("stripe_customer_id", user.id, stripe_customer_id);
 
-	if (!postgresUser.stripe_customer_id) {
+	if (!stripe_customer_id) {
 		return NextResponse.json({
 			uid: user.id,
 			customerStatus: null,
 		} satisfies PaymentsCustomersStatusGetResponse);
 	}
 
-	const customerStatus = await getCustomerSubscriptionStatus(postgresUser.stripe_customer_id);
+	const customerStatus = await getCustomerSubscriptionStatus(stripe_customer_id);
 
 	console.log("customerStatus", customerStatus);
 
