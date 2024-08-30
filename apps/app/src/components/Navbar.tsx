@@ -93,7 +93,7 @@ export const Navbar: FC = () => {
 						</DropdownItem>
 					)}
 					{customerStatus?.isActive && (
-						<a href="https://billing.stripe.com/p/login/test_eVa3fw9LT5tr06Y000" target="_blank">
+						<a href="https://billing.stripe.com/p/login/4gw1575737nVdna288">
 							<DropdownItem>
 								<CreditCardIcon className="h-4 w-4" />
 								<span>Manage Subscription</span>
