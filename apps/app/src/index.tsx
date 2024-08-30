@@ -1,5 +1,7 @@
 import * as amplitude from "@amplitude/analytics-browser";
 import * as Sentry from "@sentry/react";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import { QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -26,13 +28,19 @@ Sentry.init({
 
 amplitude.init("6d14f14501c1f88da608c5b493ea0c00", { autocapture: { elementInteractions: true } });
 
+// Make sure to call `loadStripe` outside of a component’s render to avoid
+// recreating the `Stripe` object on every render.
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY!);
+
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
 root.render(
 	<React.StrictMode>
 		<QueryClientProvider client={queryClient}>
-			<ToastContainer position="bottom-right" autoClose={2500} />
-			<Router />
+			<Elements stripe={stripePromise}>
+				<ToastContainer position="bottom-right" autoClose={2500} />
+				<Router />
+			</Elements>
 		</QueryClientProvider>
 	</React.StrictMode>,
 );

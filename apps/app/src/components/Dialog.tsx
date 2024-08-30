@@ -54,12 +54,14 @@ interface DialogContentProps
 	extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>,
 		VariantProps<typeof dialogVariants> {
 	onClose?: () => void;
+	insertBetween?: React.ReactNode;
 }
 
 const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, DialogContentProps>(
-	({ className, position, size, onClose, children, ...props }, ref) => (
+	({ className, position, size, onClose, children, insertBetween, ...props }, ref) => (
 		<DialogPortal>
 			<DialogOverlay />
+			{insertBetween}
 			<DialogPrimitive.Content
 				ref={ref}
 				className={cn(dialogVariants({ position, size }), className)}

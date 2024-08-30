@@ -8,6 +8,8 @@ import { AuthView } from "./views/auth/AuthView";
 import { CollectionDetailView } from "./views/collectionDetail/CollectionDetailView";
 import { HomeView } from "./views/home/HomeView";
 import { LoadingView } from "./views/loading/LoadingView";
+import { PaymentGuard } from "./views/pricing/PaymentGuard";
+import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
 
 const ProtectedLayout: FC = () => {
@@ -24,6 +26,8 @@ const ProtectedLayout: FC = () => {
 		<div className="h-dvh w-screen flex flex-col">
 			<Navbar />
 			<Outlet />
+			<PaymentGuard />
+			<PaymentSuccessDialog />
 		</div>
 	);
 };

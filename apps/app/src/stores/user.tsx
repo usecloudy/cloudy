@@ -1,15 +1,20 @@
 import * as amplitude from "@amplitude/analytics-browser";
+import { handleSupabaseError } from "@cloudy/utils/common";
 import { Session, User } from "@supabase/supabase-js";
 import { useMount } from "react-use";
 import { create } from "zustand";
 
-import { setupAuthHeader } from "src/api/client";
+import { apiClient, setupAuthHeader } from "src/api/client";
 import { supabase } from "src/clients/supabase";
 
 export const createUserIfNotExists = async (user: User) => {
 	return supabase.from("users").upsert({
 		id: user.id,
 	});
+};
+
+const createStripeCustomerIfNotExists = async () => {
+	return apiClient.post("/api/payments/customers/create");
 };
 
 export const useUserStore = create<{
@@ -46,6 +51,13 @@ export const useUserHandler = () => {
 
 			amplitude.setUserId(session.user.id);
 			setupAuthHeader();
+
+			const postgresUser = handleSupabaseError(
+				await supabase.from("users").select("*").eq("id", session.user.id).single(),
+			);
+			if (!postgresUser.stripe_customer_id) {
+				await createStripeCustomerIfNotExists();
+			}
 		};
 
 		const handleClearUser = () => {
