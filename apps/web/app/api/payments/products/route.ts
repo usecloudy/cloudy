@@ -4,7 +4,7 @@ import Stripe from "stripe";
 
 import { stripe } from "../../utils/stripe";
 
-export const dynamic = true;
+export const dynamic = "force-dynamic";
 
 export const GET = async () => {
 	const products = await stripe.products.list();

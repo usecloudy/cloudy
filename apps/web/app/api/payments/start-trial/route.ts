@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCustomerSubscriptionStatus, stripe } from "app/api/utils/stripe";
 import { getSupabase } from "app/api/utils/supabase";
 
-export const dynamic = true;
+export const dynamic = "force-dynamic";
 
 export const GET = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
