@@ -1,0 +1,10 @@
+{
+    "tailwindCSS.experimental.classRegex": [
+        [
+            "cva(?:<[^>]*>)?(([^)]*))",
+            "[\"'`]([^\"'`]*).*?[\"'`]",
+            "(?:twMerge|twJoin)\\(([^\\);]*)[\\);]"
+        ]
+    ],
+    "tailwindCSS.experimental.configFile": "apps/app/tailwind.config.js"
+}

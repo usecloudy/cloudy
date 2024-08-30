@@ -3,10 +3,16 @@
     "version": "1.0.0",
     "main": "index.js",
     "scripts": {
+        "dev": "tsc --watch",
+        "build": "tsc",
         "sync": "supabase gen types typescript --project-id tdpwkwzytyfwpojbbsyt > src/database.types.ts",
         "sync:local": "supabase gen types typescript --db-url postgresql://postgres:postgres@127.0.0.1:54322/postgres > src/database.types.ts"
     },
     "exports": {
         ".": "./src/database.types.ts"
+    },
+    "devDependencies": {
+        "supabase": "^1.191.3",
+        "typescript": "^5.5.4"
     }
 }

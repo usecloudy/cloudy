@@ -1,0 +1,20 @@
+{
+    "name": "@cloudy/ui",
+    "version": "1.0.0",
+    "description": "",
+    "type": "module",
+    "scripts": {
+        "dev": "tsc --watch",
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@cloudy/utils": "*",
+        "@repo/typescript-config": "*"
+    },
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "devDependencies": {
+        "typescript": "^5.5.4"
+    }
+}

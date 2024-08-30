@@ -1,18 +1,57 @@
-import { ArrowLeft, ArrowRight, Home, LogOut, MenuIcon, Plus } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import {
+	ArrowLeft,
+	ArrowRight,
+	CircleFadingArrowUpIcon,
+	CircleHelpIcon,
+	CreditCardIcon,
+	Home,
+	LogOut,
+	MenuIcon,
+	Plus,
+} from "lucide-react";
 import { FC } from "react";
 import { Link, useLocation } from "react-router-dom";
 
+import { apiClient } from "src/api/client";
 import { supabase } from "src/clients/supabase";
 import { useUser } from "src/stores/user";
+import { pluralize } from "src/utils/strings";
+import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
 import { Button } from "./Button";
 import { Dropdown, DropdownItem } from "./Dropdown";
 
+const useBillingPortal = () => {
+	return useMutation({
+		mutationFn: async () => {
+			const res = await apiClient.get<{ url: string }>(`/api/payments/billing`, {
+				params: {
+					returnUrl: window.location.href,
+				},
+			});
+			return res.data;
+		},
+	});
+};
+
 export const Navbar: FC = () => {
 	const user = useUser();
+	const { data } = useCustomerStatus();
+	const { mutateAsync: getBillingPortalUrl } = useBillingPortal();
 
+	const customerStatus = data?.customerStatus;
 	const location = useLocation();
 	const isHomePage = location.pathname === "/";
+
+	const handleOpenSubscriptionModal = () => {
+		window.location.href = "/?showSubscriptionModal=true";
+	};
+
+	const handleOpenBillingPortal = async () => {
+		const { url } = await getBillingPortalUrl();
+		window.location.href = url;
+	};
 
 	const handleSignOut = () => {
 		console.log("Signing out");
@@ -65,13 +104,41 @@ export const Navbar: FC = () => {
 						</Button>
 					}
 					className="w-64">
-					<div className="flex flex-col gap-1 p-2 mb-2 border-b border-border">
-						<span className="text-sm font-medium text-secondary">Signed in as</span>
-						<span className="text-sm">{user.email}</span>
+					<div className="flex flex-col mb-2">
+						<div className="flex flex-col gap-1 p-2  border-b border-border">
+							<span className="text-sm font-medium text-secondary">Signed in as</span>
+							<span className="text-sm">{user.email}</span>
+						</div>
+						{customerStatus?.isTrialing && (
+							<div className="flex flex-col gap-1 p-2 border-b border-border">
+								<span className="text-sm font-medium text-secondary">Trial Status</span>
+								<span className="text-sm">
+									{`${pluralize(customerStatus.remainingDaysInTrial ?? 0, "day")} remaining`}
+								</span>
+							</div>
+						)}
 					</div>
+					{customerStatus?.isTrialing && (
+						<DropdownItem className="text-accent" onSelect={handleOpenSubscriptionModal}>
+							<CircleFadingArrowUpIcon className="h-4 w-4" />
+							<span>Subscribe</span>
+						</DropdownItem>
+					)}
+					{customerStatus?.isActive && (
+						<DropdownItem onSelect={handleOpenBillingPortal}>
+							<CreditCardIcon className="h-4 w-4" />
+							<span>Manage Subscription</span>
+						</DropdownItem>
+					)}
+					<a href="https://usecloudy.com/support">
+						<DropdownItem>
+							<CircleHelpIcon className="h-4 w-4" />
+							<span>Support</span>
+						</DropdownItem>
+					</a>
 					<DropdownItem onSelect={handleSignOut}>
 						<LogOut className="h-4 w-4" />
-						<span>Sign Out</span>
+						<span>Sign out</span>
 					</DropdownItem>
 				</Dropdown>
 			</div>

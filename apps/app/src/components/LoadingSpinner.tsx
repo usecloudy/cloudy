@@ -1,6 +1,8 @@
 import { type VariantProps, cva } from "class-variance-authority";
 import React from "react";
 
+import { cn } from "src/utils";
+
 const spinnerVariants = cva("rounded-full border-solid animate-spin", {
 	variants: {
 		size: {
@@ -12,6 +14,7 @@ const spinnerVariants = cva("rounded-full border-solid animate-spin", {
 		variant: {
 			primary: "border-accent border-t-transparent",
 			secondary: "border-secondary border-t-transparent",
+			background: "border-background border-t-transparent",
 		},
 	},
 	defaultVariants: {
@@ -20,12 +23,14 @@ const spinnerVariants = cva("rounded-full border-solid animate-spin", {
 	},
 });
 
-interface LoadingSpinnerProps extends VariantProps<typeof spinnerVariants> {}
+interface LoadingSpinnerProps extends VariantProps<typeof spinnerVariants> {
+	className?: string;
+}
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size, variant }) => {
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size, variant, className }) => {
 	return (
 		<div className="flex items-center justify-center">
-			<div className={spinnerVariants({ size, variant })} />
+			<div className={cn(spinnerVariants({ size, variant }), className)} />
 		</div>
 	);
 };
