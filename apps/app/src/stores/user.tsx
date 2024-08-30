@@ -1,6 +1,7 @@
 import * as amplitude from "@amplitude/analytics-browser";
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { Session, User } from "@supabase/supabase-js";
+import { useMutation } from "@tanstack/react-query";
 import { useMount } from "react-use";
 import { create } from "zustand";
 
@@ -39,27 +40,33 @@ export const useUserGuard = () => {
 
 export const useUserHandler = () => {
 	const { user, setUser } = useUserStore();
+	const { mutate: handleSetUser } = useMutation({
+		mutationKey: ["handleSetUser"],
+		mutationFn: async (session: Session) => {
+			const existingUser = useUserStore.getState().user;
 
-	useMount(async () => {
-		const handleSetUser = async (session: Session) => {
 			setUser(session.user);
 
-			const doesUserExist = await supabase.from("users").select("*").eq("id", session.user.id);
-			if (!doesUserExist.data?.at(0)) {
-				createUserIfNotExists(session.user);
+			if ((!existingUser && session.user) || (existingUser && existingUser.id !== session.user.id)) {
+				const doesUserExist = await supabase.from("users").select("*").eq("id", session.user.id);
+				if (!doesUserExist.data?.at(0)) {
+					createUserIfNotExists(session.user);
+				}
+
+				amplitude.setUserId(session.user.id);
+				setupAuthHeader();
+
+				const postgresUser = handleSupabaseError(
+					await supabase.from("users").select("*").eq("id", session.user.id).single(),
+				);
+				if (!postgresUser.stripe_customer_id) {
+					await createStripeCustomerIfNotExists();
+				}
 			}
+		},
+	});
 
-			amplitude.setUserId(session.user.id);
-			setupAuthHeader();
-
-			const postgresUser = handleSupabaseError(
-				await supabase.from("users").select("*").eq("id", session.user.id).single(),
-			);
-			if (!postgresUser.stripe_customer_id) {
-				await createStripeCustomerIfNotExists();
-			}
-		};
-
+	useMount(async () => {
 		const handleClearUser = () => {
 			setUser(null);
 			amplitude.setUserId(undefined);
