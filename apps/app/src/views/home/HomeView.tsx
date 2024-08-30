@@ -6,6 +6,7 @@ import { SimpleLayout } from "src/components/SimpleLayout";
 import { ThoughtList } from "src/components/ThoughtList";
 import { useUser } from "src/stores/user";
 import { makeHeadTitle } from "src/utils/strings";
+import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
 import { CollectionsColumn } from "./CollectionsColumn";
 import { ThoughtsEmptyState } from "./ThoughtsEmptyState";
@@ -44,8 +45,10 @@ const useThoughts = () => {
 
 export const HomeView = () => {
 	const { data: thoughts, isLoading } = useThoughts();
+	const { isLoading: isCustomerStatusLoading } = useCustomerStatus();
+
 	return (
-		<SimpleLayout isLoading={isLoading}>
+		<SimpleLayout isLoading={isLoading || isCustomerStatusLoading}>
 			<Helmet>
 				<title>{makeHeadTitle("Home")}</title>
 			</Helmet>

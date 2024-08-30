@@ -143,7 +143,7 @@ export const PaymentGuard = () => {
 											onClick={() => handleStartTrial(product.defaultPrice.id)}
 											disabled={isStartTrialLoading}>
 											{isStartTrialLoading ? (
-												<LoadingSpinner size="xs" className="border-background" />
+												<LoadingSpinner size="xs" variant="background" />
 											) : (
 												"Get started"
 											)}
@@ -158,7 +158,7 @@ export const PaymentGuard = () => {
 										onClick={() => handleSubscribe(product.defaultPrice.id)}
 										disabled={isCheckoutLoading}>
 										{isCheckoutLoading ? (
-											<LoadingSpinner size="xs" className="border-background" />
+											<LoadingSpinner size="xs" variant="background" />
 										) : (
 											"Subscribe now"
 										)}

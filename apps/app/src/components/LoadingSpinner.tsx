@@ -14,6 +14,7 @@ const spinnerVariants = cva("rounded-full border-solid animate-spin", {
 		variant: {
 			primary: "border-accent border-t-transparent",
 			secondary: "border-secondary border-t-transparent",
+			background: "border-background border-t-transparent",
 		},
 	},
 	defaultVariants: {
