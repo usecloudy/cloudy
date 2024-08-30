@@ -156,8 +156,8 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 	});
 
 	return (
-		<div className="relative h-full box-border overflow-y-auto flex w-full lg:w-[28rem] no-scrollbar ">
-			<div className="w-full px-6 md:px-4 md:pt-4 lg:px-8 lg:pt-8">
+		<div className="relative h-full box-border overflow-y-auto flex w-full lg:w-[26rem] no-scrollbar ">
+			<div className="w-full md:pt-4 lg:pt-8">
 				{activeThreadCommentId ? (
 					<AiCommentThread commentId={activeThreadCommentId} />
 				) : (

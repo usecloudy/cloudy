@@ -478,7 +478,7 @@ const EditorView = ({
 	};
 
 	return (
-		<div className="flex flex-col flex-1 px-6 pt-8 lg:py-8 lg:pl-8 box-border lg:overflow-y-scroll no-scrollbar">
+		<div className="flex flex-col flex-1 pr-8 pt-8 lg:py-8 box-border lg:overflow-y-scroll no-scrollbar">
 			<div className="flex flex-col gap-2 pb-4">
 				<div className="flex w-full flex-row items-start justify-between gap-2">
 					<TextareaAutosize

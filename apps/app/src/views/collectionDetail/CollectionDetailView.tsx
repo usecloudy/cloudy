@@ -136,7 +136,7 @@ export const CollectionDetailView = () => {
 				<title>{makeHeadTitle(collection?.title ? ellipsizeText(collection.title, 16) : "Untitled Collection")}</title>
 			</Helmet>
 			{collection && (
-				<div className="p-8">
+				<div className="py-8">
 					<div className="text-sm text-secondary">Collection • {pluralize(thoughts?.length ?? 0, "note")}</div>
 					<input
 						className="mb-4 w-full appearance-none border-none bg-transparent text-3xl font-bold leading-5 outline-none"
