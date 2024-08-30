@@ -16,7 +16,6 @@ export const setupAuthHeader = async () => {
 	const { data } = await supabase.auth.getSession();
 
 	if (data.session?.access_token) {
-		å;
 		setHeader("Authorization", `Bearer ${data.session.access_token}`);
 	}
 };
