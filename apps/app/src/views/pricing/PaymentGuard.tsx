@@ -137,7 +137,7 @@ export const PaymentGuard = () => {
 							.
 						</p>
 						<p className="text-secondary text-sm text-center">
-							For a faster response, DM the CTO Jenn on X:{" "}
+							For a faster response, shoot Jenn a dm on X:{" "}
 							<a href="https://x.com/jennmueng" className="text-accent">
 								@jennmueng
 							</a>

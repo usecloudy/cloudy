@@ -58,7 +58,7 @@ export const Pricing = ({
             ) : (
                 <div className="flex items-baseline">
                     <span className="text-3xl font-bold text-primary">
-                        {formatPrice(price.unit_amount)}
+                        {formatPrice(price.unit_amount, price.currency)}
                     </span>
                     {price.recurring && (
                         <span className="text-sm text-secondary ml-1">
