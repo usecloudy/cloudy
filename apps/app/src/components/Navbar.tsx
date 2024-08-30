@@ -1,5 +1,15 @@
 import { useMutation } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, CircleFadingArrowUpIcon, CreditCardIcon, Home, LogOut, MenuIcon, Plus } from "lucide-react";
+import {
+	ArrowLeft,
+	ArrowRight,
+	CircleFadingArrowUpIcon,
+	CircleHelpIcon,
+	CreditCardIcon,
+	Home,
+	LogOut,
+	MenuIcon,
+	Plus,
+} from "lucide-react";
 import { FC } from "react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -120,6 +130,12 @@ export const Navbar: FC = () => {
 							<span>Manage Subscription</span>
 						</DropdownItem>
 					)}
+					<a href="https://usecloudy.com/support">
+						<DropdownItem>
+							<CircleHelpIcon className="h-4 w-4" />
+							<span>Support</span>
+						</DropdownItem>
+					</a>
 					<DropdownItem onSelect={handleSignOut}>
 						<LogOut className="h-4 w-4" />
 						<span>Sign out</span>
