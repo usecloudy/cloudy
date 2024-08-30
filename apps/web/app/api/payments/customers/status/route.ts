@@ -29,6 +29,8 @@ export const GET = async (req: NextRequest) => {
 
 	const customerStatus = await getCustomerSubscriptionStatus(postgresUser.stripe_customer_id);
 
+	console.log("customerStatus", customerStatus);
+
 	return NextResponse.json({
 		uid: user.id,
 		customerStatus,
