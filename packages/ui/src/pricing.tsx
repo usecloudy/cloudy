@@ -1,9 +1,17 @@
 import { Price } from "@cloudy/utils/common";
 
-const formatPrice = (amount: number | null | undefined) => {
-    return amount !== null && amount !== undefined
-        ? `$${(amount / 100).toFixed(0)}`
-        : "N/A";
+const formatPrice = (amount: number | null | undefined, currency: string) => {
+    if (amount === null || amount === undefined) {
+        return "N/A";
+    }
+    const formattedAmount = (amount / 100).toFixed(2);
+    const formatter = new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+    });
+    return formatter.format(parseFloat(formattedAmount)).replace(/\.00$/, "");
 };
 
 export const Pricing = ({
@@ -29,11 +37,11 @@ export const Pricing = ({
             {fullPrice ? (
                 <div className="flex flex-row items-center gap-1">
                     <div className="text-base text-secondary line-through">
-                        {formatPrice(fullPrice.unit_amount)}
+                        {formatPrice(fullPrice.unit_amount, fullPrice.currency)}
                     </div>
                     <div className="flex items-baseline">
                         <span className="text-3xl font-bold text-primary">
-                            {formatPrice(price.unit_amount)}
+                            {formatPrice(price.unit_amount, price.currency)}
                         </span>
                         {price.recurring && (
                             <span className="text-sm text-secondary ml-1 mb-1">
