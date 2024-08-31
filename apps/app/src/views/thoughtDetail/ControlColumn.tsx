@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { FileSymlinkIcon, MessageCircleIcon, TrashIcon, ZapIcon } from "lucide-react";
+import { FileSymlinkIcon, MessageCircleIcon, TrashIcon, XIcon, ZapIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useUnmount } from "react-use";
 
 import { queryClient } from "src/api/queryClient";
@@ -131,11 +132,13 @@ const useDeleteThought = (thoughtId?: string) => {
 export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 	const { data: relatedThoughts, isLoading, dataUpdatedAt } = useThoughtEmbeddings(thoughtId);
 	const { mutateAsync: deleteThought } = useDeleteThought(thoughtId);
+	const navigate = useNavigate();
 
 	const { setSuggestedCollections } = useSuggestedCollectionsStore();
 	const { activeThreadCommentId, setActiveThreadCommentId } = useThreadStore();
 
 	const [isViewingArchive, setIsViewingArchive] = useState(false);
+	const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
 	useEffect(() => {
 		if (relatedThoughts && relatedThoughts.length > 0) {
@@ -154,6 +157,16 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 	useUnmount(() => {
 		setActiveThreadCommentId(null);
 	});
+
+	const handleDeleteClick = () => {
+		setShowDeleteConfirmation(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		await deleteThought();
+		setShowDeleteConfirmation(false);
+		navigate("/");
+	};
 
 	return (
 		<div className="relative h-full box-border overflow-y-auto flex w-full lg:w-[26rem] no-scrollbar ">
@@ -197,10 +210,7 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 									<Button
 										variant="ghost"
 										className="justify-start text-red-600 hover:bg-red-600"
-										onClick={() => {
-											deleteThought();
-											window.history.back();
-										}}>
+										onClick={handleDeleteClick}>
 										<TrashIcon className="h-4 w-4" />
 										<span>Delete note</span>
 									</Button>
@@ -211,6 +221,29 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 				)}
 				<div className="h-8" />
 			</div>
+			{showDeleteConfirmation && (
+				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+					<div className="bg-white primary-gradient p-6 rounded-lg shadow-lg max-w-md w-full">
+						<div className="flex justify-between items-center mb-4">
+							<h2 className="text-xl font-bold">Delete Thought</h2>
+							<Button variant="ghost" size="icon" onClick={() => setShowDeleteConfirmation(false)}>
+								<XIcon className="h-4 w-4" />
+							</Button>
+						</div>
+						<p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+							Are you sure you want to delete this thought? This action cannot be undone.
+						</p>
+						<div className="flex justify-end space-x-2">
+							<Button variant="destructive" onClick={() => setShowDeleteConfirmation(false)}>
+								Cancel
+							</Button>
+							<Button variant="secondary" onClick={handleConfirmDelete}>
+								Delete
+							</Button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };
