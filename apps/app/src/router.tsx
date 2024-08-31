@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom
 import { Navbar } from "./components/Navbar";
 import { useUserGuard, useUserHandler } from "./stores/user";
 import { AuthView } from "./views/auth/AuthView";
+import { PasswordResetView } from "./views/auth/PasswordResetView";
 import { SignOutView } from "./views/auth/SignOutView";
 // Add this import
 import { CollectionDetailView } from "./views/collectionDetail/CollectionDetailView";
@@ -43,6 +44,7 @@ export const Router: FC = () => {
 					<Route path="/" element={<HomeView />} />
 					<Route path="thoughts/:thoughtId" element={<ThoughtDetailView />} />
 					<Route path="collections/:collectionId" element={<CollectionDetailView />} />
+					<Route path="/auth/password-reset" element={<PasswordResetView />} />
 					<Route path="/signout" element={<SignOutView />} />
 				</Route>
 			</Routes>
