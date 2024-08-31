@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 const config = {
-	content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html", "../../packages/ui/**/*.{js,jsx,ts,tsx}"],
+	content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html", "../../packages/ui/src/**/*.{js,jsx,ts,tsx}"],
 	// darkMode: "class",
 	theme: {
 		container: {
