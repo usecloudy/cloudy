@@ -6,12 +6,17 @@
         "build": {
             "dependsOn": ["^build"],
             "inputs": ["$TURBO_DEFAULT$", ".env*"],
-            "outputs": [".next/**", "!.next/cache/**"],
             "env": [
                 "REACT_APP_SUPABASE_URL",
                 "REACT_APP_API_BASE_URL",
                 "REACT_APP_SUPABASE_ANON_KEY"
             ]
+        },
+        "app#build": {
+            "outputs": ["apps/app/build/**"]
+        },
+        "web#build": {
+            "outputs": ["apps/web/.next/**"]
         },
         "lint": {
             "dependsOn": ["^lint"]
