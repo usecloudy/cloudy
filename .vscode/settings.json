@@ -3,7 +3,8 @@
         [
             "cva(?:<[^>]*>)?(([^)]*))",
             "[\"'`]([^\"'`]*).*?[\"'`]",
-            "(?:twMerge|twJoin)\\(([^\\);]*)[\\);]"
+            "(?:twMerge|twJoin)\\(([^\\);]*)[\\);]",
+            "cn\\(([^\\);]*)[\\);]"
         ]
     ],
     "tailwindCSS.experimental.configFile": "apps/app/tailwind.config.js"

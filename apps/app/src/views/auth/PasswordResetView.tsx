@@ -1,7 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
-import { Eye, EyeOff } from "lucide-react";
+import { CheckCircle2Icon, Eye, EyeOff } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 // Import Lucide icons
 import { supabase } from "src/clients/supabase";
@@ -27,6 +28,7 @@ export const PasswordResetView: React.FC = () => {
 			setNewPassword("");
 			setError(null);
 			navigate("/");
+			toast.success("Password updated successfully", { icon: <CheckCircle2Icon className="w-4 h-4" /> });
 		},
 		onError: error => {
 			setError(`Error updating password: ${error.message}`);

@@ -1,0 +1,11 @@
+This codebase is a turbo monorepo with a Next.js App in apps/web, a CRA React SPA app in apps/app, supabase in apps/supabase, and shared libraries in packages/*
+
+In all typescript, we prefer defining functions with arrow functions over using the function keyword. We also prefer `export const` over `export default` as they are named.
+
+In React, we use hooks from react such as `useState` separately without importing the big `React` object.
+
+We also do not use `React.FC` and instead define the type of the function component separately such as `export const MyComponent = ({ props }: MyComponentProps) => { return <div>Hello</div> }`
+
+We use tailwind css for styling and you can find the config in `tailwind.config.ts` in all the app repos.
+
+

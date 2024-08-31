@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
+import { toast } from "react-toastify";
 
 import { supabase } from "src/clients/supabase";
+import { Button } from "src/components/Button";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { ThoughtList } from "src/components/ThoughtList";
 import { useUser } from "src/stores/user";
