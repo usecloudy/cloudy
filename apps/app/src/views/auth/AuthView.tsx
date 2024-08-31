@@ -48,6 +48,7 @@ export const AuthView = () => {
 									anchor: "font-sans",
 								},
 							}}
+							redirectTo="https://app.usecloudy.com/auth/password-reset"
 						/>
 					</div>
 				</div>
