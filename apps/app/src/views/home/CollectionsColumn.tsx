@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-
+import { Button } from "src/components/Button";
 import { supabase } from "src/clients/supabase";
 import { useUser } from "src/stores/user";
 import { makeHumanizedTime, pluralize } from "src/utils/strings";
+import { PlusIcon } from "lucide-react";
 
 const useLatestCollections = () => {
 	const user = useUser();
@@ -29,7 +30,15 @@ export const CollectionsColumn = () => {
 	return (
 		<div>
 			<div className="flex md:w-[18rem] lg:w-[28rem] flex-col gap-4 rounded-lg border border-border py-6">
-				<h2 className="font-semibold text-secondary px-6">Collections</h2>
+				<div className="flex justify-between items-center px-6">
+					<h2 className="font-semibold text-secondary">Collections</h2>
+					<Button variant="ghost" size="icon" asChild>
+						<Link to="/collections/new">
+							<PlusIcon className="h-4 w-4" />
+							<span className="sr-only">Add new collection</span>
+						</Link>
+					</Button>
+				</div>
 				<div className="flex flex-col px-3">
 					{data && data.length > 0 ? (
 						data.map(collection => (
@@ -45,8 +54,9 @@ export const CollectionsColumn = () => {
 					) : (
 						<div className="flex px-3">
 							<span className="text-tertiary text-sm">
-								You have no collections yet. Create one on the thoughts screen.
+								Create topics you'd like to keep track of, or let Cloudy suggest topics for you as yo write.
 							</span>
+	
 						</div>
 					)}
 				</div>
