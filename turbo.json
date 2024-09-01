@@ -13,10 +13,12 @@
             ]
         },
         "app#build": {
+            "dependsOn": ["^build"],
             "outputs": ["apps/app/build/**"]
         },
         "web#build": {
-            "outputs": ["apps/web/.next/**"]
+            "dependsOn": ["^build"],
+            "outputs": ["apps/web/.next/**", "!.next/cache/**"]
         },
         "lint": {
             "dependsOn": ["^lint"]
