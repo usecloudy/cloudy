@@ -1,6 +1,9 @@
 import { Price } from "@cloudy/utils/common";
 
-const formatPrice = (amount: number | null | undefined, currency: string) => {
+export const formatPrice = (
+    amount: number | null | undefined,
+    currency: string
+) => {
     if (amount === null || amount === undefined) {
         return "N/A";
     }

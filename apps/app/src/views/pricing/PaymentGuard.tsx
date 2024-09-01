@@ -105,6 +105,7 @@ export const PaymentGuard = () => {
 
 	const missingCustomerStatus = !isCustomerStatusLoading && !customerStatus?.customerStatus;
 	const isLoading = isProductsLoading || isCustomerStatusLoading || !isCustomerStatusFetched;
+	const isEligibleForTrial = customerStatus?.customerStatus?.isEligibleForTrial;
 
 	return (
 		<Dialog
@@ -157,10 +158,15 @@ export const PaymentGuard = () => {
 											</div>
 										) : null}
 									</div>
+									{isEligibleForTrial && (
+										<div className="text-sm text-secondary text-center">
+											Start for <span className="font-semibold">7 days free</span>, then
+										</div>
+									)}
 									<Pricing price={product.defaultPrice} fullPrice={product.fullPrice} showDiscount={false} />
 									<div className="text-sm text-secondary text-center">{product.description}</div>
 								</div>
-								{customerStatus?.customerStatus?.isEligibleForTrial ? (
+								{isEligibleForTrial ? (
 									<div className="flex flex-col items-center gap-1 w-full">
 										<Button
 											className="self-stretch"
@@ -172,8 +178,8 @@ export const PaymentGuard = () => {
 												"Get started"
 											)}
 										</Button>
-										<div className="text-xs text-secondary text-center">
-											Start for 7 days free, no credit card required
+										<div className="text-xs text-secondary text-center font-medium">
+											No credit card required.
 										</div>
 									</div>
 								) : (
