@@ -1,4 +1,3 @@
-import { useMutation } from "@tanstack/react-query";
 import { Mark, mergeAttributes } from "@tiptap/core";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskItem from "@tiptap/extension-task-item";
@@ -8,7 +7,6 @@ import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { diffLines } from "diff";
-import { MoreHorizontalIcon, TrashIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,11 +14,6 @@ import TextareaAutosize from "react-textarea-autosize";
 import { useMount, usePrevious, useUnmount, useUpdateEffect } from "react-use";
 import { Markdown } from "tiptap-markdown";
 
-import { apiClient } from "src/api/client";
-import { queryClient } from "src/api/queryClient";
-import { supabase } from "src/clients/supabase";
-import { Button } from "src/components/Button";
-import { Dropdown, DropdownItem } from "src/components/Dropdown";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { useAiSuggestionStore } from "src/stores/aiSuggestion";
 import { useHighlightStore } from "src/stores/highlight";
@@ -33,81 +26,12 @@ import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 import { CollectionCarousel } from "./CollectionCarousel";
 import { ControlColumn } from "./ControlColumn";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
+import { useEditThought, useThought, useTriggerAiSuggestion, useTriggerAiTitleSuggestion } from "./hooks";
 import { usePreviewContentStore } from "./previewContentStore";
 import { useThoughtStore } from "./thoughtStore";
-import { useThought } from "./useThought";
 
 type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
 type Collection = NonNullable<Thought["collections"]>[0];
-
-const useEditThought = (thoughtId?: string) => {
-	const { setLastLocalThoughtContentTs, setLastLocalThoughtTitleTs } = useThoughtStore();
-
-	return useMutation({
-		mutationKey: ["newThought"],
-		mutationFn: async (payload: { title?: string; content?: string; contentMd?: string }) => {
-			let titleObj = {};
-			if (payload.title !== undefined) {
-				const titleTs = new Date();
-				titleObj = { title: payload.title, title_ts: titleTs.toISOString() };
-				setLastLocalThoughtTitleTs(titleTs);
-			}
-
-			let contentObj = {};
-			if (payload.content !== undefined) {
-				const contentTs = new Date();
-				contentObj = { content: payload.content, content_ts: contentTs.toISOString() };
-				setLastLocalThoughtContentTs(contentTs);
-			}
-
-			const { data, error } = await supabase
-				.from("thoughts")
-				.upsert({
-					id: thoughtId,
-					...titleObj,
-					...contentObj,
-					...(payload.contentMd !== undefined && { content_md: payload.contentMd }),
-				})
-				.select();
-
-			return data?.at(0);
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["thoughtEmbeddings"],
-			});
-			setTimeout(() => {
-				queryClient.invalidateQueries({
-					queryKey: ["thoughtEmbeddings"],
-				});
-			}, 2500);
-		},
-	});
-};
-
-const useTriggerAiSuggestion = (thoughtId?: string) => {
-	return useMutation({
-		mutationFn: async () => {
-			if (thoughtId) {
-				return apiClient.post(`/api/ai/thought-ideate`, {
-					thoughtId,
-				});
-			}
-		},
-	});
-};
-
-const useTriggerAiTitleSuggestion = (thoughtId?: string) => {
-	return useMutation({
-		mutationFn: async () => {
-			if (thoughtId) {
-				return apiClient.post(`/api/ai/suggest-title`, {
-					thoughtId,
-				});
-			}
-		},
-	});
-};
 
 export const ThoughtDetailView = () => {
 	const { thoughtId } = useParams<{ thoughtId: string }>();
@@ -153,7 +77,6 @@ const ThoughtDetailViewExisting = ({ thoughtId, isNewMode }: { thoughtId?: strin
 
 const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; thought?: Thought }) => {
 	const { mutateAsync: editThought } = useEditThought(thoughtId);
-
 	const { mutateAsync: triggerAiSuggestion } = useTriggerAiSuggestion(thoughtId);
 	const { mutateAsync: triggerAiTitleSuggestion } = useTriggerAiTitleSuggestion(thoughtId);
 

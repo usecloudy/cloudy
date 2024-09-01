@@ -75,11 +75,11 @@ export const ThoughtCard = ({
 							{thought.collections.length > 0 ? (
 								<span className="text-xs text-secondary">
 									{" • "}
-									{thought.collections.map(collection => collection.title ?? "Untitled").join(", ")}
+									{thought.collections.map(collection => collection.title || "Untitled").join(", ")}
 								</span>
 							) : null}
 						</span>
-						<h3 className="font-medium">{thought.title ?? "Untitled"}</h3>
+						<h3 className="font-medium">{thought.title || "Untitled"}</h3>
 					</div>
 				</div>
 				{variant === "default" && (

@@ -34,9 +34,9 @@ import { useHighlightStore } from "src/stores/highlight";
 import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
 
+import { useThought } from "./hooks";
 import { useThreadStore } from "./threadStore";
 import { useTitleStore } from "./titleStore";
-import { useThought } from "./useThought";
 
 // Types
 type Suggestion = Database["public"]["Tables"]["thought_chats"]["Row"];

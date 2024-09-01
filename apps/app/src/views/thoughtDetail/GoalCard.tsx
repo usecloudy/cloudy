@@ -1,41 +1,49 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
-import { GoalIcon, MessageCircleIcon } from "lucide-react";
+import { GoalIcon } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
 
 import { supabase } from "src/clients/supabase";
-import { Button } from "src/components/Button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "src/components/Dialog";
-import { ellipsizeText } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
 
-import { useThought } from "./useThought";
+import { useEditThought, useThought } from "./hooks";
 
-const useSetIntent = (thoughtId: string) => {
+const useSetIntent = (thoughtId?: string) => {
+	const { mutateAsync: editThought } = useEditThought();
+
+	const navigate = useNavigate();
+
 	return useMutation({
 		mutationFn: async (intent: string) => {
+			let thoughtIdToUse = thoughtId;
+
+			if (!thoughtId) {
+				const thought = await editThought({});
+				thoughtIdToUse = thought?.id;
+				if (!thoughtId && thoughtIdToUse) {
+					navigate(`/thoughts/${thoughtIdToUse}`, { replace: true, preventScrollReset: true });
+				}
+			}
+
+			if (!thoughtIdToUse) {
+				return;
+			}
+
 			handleSupabaseError(
 				await supabase
 					.from("thoughts")
 					.update({
 						user_intent: intent,
 					})
-					.eq("id", thoughtId),
+					.eq("id", thoughtIdToUse),
 			);
 		},
 	});
 };
 
-export const IntentDialog = ({ thoughtId }: { thoughtId: string }) => {
+export const GoalCard = ({ thoughtId }: { thoughtId?: string }) => {
 	const { data: thought } = useThought(thoughtId);
 
 	const [intent, setIntent] = useState(thought?.user_intent || "");
@@ -57,7 +65,7 @@ export const IntentDialog = ({ thoughtId }: { thoughtId: string }) => {
 			</div>
 			<TextareaAutosize
 				placeholder="Setting a goal for your note will help Cloudy give better suggestions."
-				className="w-full rounded bg-white/20 border-border border resize-none text-base font-sans px-4 py-3 min-h-10 outline-none hover:outline-none focus:outline-none text-sm"
+				className="w-full rounded bg-white/20 border-border border resize-none font-sans px-4 py-3 min-h-10 outline-none hover:outline-none focus:outline-none text-sm"
 				value={intent}
 				onChange={e => handleSetIntent(e.target.value)}
 			/>
