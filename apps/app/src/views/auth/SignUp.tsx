@@ -1,4 +1,5 @@
 import { AuthError } from "@supabase/supabase-js";
+import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -7,6 +8,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "../../clients/supabase";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 type SignUpFormData = {
 	email: string;
@@ -25,9 +27,9 @@ export const SignUp = () => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-	const onSubmit = async (data: SignUpFormData) => {
-		try {
-			const { data: signUpData, error } = await supabase.auth.signUp({
+	const signUpMutation = useMutation({
+		mutationFn: async (data: SignUpFormData) => {
+			const { error } = await supabase.auth.signUp({
 				email: data.email,
 				password: data.password,
 				options: {
@@ -35,14 +37,18 @@ export const SignUp = () => {
 				},
 			});
 			if (error) throw error;
-			// Handle successful sign-up (e.g., show a success message or redirect)
-		} catch (error) {
+		},
+		onError: error => {
 			if (error instanceof AuthError) {
 				setSignUpError(error.message);
 			} else {
 				setSignUpError("An error occurred during sign-up");
 			}
-		}
+		},
+	});
+
+	const onSubmit = (data: SignUpFormData) => {
+		signUpMutation.mutate(data);
 	};
 
 	return (
@@ -108,8 +114,8 @@ export const SignUp = () => {
 			{errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>}
 
 			{signUpError && <p className="text-red-600 text-sm mb-2">{signUpError}</p>}
-			<Button type="submit" className="self-stretch mt-4">
-				Sign Up
+			<Button type="submit" className="self-stretch mt-4" disabled={signUpMutation.isPending}>
+				{signUpMutation.isPending ? <LoadingSpinner size="xs" variant="background" /> : "Sign Up"}
 			</Button>
 			<div className="text-sm text-muted-foreground text-center mt-4">
 				Already have an account?{" "}

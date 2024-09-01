@@ -1,4 +1,5 @@
 import { AuthError } from "@supabase/supabase-js";
+import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -7,6 +8,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "../../clients/supabase";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 type LoginFormData = {
 	email: string;
@@ -22,20 +24,25 @@ export const SignIn = () => {
 	const [loginError, setLoginError] = useState<string | null>(null);
 	const [showPassword, setShowPassword] = useState(false);
 
-	const onSubmit = async (data: LoginFormData) => {
-		try {
+	const signInMutation = useMutation({
+		mutationFn: async (data: LoginFormData) => {
 			const { error } = await supabase.auth.signInWithPassword({
 				email: data.email,
 				password: data.password,
 			});
 			if (error) throw error;
-		} catch (error) {
+		},
+		onError: error => {
 			if (error instanceof AuthError) {
 				setLoginError(error.message);
 			} else {
 				setLoginError("An error occurred");
 			}
-		}
+		},
+	});
+
+	const onSubmit = (data: LoginFormData) => {
+		signInMutation.mutate(data);
 	};
 
 	return (
@@ -72,8 +79,8 @@ export const SignIn = () => {
 				{errors.password && <p className="text-red-600 text-sm">{errors.password.message}</p>}
 			</div>
 			{loginError && <p className="text-red-600 text-sm mb-2">{loginError}</p>}
-			<Button type="submit" className="self-stretch">
-				Sign In
+			<Button type="submit" className="self-stretch" disabled={signInMutation.isPending}>
+				{signInMutation.isPending ? <LoadingSpinner size="xs" variant="background" /> : "Sign In"}
 			</Button>
 			<div className="text-sm text-muted-foreground mt-4 flex flex-row gap-2 items-center justify-between">
 				<Link to="/auth/signup" className="text-accent text-left hover:text-accent/70 hover:underline">
