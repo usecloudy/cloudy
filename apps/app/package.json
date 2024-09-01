@@ -75,6 +75,7 @@
 		"install": "^0.13.0",
 		"lucide-react": "^0.436.0",
 		"npm": "^10.8.2",
+		"posthog-js": "^1.160.0",
 		"react": "^18.2.0",
 		"react-confetti-explosion": "^2.1.2",
 		"react-contenteditable": "^3.3.7",

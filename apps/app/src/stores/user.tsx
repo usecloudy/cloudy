@@ -2,6 +2,7 @@ import * as amplitude from "@amplitude/analytics-browser";
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { Session, User } from "@supabase/supabase-js";
 import { useMutation } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useMount } from "react-use";
 import { create } from "zustand";
 
@@ -57,6 +58,7 @@ export const useUserHandler = () => {
 				}
 
 				amplitude.setUserId(session.user.id);
+				posthog.identify(session.user.id, { email: session.user.email });
 				await setupAuthHeader();
 
 				const postgresUser = handleSupabaseError(

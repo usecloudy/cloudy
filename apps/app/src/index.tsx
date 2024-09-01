@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/react";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { QueryClientProvider } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "react-toastify/dist/ReactToastify.css";
@@ -26,7 +27,14 @@ Sentry.init({
 	replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
 });
 
-amplitude.init(process.env.NODE_ENV === 'production' ? "6d14f14501c1f88da608c5b493ea0c00" : "", { autocapture: { elementInteractions: true },  });
+amplitude.init(process.env.NODE_ENV === "production" ? "6d14f14501c1f88da608c5b493ea0c00" : "", {
+	autocapture: { elementInteractions: true },
+});
+
+posthog.init(process.env.REACT_APP_POSTHOG_KEY!, {
+	api_host: "https://us.i.posthog.com",
+	person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
+});
 
 // Make sure to call `loadStripe` outside of a component’s render to avoid
 // recreating the `Stripe` object on every render.

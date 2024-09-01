@@ -2,6 +2,7 @@ import { Pricing } from "@cloudy/ui";
 import { PaymentsProductsGetResponse } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { XIcon } from "lucide-react";
+import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -71,6 +72,7 @@ export const PaymentGuard = () => {
 	const allowClose = showSubscriptionModal;
 
 	const handleSubscribe = async (priceId: string) => {
+		posthog.capture("subscribe");
 		checkout(priceId, {
 			onSuccess: url => {
 				window.location.href = url;
@@ -79,6 +81,7 @@ export const PaymentGuard = () => {
 	};
 
 	const handleStartTrial = async (priceId: string) => {
+		posthog.capture("start_trial");
 		const { success } = await startTrial(priceId, {});
 		if (success) {
 			handleClose(true);
@@ -87,10 +90,13 @@ export const PaymentGuard = () => {
 
 	useEffect(() => {
 		if (showSubscriptionModal) {
+			posthog.capture("show_subscription_modal");
 			setIsOpen(true);
 		} else if (!isCustomerStatusLoading && !customerStatus?.customerStatus?.isActive) {
+			posthog.capture("force_show_subscription_modal");
 			setIsOpen(true);
 		} else {
+			posthog.capture("hide_subscription_modal");
 			setIsOpen(false);
 		}
 	}, [isCustomerStatusLoading, customerStatus, showSubscriptionModal]);
