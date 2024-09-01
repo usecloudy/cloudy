@@ -81,7 +81,7 @@
 		"react-contenteditable": "^3.3.7",
 		"react-dom": "^18.2.0",
 		"react-helmet": "^6.1.0",
-		"react-hook-form": "^7.52.0",
+		"react-hook-form": "^7.53.0",
 		"react-icons": "^4.7.1",
 		"react-router-dom": "^6.4.4",
 		"react-textarea-autosize": "^8.5.3",
