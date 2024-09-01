@@ -96,13 +96,13 @@ export const PaymentGuard = () => {
 			posthog.capture("force_show_subscription_modal");
 			setIsOpen(true);
 		} else {
-			posthog.capture("hide_subscription_modal");
 			setIsOpen(false);
 		}
 	}, [isCustomerStatusLoading, customerStatus, showSubscriptionModal]);
 
 	const handleClose = (force?: boolean) => {
 		if (allowClose || force) {
+			posthog.capture("hide_subscription_modal");
 			setIsOpen(false);
 			searchParams.delete("showSubscriptionModal");
 			window.history.replaceState({}, "", `${window.location.pathname}?${searchParams.toString()}`);
