@@ -69,7 +69,7 @@ const ThoughtDetailViewExisting = ({ thoughtId, isNewMode }: { thoughtId?: strin
 	const { data: thought, isLoading } = useThought(thoughtId);
 
 	return (
-		<SimpleLayout isLoading={Boolean(isLoading && !isNewMode)} className="lg:overflow-hidden">
+		<SimpleLayout isLoading={Boolean(isLoading && !isNewMode)} className="lg:overflow-hidden items-center">
 			<ThoughtDetailViewInner thoughtId={thoughtId} thought={thought ?? undefined} />
 		</SimpleLayout>
 	);
@@ -138,7 +138,7 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 			<Helmet>
 				<title>{headTitle}</title>
 			</Helmet>
-			<div className="flex w-full flex-col lg:flex-row gap-4 lg:h-full">
+			<div className="flex w-full flex-col lg:flex-row gap-4 lg:h-full xl:max-w-screen-2xl">
 				<EditorView
 					thoughtId={thoughtId}
 					collections={thought?.collections ?? []}
