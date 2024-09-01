@@ -26,7 +26,7 @@ Sentry.init({
 	replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
 });
 
-amplitude.init("6d14f14501c1f88da608c5b493ea0c00", { autocapture: { elementInteractions: true } });
+amplitude.init(process.env.NODE_ENV === 'production' ? "6d14f14501c1f88da608c5b493ea0c00" : "", { autocapture: { elementInteractions: true },  });
 
 // Make sure to call `loadStripe` outside of a component’s render to avoid
 // recreating the `Stripe` object on every render.
