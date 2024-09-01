@@ -5,18 +5,13 @@
     "tasks": {
         "build": {
             "dependsOn": ["^build"],
-            "inputs": ["$TURBO_DEFAULT$", ".env*"],
-            "env": [
-                "REACT_APP_SUPABASE_URL",
-                "REACT_APP_API_BASE_URL",
-                "REACT_APP_SUPABASE_ANON_KEY"
-            ]
+            "inputs": ["$TURBO_DEFAULT$", ".env*"]
         },
-        "app#build": {
+        "@cloudy/app#build": {
             "dependsOn": ["^build"],
             "outputs": ["apps/app/build/**"]
         },
-        "web#build": {
+        "@cloudy/web#build": {
             "dependsOn": ["^build"],
             "outputs": ["apps/web/.next/**", "!.next/cache/**"]
         },
