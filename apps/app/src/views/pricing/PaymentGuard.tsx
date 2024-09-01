@@ -92,7 +92,7 @@ export const PaymentGuard = () => {
 		if (showSubscriptionModal) {
 			posthog.capture("show_subscription_modal");
 			setIsOpen(true);
-		} else if (!isCustomerStatusLoading && !customerStatus?.customerStatus?.isActive) {
+		} else if (!isCustomerStatusLoading && customerStatus?.customerStatus && !customerStatus.customerStatus.isActive) {
 			posthog.capture("force_show_subscription_modal");
 			setIsOpen(true);
 		} else {
