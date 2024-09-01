@@ -25,15 +25,15 @@ const DialogOverlay = React.forwardRef<
 DialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 
 const dialogVariants = cva(
-	"fixed z-50 gap-4 bg-background border flex flex-col gap-2 border-border p-6 transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+	"fixed z-50 gap-4 bg-background border flex flex-col rounded-lg border-border p-6 transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
 	{
 		variants: {
 			position: {
-				center: "left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] rounded-md data-[state=open]:slide-in-from-bottom-0 data-[state=open]:slide-in-from-right-0",
-				top: "left-[50%] top-[5%] translate-x-[-50%] rounded-b-lg data-[state=open]:slide-in-from-top-0",
-				bottom: "left-[50%] bottom-[5%] translate-x-[-50%] rounded-t-lg data-[state=open]:slide-in-from-bottom-0",
-				left: "left-4 top-[50%] translate-y-[-50%] rounded-r-lg data-[state=open]:slide-in-from-left-0",
-				right: "right-4 top-[50%] translate-y-[-50%] rounded-l-lg data-[state=open]:slide-in-from-right-0",
+				center: "left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+				// top: "left-[50%] top-[5%] translate-x-[-50%] rounded-b-lg data-[state=open]:slide-in-from-top-0",
+				// bottom: "left-[50%] bottom-[5%] translate-x-[-50%] rounded-t-lg data-[state=open]:slide-in-from-bottom-0",
+				// left: "left-4 top-[50%] translate-y-[-50%] rounded-r-lg data-[state=open]:slide-in-from-left-0",
+				// right: "right-4 top-[50%] translate-y-[-50%] rounded-l-lg data-[state=open]:slide-in-from-right-0",
 			},
 			size: {
 				sm: "w-full max-w-sm",
