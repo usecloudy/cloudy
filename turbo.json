@@ -9,7 +9,7 @@
         },
         "@cloudy/app#build": {
             "dependsOn": ["^build"],
-            "outputs": ["apps/app/build/**"],
+            "outputs": ["build/**"],
             "env": [
                 "REACT_APP_SUPABASE_URL",
                 "REACT_APP_API_BASE_URL",
@@ -19,7 +19,7 @@
         },
         "@cloudy/web#build": {
             "dependsOn": ["^build"],
-            "outputs": ["apps/web/.next/**", "!apps/web/.next/cache/**"]
+            "outputs": [".next/**", "!.next/cache/**"]
         },
         "lint": {
             "dependsOn": ["^lint"]
