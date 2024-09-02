@@ -1,2 +1,3 @@
-export * from "./pricing";
-export * from "./hero";
+export * from "./Pricing";
+export * from "./Hero";
+export * from "./Tag";

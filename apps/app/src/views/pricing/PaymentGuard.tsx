@@ -1,4 +1,4 @@
-import { Pricing } from "@cloudy/ui";
+import { Pricing, Tag } from "@cloudy/ui";
 import { PaymentsProductsGetResponse } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { XIcon } from "lucide-react";
@@ -158,11 +158,7 @@ export const PaymentGuard = () => {
 									<img src="/logo.png" className="w-8" alt="Cloudy Logo" />
 									<div className="flex flex-row items-center gap-2">
 										<h3 className="font-medium text-lg">{product.name}</h3>
-										{"tag" in product.metadata ? (
-											<div className="text-xs text-accent font-medium bg-card rounded px-2 py-0.5">
-												{product.metadata.tag}
-											</div>
-										) : null}
+										{"tag" in product.metadata ? <Tag>{product.metadata.tag}</Tag> : null}
 									</div>
 									{isEligibleForTrial && (
 										<div className="text-sm text-secondary text-center">

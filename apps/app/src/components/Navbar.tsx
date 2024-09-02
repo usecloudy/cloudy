@@ -1,3 +1,4 @@
+import { Tag } from "@cloudy/ui";
 import { useMutation } from "@tanstack/react-query";
 import {
 	ArrowLeft,
@@ -94,6 +95,9 @@ export const Navbar: FC = () => {
 			{/* Center logo */}
 			<div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
 				<img src="/logo.png" className="w-10" alt="Logo" />
+				<div className="absolute top-1/2 -translate-y-1/2 -right-10 scale-75">
+					<Tag className="text-accent/80">beta</Tag>
+				</div>
 			</div>
 
 			<div>
