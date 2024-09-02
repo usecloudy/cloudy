@@ -267,6 +267,7 @@ export type Database = {
           is_suggestion_paused: boolean
           last_suggestion_content_md: string | null
           signals: Json | null
+          suggested_goal: string | null
           suggestion_index: number
           suggestion_status: string
           title: string | null
@@ -285,6 +286,7 @@ export type Database = {
           is_suggestion_paused?: boolean
           last_suggestion_content_md?: string | null
           signals?: Json | null
+          suggested_goal?: string | null
           suggestion_index?: number
           suggestion_status?: string
           title?: string | null
@@ -303,6 +305,7 @@ export type Database = {
           is_suggestion_paused?: boolean
           last_suggestion_content_md?: string | null
           signals?: Json | null
+          suggested_goal?: string | null
           suggestion_index?: number
           suggestion_status?: string
           title?: string | null
@@ -339,7 +342,15 @@ export type Database = {
           name?: string | null
           stripe_customer_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "users_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

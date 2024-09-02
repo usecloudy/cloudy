@@ -1,7 +1,7 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { GoalIcon, MessageCircleIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 
 import { supabase } from "src/clients/supabase";
@@ -18,6 +18,7 @@ import {
 import { ellipsizeText } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
 
+import { apiClient } from "../../api/client";
 import { useThought } from "./useThought";
 
 const useSetIntent = (thoughtId: string) => {
@@ -35,18 +36,29 @@ const useSetIntent = (thoughtId: string) => {
 	});
 };
 
+const useSetSuggestedGoal = (thoughtId: string) => {
+	return useMutation({
+		mutationFn: async () => {
+			const response = await apiClient.post("/api/ai/suggest-goal", { thoughtId });
+			return response.data;
+		},
+	});
+};
+
 export const IntentDialog = ({ thoughtId }: { thoughtId: string }) => {
 	const { data: thought } = useThought(thoughtId);
 
 	const [intent, setIntent] = useState(thought?.user_intent || "");
+	const [suggestedGoal, setSuggestedGoal] = useState(thought?.suggested_goal || "");
 
 	const { mutate: confirmSetIntent } = useSetIntent(thoughtId);
-
-	const { onChange } = useSave(confirmSetIntent);
+	const { mutate: confirmSetSuggestedGoal } = useSetSuggestedGoal(thoughtId);
+	const { onChange: onChangeIntent } = useSave(confirmSetIntent);
+	const { onChange: onChangeSuggestedGoal } = useSave(confirmSetSuggestedGoal);
 
 	const handleSetIntent = (value: string) => {
 		setIntent(value);
-		onChange(value);
+		onChangeIntent(value);
 	};
 
 	return (
@@ -61,6 +73,17 @@ export const IntentDialog = ({ thoughtId }: { thoughtId: string }) => {
 				value={intent}
 				onChange={e => handleSetIntent(e.target.value)}
 			/>
+
+			<div className="mt-2">
+				<Button variant="secondary" onClick={() => confirmSetSuggestedGoal()}>
+					Get AI Suggested Goal
+				</Button>
+			</div>
+			<h6 className="text-sm font-medium text-secondary">AI Suggested Goal:</h6>
+
+			<div className="mt-2">
+				<p className="text-sm text-secondary">{suggestedGoal}</p>
+			</div>
 		</div>
 	);
 };
