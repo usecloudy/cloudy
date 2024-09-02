@@ -1,7 +1,7 @@
 import * as amplitude from "@amplitude/analytics-browser";
-import { handleSupabaseError } from "@cloudy/utils/common";
+import { PaymentsCustomersStatusGetResponse, handleSupabaseError } from "@cloudy/utils/common";
 import { Session, User } from "@supabase/supabase-js";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { useMount } from "react-use";
 import { create } from "zustand";
@@ -15,9 +15,20 @@ export const createUserIfNotExists = async (user: User) => {
 	});
 };
 
-const createStripeCustomerIfNotExists = async () => {
-	return apiClient.post("/api/payments/customers/create");
-};
+const waitForStripeCustomer = () =>
+	new Promise<void>(resolve => {
+		const interval = setInterval(async () => {
+			try {
+				const status = await apiClient
+					.get<PaymentsCustomersStatusGetResponse>("/api/payments/customers/status")
+					.then(res => res.data);
+				if (status.customerStatus) {
+					clearInterval(interval);
+					resolve();
+				}
+			} catch (error) {}
+		}, 1000);
+	});
 
 export const useUserStore = create<{
 	user: User | null;
@@ -47,29 +58,13 @@ export const useUserHandler = () => {
 	const { mutate: handleSetUser } = useMutation({
 		mutationKey: ["handleSetUser"],
 		mutationFn: async (session: Session) => {
-			const existingUser = useUserStore.getState().user;
-
 			setUser(session.user);
 
-			if ((!existingUser && session.user) || (existingUser && existingUser.id !== session.user.id)) {
-				const doesUserExist = await supabase.from("users").select("*").eq("id", session.user.id);
-				if (!doesUserExist.data?.at(0)) {
-					await createUserIfNotExists(session.user);
-				}
-
-				amplitude.setUserId(session.user.id);
-				posthog.identify(session.user.id, { email: session.user.email });
-				await setupAuthHeader();
-
-				const postgresUser = handleSupabaseError(
-					await supabase.from("users").select("*").eq("id", session.user.id).single(),
-				);
-				if (!postgresUser.stripe_customer_id) {
-					await createStripeCustomerIfNotExists();
-				}
-
-				setIsReady(true);
-			}
+			amplitude.setUserId(session.user.id);
+			posthog.identify(session.user.id, { email: session.user.email });
+			await setupAuthHeader();
+			await waitForStripeCustomer();
+			setIsReady(true);
 		},
 	});
 
@@ -78,6 +73,7 @@ export const useUserHandler = () => {
 			setUser(null, false);
 			setIsReady(false);
 			amplitude.setUserId(undefined);
+			posthog.identify(undefined);
 		};
 
 		supabase.auth.getSession().then(({ data: { session } }) => {

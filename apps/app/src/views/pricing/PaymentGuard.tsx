@@ -3,8 +3,7 @@ import { PaymentsProductsGetResponse } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { XIcon } from "lucide-react";
 import posthog from "posthog-js";
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 
 import { apiClient } from "src/api/client";
 import { queryClient } from "src/api/queryClient";
@@ -12,6 +11,8 @@ import { Button } from "src/components/Button";
 import { Dialog, DialogContent } from "src/components/Dialog";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
+
+import { useSubscriptionModalStore } from "./subscriptionModalStore";
 
 const useProducts = () => {
 	return useQuery({
@@ -53,7 +54,21 @@ const useCheckout = () => {
 	});
 };
 
-export const PaymentGuard = () => {
+const usePaymentGuard = () => {
+	const { data: customerStatus, isLoading, isFetched } = useCustomerStatus();
+	const { setIsOpen } = useSubscriptionModalStore();
+
+	useEffect(() => {
+		if (!isLoading && isFetched) {
+			if (customerStatus?.customerStatus && !customerStatus.customerStatus.isActive) {
+				posthog.capture("force_show_subscription_modal");
+				setIsOpen(true, false);
+			}
+		}
+	}, [isLoading, isFetched, customerStatus]);
+};
+
+export const SubscriptionModal = () => {
 	const {
 		data: customerStatus,
 		isLoading: isCustomerStatusLoading,
@@ -61,15 +76,14 @@ export const PaymentGuard = () => {
 	} = useCustomerStatus();
 	const { data, isLoading: isProductsLoading } = useProducts();
 	const { mutate: checkout, isPending: isCheckoutLoading } = useCheckout();
-	const { mutateAsync: startTrial, isPending: isStartTrialLoading } = useStartTrial();
+	usePaymentGuard();
 
-	const [searchParams] = useSearchParams();
-	const showSubscriptionModal = searchParams.get("showSubscriptionModal");
+	const { isOpen, allowClose, setIsOpen } = useSubscriptionModalStore();
 
-	const [isOpen, setIsOpen] = useState(false);
+	const missingCustomerStatus = !isCustomerStatusLoading && !customerStatus?.customerStatus;
+	const isLoading = isProductsLoading || isCustomerStatusLoading || !isCustomerStatusFetched;
 
 	const products = data?.products;
-	const allowClose = showSubscriptionModal;
 
 	const handleSubscribe = async (priceId: string) => {
 		posthog.capture("subscribe");
@@ -80,38 +94,12 @@ export const PaymentGuard = () => {
 		});
 	};
 
-	const handleStartTrial = async (priceId: string) => {
-		posthog.capture("start_trial");
-		const { success } = await startTrial(priceId, {});
-		if (success) {
-			handleClose(true);
-		}
-	};
-
-	useEffect(() => {
-		if (showSubscriptionModal) {
-			posthog.capture("show_subscription_modal");
-			setIsOpen(true);
-		} else if (!isCustomerStatusLoading && customerStatus?.customerStatus && !customerStatus.customerStatus.isActive) {
-			posthog.capture("force_show_subscription_modal");
-			setIsOpen(true);
-		} else {
-			setIsOpen(false);
-		}
-	}, [isCustomerStatusLoading, customerStatus, showSubscriptionModal]);
-
 	const handleClose = (force?: boolean) => {
 		if (allowClose || force) {
 			posthog.capture("hide_subscription_modal");
-			setIsOpen(false);
-			searchParams.delete("showSubscriptionModal");
-			window.history.replaceState({}, "", `${window.location.pathname}?${searchParams.toString()}`);
+			setIsOpen(false, false);
 		}
 	};
-
-	const missingCustomerStatus = !isCustomerStatusLoading && !customerStatus?.customerStatus;
-	const isLoading = isProductsLoading || isCustomerStatusLoading || !isCustomerStatusFetched;
-	const isEligibleForTrial = customerStatus?.customerStatus?.isEligibleForTrial;
 
 	return (
 		<Dialog
@@ -160,42 +148,15 @@ export const PaymentGuard = () => {
 										<h3 className="font-medium text-lg">{product.name}</h3>
 										{"tag" in product.metadata ? <Tag>{product.metadata.tag}</Tag> : null}
 									</div>
-									{isEligibleForTrial && (
-										<div className="text-sm text-secondary text-center">
-											Start for <span className="font-semibold">7 days free</span>, then
-										</div>
-									)}
 									<Pricing price={product.defaultPrice} fullPrice={product.fullPrice} showDiscount={false} />
 									<div className="text-sm text-secondary text-center">{product.description}</div>
 								</div>
-								{isEligibleForTrial ? (
-									<div className="flex flex-col items-center gap-1 w-full">
-										<Button
-											className="self-stretch"
-											onClick={() => handleStartTrial(product.defaultPrice.id)}
-											disabled={isStartTrialLoading}>
-											{isStartTrialLoading ? (
-												<LoadingSpinner size="xs" variant="background" />
-											) : (
-												"Get started"
-											)}
-										</Button>
-										<div className="text-xs text-secondary text-center font-medium">
-											No credit card required.
-										</div>
-									</div>
-								) : (
-									<Button
-										className="self-stretch"
-										onClick={() => handleSubscribe(product.defaultPrice.id)}
-										disabled={isCheckoutLoading}>
-										{isCheckoutLoading ? (
-											<LoadingSpinner size="xs" variant="background" />
-										) : (
-											"Subscribe now"
-										)}
-									</Button>
-								)}
+								<Button
+									className="self-stretch"
+									onClick={() => handleSubscribe(product.defaultPrice.id)}
+									disabled={isCheckoutLoading}>
+									{isCheckoutLoading ? <LoadingSpinner size="xs" variant="background" /> : "Subscribe now"}
+								</Button>
 								<div className="flex flex-col items-start w-full bg-card rounded-md p-4">
 									<div className="text-sm text-secondary font-medium">Features include:</div>
 									<ul className="list-disc list-outside px-4">

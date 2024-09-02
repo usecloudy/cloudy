@@ -13,12 +13,12 @@ import { SignUp } from "./views/auth/SignUp";
 import { CollectionDetailView } from "./views/collectionDetail/CollectionDetailView";
 import { HomeView } from "./views/home/HomeView";
 import { LoadingView } from "./views/loading/LoadingView";
-import { PaymentGuard } from "./views/pricing/PaymentGuard";
+import { SubscriptionModal } from "./views/pricing/PaymentGuard";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
 
 const ProtectedLayout: FC = () => {
-	const { user, isLoading } = useUserGuard();
+	const { user, isLoading, isReady } = useUserGuard();
 
 	if (isLoading) {
 		return <LoadingView />;
@@ -27,11 +27,16 @@ const ProtectedLayout: FC = () => {
 	if (!user) {
 		return <Navigate to="/auth" />;
 	}
+
+	if (!isReady) {
+		return <LoadingView />;
+	}
+
 	return (
 		<div className="h-dvh w-screen flex flex-col">
 			<Navbar />
 			<Outlet />
-			<PaymentGuard />
+			<SubscriptionModal />
 			<PaymentSuccessDialog />
 		</div>
 	);

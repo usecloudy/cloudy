@@ -7,6 +7,7 @@ import { getSupabase } from "app/api/utils/supabase";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
+// @deprecated, to be fully handled in handle-user
 export const POST = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 

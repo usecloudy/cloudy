@@ -10,15 +10,17 @@ import {
 	LogOut,
 	MenuIcon,
 	Plus,
+	TimerIcon,
 } from "lucide-react";
 import { FC } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { apiClient } from "src/api/client";
 import { supabase } from "src/clients/supabase";
 import { useUser } from "src/stores/user";
 import { pluralize } from "src/utils/strings";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
+import { useSubscriptionModalStore } from "src/views/pricing/subscriptionModalStore";
 
 import { Button } from "./Button";
 import { Dropdown, DropdownItem } from "./Dropdown";
@@ -41,12 +43,15 @@ export const Navbar: FC = () => {
 	const { data } = useCustomerStatus();
 	const { mutateAsync: getBillingPortalUrl } = useBillingPortal();
 
+	const { setIsOpen: setShowSubscriptionModal } = useSubscriptionModalStore();
+
 	const customerStatus = data?.customerStatus;
 	const location = useLocation();
+	const navigate = useNavigate();
 	const isHomePage = location.pathname === "/";
 
 	const handleOpenSubscriptionModal = () => {
-		window.location.href = "/?showSubscriptionModal=true";
+		setShowSubscriptionModal(true, true);
 	};
 
 	const handleOpenBillingPortal = async () => {
@@ -100,7 +105,23 @@ export const Navbar: FC = () => {
 				</div>
 			</div>
 
-			<div>
+			<div className="flex flex-row items-center gap-2">
+				{customerStatus?.isTrialing && (
+					<Dropdown
+						trigger={
+							<div className="bg-accent/10 px-2 py-1 rounded flex flex-row items-center gap-1 text-secondary cursor-pointer hover:bg-accent/20">
+								<TimerIcon className="h-3.5 w-3.5" />
+								<span className="text-xs ">
+									{`${pluralize(customerStatus.remainingDaysInTrial ?? 0, "day")} remaining in trial`}
+								</span>
+							</div>
+						}>
+						<DropdownItem className="text-accent" onSelect={handleOpenSubscriptionModal}>
+							<CircleFadingArrowUpIcon className="h-4 w-4" />
+							<span>Subscribe</span>
+						</DropdownItem>
+					</Dropdown>
+				)}
 				<Dropdown
 					trigger={
 						<Button variant="ghost" size="icon" aria-label="New thought">
