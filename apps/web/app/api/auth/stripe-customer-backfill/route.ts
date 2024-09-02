@@ -18,37 +18,39 @@ export const POST = async (req: NextRequest) => {
 
 	console.log("Found", postgresUsersWithoutStripeCustomerId.length, "users without a stripe customer id");
 
-	postgresUsersWithoutStripeCustomerId.map(async user => {
-		const {
-			data: { user: authUser },
-		} = await supabase.auth.admin.getUserById(user.id);
+	await Promise.all(
+		postgresUsersWithoutStripeCustomerId.map(async user => {
+			const {
+				data: { user: authUser },
+			} = await supabase.auth.admin.getUserById(user.id);
 
-		if (!authUser) {
-			console.log("User not found in auth.users", user.id);
-			return;
-		}
+			if (!authUser) {
+				console.log("User not found in auth.users", user.id);
+				return;
+			}
 
-		const customers = await stripe.customers.search({
-			query: `email:"${authUser.email}"`,
-		});
-
-		const existingCustomer = customers.data.at(0);
-
-		if (existingCustomer && !existingCustomer.deleted) {
-			console.log("User already has a stripe customer id", user.id, existingCustomer.id);
-			await supabase.from("users").update({ stripe_customer_id: existingCustomer.id }).eq("id", user.id);
-		} else {
-			console.log("Creating stripe customer for user", user.id);
-			const customer = await stripe.customers.create({
-				name: user.name ?? undefined,
-				email: authUser.email,
+			const customers = await stripe.customers.search({
+				query: `email:"${authUser.email}"`,
 			});
 
-			console.log("Created stripe customer for user", user.id, customer.id);
+			const existingCustomer = customers.data.at(0);
 
-			await supabase.from("users").update({ stripe_customer_id: customer.id }).eq("id", user.id);
-		}
-	});
+			if (existingCustomer && !existingCustomer.deleted) {
+				console.log("User already has a stripe customer id", user.id, existingCustomer.id);
+				await supabase.from("users").update({ stripe_customer_id: existingCustomer.id }).eq("id", user.id);
+			} else {
+				console.log("Creating stripe customer for user", user.id);
+				const customer = await stripe.customers.create({
+					name: user.name ?? undefined,
+					email: authUser.email,
+				});
+
+				console.log("Created stripe customer for user", user.id, customer.id);
+
+				await supabase.from("users").update({ stripe_customer_id: customer.id }).eq("id", user.id);
+			}
+		}),
+	);
 
 	console.log("Finished");
 
