@@ -33,6 +33,9 @@ posthog.init(process.env.REACT_APP_POSTHOG_KEY!, {
 	api_host: process.env.REACT_APP_API_BASE_URL! + "/ingest",
 	ui_host: "https://us.posthog.com",
 	person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
+	session_recording: {
+		maskTextSelector: "*", // Masks all text elements (not including inputs)
+	},
 });
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
