@@ -11,13 +11,14 @@
     },
     "devDependencies": {
         "eslint-config-prettier": "^9.1.0",
-        "prettier": "^3.3.3",
+        "prettier": "3.3.3",
         "supabase": "^1.191.3",
         "turbo": "^2.1.0",
-        "typescript": "^5.5.3"
+        "typescript": "5.5.3"
     },
     "overrides": {
-        "typescript": "^5.5.3"
+        "typescript": "5.5.3",
+        "prettier": "3.3.3"
     },
     "engines": {
         "node": ">=18"

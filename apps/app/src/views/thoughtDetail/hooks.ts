@@ -169,7 +169,7 @@ export const useThought = (thoughtId?: string) => {
 	});
 };
 
-export const useThoughtEmbeddings = (thoughtId?: string) => {
+export const useRelatedThoughts = (thoughtId?: string) => {
 	useEffect(() => {
 		if (!thoughtId) {
 			return;
@@ -210,17 +210,15 @@ export const useThoughtEmbeddings = (thoughtId?: string) => {
 				.select(
 					`
 					id,
-					thought_embeddings!matches (
-						thoughts (
-							id,
-							title,
-							created_at,
-							updated_at,
-							collection_thoughts (
-								collections (
-									id,
-									title
-								)
+					thought:thoughts!matches_thought_id (
+						id,
+						title,
+						created_at,
+						updated_at,
+						collection_thoughts (
+							collections (
+								id,
+								title
 							)
 						)
 					)
@@ -244,9 +242,8 @@ export const useThoughtEmbeddings = (thoughtId?: string) => {
 			> = {};
 
 			data.forEach(match => {
-				const thoughtEmbedding = fixOneToOne(match.thought_embeddings);
-				if (thoughtEmbedding?.thoughts) {
-					const thought = thoughtEmbedding.thoughts;
+				const thought = fixOneToOne(match.thought);
+				if (thought) {
 					thoughts[thought.id] = {
 						id: thought.id,
 						title: thought.title,

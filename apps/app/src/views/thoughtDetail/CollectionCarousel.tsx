@@ -1,6 +1,6 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ListIcon, PlusIcon, SparklesIcon } from "lucide-react";
+import { ListIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUpdateEffect } from "react-use";
@@ -19,10 +19,9 @@ import {
 } from "src/components/AlertDialog";
 import { Chip } from "src/components/Chip";
 import { CollectionDropdown } from "src/components/CollectionDropdown";
-import { useSuggestedCollectionsStore } from "src/stores/suggestedCollection";
 import { useUser } from "src/stores/user";
 
-import { useEditThought } from "./hooks";
+import { useEditThought, useThought } from "./hooks";
 
 interface Collection {
 	id: string;
@@ -138,14 +137,47 @@ const useRemoveFromCollection = () => {
 	});
 };
 
+const useIgnoreCollectionSuggestion = () => {
+	return useMutation({
+		mutationFn: async (payload: { collectionId: string; thoughtId: string }) => {
+			const ignoredCollectionSuggestions = handleSupabaseError(
+				await supabase
+					.from("thoughts")
+					.select("collection_suggestions, ignored_collection_suggestions")
+					.eq("id", payload.thoughtId)
+					.single(),
+			);
+
+			const collectionSuggestions = ignoredCollectionSuggestions.collection_suggestions as string[] | null;
+			const newIgnoredCollectionSuggestions = Array.from(
+				new Set([
+					...((ignoredCollectionSuggestions.ignored_collection_suggestions as string[] | null) ?? []),
+					payload.collectionId,
+				]),
+			);
+			const newCollectionSuggestions = collectionSuggestions?.filter(id => id !== payload.collectionId);
+
+			await supabase
+				.from("thoughts")
+				.update({
+					ignored_collection_suggestions: newIgnoredCollectionSuggestions,
+					collection_suggestions: newCollectionSuggestions,
+				})
+				.eq("id", payload.thoughtId);
+
+			return payload.thoughtId;
+		},
+	});
+};
+
 export const CollectionCarousel = ({ thoughtId, collections }: { thoughtId?: string; collections: Collection[] }) => {
 	const { data: allCollections } = useCollections();
-
-	const { suggestedCollections, setSuggestedCollections } = useSuggestedCollectionsStore();
+	const { data: thought } = useThought(thoughtId);
 
 	const { mutateAsync: createCollection } = useNewCollection();
 	const { mutateAsync: addToCollection } = useAddToCollection();
 	const { mutateAsync: removeFromCollection } = useRemoveFromCollection();
+	const { mutateAsync: ignoreCollectionSuggestion } = useIgnoreCollectionSuggestion();
 
 	const thoughtCollectionSet = useMemo(() => new Set(collections?.map(collection => collection.id)), [collections]);
 
@@ -158,9 +190,13 @@ export const CollectionCarousel = ({ thoughtId, collections }: { thoughtId?: str
 		return new Set(collections?.map(collection => collection.id) ?? []);
 	}, [collections]);
 
-	useUpdateEffect(() => {
-		setSuggestedCollections([]);
-	}, [thoughtId]);
+	const suggestedCollections = useMemo(() => {
+		return (thought?.collection_suggestions as string[] | null)
+			?.map(collectionId => {
+				return allCollections?.find(collection => collection.id === collectionId);
+			})
+			.filter(collection => collection !== undefined);
+	}, [thought?.collection_suggestions, allCollections]);
 
 	return (
 		<div className="w-screen -ml-6 pl-6 md:ml-0 md:pl-0 md:w-full overflow-x-auto no-scrollbar">
@@ -211,8 +247,9 @@ export const CollectionCarousel = ({ thoughtId, collections }: { thoughtId?: str
 							</Chip>
 						</Link>
 					))}
-				{thoughtId &&
-					suggestedCollections.map(
+				{thought &&
+					thoughtId &&
+					suggestedCollections?.map(
 						suggestedCollection =>
 							!collectionIds.has(suggestedCollection.id) && (
 								<Chip
@@ -225,10 +262,20 @@ export const CollectionCarousel = ({ thoughtId, collections }: { thoughtId?: str
 											collectionId: suggestedCollection.id,
 											thoughtId,
 										});
-										setSuggestedCollections(
-											suggestedCollections.filter(collection => collection.id !== suggestedCollection.id),
-										);
-									}}>
+									}}
+									rightElements={
+										<Chip.Delete
+											icon={<XIcon className="h-3.5 w-3.5 flex-shrink-0" />}
+											onClick={e => {
+												e.preventDefault();
+												e.stopPropagation();
+												ignoreCollectionSuggestion({
+													collectionId: suggestedCollection.id,
+													thoughtId,
+												});
+											}}
+										/>
+									}>
 									<SparklesIcon className="h-3.5 w-3.5 flex-shrink-0 text-accent" />
 									<span>{"Add to "}</span>
 									<span className="font-bold">{suggestedCollection.title}</span>

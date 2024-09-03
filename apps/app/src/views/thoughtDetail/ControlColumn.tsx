@@ -1,40 +1,24 @@
 import { FileSymlinkIcon, TrashIcon, ZapIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useUnmount } from "react-use";
 
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { ThoughtCard } from "src/components/ThoughtCard";
-import { useSuggestedCollectionsStore } from "src/stores/suggestedCollection";
 
 import { Button } from "../../components/Button";
 import { AiCommentThread } from "./AiCommentThread";
 import { AiFeed } from "./AiFeed";
 import { GoalCard } from "./GoalCard";
-import { useDeleteThought, useThoughtEmbeddings } from "./hooks";
+import { useDeleteThought, useRelatedThoughts } from "./hooks";
 import { useThreadStore } from "./threadStore";
 
 export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
-	const { data: relatedThoughts, isLoading, dataUpdatedAt } = useThoughtEmbeddings(thoughtId);
+	const { data: relatedThoughts, isLoading } = useRelatedThoughts(thoughtId);
 	const { mutateAsync: deleteThought } = useDeleteThought(thoughtId);
 
-	const { setSuggestedCollections } = useSuggestedCollectionsStore();
 	const { activeThreadCommentId, setActiveThreadCommentId } = useThreadStore();
 
 	const [isViewingArchive, setIsViewingArchive] = useState(false);
-
-	useEffect(() => {
-		if (relatedThoughts && relatedThoughts.length > 0) {
-			const allRelatedCollections = Object.values(
-				Object.fromEntries(
-					relatedThoughts.flatMap(thought => thought.collections.map(collection => [collection.id, collection])),
-				),
-			);
-
-			setSuggestedCollections(allRelatedCollections);
-		} else {
-			setSuggestedCollections([]);
-		}
-	}, [relatedThoughts, dataUpdatedAt]);
 
 	useUnmount(() => {
 		setActiveThreadCommentId(null);
@@ -80,7 +64,6 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 											<ZapIcon className="h-4 w-4 text-secondary" />
 											<h4 className="text-sm font-medium text-secondary">Note Actions</h4>
 										</div>
-
 										<Button
 											variant="ghost"
 											className="justify-start text-red-600 hover:bg-red-600"

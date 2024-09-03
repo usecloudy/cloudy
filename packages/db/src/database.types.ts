@@ -875,6 +875,8 @@ export type Database = {
           id: string
           matched_by: string
           matches: string
+          matches_thought_id: string | null
+          similarity: number
           thought_id: string
         }
         Insert: {
@@ -882,6 +884,8 @@ export type Database = {
           id?: string
           matched_by: string
           matches: string
+          matches_thought_id?: string | null
+          similarity?: number
           thought_id: string
         }
         Update: {
@@ -889,6 +893,8 @@ export type Database = {
           id?: string
           matched_by?: string
           matches?: string
+          matches_thought_id?: string | null
+          similarity?: number
           thought_id?: string
         }
         Relationships: [
@@ -904,6 +910,13 @@ export type Database = {
             columns: ["matches"]
             isOneToOne: false
             referencedRelation: "thought_embeddings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thought_embedding_matches_matches_thought_id_fkey"
+            columns: ["matches_thought_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
             referencedColumns: ["id"]
           },
           {
@@ -953,12 +966,14 @@ export type Database = {
       thoughts: {
         Row: {
           author_id: string
+          collection_suggestions: Json | null
           content: string | null
           content_md: string | null
           content_ts: string
           created_at: string
           embeddings_version: number
           id: string
+          ignored_collection_suggestions: Json | null
           is_suggestion_paused: boolean
           last_suggestion_content_md: string | null
           signals: Json | null
@@ -971,12 +986,14 @@ export type Database = {
         }
         Insert: {
           author_id?: string
+          collection_suggestions?: Json | null
           content?: string | null
           content_md?: string | null
           content_ts?: string
           created_at?: string
           embeddings_version?: number
           id?: string
+          ignored_collection_suggestions?: Json | null
           is_suggestion_paused?: boolean
           last_suggestion_content_md?: string | null
           signals?: Json | null
@@ -989,12 +1006,14 @@ export type Database = {
         }
         Update: {
           author_id?: string
+          collection_suggestions?: Json | null
           content?: string | null
           content_md?: string | null
           content_ts?: string
           created_at?: string
           embeddings_version?: number
           id?: string
+          ignored_collection_suggestions?: Json | null
           is_suggestion_paused?: boolean
           last_suggestion_content_md?: string | null
           signals?: Json | null
@@ -1193,12 +1212,9 @@ export type Database = {
           input_author_id: string
         }
         Returns: {
-          created_at: string
-          embedding: string
-          hash: string
           id: string
-          index: number
           thought_id: string
+          similarity: number
         }[]
       }
       match_thoughts:
@@ -1244,6 +1260,21 @@ export type Database = {
           "": unknown[]
         }
         Returns: number
+      }
+      update_thought_embedding_matches: {
+        Args: {
+          p_thought_id: string
+          p_match_pairs: Json
+        }
+        Returns: {
+          created_at: string
+          id: string
+          matched_by: string
+          matches: string
+          matches_thought_id: string | null
+          similarity: number
+          thought_id: string
+        }[]
       }
       vector_avg: {
         Args: {

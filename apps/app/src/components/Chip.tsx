@@ -65,9 +65,11 @@ export const Chip = React.forwardRef<HTMLDivElement, ChipProps>(
 
 Chip.displayName = "Chip";
 
-interface ChipDeleteProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
+interface ChipDeleteProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+	icon?: React.ReactNode;
+}
 
-const ChipDelete = React.forwardRef<HTMLButtonElement, ChipDeleteProps>(({ className, ...props }, ref) => {
+const ChipDelete = React.forwardRef<HTMLButtonElement, ChipDeleteProps>(({ className, icon, ...props }, ref) => {
 	return (
 		<button
 			ref={ref}
@@ -78,7 +80,7 @@ const ChipDelete = React.forwardRef<HTMLButtonElement, ChipDeleteProps>(({ class
 			)}
 			{...props}>
 			<span className="sr-only">Remove</span>
-			<MinusCircle className="h-3.5 w-3.5 stroke-2" />
+			{icon ?? <MinusCircle className="h-3.5 w-3.5 stroke-2" />}
 		</button>
 	);
 });
