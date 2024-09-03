@@ -409,7 +409,6 @@ const EditorView = ({
 			</div>
 			{editor && thoughtId && (
 				<EditorBubbleMenu
-					thoughtId={thoughtId}
 					editor={editor}
 					setIsHighlighting={handleSetIsHighlighting}
 					onUpdate={onUpdate}
