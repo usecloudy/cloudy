@@ -35,7 +35,7 @@ const startTrialIfEligible = async () => {
 		.get<PaymentsCustomersStatusGetResponse>("/api/payments/customers/status")
 		.then(res => res.data);
 	if (status.customerStatus && !status.customerStatus.isTrialing && status.customerStatus.isEligibleForTrial) {
-		await apiClient.post("/api/payments/customers/trials/start");
+		await apiClient.post("/api/payments/start-trial");
 	}
 };
 
