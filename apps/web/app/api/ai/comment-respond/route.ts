@@ -44,14 +44,7 @@ interface Comment {
 export const maxDuration = 60;
 
 export const POST = async (req: Request) => {
-	if (
-		process.env.NODE_ENV === "production" &&
-		(!req.headers.get("x-supabase-secret") || req.headers.get("x-supabase-secret") !== process.env.SUPABASE_SERVICE_SECRET)
-	) {
-		return NextResponse.error();
-	}
-
-	const supabase = getSupabase({ mode: "service" });
+	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "service" });
 
 	const payload = (await req.json()) as Payload;
 
