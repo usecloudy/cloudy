@@ -30,7 +30,8 @@ amplitude.init(process.env.NODE_ENV === "production" ? "6d14f14501c1f88da608c5b4
 });
 
 posthog.init(process.env.REACT_APP_POSTHOG_KEY!, {
-	api_host: "https://us.i.posthog.com",
+	api_host: process.env.REACT_APP_API_BASE_URL! + "/ingest",
+	ui_host: "https://us.posthog.com",
 	person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
 });
 
