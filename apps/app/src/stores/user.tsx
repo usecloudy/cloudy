@@ -1,7 +1,7 @@
 import * as amplitude from "@amplitude/analytics-browser";
-import { PaymentsCustomersStatusGetResponse, handleSupabaseError } from "@cloudy/utils/common";
+import { PaymentsCustomersStatusGetResponse } from "@cloudy/utils/common";
 import { Session, User } from "@supabase/supabase-js";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { useMount } from "react-use";
 import { create } from "zustand";
@@ -29,6 +29,15 @@ const waitForStripeCustomer = () =>
 			} catch (error) {}
 		}, 1000);
 	});
+
+const startTrialIfEligible = async () => {
+	const status = await apiClient
+		.get<PaymentsCustomersStatusGetResponse>("/api/payments/customers/status")
+		.then(res => res.data);
+	if (status.customerStatus && !status.customerStatus.isTrialing && status.customerStatus.isEligibleForTrial) {
+		await apiClient.post("/api/payments/customers/trials/start");
+	}
+};
 
 export const useUserStore = create<{
 	user: User | null;
@@ -64,6 +73,7 @@ export const useUserHandler = () => {
 			posthog.identify(session.user.id, { email: session.user.email });
 			await setupAuthHeader();
 			await waitForStripeCustomer();
+			await startTrialIfEligible();
 			setIsReady(true);
 		},
 	});
