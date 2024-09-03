@@ -21,22 +21,6 @@ const useProducts = () => {
 	});
 };
 
-const useStartTrial = () => {
-	return useMutation({
-		mutationFn: async (priceId: string) => {
-			const res = await apiClient.get<{ success: boolean }>(`/api/payments/start-trial`, {
-				params: {
-					priceId,
-				},
-			});
-			return res.data;
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["payments", "customers", "status"] });
-		},
-	});
-};
-
 const useCheckout = () => {
 	return useMutation({
 		mutationFn: async (priceId: string) => {

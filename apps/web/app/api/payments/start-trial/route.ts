@@ -7,7 +7,7 @@ import { getSupabase } from "app/api/utils/supabase";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-export const GET = async (req: NextRequest) => {
+export const POST = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
 	const { searchParams } = new URL(req.url);
