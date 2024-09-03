@@ -22,7 +22,7 @@
 	},
 	"dependencies": {
 		"@ai-sdk/anthropic": "^0.0.43",
-		"@ai-sdk/openai": "^0.0.49",
+		"@ai-sdk/openai": "^0.0.54",
 		"@cloudy/utils": "*",
 		"@next/bundle-analyzer": "^14.2.3",
 		"@opentelemetry/api-logs": "^0.52.1",
@@ -54,7 +54,7 @@
 		"@supabase/supabase-js": "^2.45.1",
 		"@t3-oss/env-nextjs": "^0.10.1",
 		"@vercel/otel": "^1.10.0",
-		"ai": "^3.3.11",
+		"ai": "^3.3.25",
 		"class-variance-authority": "^0.7.0",
 		"diff": "^6.0.0-beta",
 		"fastest-levenshtein": "^1.0.16",

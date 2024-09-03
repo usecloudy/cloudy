@@ -9,7 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { chunkAndHashMarkdown } from "app/api/utils/relatedChunks";
 import { getSupabase } from "app/api/utils/supabase";
 
-import { Payload, ThoughtRecord, generateMatchPairs } from "./utils";
+import { ideateThought } from "./ideate/route";
+import { Payload, ThoughtRecord, generateMatchPairs, markThoughtAsProcessing, markThoughtProcessingAsDone } from "./utils";
 
 const MINIMUM_CONTENT_LENGTH = 3;
 const MINIMUM_EDIT_DISTANCE = 64;
@@ -25,7 +26,11 @@ export const POST = async (req: NextRequest) => {
 		});
 	}
 
-	if (payload.type === "UPDATE" && payload.record.content === payload.old_record.content) {
+	if (
+		payload.type === "UPDATE" &&
+		payload.record.content === payload.old_record.content &&
+		payload.record.is_suggestion_paused === payload.old_record.is_suggestion_paused
+	) {
 		return new Response(JSON.stringify({ message: "No content changes" }), {
 			headers: { "Content-Type": "application/json" },
 		});
@@ -48,18 +53,24 @@ const processThought = async (thoughtRecord: ThoughtRecord, supabase: SupabaseCl
 		});
 	}
 
-	if (lastContentMd) {
-		const editDistance = distance(contentMd, lastContentMd);
+	// if (lastContentMd) {
+	// 	const editDistance = distance(contentMd, lastContentMd);
 
-		if (editDistance < MINIMUM_EDIT_DISTANCE) {
-			console.log("Content too similar");
-			return new Response(JSON.stringify({ message: "Content too similar" }), {
-				headers: { "Content-Type": "application/json" },
-			});
-		}
-	}
+	// 	if (editDistance < MINIMUM_EDIT_DISTANCE) {
+	// 		console.log("Content too similar");
+	// 		return new Response(JSON.stringify({ message: "Content too similar" }), {
+	// 			headers: { "Content-Type": "application/json" },
+	// 		});
+	// 	}
+	// }
 
-	await generateEmbeddings(thoughtRecord, supabase);
+	console.log(`Processing thought ${thoughtRecord.id}`);
+
+	await markThoughtAsProcessing(thoughtRecord.id, supabase);
+
+	await Promise.all([ideateThought(thoughtRecord, supabase), generateEmbeddings(thoughtRecord, supabase)]);
+
+	await markThoughtProcessingAsDone(thoughtRecord.id, supabase, contentMd);
 
 	return NextResponse.json({ message: "Success" });
 };
@@ -111,6 +122,9 @@ const generateEmbeddings = async (thoughtRecord: ThoughtRecord, supabase: Supaba
 		const { embeddings } = await embedMany({
 			model: openai.embedding("text-embedding-3-small"),
 			values: chunksToEmbed.map(chunk => chunk.chunk),
+			experimental_telemetry: {
+				isEnabled: true,
+			},
 		});
 
 		console.log(

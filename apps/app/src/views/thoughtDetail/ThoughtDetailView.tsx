@@ -77,7 +77,6 @@ const ThoughtDetailViewExisting = ({ thoughtId, isNewMode }: { thoughtId?: strin
 
 const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; thought?: Thought }) => {
 	const { mutateAsync: editThought } = useEditThought(thoughtId);
-	const { mutateAsync: triggerAiSuggestion } = useTriggerAiSuggestion(thoughtId);
 	const { mutateAsync: triggerAiTitleSuggestion } = useTriggerAiTitleSuggestion(thoughtId);
 
 	const { setIsLoading: setIsAiSuggestionLoading } = useAiSuggestionStore();
@@ -102,11 +101,6 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 			if (!title || title.length <= 2) {
 				triggerAiTitleSuggestion();
 			}
-
-			// Check if the state has changed from paused to unpaused
-			if (!isPaused) {
-				triggerAiSuggestion();
-			}
 		},
 		{
 			debounceDurationMs: 1500,
@@ -126,12 +120,6 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 			setIsAiSuggestionLoading(false);
 		}
 	}, [setIsAiSuggestionLoading, thought?.suggestion_status]);
-
-	useUpdateEffect(() => {
-		if (prevIsPaused && !isPaused) {
-			triggerAiSuggestion();
-		}
-	}, [isPaused]);
 
 	return (
 		<>
@@ -419,8 +407,9 @@ const EditorView = ({
 					<CollectionCarousel thoughtId={thoughtId} collections={collections} />
 				</div>
 			</div>
-			{editor && (
+			{editor && thoughtId && (
 				<EditorBubbleMenu
+					thoughtId={thoughtId}
 					editor={editor}
 					setIsHighlighting={handleSetIsHighlighting}
 					onUpdate={onUpdate}

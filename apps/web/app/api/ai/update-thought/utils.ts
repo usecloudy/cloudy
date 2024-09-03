@@ -124,3 +124,20 @@ export const generateMatchPairs = async (thoughtRecord: ThoughtRecord, supabase:
 	);
 	console.log(`Updated thought ${thoughtRecord.id} with suggested collections`);
 };
+
+export const markThoughtAsProcessing = async (thoughtId: string, supabase: SupabaseClient<Database>) => {
+	await supabase.from("thoughts").update({ suggestion_status: "processing" }).eq("id", thoughtId);
+};
+
+export const markThoughtProcessingAsDone = async (
+	thoughtId: string,
+	supabase: SupabaseClient<Database>,
+	thoughtContentMd?: string | null,
+) => {
+	handleSupabaseError(
+		await supabase
+			.from("thoughts")
+			.update({ suggestion_status: "idle", ...(thoughtContentMd && { last_suggestion_content_md: thoughtContentMd }) })
+			.eq("id", thoughtId),
+	);
+};
