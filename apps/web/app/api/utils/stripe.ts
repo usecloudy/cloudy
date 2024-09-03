@@ -36,3 +36,43 @@ export const getCustomerSubscriptionStatus = async (stripeCustomerId: string) =>
 		remainingDaysInTrial,
 	} satisfies CustomerStatus;
 };
+
+export const startTrialOnCustomer = async (customer: Stripe.Customer) => {
+	console.log("Starting trial on customer", customer.id);
+	const products = await stripe.products.list();
+
+	const activeProducts = products.data.flatMap(product => {
+		if (product.active && product.type === "service") {
+			return [product];
+		}
+		return [];
+	});
+
+	const firstProduct = activeProducts.at(0);
+
+	if (!firstProduct) {
+		throw new Error("No active products found");
+	}
+
+	if (!firstProduct.default_price) {
+		throw new Error("No default price found for product");
+	}
+
+	await stripe.subscriptions.create({
+		customer: customer.id,
+		items: [
+			{
+				price: firstProduct.default_price as string,
+				quantity: 1,
+			},
+		],
+		trial_period_days: 7,
+		trial_settings: {
+			end_behavior: {
+				missing_payment_method: "cancel",
+			},
+		},
+	});
+
+	console.log("Started trial on customer", customer.id);
+};

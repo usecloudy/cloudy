@@ -1,7 +1,7 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { NextRequest, NextResponse } from "next/server";
 
-import { getCustomerSubscriptionStatus, stripe } from "app/api/utils/stripe";
+import { getCustomerSubscriptionStatus, startTrialOnCustomer, stripe } from "app/api/utils/stripe";
 import { getSupabase } from "app/api/utils/supabase";
 
 export const dynamic = "force-dynamic";
@@ -9,13 +9,6 @@ export const fetchCache = "force-no-store";
 
 export const POST = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
-
-	const { searchParams } = new URL(req.url);
-	const priceId = searchParams.get("priceId");
-
-	if (!priceId) {
-		return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
-	}
 
 	const {
 		data: { user },
@@ -38,21 +31,13 @@ export const POST = async (req: NextRequest) => {
 		return NextResponse.json({ error: "User is not eligible for a trial" }, { status: 400 });
 	}
 
-	await stripe.subscriptions.create({
-		customer: postgresUser.stripe_customer_id,
-		items: [
-			{
-				price: priceId,
-				quantity: 1,
-			},
-		],
-		trial_period_days: 7,
-		trial_settings: {
-			end_behavior: {
-				missing_payment_method: "cancel",
-			},
-		},
-	});
+	const customer = await stripe.customers.retrieve(postgresUser.stripe_customer_id);
+
+	if (!customer || customer.deleted) {
+		return NextResponse.json({ error: "Failed to retrieve customer" }, { status: 500 });
+	}
+
+	await startTrialOnCustomer(customer);
 
 	return NextResponse.json({ success: true });
 };
