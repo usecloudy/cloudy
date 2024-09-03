@@ -106,22 +106,24 @@ export const Navbar: FC = () => {
 			</div>
 
 			<div className="flex flex-row items-center gap-2">
-				{customerStatus?.isTrialing && (
-					<Dropdown
-						trigger={
-							<div className="bg-accent/10 px-2 py-1 rounded flex flex-row items-center gap-1 text-secondary cursor-pointer hover:bg-accent/20">
-								<TimerIcon className="h-3.5 w-3.5" />
-								<span className="text-xs ">
-									{`${pluralize(customerStatus.remainingDaysInTrial ?? 0, "day")} remaining in trial`}
-								</span>
-							</div>
-						}>
-						<DropdownItem className="text-accent" onSelect={handleOpenSubscriptionModal}>
-							<CircleFadingArrowUpIcon className="h-4 w-4" />
-							<span>Subscribe</span>
-						</DropdownItem>
-					</Dropdown>
-				)}
+				<div className="hidden md:block">
+					{customerStatus?.isTrialing && (
+						<Dropdown
+							trigger={
+								<div className="bg-accent/10 px-2 py-1 rounded flex flex-row items-center gap-1 text-secondary cursor-pointer hover:bg-accent/20">
+									<TimerIcon className="h-3.5 w-3.5" />
+									<span className="text-xs">
+										{`${pluralize(customerStatus.remainingDaysInTrial ?? 0, "day")} remaining in trial`}
+									</span>
+								</div>
+							}>
+							<DropdownItem className="text-accent" onSelect={handleOpenSubscriptionModal}>
+								<CircleFadingArrowUpIcon className="h-4 w-4" />
+								<span>Subscribe</span>
+							</DropdownItem>
+						</Dropdown>
+					)}
+				</div>
 				<Dropdown
 					trigger={
 						<Button variant="ghost" size="icon" aria-label="New thought">
