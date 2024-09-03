@@ -53,16 +53,16 @@ const processThought = async (thoughtRecord: ThoughtRecord, supabase: SupabaseCl
 		});
 	}
 
-	// if (lastContentMd) {
-	// 	const editDistance = distance(contentMd, lastContentMd);
+	if (lastContentMd) {
+		const editDistance = distance(contentMd, lastContentMd);
 
-	// 	if (editDistance < MINIMUM_EDIT_DISTANCE) {
-	// 		console.log("Content too similar");
-	// 		return new Response(JSON.stringify({ message: "Content too similar" }), {
-	// 			headers: { "Content-Type": "application/json" },
-	// 		});
-	// 	}
-	// }
+		if (editDistance < MINIMUM_EDIT_DISTANCE) {
+			console.log("Content too similar");
+			return new Response(JSON.stringify({ message: "Content too similar" }), {
+				headers: { "Content-Type": "application/json" },
+			});
+		}
+	}
 
 	console.log(`Processing thought ${thoughtRecord.id}`);
 
