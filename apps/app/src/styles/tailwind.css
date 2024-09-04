@@ -50,6 +50,8 @@
 
 .ProseMirror {
 	padding-inline: 2rem 0;
+
+	padding-bottom: 8rem;
 	
 	> * + * {
 		margin: 0.33rem 0;

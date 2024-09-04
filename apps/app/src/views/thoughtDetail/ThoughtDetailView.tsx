@@ -228,6 +228,7 @@ const EditorView = ({
 			Typography,
 			ListKeymap,
 		],
+
 		content: remoteContent ?? "",
 		onUpdate: async () => {
 			onUpdate(true);
@@ -420,12 +421,12 @@ const EditorView = ({
 						setIsAiWriting={setIsAiWriting}
 					/>
 				)}
-				<DragHandle editor={editor!} tippyOptions={{ offset: [-3, 4] }}>
+				<DragHandle editor={editor!} tippyOptions={{ offset: [-4, 4] }}>
 					<div className="hidden md:flex flex-row items-center hover:bg-card border border-transparent hover:border-border rounded py-1 px-0.5 active:bg-accent/20 cursor-grab active:cursor-grabbing">
 						<GripVertical className="h-5 w-5 text-tertiary" />
 					</div>
 				</DragHandle>
-				<EditorContent editor={editor} className={cn("w-full pb-8", isAiWriting && "pointer-events-none opacity-70")} />
+				<EditorContent editor={editor} className={cn("w-full", isAiWriting && "pointer-events-none opacity-70")} />
 				<CommentColumn editor={editor} thoughtId={thoughtId} isHighlightingRef={isHighlightingRef} />
 			</div>
 		</div>
