@@ -289,10 +289,7 @@ const EditorView = ({
 				if (editor) {
 					const lines = part.value.split("\n").filter(line => line.trim().length > 0);
 					lines.forEach(line => {
-						const results = processSearches(
-							editor.state.doc,
-							new RegExp(line.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
-						);
+						const results = processSearches(editor.state.doc, line);
 
 						const firstResult = results?.at(0);
 
@@ -334,10 +331,7 @@ const EditorView = ({
 				editor.commands.unsetMark("commentHighlight");
 
 				highlights.forEach(highlight => {
-					const results = processSearches(
-						editor.state.doc,
-						new RegExp(highlight.text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
-					);
+					const results = processSearches(editor.state.doc, highlight.text);
 
 					const firstResult = results?.at(0);
 

@@ -110,8 +110,8 @@ const useEditSelection = (editor: Editor) => {
 
 			editor.commands.setContent(newEditingContent);
 
-			const openingTokens = processSearches(editor.view.state.doc, /\[\[\[/g);
-			const closingTokens = processSearches(editor.view.state.doc, /\]\]\]/g);
+			const openingTokens = processSearches(editor.view.state.doc, "[[[", 0.99);
+			const closingTokens = processSearches(editor.view.state.doc, "]]]", 0.99);
 
 			editor
 				.chain()

@@ -27,7 +27,7 @@ type RangeWithPos = Range & {
 	pos: number;
 };
 
-export function processSearches(doc: PMNode, searchTerm: RegExp) {
+export const processSearches = (doc: PMNode, searchTerm: string, threshold: number = 0.9) => {
 	const results: RangeWithPos[] = [];
 
 	let textNodesWithPosition: TextNodesWithPosition[] = [];
@@ -57,22 +57,58 @@ export function processSearches(doc: PMNode, searchTerm: RegExp) {
 
 	textNodesWithPosition = textNodesWithPosition.filter(Boolean);
 
+	const fuzzyMatch = (text: string, pattern: string) => {
+		if (pattern.length <= 6) {
+			// For very short search terms, use exact matching
+			return text.toLowerCase().includes(pattern.toLowerCase());
+		}
+
+		const words = pattern.toLowerCase().split(/\s+/);
+		const textLower = text.toLowerCase();
+		let matchCount = 0;
+		let lastIndex = -1;
+
+		for (const word of words) {
+			const index = textLower.indexOf(word, lastIndex + 1);
+			if (index > -1) {
+				matchCount++;
+				lastIndex = index;
+			}
+		}
+
+		const matchRatio = matchCount / words.length;
+		return matchRatio >= threshold;
+	};
+
 	for (const element of textNodesWithPosition) {
 		const { text, pos } = element;
-		const matches = Array.from(text.matchAll(searchTerm)).filter(([matchText]) => matchText.trim());
+		const chunkSize = Math.max(searchTerm.length, 100); // Adjust chunk size based on search term length
 
-		for (const m of matches) {
-			if (m[0] === "") break;
-
-			if (m.index !== undefined) {
+		if (searchTerm.length <= 6) {
+			// For very short search terms, search the entire text without chunking
+			const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			const matches = Array.from(text.matchAll(new RegExp(escapedSearchTerm, "gi")));
+			for (const match of matches) {
 				results.push({
 					pos,
-					from: pos + m.index,
-					to: pos + m.index + m[0].length,
+					from: pos + match.index!,
+					to: pos + match.index! + searchTerm.length,
 				});
+			}
+		} else {
+			// For longer search terms, use the chunking approach
+			for (let i = 0; i < text.length; i += chunkSize / 2) {
+				const chunk = text.slice(i, i + chunkSize);
+				if (fuzzyMatch(chunk, searchTerm)) {
+					results.push({
+						pos,
+						from: pos + i,
+						to: pos + i + chunk.length,
+					});
+				}
 			}
 		}
 	}
 
 	return results;
-}
+};

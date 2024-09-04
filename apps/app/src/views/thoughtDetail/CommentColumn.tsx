@@ -34,7 +34,6 @@ const CommentColumnInner = ({
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		console.log("isHighlightingRef.current", isHighlightingRef.current);
 		if (isHighlightingRef.current) return;
 
 		let groupedComments: Record<string, { comments: Comment[]; offset: number }> = {};
@@ -44,10 +43,7 @@ const CommentColumnInner = ({
 			const commentTarget = comment.related_chunks?.at(0) ?? null;
 			if (!commentTarget) return 0;
 
-			const ranges = processSearches(
-				editor.state.doc,
-				new RegExp(commentTarget.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
-			);
+			const ranges = processSearches(editor.state.doc, commentTarget);
 			const range0 = ranges[0];
 
 			if (!range0) return 0;
