@@ -16,6 +16,8 @@ import { Payload, ThoughtRecord, generateMatchPairs } from "./utils";
 const MINIMUM_CONTENT_LENGTH = 3;
 const MINIMUM_EDIT_DISTANCE = 64;
 
+export const maxDuration = 90;
+
 export const POST = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "service" });
 
