@@ -1,13 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-	ArrowLeftIcon,
-	CheckCircle2Icon,
-	ChevronsLeftIcon,
-	RefreshCwIcon,
-	SendHorizonalIcon,
-	SparklesIcon,
-	UserIcon,
-} from "lucide-react";
+import { CheckCircle2Icon, ChevronsLeftIcon, RefreshCwIcon, SendHorizonalIcon, SparklesIcon, UserIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 
@@ -19,7 +11,7 @@ import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
 
 import { usePreviewContentStore } from "./previewContentStore";
-import { useThreadStore } from "./threadStore";
+import { useThoughtStore } from "./thoughtStore";
 
 const useAiCommentThread = (commentId: string) => {
 	useEffect(() => {
@@ -157,8 +149,17 @@ const useMarkAsApplied = (commentId: string) => {
 	});
 };
 
-export const AiCommentThread = ({ commentId }: { commentId: string }) => {
-	const { setActiveThreadCommentId } = useThreadStore();
+export const AiCommentThread = () => {
+	const { activeThreadCommentId } = useThoughtStore();
+
+	if (!activeThreadCommentId) {
+		return null;
+	}
+
+	return <AiCommentThreadInner commentId={activeThreadCommentId} />;
+};
+
+const AiCommentThreadInner = ({ commentId }: { commentId: string }) => {
 	const { setPreviewContent, apply } = usePreviewContentStore();
 
 	const { data: comment, isLoading } = useAiCommentThread(commentId);
@@ -187,18 +188,8 @@ export const AiCommentThread = ({ commentId }: { commentId: string }) => {
 		setTextInput("");
 	};
 
-	const handleBack = () => {
-		setActiveThreadCommentId(null);
-	};
-
 	return (
-		<div className="flex flex-col gap-4 w-full bg-card rounded-md p-4">
-			<div className="flex items-center gap-1">
-				<Button size="icon-sm" variant="ghost" onClick={handleBack} className="text-secondary">
-					<ArrowLeftIcon className="w-5 h-5" />
-				</Button>
-				<h4 className="text-sm font-medium text-secondary">Thread</h4>
-			</div>
+		<div className="flex flex-col gap-4">
 			<div ref={threadRef} className="flex flex-col gap-2 overflow-y-auto max-h-[60vh] no-scrollbar">
 				{comment ? (
 					<>

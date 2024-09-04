@@ -277,3 +277,59 @@ export const useDeleteThought = (thoughtId?: string) => {
 		},
 	});
 };
+
+export const useComments = (thoughtId: string) => {
+	useEffect(() => {
+		const channel = supabase
+			.channel("ideaSuggestions")
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "thought_chats",
+					filter: `thought_id=eq.${thoughtId}`,
+				},
+				() => {
+					queryClient.invalidateQueries({
+						queryKey: ["ideaSuggestions", thoughtId],
+					});
+				},
+			)
+			.subscribe();
+
+		return () => {
+			channel.unsubscribe();
+		};
+	}, [thoughtId]);
+
+	const useQueryResult = useQuery({
+		queryKey: ["ideaSuggestions", thoughtId],
+		queryFn: async () => {
+			if (thoughtId === "new") return [];
+
+			const { data, error } = await supabase
+				.from("thought_chats")
+				.select("*, thought_chat_threads(count)")
+				.eq("thought_id", thoughtId);
+
+			if (error) throw error;
+
+			const suggestions = data.map(item => ({
+				...item,
+				threadCount: item.thought_chat_threads[0].count,
+			}));
+
+			return suggestions.sort((a, b) => {
+				if (a.is_archived !== b.is_archived) return a.is_archived ? 1 : -1;
+				if (a.is_pinned !== b.is_pinned) return b.is_pinned ? 1 : -1;
+				if (a.type === "title_suggestion" && b.type !== "title_suggestion") return -1;
+				if (a.type !== "title_suggestion" && b.type === "title_suggestion") return 1;
+				return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+			});
+		},
+		initialData: [],
+	});
+
+	return useQueryResult;
+};

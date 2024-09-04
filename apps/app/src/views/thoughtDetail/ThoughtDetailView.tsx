@@ -24,6 +24,7 @@ import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
 import { CollectionCarousel } from "./CollectionCarousel";
+import { CommentColumn } from "./CommentColumn";
 import { ControlColumn } from "./ControlColumn";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { useEditThought, useThought, useTriggerAiTitleSuggestion } from "./hooks";
@@ -124,7 +125,7 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 			<Helmet>
 				<title>{headTitle}</title>
 			</Helmet>
-			<div className="flex w-full flex-col lg:flex-row gap-4 lg:h-full xl:max-w-screen-2xl">
+			<div className="flex w-full flex-col lg:flex-row lg:h-full xl:max-w-screen-2xl">
 				<EditorView
 					thoughtId={thoughtId}
 					collections={thought?.collections ?? []}
@@ -320,9 +321,9 @@ const EditorView = ({
 
 	// Update this effect to use the new CommentHighlight mark
 	useEffect(() => {
-		if (editor && !isHighlightingRef.current) {
-			isHighlightingRef.current = true;
+		if (editor) {
 			if (highlights.length > 0) {
+				isHighlightingRef.current = true;
 				const existingSelection = editor.state.selection;
 
 				// Clear all existing comment highlights first
@@ -363,9 +364,9 @@ const EditorView = ({
 					from: existingSelection.from,
 					to: existingSelection.to,
 				});
-			}
 
-			isHighlightingRef.current = false;
+				isHighlightingRef.current = false;
+			}
 		}
 	}, [editor, highlights]);
 
@@ -387,7 +388,7 @@ const EditorView = ({
 	};
 
 	return (
-		<div className="flex flex-col flex-1 pr-8 pt-8 lg:py-8 box-border lg:overflow-y-scroll no-scrollbar">
+		<div className="flex flex-col flex-1 pt-8 lg:py-8 box-border lg:overflow-y-scroll no-scrollbar">
 			<div className="flex flex-col gap-2 pb-4">
 				<div className="flex w-full flex-row items-start justify-between gap-2">
 					<TextareaAutosize
@@ -405,18 +406,18 @@ const EditorView = ({
 					<CollectionCarousel thoughtId={thoughtId} collections={collections} />
 				</div>
 			</div>
-			{editor && thoughtId && (
-				<EditorBubbleMenu
-					editor={editor}
-					setIsHighlighting={handleSetIsHighlighting}
-					onUpdate={onUpdate}
-					setIsAiWriting={setIsAiWriting}
-				/>
-			)}
-			<EditorContent
-				editor={editor}
-				className={cn("w-full pb-8 pr-4", isAiWriting && "pointer-events-none opacity-70")}
-			/>
+			<div className="flex flex-row">
+				{editor && thoughtId && (
+					<EditorBubbleMenu
+						editor={editor}
+						setIsHighlighting={handleSetIsHighlighting}
+						onUpdate={onUpdate}
+						setIsAiWriting={setIsAiWriting}
+					/>
+				)}
+				<EditorContent editor={editor} className={cn("w-full pb-8", isAiWriting && "pointer-events-none opacity-70")} />
+				<CommentColumn editor={editor} thoughtId={thoughtId} isHighlightingRef={isHighlightingRef} />
+			</div>
 		</div>
 	);
 };

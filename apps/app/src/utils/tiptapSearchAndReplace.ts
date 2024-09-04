@@ -23,8 +23,12 @@ interface TextNodesWithPosition {
 	pos: number;
 }
 
+type RangeWithPos = Range & {
+	pos: number;
+};
+
 export function processSearches(doc: PMNode, searchTerm: RegExp) {
-	const results: Range[] = [];
+	const results: RangeWithPos[] = [];
 
 	let textNodesWithPosition: TextNodesWithPosition[] = [];
 	let index = 0;
@@ -62,6 +66,7 @@ export function processSearches(doc: PMNode, searchTerm: RegExp) {
 
 			if (m.index !== undefined) {
 				results.push({
+					pos,
 					from: pos + m.index,
 					to: pos + m.index + m[0].length,
 				});

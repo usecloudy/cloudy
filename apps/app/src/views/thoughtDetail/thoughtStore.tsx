@@ -1,6 +1,13 @@
 import { Selection } from "@tiptap/pm/state";
 import { create } from "zustand";
 
+export type CommentFilter = {
+	selectedGroupId: string;
+	commentIds: string[];
+};
+
+export type FeedMode = "default" | "archive" | "selectedComments" | "thread";
+
 interface ThoughtStore {
 	currentContent: string | null;
 	setCurrentContent: (content: string | null) => void;
@@ -12,6 +19,12 @@ interface ThoughtStore {
 	setLastLocalThoughtContentTs: (ts: Date | null) => void;
 	isAiSuggestionLoading: boolean;
 	setIsAiSuggestionLoading: (isLoading: boolean) => void;
+	commentFilter: CommentFilter | null;
+	setCommentFilter: (filter: CommentFilter | null) => void;
+	feedMode: FeedMode;
+	setFeedMode: (mode: FeedMode) => void;
+	activeThreadCommentId: string | null;
+	setActiveThreadCommentId: (id: string | null) => void;
 }
 
 export const useThoughtStore = create<ThoughtStore>(set => ({
@@ -25,4 +38,12 @@ export const useThoughtStore = create<ThoughtStore>(set => ({
 	setLastLocalThoughtContentTs: ts => set({ lastLocalThoughtContentTs: ts }),
 	isAiSuggestionLoading: false,
 	setIsAiSuggestionLoading: isLoading => set({ isAiSuggestionLoading: isLoading }),
+	commentFilter: null,
+	setCommentFilter: filter =>
+		set({ commentFilter: filter, feedMode: filter ? "selectedComments" : "default", activeThreadCommentId: null }),
+	feedMode: "default",
+	setFeedMode: mode => set({ feedMode: mode }),
+	activeThreadCommentId: null,
+	setActiveThreadCommentId: id =>
+		set({ activeThreadCommentId: id, feedMode: id ? "thread" : "default", commentFilter: null }),
 }));

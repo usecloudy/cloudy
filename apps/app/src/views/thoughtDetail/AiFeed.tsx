@@ -1,6 +1,6 @@
 import { ThoughtSignals } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import {
 	ArchiveIcon,
 	ArchiveRestoreIcon,
@@ -34,8 +34,9 @@ import { useHighlightStore } from "src/stores/highlight";
 import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
 
-import { useThought } from "./hooks";
-import { useThreadStore } from "./threadStore";
+import { AiCommentThread } from "./AiCommentThread";
+import { useComments, useThought } from "./hooks";
+import { CommentFilter, useThoughtStore } from "./thoughtStore";
 import { useTitleStore } from "./titleStore";
 
 // Types
@@ -53,61 +54,6 @@ const useScrollStateStore = create<{
 }));
 
 // Hooks
-const useIdeaSuggestions = (thoughtId: string) => {
-	useEffect(() => {
-		const channel = supabase
-			.channel("ideaSuggestions")
-			.on(
-				"postgres_changes",
-				{
-					event: "*",
-					schema: "public",
-					table: "thought_chats",
-					filter: `thought_id=eq.${thoughtId}`,
-				},
-				() => {
-					queryClient.invalidateQueries({
-						queryKey: ["ideaSuggestions", thoughtId],
-					});
-				},
-			)
-			.subscribe();
-
-		return () => {
-			channel.unsubscribe();
-		};
-	}, [thoughtId]);
-
-	const useQueryResult = useQuery({
-		queryKey: ["ideaSuggestions", thoughtId],
-		queryFn: async () => {
-			if (thoughtId === "new") return [];
-
-			const { data, error } = await supabase
-				.from("thought_chats")
-				.select("*, thought_chat_threads(count)")
-				.eq("thought_id", thoughtId);
-
-			if (error) throw error;
-
-			const suggestions = data.map(item => ({
-				...item,
-				threadCount: item.thought_chat_threads[0].count,
-			}));
-
-			return suggestions.sort((a, b) => {
-				if (a.is_archived !== b.is_archived) return a.is_archived ? 1 : -1;
-				if (a.is_pinned !== b.is_pinned) return b.is_pinned ? 1 : -1;
-				if (a.type === "title_suggestion" && b.type !== "title_suggestion") return -1;
-				if (a.type !== "title_suggestion" && b.type === "title_suggestion") return 1;
-				return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-			});
-		},
-		initialData: [],
-	});
-
-	return useQueryResult;
-};
 
 const useDeleteComment = (thoughtId: string) => {
 	return useMutation({
@@ -205,19 +151,28 @@ const useMarkAllAsRead = (thoughtId: string) => {
 	});
 };
 
-const useArchiveAllExceptPinned = (thoughtId: string) => {
+const useArchive = (thoughtId: string, commentFilter: CommentFilter | null) => {
 	return useMutation({
 		mutationFn: async () => {
-			const { error } = await supabase
+			let query = supabase
 				.from("thought_chats")
 				.update({ is_archived: true })
 				.not("is_pinned", "eq", true)
 				.eq("thought_id", thoughtId);
+			if (commentFilter) {
+				query = query.in("id", commentFilter.commentIds);
+			}
+			const { error } = await query;
 			if (error) throw error;
 		},
 		onMutate: () => {
 			queryClient.setQueryData(["ideaSuggestions", thoughtId], (data: Suggestion[] | undefined) =>
-				data?.filter(suggestion => suggestion.is_pinned),
+				data?.filter(suggestion => {
+					if (commentFilter) {
+						return !commentFilter.commentIds.includes(suggestion.id);
+					}
+					return suggestion.is_pinned;
+				}),
 			);
 		},
 	});
@@ -316,57 +271,55 @@ const titleForType = (type: string) => {
 	return titleMap[type] || "Suggestion";
 };
 
-export const AiFeed = ({
-	thoughtId,
-	isViewingArchive,
-	setIsViewingArchive,
-}: {
-	thoughtId?: string;
-	isViewingArchive: boolean;
-	setIsViewingArchive: (isViewingArchive: boolean) => void;
-}) => {
+export const AiFeed = ({ thoughtId }: { thoughtId?: string }) => {
 	if (!thoughtId) return <EmptyState />;
 
-	return <AiFeedInner thoughtId={thoughtId} isViewingArchive={isViewingArchive} setIsViewingArchive={setIsViewingArchive} />;
+	return <AiFeedInner thoughtId={thoughtId} />;
 };
 
 // Main component
-export const AiFeedInner = ({
-	thoughtId,
-	isViewingArchive,
-	setIsViewingArchive,
-}: {
-	thoughtId: string;
-	isViewingArchive: boolean;
-	setIsViewingArchive: (isViewingArchive: boolean) => void;
-}) => {
+export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 	const isAiSuggestionLoading = useIsAiSuggestionLoading(thoughtId);
-	const { data: ideaSuggestions } = useIdeaSuggestions(thoughtId);
+	const { data: ideaSuggestions } = useComments(thoughtId);
 	const isSuggestionPaused = useThoughtSuggestionIsPaused(thoughtId);
+	const { feedMode, setFeedMode, commentFilter, setCommentFilter, setActiveThreadCommentId } = useThoughtStore();
 
 	const { mutate: markAllAsRead } = useMarkAllAsRead(thoughtId);
-	const { mutate: archiveAllExceptPinned } = useArchiveAllExceptPinned(thoughtId);
+	const { mutate: archive } = useArchive(thoughtId, commentFilter);
 	const { mutate: setSuggestionPaused } = useSetSuggestionPaused(thoughtId);
 	const { mutate: deleteAllArchived } = useDeleteAllArchived(thoughtId);
 
 	const isUnseenCount = ideaSuggestions.filter(suggestion => !suggestion.is_seen && !suggestion.is_archived).length ?? 0;
 
 	const suggestions = useMemo(() => {
-		return isViewingArchive
+		return feedMode === "archive"
 			? ideaSuggestions.filter(suggestion => suggestion.is_archived)
-			: ideaSuggestions.filter(suggestion => !suggestion.is_archived);
-	}, [isViewingArchive, ideaSuggestions]);
+			: ideaSuggestions.filter(
+					suggestion =>
+						!suggestion.is_archived && (!commentFilter || commentFilter.commentIds.includes(suggestion.id)),
+				);
+	}, [feedMode, ideaSuggestions, commentFilter]);
+
+	useEffect(() => {
+		if (feedMode === "selectedComments" && suggestions.length === 0) {
+			setCommentFilter(null);
+		}
+	}, [feedMode, suggestions, setCommentFilter]);
 
 	return (
-		<div className="flex flex-col gap-4 rounded-md border border-border bg-card p-4 w-full md:w-2/3 lg:w-full">
-			{isViewingArchive ? (
+		<div
+			className={cn(
+				"flex flex-col gap-4 rounded-md border border-border bg-card p-4 w-full md:w-2/3 lg:w-full",
+				feedMode === "selectedComments" && "ring-2 ring-accent/40 ring-offset-2 ring-offset-background",
+			)}>
+			{feedMode === "archive" ? (
 				<div className="flex flex-row items-center justify-between gap-1">
 					<div className="flex flex-row items-center gap-1">
 						<Button
 							size="icon-xs"
 							variant="ghost"
 							className="text-secondary"
-							onClick={() => setIsViewingArchive(false)}>
+							onClick={() => setFeedMode("default")}>
 							<ArrowLeftIcon className="h-4 w-4" />
 						</Button>
 						<h4 className="text-sm font-medium text-secondary">Archived Suggestions</h4>
@@ -387,6 +340,51 @@ export const AiFeedInner = ({
 								<span>Delete all archived</span>
 							</DropdownItem>
 						</Dropdown>
+					</div>
+				</div>
+			) : feedMode === "selectedComments" ? (
+				<div className="flex flex-row items-center justify-between gap-1">
+					<div className="flex flex-row items-center gap-2">
+						<div className="flex flex-row items-center gap-1">
+							<Button
+								size="icon-xs"
+								variant="ghost"
+								className="text-secondary"
+								onClick={() => setCommentFilter(null)}>
+								<ArrowLeftIcon className="h-4 w-4" />
+							</Button>
+							<h4 className="text-sm font-medium text-secondary">Comments</h4>
+						</div>
+					</div>
+					<div className="flex flex-row items-center gap-2">
+						<div className="flex flex-row items-center gap-1 relative">
+							<Dropdown
+								trigger={
+									<Button size="icon-xs" variant="ghost" className="text-secondary">
+										<MoreHorizontalIcon className="h-4 w-4" />
+									</Button>
+								}>
+								<DropdownItem onSelect={() => archive()}>
+									<TrashIcon className="h-4 w-4" />
+									<span>Archive selected</span>
+								</DropdownItem>
+							</Dropdown>
+						</div>
+					</div>
+				</div>
+			) : feedMode === "thread" ? (
+				<div className="flex flex-row items-center justify-between gap-1">
+					<div className="flex flex-row items-center gap-2">
+						<div className="flex flex-row items-center gap-1">
+							<Button
+								size="icon-xs"
+								variant="ghost"
+								className="text-secondary"
+								onClick={() => setActiveThreadCommentId(null)}>
+								<ArrowLeftIcon className="h-4 w-4" />
+							</Button>
+							<h4 className="text-sm font-medium text-secondary">Thread</h4>
+						</div>
 					</div>
 				</div>
 			) : (
@@ -415,7 +413,7 @@ export const AiFeedInner = ({
 							size="icon-xs"
 							variant="ghost"
 							className="text-secondary"
-							onClick={() => setIsViewingArchive(true)}>
+							onClick={() => setFeedMode("archive")}>
 							<ArchiveIcon className="h-4 w-4" />
 						</Button>
 						<div className="flex flex-row items-center gap-1 relative">
@@ -442,7 +440,7 @@ export const AiFeedInner = ({
 									<EyeIcon className="h-4 w-4" />
 									<span>Mark all as read</span>
 								</DropdownItem>
-								<DropdownItem onSelect={() => archiveAllExceptPinned()}>
+								<DropdownItem onSelect={() => archive()}>
 									<TrashIcon className="h-4 w-4" />
 									<span>Archive all (Except pinned)</span>
 								</DropdownItem>
@@ -451,7 +449,11 @@ export const AiFeedInner = ({
 					</div>
 				</div>
 			)}
-			<IdeaSuggestionList thoughtId={thoughtId} suggestions={suggestions} />
+			{feedMode === "thread" ? (
+				<AiCommentThread />
+			) : (
+				<IdeaSuggestionList thoughtId={thoughtId} suggestions={suggestions} />
+			)}
 		</div>
 	);
 };
@@ -508,7 +510,7 @@ const IdeaSuggestion = ({
 }) => {
 	const { setHighlights } = useHighlightStore();
 	const { setTitle } = useTitleStore();
-	const { setActiveThreadCommentId } = useThreadStore();
+	const { setActiveThreadCommentId } = useThoughtStore();
 
 	const { mutate: deleteComment } = useDeleteComment(thoughtId);
 	const { mutate: pinComment } = usePinComment(thoughtId);
@@ -524,7 +526,7 @@ const IdeaSuggestion = ({
 		}
 	};
 
-	const handleMouseLeave = () => setHighlights([]);
+	const clearHighlights = () => setHighlights([]);
 
 	const handleApplyTitle = () => {
 		setTitle(suggestion.content!, true);
@@ -532,10 +534,12 @@ const IdeaSuggestion = ({
 	};
 
 	const handleReply = () => {
+		clearHighlights();
 		setActiveThreadCommentId(suggestion.id);
 	};
 
 	const handlePin = () => {
+		clearHighlights();
 		pinComment({
 			commentId: suggestion.id,
 			isPinned: !suggestion.is_pinned,
@@ -543,14 +547,17 @@ const IdeaSuggestion = ({
 	};
 
 	const handleArchive = () => {
+		clearHighlights();
 		archiveComment(suggestion.id);
 	};
 
 	const handleUnarchive = () => {
+		clearHighlights();
 		unarchiveComment(suggestion.id);
 	};
 
 	const handleDelete = () => {
+		clearHighlights();
 		deleteComment(suggestion.id);
 	};
 
@@ -564,7 +571,7 @@ const IdeaSuggestion = ({
 			key={suggestion.id}
 			className={`flex flex-col gap-2 rounded bg-background p-3 text-sm outline-offset-2 animate-in fade-in slide-in-from-bottom-4 fill-mode-forwards hover:outline hover:outline-accent/40 ${index > 0 ? "delay-" + index * 100 : ""}`}
 			onMouseEnter={() => handleMouseEnter(suggestion)}
-			onMouseLeave={handleMouseLeave}>
+			onMouseLeave={clearHighlights}>
 			<div className="flex w-full flex-row items-center justify-between gap-2 text-xs text-secondary">
 				<div className="flex flex-row items-center gap-1 font-medium">
 					<IconForType type={suggestion.type} />
