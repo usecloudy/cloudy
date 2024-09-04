@@ -48,6 +48,7 @@
 		"@tiptap/extension-bubble-menu": "^2.6.6",
 		"@tiptap/extension-highlight": "^2.5.9",
 		"@tiptap/extension-list-item": "^2.5.9",
+		"@tiptap/extension-list-keymap": "^2.6.6",
 		"@tiptap/extension-ordered-list": "^2.5.9",
 		"@tiptap/extension-placeholder": "^2.5.9",
 		"@tiptap/extension-task-item": "^2.6.2",

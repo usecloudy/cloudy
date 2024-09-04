@@ -1,6 +1,7 @@
 import { ThoughtSignals } from "@cloudy/utils/common";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
 import { Mark, mergeAttributes } from "@tiptap/core";
+import ListKeymap from "@tiptap/extension-list-keymap";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
@@ -225,6 +226,7 @@ const EditorView = ({
 				},
 			}),
 			Typography,
+			ListKeymap,
 		],
 		content: remoteContent ?? "",
 		onUpdate: async () => {
