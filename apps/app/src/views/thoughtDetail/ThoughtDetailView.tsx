@@ -11,6 +11,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { diffLines } from "diff";
 import { GripVertical } from "lucide-react";
+import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useNavigate, useParams } from "react-router-dom";
@@ -56,11 +57,13 @@ export const ThoughtDetailView = () => {
 			}
 			// Set the mode to "new" for creating a new thought
 			setIsNewMode(true);
+			posthog.capture("new_thought");
 		} else {
 			// We're viewing an existing thought
 			setIsNewMode(false);
 			// Generate a new key to force a re-render when switching between existing thoughts
 			setKey(Date.now());
+			posthog.capture("view_thought");
 		}
 	}, [thoughtId]); // This effect runs whenever thoughtId changes
 
