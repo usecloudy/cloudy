@@ -10,6 +10,8 @@ interface ThoughtStore {
 	setLastLocalThoughtTitleTs: (ts: Date | null) => void;
 	lastLocalThoughtContentTs: Date | null;
 	setLastLocalThoughtContentTs: (ts: Date | null) => void;
+	isAiSuggestionLoading: boolean;
+	setIsAiSuggestionLoading: (isLoading: boolean) => void;
 }
 
 export const useThoughtStore = create<ThoughtStore>(set => ({
@@ -21,4 +23,6 @@ export const useThoughtStore = create<ThoughtStore>(set => ({
 	setLastLocalThoughtTitleTs: ts => set({ lastLocalThoughtTitleTs: ts }),
 	lastLocalThoughtContentTs: null,
 	setLastLocalThoughtContentTs: ts => set({ lastLocalThoughtContentTs: ts }),
+	isAiSuggestionLoading: false,
+	setIsAiSuggestionLoading: isLoading => set({ isAiSuggestionLoading: isLoading }),
 }));

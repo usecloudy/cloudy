@@ -1,3 +1,4 @@
+import { ThoughtSignals } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -29,7 +30,6 @@ import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Dropdown, DropdownItem } from "src/components/Dropdown";
 import LoadingSpinner from "src/components/LoadingSpinner";
-import { useAiSuggestionStore } from "src/stores/aiSuggestion";
 import { useHighlightStore } from "src/stores/highlight";
 import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
@@ -285,6 +285,14 @@ const useSetSuggestionPaused = (thoughtId: string) => {
 	});
 };
 
+const useIsAiSuggestionLoading = (thoughtId: string) => {
+	const { data: thought } = useThought(thoughtId);
+	return useMemo(() => {
+		const signals = thought?.signals as string[] | null;
+		return signals?.includes(ThoughtSignals.AI_SUGGESTIONS);
+	}, [thought?.signals]);
+};
+
 // Helper functions
 const IconForType = ({ type }: { type: string }) => {
 	const iconMap: { [key: string]: JSX.Element } = {
@@ -332,6 +340,7 @@ export const AiFeedInner = ({
 	isViewingArchive: boolean;
 	setIsViewingArchive: (isViewingArchive: boolean) => void;
 }) => {
+	const isAiSuggestionLoading = useIsAiSuggestionLoading(thoughtId);
 	const { data: ideaSuggestions } = useIdeaSuggestions(thoughtId);
 	const isSuggestionPaused = useThoughtSuggestionIsPaused(thoughtId);
 
@@ -339,8 +348,6 @@ export const AiFeedInner = ({
 	const { mutate: archiveAllExceptPinned } = useArchiveAllExceptPinned(thoughtId);
 	const { mutate: setSuggestionPaused } = useSetSuggestionPaused(thoughtId);
 	const { mutate: deleteAllArchived } = useDeleteAllArchived(thoughtId);
-
-	const { isLoading: isAiSuggestionLoading } = useAiSuggestionStore();
 
 	const isUnseenCount = ideaSuggestions.filter(suggestion => !suggestion.is_seen && !suggestion.is_archived).length ?? 0;
 

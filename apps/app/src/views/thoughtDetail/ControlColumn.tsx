@@ -1,5 +1,6 @@
+import { ThoughtSignals } from "@cloudy/utils/common";
 import { FileSymlinkIcon, TrashIcon, ZapIcon } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useUnmount } from "react-use";
 
 import LoadingSpinner from "src/components/LoadingSpinner";
@@ -9,10 +10,20 @@ import { Button } from "../../components/Button";
 import { AiCommentThread } from "./AiCommentThread";
 import { AiFeed } from "./AiFeed";
 import { GoalCard } from "./GoalCard";
-import { useDeleteThought, useRelatedThoughts } from "./hooks";
+import { useDeleteThought, useRelatedThoughts, useThought } from "./hooks";
 import { useThreadStore } from "./threadStore";
 
+const useIsAiEmbeddingLoading = (thoughtId?: string) => {
+	const { data: thought } = useThought(thoughtId);
+
+	return useMemo(() => {
+		const signals = thought?.signals as string[] | null;
+		return signals?.includes(ThoughtSignals.EMBEDDING_UPDATE);
+	}, [thought?.signals]);
+};
+
 export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
+	const isAiEmbeddingLoading = useIsAiEmbeddingLoading(thoughtId);
 	const { data: relatedThoughts, isLoading } = useRelatedThoughts(thoughtId);
 	const { mutateAsync: deleteThought } = useDeleteThought(thoughtId);
 
@@ -41,6 +52,7 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 								<div className="flex items-center gap-1 mb-2 ">
 									<FileSymlinkIcon className="h-4 w-4 text-secondary" />
 									<h4 className="text-sm font-medium text-secondary">Related Notes</h4>
+									{isAiEmbeddingLoading && <LoadingSpinner size="xs" className="ml-2" />}
 								</div>
 								{isLoading ? (
 									<div className="flex w-full justify-center py-4">

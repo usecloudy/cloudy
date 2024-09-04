@@ -1,3 +1,4 @@
+import { ThoughtSignals } from "@cloudy/utils/common";
 import { Mark, mergeAttributes } from "@tiptap/core";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskItem from "@tiptap/extension-task-item";
@@ -15,7 +16,6 @@ import { useMount, usePrevious, useUnmount, useUpdateEffect } from "react-use";
 import { Markdown } from "tiptap-markdown";
 
 import { SimpleLayout } from "src/components/SimpleLayout";
-import { useAiSuggestionStore } from "src/stores/aiSuggestion";
 import { useHighlightStore } from "src/stores/highlight";
 import { cn } from "src/utils";
 import { ellipsizeText, makeHeadTitle } from "src/utils/strings";
@@ -26,7 +26,7 @@ import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 import { CollectionCarousel } from "./CollectionCarousel";
 import { ControlColumn } from "./ControlColumn";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
-import { useEditThought, useThought, useTriggerAiSuggestion, useTriggerAiTitleSuggestion } from "./hooks";
+import { useEditThought, useThought, useTriggerAiTitleSuggestion } from "./hooks";
 import { usePreviewContentStore } from "./previewContentStore";
 import { useThoughtStore } from "./thoughtStore";
 
@@ -79,7 +79,7 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 	const { mutateAsync: editThought } = useEditThought(thoughtId);
 	const { mutateAsync: triggerAiTitleSuggestion } = useTriggerAiTitleSuggestion(thoughtId);
 
-	const { setIsLoading: setIsAiSuggestionLoading } = useAiSuggestionStore();
+	const { setIsAiSuggestionLoading } = useThoughtStore();
 
 	const { title } = useTitleStore();
 
@@ -92,9 +92,6 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 			navigate(`/thoughts/${updatedThought.id}`, { replace: true, preventScrollReset: true });
 		}
 	});
-
-	const isPaused = thought?.is_suggestion_paused;
-	const prevIsPaused = usePrevious(isPaused);
 
 	const { onChange: onChangeAiSuggestion } = useSave(
 		(payload?: void) => {
@@ -114,12 +111,13 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 	const headTitle = title ? makeHeadTitle(ellipsizeText(title, 16)) : makeHeadTitle("New Thought");
 
 	useEffect(() => {
-		if (thought?.suggestion_status === "processing") {
+		const signals = (thought?.signals as string[] | null) ?? [];
+		if (signals.includes(ThoughtSignals.AI_SUGGESTIONS)) {
 			setIsAiSuggestionLoading(true);
-		} else if (thought?.suggestion_status === "idle") {
+		} else {
 			setIsAiSuggestionLoading(false);
 		}
-	}, [setIsAiSuggestionLoading, thought?.suggestion_status]);
+	}, [setIsAiSuggestionLoading, thought?.signals]);
 
 	return (
 		<>
