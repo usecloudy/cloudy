@@ -72,6 +72,9 @@ Response:
 			},
 		],
 		temperature: 0.0,
+		experimental_telemetry: {
+			isEnabled: true,
+		},
 	});
 
 	return stream.toTextStreamResponse();
