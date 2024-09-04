@@ -74,7 +74,9 @@ const CommentColumnInner = ({
 	}, [comments, editor, editor.state.doc, isHighlightingRef]);
 
 	return (
-		<div className="h-full w-16 relative" ref={containerRef}>
+		<div
+			className={cn("h-full w-16 relative -mr-6 md:mr-0", commentsWithOffset.length === 0 && "hidden md:block")}
+			ref={containerRef}>
 			{commentsWithOffset.map(({ offset, comments }) => {
 				const isSelected = commentFilter?.selectedGroupId === offset.toString();
 				return (

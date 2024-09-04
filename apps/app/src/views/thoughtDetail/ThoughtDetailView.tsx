@@ -1,4 +1,5 @@
 import { ThoughtSignals } from "@cloudy/utils/common";
+import DragHandle from "@tiptap-pro/extension-drag-handle-react";
 import { Mark, mergeAttributes } from "@tiptap/core";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskItem from "@tiptap/extension-task-item";
@@ -8,6 +9,7 @@ import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { diffLines } from "diff";
+import { GripVertical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useNavigate, useParams } from "react-router-dom";
@@ -197,7 +199,12 @@ const EditorView = ({
 
 	const editor = useEditor({
 		extensions: [
-			StarterKit.configure({}),
+			StarterKit.configure({
+				dropcursor: {
+					color: "rgb(var(--color-accent) / 0.6)",
+					width: 4,
+				},
+			}),
 			Placeholder.configure({
 				placeholder: "What are you thinking about?",
 			}),
@@ -382,8 +389,8 @@ const EditorView = ({
 	};
 
 	return (
-		<div className="flex flex-col flex-1 pt-8 lg:py-8 box-border lg:overflow-y-scroll no-scrollbar">
-			<div className="flex flex-col gap-2 pb-4">
+		<div className="flex flex-col flex-1 pt-8 lg:py-8 box-border lg:overflow-y-scroll no-scrollbar -ml-8">
+			<div className="flex flex-col gap-2 pb-4 ml-8">
 				<div className="flex w-full flex-row items-start justify-between gap-2">
 					<TextareaAutosize
 						className="w-full resize-none appearance-none border-none bg-transparent text-2xl leading-8 md:text-3xl font-bold md:leading-10 outline-none no-scrollbar"
@@ -411,6 +418,11 @@ const EditorView = ({
 						setIsAiWriting={setIsAiWriting}
 					/>
 				)}
+				<DragHandle editor={editor!} tippyOptions={{ offset: [-3, 4] }}>
+					<div className="hidden md:flex flex-row items-center hover:bg-card border border-transparent hover:border-border rounded py-1 px-0.5 active:bg-accent/20 cursor-grab active:cursor-grabbing">
+						<GripVertical className="h-5 w-5 text-tertiary" />
+					</div>
+				</DragHandle>
 				<EditorContent editor={editor} className={cn("w-full pb-8", isAiWriting && "pointer-events-none opacity-70")} />
 				<CommentColumn editor={editor} thoughtId={thoughtId} isHighlightingRef={isHighlightingRef} />
 			</div>

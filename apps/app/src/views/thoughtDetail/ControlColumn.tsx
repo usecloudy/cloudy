@@ -25,7 +25,7 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 	const { mutateAsync: deleteThought } = useDeleteThought(thoughtId);
 
 	return (
-		<div className="relative h-full box-border overflow-y-auto flex w-full lg:w-[26rem] no-scrollbar px-1">
+		<div className="relative h-full box-border overflow-y-auto flex w-full lg:w-[26rem] no-scrollbar px-1 pt-1 md:pt-0">
 			<div className="w-full md:pt-4 lg:pt-8">
 				<div className="flex flex-col md:flex-row lg:flex-col gap-4 w-full">
 					<AiFeed thoughtId={thoughtId} />

@@ -48,6 +48,14 @@
 	}
 }
 
+.ProseMirror {
+	padding-inline: 2rem 0;
+	
+	> * + * {
+		margin: 0.33rem 0;
+	}
+}
+
 .ProseMirror:focus {
 	@apply outline-none;
 }
