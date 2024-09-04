@@ -74,7 +74,7 @@ export const EditorBubbleMenu = ({
 	};
 
 	return (
-		<>
+		<div>
 			<BubbleMenu editor={editor} tippyOptions={{ duration: 100, maxWidth: "1024px" }}>
 				<div
 					ref={bubbleMenuRef}
@@ -161,6 +161,6 @@ export const EditorBubbleMenu = ({
 					setIsAiWriting={setIsAiWriting}
 				/>
 			)}
-		</>
+		</div>
 	);
 };
