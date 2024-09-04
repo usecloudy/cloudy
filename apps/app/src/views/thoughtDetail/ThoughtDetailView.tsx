@@ -400,7 +400,9 @@ const EditorView = ({
 					<CollectionCarousel thoughtId={thoughtId} collections={collections} />
 				</div>
 			</div>
-			<div className="flex flex-row">
+			<div
+				// On larger screens, we need left padding to avoid some characters being cut off
+				className="flex flex-row md:pl-[2px]">
 				{editor && thoughtId && (
 					<EditorBubbleMenu
 						editor={editor}
