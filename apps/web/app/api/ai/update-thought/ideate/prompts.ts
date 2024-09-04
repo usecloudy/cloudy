@@ -26,7 +26,7 @@ export const makeThoughtIdeatePrompts = ({
 	let tasksText = "";
 	if (comments.length > 0) {
 		commentsText =
-			"Currently, the below comments are on the note:\n" +
+			"Currently, the below are comments you previously provided on the note before the current change:\n" +
 			comments
 				.map(
 					comment =>
@@ -74,7 +74,8 @@ Ask questions and provide constructive criticism on what the user is writing abo
 - Focus on the current note, use the previous notes as reference but only comment on the current note.
 - Make sure you keep the comments short, concise, and to the point.
 - Focus on improving ideation, creativity, and critical thinking over writing for other readers.
-- To not overwhelm the user, make sure only 5-10 comments are active at a time.
+- To not overwhelm the user, make sure at most 5-10 comments are active at a time.
+- Make a reasonable amount of comments given the amount of content changed, for example, if 1 sentence is changed, make 1 comment, if multiple paragraphs are changed, make 3 comments.
 - If there are no comments to add or archive, say ONLY "<NO_ACTION>"
 
 An example of a comment is:

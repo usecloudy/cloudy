@@ -37,10 +37,16 @@ export const POST = async (req: NextRequest) => {
 		});
 	}
 
-	return processThought(payload.record, supabase);
+	const isUnpauseTrigger =
+		payload.type === "UPDATE" && !payload.record.is_suggestion_paused && payload.old_record.is_suggestion_paused;
+	return processThought(payload.record, supabase, { isUnpauseTrigger });
 };
 
-const processThought = async (thoughtRecord: ThoughtRecord, supabase: SupabaseClient<Database>) => {
+const processThought = async (
+	thoughtRecord: ThoughtRecord,
+	supabase: SupabaseClient<Database>,
+	options?: { isUnpauseTrigger?: boolean },
+) => {
 	const { content_md: contentMd, last_suggestion_content_md: lastContentMd } = thoughtRecord;
 
 	if (!contentMd) {
@@ -52,7 +58,7 @@ const processThought = async (thoughtRecord: ThoughtRecord, supabase: SupabaseCl
 		return NextResponse.json({ message: "Content too short" });
 	}
 
-	if (lastContentMd) {
+	if (!options?.isUnpauseTrigger && lastContentMd) {
 		const editDistance = distance(contentMd, lastContentMd);
 
 		if (editDistance < MINIMUM_EDIT_DISTANCE) {
