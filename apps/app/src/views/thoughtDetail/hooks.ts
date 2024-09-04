@@ -1,5 +1,6 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useEffect } from "react";
 
 import { apiClient } from "../../api/client";
@@ -39,6 +40,10 @@ export const useEditThought = (thoughtId?: string) => {
 					})
 					.select(),
 			);
+
+			posthog.capture("edit_thought", {
+				thoughtId,
+			});
 
 			return data?.at(0);
 		},
