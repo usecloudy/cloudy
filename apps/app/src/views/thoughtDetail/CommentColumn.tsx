@@ -1,6 +1,6 @@
 import { Editor } from "@tiptap/react";
 import { MessageCircleIcon } from "lucide-react";
-import { RefObject, useEffect, useRef, useState } from "react";
+import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "src/components/Button";
 import { cn } from "src/utils";
@@ -32,6 +32,17 @@ const CommentColumnInner = ({
 	const [commentsWithOffset, setCommentsWithOffset] = useState<{ comments: Comment[]; offset: number }[]>([]);
 
 	const containerRef = useRef<HTMLDivElement>(null);
+
+	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+	const handleResize = useCallback(() => {
+		setWindowWidth(window.innerWidth);
+	}, []);
+
+	useEffect(() => {
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, [handleResize]);
 
 	useEffect(() => {
 		if (isHighlightingRef.current) return;
@@ -71,7 +82,7 @@ const CommentColumnInner = ({
 		}));
 
 		setCommentsWithOffset(commentsWithOffset);
-	}, [comments, editor, editor.state.doc, isHighlightingRef]);
+	}, [comments, editor, editor.state.doc, isHighlightingRef, windowWidth]);
 
 	return (
 		<div
