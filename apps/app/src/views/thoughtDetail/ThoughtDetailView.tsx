@@ -31,6 +31,7 @@ import { CollectionCarousel } from "./CollectionCarousel";
 import { CommentColumn } from "./CommentColumn";
 import { ControlColumn } from "./ControlColumn";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
+import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { useEditThought, useThought, useTriggerAiTitleSuggestion } from "./hooks";
 import { usePreviewContentStore } from "./previewContentStore";
 import { IndentExtension, IndentNode } from "./tabExtension";
@@ -69,7 +70,13 @@ export const ThoughtDetailView = () => {
 	}, [thoughtId]); // This effect runs whenever thoughtId changes
 
 	return (
-		<ThoughtDetailViewExisting isNewMode={isNewMode} thoughtId={thoughtId === "new" ? undefined : thoughtId} key={key} />
+		<EditorErrorBoundary>
+			<ThoughtDetailViewExisting
+				isNewMode={isNewMode}
+				thoughtId={thoughtId === "new" ? undefined : thoughtId}
+				key={key}
+			/>
+		</EditorErrorBoundary>
 	);
 };
 
