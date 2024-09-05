@@ -1,4 +1,5 @@
 import { ThoughtSignals } from "@cloudy/utils/common";
+import { ErrorBoundary } from "@sentry/react";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
 import { Mark, mergeAttributes } from "@tiptap/core";
 import ListKeymap from "@tiptap/extension-list-keymap";
@@ -47,9 +48,10 @@ export const ThoughtDetailView = () => {
 
 	const [isNewMode, setIsNewMode] = useState(thoughtId === "new");
 	const [key, setKey] = useState(0);
+	const [activeThoughtId, setActiveThoughtId] = useState(thoughtId);
 
 	// Update isNewMode and key when thoughtId changes
-	useUpdateEffect(() => {
+	useEffect(() => {
 		// Check if we're entering or staying in "new" mode
 		if (prevThoughtId === "new" || thoughtId === "new") {
 			// If we're transitioning from an existing thought to a new one
@@ -67,13 +69,14 @@ export const ThoughtDetailView = () => {
 			setKey(Date.now());
 			posthog.capture("view_thought");
 		}
+		setActiveThoughtId(thoughtId);
 	}, [thoughtId]); // This effect runs whenever thoughtId changes
 
 	return (
 		<EditorErrorBoundary>
 			<ThoughtDetailViewExisting
 				isNewMode={isNewMode}
-				thoughtId={thoughtId === "new" ? undefined : thoughtId}
+				thoughtId={activeThoughtId === "new" ? undefined : activeThoughtId}
 				key={key}
 			/>
 		</EditorErrorBoundary>
@@ -100,13 +103,16 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 
 	const navigate = useNavigate();
 
-	const { onChange } = useSave(async (payload: { title?: string; content?: string; contentMd?: string }) => {
-		const updatedThought = await editThought(payload);
+	const { onChange } = useSave(
+		async (payload: { title?: string; content?: string; contentMd?: string }) => {
+			const updatedThought = await editThought(payload);
 
-		if (!thoughtId && updatedThought?.id) {
-			navigate(`/thoughts/${updatedThought.id}`, { replace: true, preventScrollReset: true });
-		}
-	});
+			if (!thoughtId && updatedThought?.id) {
+				navigate(`/thoughts/${updatedThought.id}`, { replace: true, preventScrollReset: true });
+			}
+		},
+		{ debounceDurationMs: thoughtId ? 500 : 0 },
+	);
 
 	const { onChange: onChangeAiSuggestion } = useSave(
 		(payload?: void) => {
@@ -434,11 +440,13 @@ const EditorView = ({
 						setIsAiWriting={setIsAiWriting}
 					/>
 				)}
-				<DragHandle editor={editor!} tippyOptions={{ offset: [-4, 4] }}>
-					<div className="hidden md:flex flex-row items-center hover:bg-card border border-transparent hover:border-border rounded py-1 px-0.5 active:bg-accent/20 cursor-grab active:cursor-grabbing">
-						<GripVertical className="h-5 w-5 text-tertiary" />
-					</div>
-				</DragHandle>
+				{editor && thoughtId && (
+					<DragHandle editor={editor} key={thoughtId} tippyOptions={{ offset: [-4, 4] }}>
+						<div className="hidden md:flex flex-row items-center hover:bg-card border border-transparent hover:border-border rounded py-1 px-0.5 active:bg-accent/20 cursor-grab active:cursor-grabbing">
+							<GripVertical className="h-5 w-5 text-tertiary" />
+						</div>
+					</DragHandle>
+				)}
 				<EditorContent editor={editor} className={cn("w-full", isAiWriting && "pointer-events-none opacity-70")} />
 				<CommentColumn editor={editor} thoughtId={thoughtId} isHighlightingRef={isHighlightingRef} />
 			</div>
