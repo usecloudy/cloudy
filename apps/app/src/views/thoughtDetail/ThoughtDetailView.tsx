@@ -192,6 +192,8 @@ const EditorView = ({
 	const isHighlightingRef = useRef(false);
 	const existingContent = useRef("");
 
+	throw new Error("Oh no");
+
 	const editor = useEditor({
 		extensions: [
 			StarterKit.configure({

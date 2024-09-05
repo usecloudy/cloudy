@@ -29,7 +29,7 @@ export class EditorErrorBoundary extends Component<EditorErrorBoundaryProps, Edi
 		if (this.state.hasError) {
 			return (
 				<div className="flex flex-col items-center justify-center h-full gap-4">
-					<FrownIcon className="w-10 h-10 text-tertiary" />
+					<img src="/cringe-cat.jpg" className="w-96 h-48" alt="Oh no! Cringe" />
 					<div className="flex flex-col items-center gap-2">
 						<p className="text-center">Oh no. Something went wrong here.</p>
 						<p className="text-center text-sm text-secondary">
