@@ -62,6 +62,18 @@
 	@apply outline-none;
 }
 
+.tiptap .indent {
+	padding-inline: 1rem 0;
+}
+
+.tiptap .indent-level-2 {
+	padding-inline: 2rem 0;
+}
+
+.tiptap .indent-level-3 {
+	padding-inline: 3rem 0;
+}
+
 .tiptap p.is-editor-empty:first-child::before {
 	color: hsl(var(--muted-foreground));
 	content: attr(data-placeholder);

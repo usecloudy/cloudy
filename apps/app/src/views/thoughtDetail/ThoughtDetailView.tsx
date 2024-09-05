@@ -33,6 +33,7 @@ import { ControlColumn } from "./ControlColumn";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { useEditThought, useThought, useTriggerAiTitleSuggestion } from "./hooks";
 import { usePreviewContentStore } from "./previewContentStore";
+import { IndentExtension, IndentNode } from "./tabExtension";
 import { useThoughtStore } from "./thoughtStore";
 
 type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
@@ -230,6 +231,8 @@ const EditorView = ({
 			}),
 			Typography,
 			ListKeymap,
+			IndentExtension,
+			IndentNode,
 		],
 
 		content: remoteContent ?? "",
