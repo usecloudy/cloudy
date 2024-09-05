@@ -318,7 +318,7 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 	return (
 		<div
 			className={cn(
-				"flex flex-col gap-4 rounded-md border border-border bg-card p-4 w-full md:w-2/3 lg:w-full",
+				"flex flex-col gap-4 rounded-md border border-border bg-card p-4 w-full md:w-2/3 lg:w-full thought-feed-view",
 				feedMode === "selectedComments" && "ring-2 ring-accent/40 ring-offset-2 ring-offset-background",
 			)}>
 			{feedMode === "archive" ? (

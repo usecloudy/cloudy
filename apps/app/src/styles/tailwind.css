@@ -86,21 +86,40 @@
 	margin-top: 0;
 }
 
-ul,
-ol {
+.tiptap ul,
+.tiptap ol {
 	padding: 0 1rem;
 	margin: 0;
 }
 
-ol {
+.tiptap ol {
 	list-style-type: decimal;
 }
 
-ul {
+.tiptap ul {
 	list-style-type: disc;
 }
 
-li p {
+.tiptap li p {
+	margin-top: 0.25em;
+	margin-bottom: 0.25em;
+}
+
+.thought-feed-view  ul,
+.thought-feed-view  ol {
+	padding: 0 1rem;
+	margin: 0;
+}
+
+.thought-feed-view ol {
+	list-style-type: decimal;
+}
+
+.thought-feed-view ul {
+	list-style-type: disc;
+}
+
+.thought-feed-view  li p {
 	margin-top: 0.25em;
 	margin-bottom: 0.25em;
 }
