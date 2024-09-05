@@ -72,25 +72,25 @@ export const Navbar: FC = () => {
 						<li>
 							<Link to="/">
 								<Button aria-label="Home" variant="ghost" size="icon">
-									<Home size={24} />
+									<Home className="w-6 h-6" />
 								</Button>
 							</Link>
 						</li>
 					)}
 					<li className="hidden md:block">
 						<Button onClick={() => window.history.back()} aria-label="Go back" variant="ghost" size="icon">
-							<ArrowLeft size={24} className="text-current" />
+							<ArrowLeft className="w-6 h-6" />
 						</Button>
 					</li>
 					<li className="hidden md:block">
 						<Button onClick={() => window.history.forward()} aria-label="Go forward" variant="ghost" size="icon">
-							<ArrowRight size={24} />
+							<ArrowRight className="w-6 h-6" />
 						</Button>
 					</li>
 					<li>
 						<Link to="/thoughts/new">
 							<Button variant="ghost" size="icon" aria-label="New thought">
-								<Plus size={24} />
+								<Plus className="w-6 h-6" />
 							</Button>
 						</Link>
 					</li>
