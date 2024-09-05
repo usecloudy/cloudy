@@ -89,5 +89,5 @@ export const suggestTitle = async (thoughtRecord: ThoughtRecord, supabase: Supab
 		await removeSignal("suggest-title", thoughtRecord.id, supabase);
 	}
 
-	return NextResponse.json({ success: true });
+	return;
 };

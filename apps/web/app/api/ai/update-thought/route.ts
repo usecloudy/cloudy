@@ -10,8 +10,8 @@ import { chunkAndHashMarkdown } from "app/api/utils/relatedChunks";
 import { getSupabase } from "app/api/utils/supabase";
 import { addSignal, checkForSignal, removeSignal } from "app/api/utils/thoughts";
 
-import { ideateThought } from "./ideate/route";
-import { suggestTitle } from "./suggest-title/route";
+import { ideateThought } from "./ideate";
+import { suggestTitle } from "./suggest-title";
 import { ThoughtRecord, generateMatchPairs } from "./utils";
 
 const MINIMUM_CONTENT_LENGTH = 3;
@@ -56,15 +56,9 @@ const processThought = async (thoughtId: string, supabase: SupabaseClient<Databa
 		}
 	}
 
-	const { exists, timedOut } = await checkForSignal(ThoughtSignals.AI_THOUGHT_UPDATE, thoughtRecord.id, supabase);
-	if (exists) {
-		if (!timedOut) {
-			console.log("Already processing");
-			return NextResponse.json({ message: "Already processing" });
-		}
-
-		console.log("Processing timed out");
-		await removeSignal(ThoughtSignals.AI_THOUGHT_UPDATE, thoughtRecord.id, supabase);
+	if (await checkForSignal(ThoughtSignals.AI_THOUGHT_UPDATE, thoughtRecord.id, supabase)) {
+		console.log("Already processing");
+		return NextResponse.json({ message: "Already processing" });
 	}
 
 	console.log(`Processing thought ${thoughtRecord.id}`);
