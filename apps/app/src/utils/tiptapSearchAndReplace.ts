@@ -97,7 +97,7 @@ export const processSearches = (doc: PMNode, searchTerm: string, threshold: numb
 			}
 		} else {
 			// For longer search terms, use the chunking approach
-			for (let i = 0; i < text.length; i += chunkSize / 2) {
+			for (let i = 0; i < text.length; i += Math.floor(chunkSize / 2)) {
 				const chunk = text.slice(i, i + chunkSize);
 				if (fuzzyMatch(chunk, searchTerm)) {
 					results.push({
