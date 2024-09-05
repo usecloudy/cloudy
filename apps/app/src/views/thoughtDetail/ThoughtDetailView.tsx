@@ -44,7 +44,7 @@ type Collection = NonNullable<Thought["collections"]>[0];
 export const ThoughtDetailView = () => {
 	const { thoughtId } = useParams<{ thoughtId: string }>();
 
-	const prevThoughtId = usePrevious(thoughtId);
+	const [prevThoughtId, setPreviousThoughtId] = useState<string | null>(null);
 
 	const [isNewMode, setIsNewMode] = useState(thoughtId === "new");
 	const [key, setKey] = useState(0);
@@ -64,6 +64,7 @@ export const ThoughtDetailView = () => {
 			reset();
 			posthog.capture("new_thought");
 		} else {
+			console.log("isnotnew", "existing", thoughtId);
 			// We're viewing an existing thought
 			setIsNewMode(false);
 			// Generate a new key to force a re-render when switching between existing thoughts
@@ -72,6 +73,7 @@ export const ThoughtDetailView = () => {
 			posthog.capture("view_thought");
 		}
 		setThoughtId(thoughtId === "new" ? null : (thoughtId ?? null));
+		setPreviousThoughtId(thoughtId ?? null);
 	}, [thoughtId]); // This effect runs whenever thoughtId changes
 
 	return (
@@ -83,6 +85,8 @@ export const ThoughtDetailView = () => {
 
 const ThoughtDetailViewExisting = ({ thoughtId, isNewMode }: { thoughtId?: string; isNewMode: boolean }) => {
 	const { data: thought, isLoading } = useThought(thoughtId);
+
+	console.log("thoughtdetailview", thoughtId, isNewMode, isLoading);
 
 	return (
 		<SimpleLayout isLoading={Boolean(isLoading && !isNewMode)} className="lg:overflow-hidden items-center">

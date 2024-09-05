@@ -55,10 +55,6 @@ export const useEditThought = (thoughtId?: string) => {
 	return useMutation({
 		mutationKey: ["editThought"],
 		mutationFn: async (payload: { title?: string; content?: string; contentMd?: string }) => {
-			if (isMutating) {
-				return;
-			}
-
 			let titleObj = {};
 			if (payload.title !== undefined) {
 				const titleTs = new Date();
@@ -71,6 +67,10 @@ export const useEditThought = (thoughtId?: string) => {
 				const contentTs = new Date();
 				contentObj = { content: payload.content, content_ts: contentTs.toISOString() };
 				setLastLocalThoughtContentTs(contentTs);
+			}
+
+			if (isMutating) {
+				return;
 			}
 
 			const newThought = handleSupabaseError(
