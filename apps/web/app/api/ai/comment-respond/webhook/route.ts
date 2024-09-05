@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getSupabase } from "app/api/utils/supabase";
 import { Database } from "app/db/database.types";
 
-import { respondToComment } from "../route";
+import { respondToComment } from "../utils";
 
 type InsertPayload = {
 	type: "INSERT";
