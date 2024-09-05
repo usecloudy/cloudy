@@ -359,3 +359,60 @@ export const useComments = (thoughtId: string) => {
 
 	return useQueryResult;
 };
+
+export const useRespond = (commentId?: string | null) => {
+	const { thoughtId, setActiveThreadCommentId } = useThoughtStore();
+
+	return useMutation({
+		mutationFn: async (content: string) => {
+			if (!commentId) {
+				const comment = handleSupabaseError(
+					await supabase
+						.from("thought_chats")
+						.insert({
+							thought_id: thoughtId,
+							role: "user",
+							type: "comment",
+							content,
+						})
+						.select()
+						.single(),
+				);
+
+				if (comment) {
+					setActiveThreadCommentId(comment.id);
+					await apiClient.post("/api/ai/comment-respond", {
+						threadId: comment.id,
+					});
+				}
+			} else {
+				console.log("commentId", commentId);
+				await supabase
+					.from("thought_chat_threads")
+					.insert({
+						comment_id: commentId,
+						role: "user",
+						content,
+					})
+					.single();
+
+				await supabase
+					.from("thought_chats")
+					.update({
+						is_thread_loading: true,
+					})
+					.eq("id", commentId);
+			}
+		},
+		onMutate: () => {
+			queryClient.setQueryData(["aiCommentThread", commentId], (data: any) => {
+				if (data) {
+					return {
+						...data,
+						is_thread_loading: true,
+					};
+				}
+			});
+		},
+	});
+};

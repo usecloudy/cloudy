@@ -20,6 +20,7 @@ import {
 	PlayIcon,
 	SparklesIcon,
 	TrashIcon,
+	UserIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { useMount, useUnmount } from "react-use";
@@ -35,6 +36,7 @@ import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
 
 import { AiCommentThread } from "./AiCommentThread";
+import { AiInputBar } from "./AiInputBar";
 import { useComments, useThought } from "./hooks";
 import { CommentFilter, useThoughtStore } from "./thoughtStore";
 import { useTitleStore } from "./titleStore";
@@ -249,7 +251,11 @@ const useIsAiSuggestionLoading = (thoughtId: string) => {
 };
 
 // Helper functions
-const IconForType = ({ type }: { type: string }) => {
+const IconForType = ({ type, role }: { type: string; role: "user" | "assistant" }) => {
+	if (role === "user") {
+		return <UserIcon className="text-tertiary h-3.5 w-3.5" />;
+	}
+
 	const iconMap: { [key: string]: JSX.Element } = {
 		suggestion: <LightbulbIcon className="text-tertiary ml-[-0.15rem] h-3.5 w-3.5" />,
 		comment: <MessageCircleIcon className="text-tertiary h-3.5 w-3.5" />,
@@ -259,7 +265,10 @@ const IconForType = ({ type }: { type: string }) => {
 	return iconMap[type] || <MessageCircleIcon className="text-tertiary h-3.5 w-3.5" />;
 };
 
-const titleForType = (type: string) => {
+const titleForType = (type: string, role: string) => {
+	if (role === "user") {
+		return "You";
+	}
 	const titleMap: { [key: string]: string } = {
 		suggestion: "Suggestion",
 		comment: "Comment",
@@ -454,6 +463,7 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 			) : (
 				<IdeaSuggestionList thoughtId={thoughtId} suggestions={suggestions} />
 			)}
+			{(feedMode === "default" || feedMode === "thread") && <AiInputBar />}
 		</div>
 	);
 };
@@ -574,8 +584,8 @@ const IdeaSuggestion = ({
 			onMouseLeave={clearHighlights}>
 			<div className="flex w-full flex-row items-center justify-between gap-2 text-xs text-secondary">
 				<div className="flex flex-row items-center gap-1 font-medium">
-					<IconForType type={suggestion.type} />
-					{titleForType(suggestion.type)}
+					<IconForType type={suggestion.type} role={suggestion.role as "user" | "assistant"} />
+					{titleForType(suggestion.type, suggestion.role)}
 				</div>
 				<div className="flex flex-row items-center gap-1">
 					{suggestion.is_pinned && <PinIcon className="h-3 w-3 text-accent fill-accent" />}
@@ -610,7 +620,7 @@ const IdeaSuggestion = ({
 							<span>Apply</span>
 						</Button>
 					)}
-					{suggestion.type !== "title_suggestion" && (
+					{suggestion.type !== "title_suggestion" && suggestion.role !== "user" && (
 						<Button size="sm" variant="secondary" className="text-accent" onClick={handleGenerate}>
 							<SparklesIcon className="h-3.5 w-3.5" />
 							<span>Show me</span>

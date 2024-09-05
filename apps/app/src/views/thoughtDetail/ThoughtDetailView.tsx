@@ -48,7 +48,7 @@ export const ThoughtDetailView = () => {
 
 	const [isNewMode, setIsNewMode] = useState(thoughtId === "new");
 	const [key, setKey] = useState(0);
-	const [activeThoughtId, setActiveThoughtId] = useState(thoughtId);
+	const { thoughtId: activeThoughtId, setThoughtId } = useThoughtStore();
 
 	// Update isNewMode and key when thoughtId changes
 	useEffect(() => {
@@ -69,16 +69,12 @@ export const ThoughtDetailView = () => {
 			setKey(Date.now());
 			posthog.capture("view_thought");
 		}
-		setActiveThoughtId(thoughtId);
+		setThoughtId(thoughtId === "new" ? null : (thoughtId ?? null));
 	}, [thoughtId]); // This effect runs whenever thoughtId changes
 
 	return (
 		<EditorErrorBoundary>
-			<ThoughtDetailViewExisting
-				isNewMode={isNewMode}
-				thoughtId={activeThoughtId === "new" ? undefined : activeThoughtId}
-				key={key}
-			/>
+			<ThoughtDetailViewExisting isNewMode={isNewMode} thoughtId={activeThoughtId ?? undefined} key={key} />
 		</EditorErrorBoundary>
 	);
 };
