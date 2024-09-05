@@ -48,29 +48,25 @@ const triggerAiUpdatesWhenChangeIsSignificant = async (
 };
 
 export const useEditThought = (thoughtId?: string) => {
-	const { setLastLocalThoughtContentTs, setLastLocalThoughtTitleTs } = useThoughtStore();
-
 	const isMutating = Boolean(useIsMutating({ mutationKey: ["editThought"] }));
 
 	return useMutation({
 		mutationKey: ["editThought"],
 		mutationFn: async (payload: { title?: string; content?: string; contentMd?: string }) => {
+			if (isMutating) {
+				return;
+			}
+
 			let titleObj = {};
 			if (payload.title !== undefined) {
 				const titleTs = new Date();
 				titleObj = { title: payload.title, title_ts: titleTs.toISOString() };
-				setLastLocalThoughtTitleTs(titleTs);
 			}
 
 			let contentObj = {};
 			if (payload.content !== undefined) {
 				const contentTs = new Date();
 				contentObj = { content: payload.content, content_ts: contentTs.toISOString() };
-				setLastLocalThoughtContentTs(contentTs);
-			}
-
-			if (isMutating) {
-				return;
 			}
 
 			const newThought = handleSupabaseError(

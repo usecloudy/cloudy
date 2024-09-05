@@ -190,7 +190,13 @@ const EditorView = ({
 	onChange: (payload: { title?: string; content?: string; contentMd?: string }) => void;
 }) => {
 	const { highlights } = useHighlightStore();
-	const { lastLocalThoughtContentTs, lastLocalThoughtTitleTs, setCurrentContent } = useThoughtStore();
+	const {
+		lastLocalThoughtContentTs,
+		lastLocalThoughtTitleTs,
+		setCurrentContent,
+		setLastLocalThoughtContentTs,
+		setLastLocalThoughtTitleTs,
+	} = useThoughtStore();
 	const { title, setTitle, saveTitleKey } = useTitleStore();
 	const { previewContent, applyKey, setPreviewContent } = usePreviewContentStore();
 	const [isAiWriting, setIsAiWriting] = useState(false);
@@ -243,8 +249,9 @@ const EditorView = ({
 		if (!isHighlightingRef.current) {
 			const content = editor?.getHTML();
 			const contentMd = editor?.storage.markdown.getMarkdown();
-			onChange({ content, contentMd });
 
+			onChange({ content, contentMd });
+			setLastLocalThoughtContentTs(new Date());
 			setCurrentContent(content ?? "");
 		}
 	};
@@ -378,11 +385,13 @@ const EditorView = ({
 
 	useUpdateEffect(() => {
 		onChange({ title });
+		setLastLocalThoughtTitleTs(new Date());
 	}, [saveTitleKey]);
 
 	const handleChangeTitle = (title: string) => {
 		setTitle(title);
 		onChange({ title });
+		setLastLocalThoughtTitleTs(new Date());
 	};
 
 	const handleSetIsHighlighting = (isHighlighting: boolean) => {
