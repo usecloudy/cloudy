@@ -4,30 +4,6 @@ import { SupabaseClient } from "@supabase/supabase-js";
 
 export type ThoughtRecord = Database["public"]["Tables"]["thoughts"]["Row"];
 
-export type InsertPayload = {
-	type: "INSERT";
-	table: string;
-	schema: string;
-	record: ThoughtRecord;
-	old_record: null;
-};
-export type UpdatePayload = {
-	type: "UPDATE";
-	table: string;
-	schema: string;
-	record: ThoughtRecord;
-	old_record: ThoughtRecord;
-};
-export type DeletePayload = {
-	type: "DELETE";
-	table: string;
-	schema: string;
-	record: null;
-	old_record: ThoughtRecord;
-};
-
-export type Payload = InsertPayload | UpdatePayload | DeletePayload;
-
 export const generateMatchPairs = async (thoughtRecord: ThoughtRecord, supabase: SupabaseClient<Database>) => {
 	const embeddingRecords = handleSupabaseError(
 		await supabase.from("thought_embeddings").select("*").eq("thought_id", thoughtRecord.id),

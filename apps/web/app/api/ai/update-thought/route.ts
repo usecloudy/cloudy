@@ -11,47 +11,34 @@ import { getSupabase } from "app/api/utils/supabase";
 import { addSignal, checkForSignal, removeSignal } from "app/api/utils/thoughts";
 
 import { ideateThought } from "./ideate/route";
-import { Payload, ThoughtRecord, generateMatchPairs } from "./utils";
+import { suggestTitle } from "./suggest-title/route";
+import { ThoughtRecord, generateMatchPairs } from "./utils";
 
 const MINIMUM_CONTENT_LENGTH = 3;
 const MINIMUM_EDIT_DISTANCE = 64;
 
 export const maxDuration = 90;
 
+interface Payload {
+	thoughtId: string;
+	force?: boolean;
+}
+
 export const POST = async (req: NextRequest) => {
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "service" });
+	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
 	const payload = (await req.json()) as Payload;
 
-	if (payload.type === "DELETE") {
-		return new Response(JSON.stringify({ message: "DELETE not supported" }), {
-			headers: { "Content-Type": "application/json" },
-		});
-	}
-
-	if (
-		payload.type === "UPDATE" &&
-		payload.record.content === payload.old_record.content &&
-		payload.record.is_suggestion_paused === payload.old_record.is_suggestion_paused
-	) {
-		return new Response(JSON.stringify({ message: "No content changes" }), {
-			headers: { "Content-Type": "application/json" },
-		});
-	}
-
-	const isUnpauseTrigger =
-		payload.type === "UPDATE" && !payload.record.is_suggestion_paused && payload.old_record.is_suggestion_paused;
-	return processThought(payload.record, supabase, { isUnpauseTrigger });
+	return processThought(payload.thoughtId, supabase, { force: payload.force });
 };
 
-const processThought = async (
-	thoughtRecord: ThoughtRecord,
-	supabase: SupabaseClient<Database>,
-	options?: { isUnpauseTrigger?: boolean },
-) => {
+const processThought = async (thoughtId: string, supabase: SupabaseClient<Database>, options?: { force?: boolean }) => {
+	const thoughtRecord = handleSupabaseError(await supabase.from("thoughts").select("*").eq("id", thoughtId).single());
+
 	const { content_md: contentMd, last_suggestion_content_md: lastContentMd } = thoughtRecord;
 
 	if (!contentMd) {
+		console.log("No content_md");
 		return new Response(JSON.stringify({ message: "No content_md" }), { headers: { "Content-Type": "application/json" } });
 	}
 
@@ -60,7 +47,7 @@ const processThought = async (
 		return NextResponse.json({ message: "Content too short" });
 	}
 
-	if (!options?.isUnpauseTrigger && lastContentMd) {
+	if (!options?.force && lastContentMd) {
 		const editDistance = distance(contentMd, lastContentMd);
 
 		if (editDistance < MINIMUM_EDIT_DISTANCE) {
@@ -69,8 +56,15 @@ const processThought = async (
 		}
 	}
 
-	if (await checkForSignal(ThoughtSignals.AI_THOUGHT_UPDATE, thoughtRecord.id, supabase)) {
-		return NextResponse.json({ message: "Already processing" });
+	const { exists, timedOut } = await checkForSignal(ThoughtSignals.AI_THOUGHT_UPDATE, thoughtRecord.id, supabase);
+	if (exists) {
+		if (!timedOut) {
+			console.log("Already processing");
+			return NextResponse.json({ message: "Already processing" });
+		}
+
+		console.log("Processing timed out");
+		await removeSignal(ThoughtSignals.AI_THOUGHT_UPDATE, thoughtRecord.id, supabase);
 	}
 
 	console.log(`Processing thought ${thoughtRecord.id}`);
@@ -78,7 +72,11 @@ const processThought = async (
 	await addSignal(ThoughtSignals.AI_THOUGHT_UPDATE, thoughtRecord.id, supabase);
 
 	try {
-		await Promise.all([ideateThought(thoughtRecord, supabase), generateEmbeddings(thoughtRecord, supabase)]);
+		await Promise.all([
+			ideateThought(thoughtRecord, supabase),
+			generateEmbeddings(thoughtRecord, supabase),
+			suggestTitle(thoughtRecord, supabase),
+		]);
 
 		await supabase.from("thoughts").update({ last_suggestion_content_md: contentMd }).eq("id", thoughtRecord.id);
 	} finally {

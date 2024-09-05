@@ -1,5 +1,6 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
 import { useEffect } from "react";
 
@@ -8,6 +9,43 @@ import { queryClient } from "../../api/queryClient";
 import { supabase } from "../../clients/supabase";
 import { fixOneToOne } from "../../utils";
 import { useThoughtStore } from "./thoughtStore";
+
+const MINIMUM_CONTENT_LENGTH = 3;
+const MINIMUM_EDIT_DISTANCE = 64;
+
+const triggerAiUpdatesWhenChangeIsSignificant = async (
+	thoughtId: string,
+	contentMd: string,
+	lastContentMd?: string | null,
+	force?: boolean,
+) => {
+	if (!force) {
+		if (lastContentMd === contentMd) {
+			return;
+		}
+
+		if (contentMd.length < MINIMUM_CONTENT_LENGTH) {
+			return;
+		}
+
+		if (lastContentMd) {
+			const editDistance = distance(contentMd, lastContentMd);
+
+			if (editDistance < MINIMUM_EDIT_DISTANCE) {
+				return;
+			}
+		}
+	}
+
+	await apiClient.post(
+		`/api/ai/update-thought`,
+		{
+			thoughtId,
+			force,
+		},
+		{ timeout: 90000 },
+	);
+};
 
 export const useEditThought = (thoughtId?: string) => {
 	const { setLastLocalThoughtContentTs, setLastLocalThoughtTitleTs } = useThoughtStore();
@@ -29,7 +67,7 @@ export const useEditThought = (thoughtId?: string) => {
 				setLastLocalThoughtContentTs(contentTs);
 			}
 
-			const data = handleSupabaseError(
+			const newThought = handleSupabaseError(
 				await supabase
 					.from("thoughts")
 					.upsert({
@@ -38,14 +76,21 @@ export const useEditThought = (thoughtId?: string) => {
 						...contentObj,
 						...(payload.contentMd !== undefined && { content_md: payload.contentMd }),
 					})
-					.select(),
+					.select()
+					.single(),
+			);
+
+			triggerAiUpdatesWhenChangeIsSignificant(
+				newThought.id,
+				newThought.content_md ?? "",
+				newThought.last_suggestion_content_md,
 			);
 
 			posthog.capture("edit_thought", {
 				thoughtId,
 			});
 
-			return data?.at(0);
+			return newThought;
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
@@ -56,30 +101,6 @@ export const useEditThought = (thoughtId?: string) => {
 					queryKey: ["thoughtEmbeddings"],
 				});
 			}, 2500);
-		},
-	});
-};
-
-export const useTriggerAiSuggestion = (thoughtId?: string) => {
-	return useMutation({
-		mutationFn: async () => {
-			if (thoughtId) {
-				return apiClient.post(`/api/ai/thought-ideate`, {
-					thoughtId,
-				});
-			}
-		},
-	});
-};
-
-export const useTriggerAiTitleSuggestion = (thoughtId?: string) => {
-	return useMutation({
-		mutationFn: async () => {
-			if (thoughtId) {
-				return apiClient.post(`/api/ai/suggest-title`, {
-					thoughtId,
-				});
-			}
 		},
 	});
 };

@@ -33,7 +33,7 @@ import { CommentColumn } from "./CommentColumn";
 import { ControlColumn } from "./ControlColumn";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
-import { useEditThought, useThought, useTriggerAiTitleSuggestion } from "./hooks";
+import { useEditThought, useThought } from "./hooks";
 import { usePreviewContentStore } from "./previewContentStore";
 import { IndentExtension, IndentNode } from "./tabExtension";
 import { useThoughtStore } from "./thoughtStore";
@@ -95,7 +95,6 @@ const ThoughtDetailViewExisting = ({ thoughtId, isNewMode }: { thoughtId?: strin
 
 const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; thought?: Thought }) => {
 	const { mutateAsync: editThought } = useEditThought(thoughtId);
-	const { mutateAsync: triggerAiTitleSuggestion } = useTriggerAiTitleSuggestion(thoughtId);
 
 	const { setIsAiSuggestionLoading } = useThoughtStore();
 
@@ -113,21 +112,6 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 		},
 		{ debounceDurationMs: thoughtId ? 500 : 0 },
 	);
-
-	const { onChange: onChangeAiSuggestion } = useSave(
-		(payload?: void) => {
-			if (!title || title.length <= 2) {
-				triggerAiTitleSuggestion();
-			}
-		},
-		{
-			debounceDurationMs: 1500,
-		},
-	);
-
-	const handleWillTriggerAiSuggestion = () => {
-		onChangeAiSuggestion();
-	};
 
 	const headTitle = title ? makeHeadTitle(ellipsizeText(title, 16)) : makeHeadTitle("New Thought");
 
@@ -154,7 +138,6 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 					latestRemoteContentTs={thought?.content_ts ?? undefined}
 					latestRemoteTitleTs={thought?.title_ts ?? undefined}
 					onChange={onChange}
-					onChangeAiSuggestion={handleWillTriggerAiSuggestion}
 				/>
 				<ControlColumn thoughtId={thoughtId} />
 			</div>
@@ -195,7 +178,6 @@ const EditorView = ({
 	latestRemoteTitleTs,
 	collections,
 	onChange,
-	onChangeAiSuggestion,
 }: {
 	thoughtId?: string;
 	remoteContent?: string;
@@ -204,7 +186,6 @@ const EditorView = ({
 	latestRemoteTitleTs?: string;
 	collections: Collection[];
 	onChange: (payload: { title?: string; content?: string; contentMd?: string }) => void;
-	onChangeAiSuggestion: () => void;
 }) => {
 	const { highlights } = useHighlightStore();
 	const { lastLocalThoughtContentTs, lastLocalThoughtTitleTs, setCurrentContent } = useThoughtStore();
@@ -263,10 +244,6 @@ const EditorView = ({
 			onChange({ content, contentMd });
 
 			setCurrentContent(content ?? "");
-
-			if (isUserUpdate) {
-				onChangeAiSuggestion();
-			}
 		}
 	};
 
