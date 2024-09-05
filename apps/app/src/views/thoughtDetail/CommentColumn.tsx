@@ -1,5 +1,5 @@
 import { Editor } from "@tiptap/react";
-import { MessageCircleIcon } from "lucide-react";
+import { CircleIcon, MessageCircleIcon } from "lucide-react";
 import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "src/components/Button";
@@ -90,6 +90,8 @@ const CommentColumnInner = ({
 			ref={containerRef}>
 			{commentsWithOffset.map(({ offset, comments }) => {
 				const isSelected = commentFilter?.selectedGroupId === offset.toString();
+				const hasUnreadComments = comments.some(comment => !comment.is_seen); // Add this line
+
 				return (
 					<div key={offset} style={{ top: offset }} className="absolute left-0 w-12 -mt-1">
 						<Button
@@ -105,9 +107,12 @@ const CommentColumnInner = ({
 									});
 								}
 							}}
-							className={cn("px-2", isSelected && "bg-accent/80 text-background")}>
+							className={cn("px-2 relative", isSelected && "bg-accent/80 text-background")}>
 							<MessageCircleIcon className="w-5 h-5" />
 							<span className="text-xs">{comments.length}</span>
+							{hasUnreadComments && (
+								<CircleIcon className="absolute top-1 right-0.5 w-2 h-2 text-accent fill-current" />
+							)}
 						</Button>
 					</div>
 				);
