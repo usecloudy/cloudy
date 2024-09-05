@@ -33,7 +33,15 @@ export class EditorErrorBoundary extends Component<EditorErrorBoundaryProps, Edi
 					<div className="flex flex-col items-center gap-2">
 						<p className="text-center">Oh no. Something went wrong here.</p>
 						<p className="text-center text-sm text-secondary">
-							We've been notified, contact support or dm @jennmueng on X if this persists.
+							We've been notified, email us at{" "}
+							<a href="mailto:founders@usecloudy.com" className="text-accent hover:underline">
+								founders@usecloudy.com
+							</a>{" "}
+							or dm{" "}
+							<a href="https://x.com/jennmueng" className="text-accent hover:underline">
+								@jennmueng
+							</a>{" "}
+							on X if this persists.
 						</p>
 					</div>
 					<Button
