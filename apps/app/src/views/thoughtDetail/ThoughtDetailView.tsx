@@ -48,7 +48,7 @@ export const ThoughtDetailView = () => {
 
 	const [isNewMode, setIsNewMode] = useState(thoughtId === "new");
 	const [key, setKey] = useState(0);
-	const { thoughtId: activeThoughtId, setThoughtId } = useThoughtStore();
+	const { thoughtId: activeThoughtId, setThoughtId, reset } = useThoughtStore();
 
 	// Update isNewMode and key when thoughtId changes
 	useEffect(() => {
@@ -61,12 +61,14 @@ export const ThoughtDetailView = () => {
 			}
 			// Set the mode to "new" for creating a new thought
 			setIsNewMode(true);
+			reset();
 			posthog.capture("new_thought");
 		} else {
 			// We're viewing an existing thought
 			setIsNewMode(false);
 			// Generate a new key to force a re-render when switching between existing thoughts
 			setKey(Date.now());
+			reset();
 			posthog.capture("view_thought");
 		}
 		setThoughtId(thoughtId === "new" ? null : (thoughtId ?? null));
@@ -414,11 +416,13 @@ const EditorView = ({
 					/>
 				)}
 				{editor && thoughtId && (
-					<DragHandle editor={editor} key={thoughtId} tippyOptions={{ offset: [-4, 4] }}>
-						<div className="hidden md:flex flex-row items-center hover:bg-card border border-transparent hover:border-border rounded py-1 px-0.5 active:bg-accent/20 cursor-grab active:cursor-grabbing">
-							<GripVertical className="h-5 w-5 text-tertiary" />
-						</div>
-					</DragHandle>
+					<div>
+						<DragHandle editor={editor} key={thoughtId} tippyOptions={{ offset: [-4, 4] }}>
+							<div className="hidden md:flex flex-row items-center hover:bg-card border border-transparent hover:border-border rounded py-1 px-0.5 active:bg-accent/20 cursor-grab active:cursor-grabbing">
+								<GripVertical className="h-5 w-5 text-tertiary" />
+							</div>
+						</DragHandle>
+					</div>
 				)}
 				<EditorContent editor={editor} className={cn("w-full", isAiWriting && "pointer-events-none opacity-70")} />
 				<CommentColumn editor={editor} thoughtId={thoughtId} isHighlightingRef={isHighlightingRef} />

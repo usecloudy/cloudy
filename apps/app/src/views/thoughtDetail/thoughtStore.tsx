@@ -27,6 +27,7 @@ interface ThoughtStore {
 	setFeedMode: (mode: FeedMode) => void;
 	activeThreadCommentId: string | null;
 	setActiveThreadCommentId: (id: string | null) => void;
+	reset: () => void;
 }
 
 export const useThoughtStore = create<ThoughtStore>(set => ({
@@ -50,4 +51,16 @@ export const useThoughtStore = create<ThoughtStore>(set => ({
 	activeThreadCommentId: null,
 	setActiveThreadCommentId: id =>
 		set({ activeThreadCommentId: id, feedMode: id ? "thread" : "default", commentFilter: null }),
+	reset: () =>
+		set({
+			thoughtId: null,
+			currentContent: null,
+			selectionToEdit: null,
+			lastLocalThoughtTitleTs: null,
+			lastLocalThoughtContentTs: null,
+			isAiSuggestionLoading: false,
+			commentFilter: null,
+			feedMode: "default",
+			activeThreadCommentId: null,
+		}),
 }));
