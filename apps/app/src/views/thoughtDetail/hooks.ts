@@ -1,5 +1,5 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useIsMutating, useMutation, useQuery } from "@tanstack/react-query";
 import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
 import { useEffect } from "react";
@@ -50,9 +50,15 @@ const triggerAiUpdatesWhenChangeIsSignificant = async (
 export const useEditThought = (thoughtId?: string) => {
 	const { setLastLocalThoughtContentTs, setLastLocalThoughtTitleTs } = useThoughtStore();
 
+	const isMutating = Boolean(useIsMutating({ mutationKey: ["editThought"] }));
+
 	return useMutation({
-		mutationKey: ["newThought"],
+		mutationKey: ["editThought"],
 		mutationFn: async (payload: { title?: string; content?: string; contentMd?: string }) => {
+			if (isMutating) {
+				return;
+			}
+
 			let titleObj = {};
 			if (payload.title !== undefined) {
 				const titleTs = new Date();
