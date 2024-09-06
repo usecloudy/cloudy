@@ -7,7 +7,7 @@ const spinnerVariants = cva("rounded-full border-solid animate-spin", {
 	variants: {
 		size: {
 			xs: "w-3.5 h-3.5 border-2",
-			sm: "w-6 h-6 border-2",
+			sm: "w-5 h-5 border-2",
 			md: "w-10 h-10 border-4",
 			lg: "w-16 h-16 border-4",
 		},

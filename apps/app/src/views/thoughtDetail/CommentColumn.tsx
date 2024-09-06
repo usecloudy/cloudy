@@ -107,7 +107,7 @@ const CommentColumnInner = ({
 									});
 								}
 							}}
-							className={cn("px-2 relative", isSelected && "bg-accent/80 text-background")}>
+							className={cn("px-2 h-7 relative", isSelected && "bg-accent/80 text-background")}>
 							<MessageCircleIcon className="w-5 h-5" />
 							<span className="text-xs">{comments.length}</span>
 							{hasUnreadComments && (

@@ -164,6 +164,7 @@ const AiCommentThreadInner = ({ commentId }: { commentId: string }) => {
 							content={threadComment.content!}
 							createdAt={threadComment.created_at}
 							hasSuggestion={Boolean(threadComment.suggestion)}
+							isLoadingSuggestion={Boolean(threadComment.is_loading_suggestion)}
 							isApplied={threadComment.is_applied}
 							onMouseEnter={() => {
 								setPreviewContent(threadComment.suggestion);
@@ -201,6 +202,7 @@ const ThreadComment = ({
 	content,
 	createdAt,
 	hasSuggestion,
+	isLoadingSuggestion,
 	onMouseEnter,
 	onMouseLeave,
 	apply,
@@ -212,6 +214,7 @@ const ThreadComment = ({
 	content: string;
 	createdAt: string;
 	hasSuggestion?: boolean;
+	isLoadingSuggestion?: boolean;
 	onMouseEnter?: () => void;
 	onMouseLeave?: () => void;
 	apply?: () => void;
@@ -235,6 +238,11 @@ const ThreadComment = ({
 			<div>
 				<Markdown>{content}</Markdown>
 			</div>
+			{isLoadingSuggestion && (
+				<div className="flex flex-row gap-1 items-center">
+					<LoadingSpinner size="sm" />
+				</div>
+			)}
 			{hasSuggestion && (
 				<div className="flex flex-row gap-1 items-center">
 					<Button

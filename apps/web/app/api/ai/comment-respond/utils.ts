@@ -1,4 +1,5 @@
 import { openai } from "@ai-sdk/openai";
+import { handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { generateText } from "ai";
@@ -76,9 +77,7 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 		});
 	});
 
-	let suggestionContent: string | null = null;
-
-	console.log("messages", messages);
+	const { tool: suggestEditTool, edits, applyEdits } = makeSuggestEditTool(thought.content!);
 
 	const { text: commentText } = await generateText({
 		model: openai.languageModel("gpt-4o-2024-08-06"),
@@ -86,9 +85,7 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 		messages,
 		maxTokens: 1024,
 		tools: {
-			suggestEdit: makeSuggestEditTool(thought.content!, newContent => {
-				suggestionContent = newContent;
-			}),
+			suggestEdit: suggestEditTool,
 		},
 		maxToolRoundtrips: 3,
 		experimental_telemetry: {
@@ -96,12 +93,20 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 		},
 	});
 
-	await supabase.from("thought_chat_threads").insert({
-		comment_id: originalComment.id,
-		content: commentText,
-		suggestion: suggestionContent,
-		role: "assistant",
-	});
+	const hasEdits = edits.length > 0;
+
+	const newComment = handleSupabaseError(
+		await supabase
+			.from("thought_chat_threads")
+			.insert({
+				comment_id: originalComment.id,
+				content: commentText,
+				role: "assistant",
+				is_loading_suggestion: hasEdits,
+			})
+			.select()
+			.single(),
+	);
 
 	await supabase
 		.from("thought_chats")
@@ -109,6 +114,20 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 			is_thread_loading: false,
 		})
 		.eq("id", originalComment.id);
+
+	if (hasEdits) {
+		const editContent = await applyEdits();
+
+		handleSupabaseError(
+			await supabase
+				.from("thought_chat_threads")
+				.update({
+					suggestion: editContent,
+					is_loading_suggestion: false,
+				})
+				.eq("id", newComment.id),
+		);
+	}
 
 	return new Response(
 		JSON.stringify({

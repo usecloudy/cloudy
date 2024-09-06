@@ -779,6 +779,7 @@ export type Database = {
           created_at: string
           id: string
           is_applied: boolean
+          is_loading_suggestion: boolean | null
           role: string
           suggestion: string | null
         }
@@ -788,6 +789,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_applied?: boolean
+          is_loading_suggestion?: boolean | null
           role?: string
           suggestion?: string | null
         }
@@ -797,6 +799,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_applied?: boolean
+          is_loading_suggestion?: boolean | null
           role?: string
           suggestion?: string | null
         }
@@ -875,7 +878,7 @@ export type Database = {
           id: string
           matched_by: string
           matches: string
-          matches_thought_id: string | null
+          matches_thought_id: string
           similarity: number
           thought_id: string
         }
@@ -884,7 +887,7 @@ export type Database = {
           id?: string
           matched_by: string
           matches: string
-          matches_thought_id?: string | null
+          matches_thought_id: string
           similarity?: number
           thought_id: string
         }
@@ -893,7 +896,7 @@ export type Database = {
           id?: string
           matched_by?: string
           matches?: string
-          matches_thought_id?: string | null
+          matches_thought_id?: string
           similarity?: number
           thought_id?: string
         }
@@ -1271,7 +1274,7 @@ export type Database = {
           id: string
           matched_by: string
           matches: string
-          matches_thought_id: string | null
+          matches_thought_id: string
           similarity: number
           thought_id: string
         }[]

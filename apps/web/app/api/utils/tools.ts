@@ -32,36 +32,59 @@ Output the new version of the note including the content to write in the same fo
 	},
 ];
 
-export const makeSuggestEditTool = (thoughtContentHtml: string, setSuggestionContent: (content: string) => void) =>
-	tool({
-		description: `Suggest edits to the note. These instructions will be provided to an assistant that can edit the note. Do not mention this function in your response to the user.
-- If the user is asking you to reorganize the note, make sure you do it extensively while keeping the original meaning, language, and structure of the note.`,
-		parameters: z.object({
-			instructions: z.string().describe("Provide EXACT instructions on how to edit the note"),
-			content: z.string().describe("The write out the EXACT content you are suggesting."),
+interface EditInstruction {
+	instructions: string;
+	content: string;
+}
+
+export const makeSuggestEditTool = (thoughtContentHtml: string) => {
+	const edits: EditInstruction[] = [];
+
+	const applyEdit = async ({ instructions, content }: EditInstruction) => {
+		const { object: newContent } = await generateObject({
+			model: openai.languageModel("gpt-4o-mini-2024-07-18", {
+				structuredOutputs: true,
+			}),
+			messages: makeSuggestEditPrompts({
+				instructions,
+				example: content,
+				content: thoughtContentHtml,
+			}),
+			schema: z.object({
+				newContent: z.string().describe("The new content of the note"),
+			}),
+			temperature: 0.0,
+		});
+
+		return newContent.newContent;
+	};
+
+	const applyEdits = async () => {
+		if (edits.length === 0) {
+			return thoughtContentHtml;
+		}
+
+		if (edits.length > 1) {
+			console.log("Multiple edits");
+		}
+
+		return applyEdit(edits[0]!);
+	};
+
+	return {
+		edits,
+		applyEdits,
+		tool: tool({
+			description: `Suggest edits to the note. These instructions will be provided to an assistant that can edit the note. Do not mention this function in your response to the user.
+	- If the user is asking you to reorganize the note, make sure you do it extensively while keeping the original meaning, language, and structure of the note.`,
+			parameters: z.object({
+				instructions: z.string().describe("Provide EXACT instructions on how to edit the note"),
+				content: z.string().describe("The write out the EXACT content you are suggesting."),
+			}),
+			execute: async (edit: EditInstruction) => {
+				edits.push(edit);
+				return "successfully scheduled edit";
+			},
 		}),
-		execute: async ({ instructions, content }) => {
-			try {
-				const { object: newContent } = await generateObject({
-					model: openai.languageModel("gpt-4o-mini-2024-07-18", {
-						structuredOutputs: true,
-					}),
-					messages: makeSuggestEditPrompts({
-						instructions,
-						example: content,
-						content: thoughtContentHtml,
-					}),
-					schema: z.object({
-						newContent: z.string().describe("The new content of the note"),
-					}),
-					temperature: 0.0,
-				});
-
-				setSuggestionContent(newContent.newContent);
-			} catch (e) {
-				return "failed to edit";
-			}
-
-			return "successfully edited";
-		},
-	});
+	};
+};

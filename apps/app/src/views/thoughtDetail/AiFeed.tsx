@@ -579,7 +579,11 @@ const IdeaSuggestion = ({
 	return (
 		<div
 			key={suggestion.id}
-			className={`flex flex-col gap-2 rounded bg-background p-3 text-sm outline-offset-2 animate-in fade-in slide-in-from-bottom-4 fill-mode-forwards hover:outline hover:outline-accent/40 ${index > 0 ? "delay-" + index * 100 : ""}`}
+			className={cn(
+				"flex flex-col gap-2 rounded bg-background p-3 text-sm outline-offset-2 animate-in fade-in slide-in-from-bottom-4 fill-mode-forwards",
+				index > 0 && `delay-${index * 100}`,
+				suggestion.related_chunks && suggestion.related_chunks.length > 0 && "hover:outline hover:outline-accent/40",
+			)}
 			onMouseEnter={() => handleMouseEnter(suggestion)}
 			onMouseLeave={clearHighlights}>
 			<div className="flex w-full flex-row items-center justify-between gap-2 text-xs text-secondary">
