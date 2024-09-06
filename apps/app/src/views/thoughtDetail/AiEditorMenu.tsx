@@ -72,25 +72,35 @@ const useEditSelection = (editor: Editor) => {
 
 			const formContent = () => {
 				// Remove leading and trailing backticks if present
-				if (newEditingContent.startsWith("```html") || newEditingContent.startsWith("html")) {
+				if (newEditingContent.startsWith("```html") || newEditingContent.startsWith("```")) {
 					const startIndex = newEditingContent.indexOf("\n") + 1;
 					newEditingContent = newEditingContent.substring(startIndex);
 				}
-				if (newEditingContent.endsWith("```")) {
-					const endIndex = newEditingContent.lastIndexOf("```");
-					newEditingContent = newEditingContent.substring(0, endIndex);
+
+				let suffix = "";
+				if (!newEditingContent.endsWith("]]]")) {
+					suffix = "]]]";
 				}
 
-				const hasStartingMark = newEditingContent.includes("[[[");
-				const hasEndingMark = newEditingContent.includes("]]]");
+				contentToSave =
+					content.substring(0, firstEditStart) + newEditingContent + suffix + content.substring(lastEditEnd);
+			};
 
-				if (hasStartingMark && hasEndingMark) {
-					contentToSave = newEditingContent.replace(/\[\[\[/g, "<edit>").replace(/\]\]\]/g, "</edit>");
-				} else if (hasStartingMark) {
-					contentToSave = newEditingContent.replace(/\[\[\[/g, "<edit>");
-					contentToSave += "</edit>";
-				} else {
-					contentToSave = newEditingContent;
+			const replaceTokens = () => {
+				const openingTokens = processSearches(editor.view.state.doc, "[[[", 0.99);
+				const closingTokens = processSearches(editor.view.state.doc, "]]]", 0.99);
+
+				if (openingTokens.length > 0 && closingTokens.length > 0) {
+					editor
+						.chain()
+						.setTextSelection({
+							from: openingTokens[0].from,
+							to: closingTokens[0].to,
+						})
+						.setMark("editHighlight")
+						.deleteRange(closingTokens[0])
+						.deleteRange(openingTokens[0])
+						.run();
 				}
 			};
 
@@ -103,26 +113,18 @@ const useEditSelection = (editor: Editor) => {
 					formContent();
 					// Use requestAnimationFrame to schedule content updates
 					editor.commands.setContent(contentToSave);
+					replaceTokens();
 				}
 			};
 
 			await processChunks();
 
-			editor.commands.setContent(newEditingContent);
+			newEditingContent += "]]]";
 
-			const openingTokens = processSearches(editor.view.state.doc, "[[[", 0.99);
-			const closingTokens = processSearches(editor.view.state.doc, "]]]", 0.99);
+			const finalContent = content.substring(0, firstEditStart) + newEditingContent + content.substring(lastEditEnd);
+			editor.commands.setContent(finalContent);
 
-			editor
-				.chain()
-				.setTextSelection({
-					from: openingTokens[0].from,
-					to: closingTokens[0].to,
-				})
-				.setMark("editHighlight")
-				.deleteRange(closingTokens[0])
-				.deleteRange(openingTokens[0])
-				.run();
+			replaceTokens();
 		},
 	});
 };

@@ -231,6 +231,10 @@
 	@apply bg-accent/30;
 }
 
+.tiptap editTest {
+	@apply bg-accent/30;
+}
+
 .tiptap .editor-addition-highlight {
 	@apply bg-green-500/30 rounded-sm;
 }

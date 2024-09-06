@@ -1,7 +1,6 @@
 import { ThoughtSignals } from "@cloudy/utils/common";
-import { ErrorBoundary } from "@sentry/react";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
-import { Mark, mergeAttributes } from "@tiptap/core";
+import { Mark, Node, mergeAttributes } from "@tiptap/core";
 import ListKeymap from "@tiptap/extension-list-keymap";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskItem from "@tiptap/extension-task-item";
@@ -17,7 +16,7 @@ import { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useNavigate, useParams } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
-import { useMount, usePrevious, useUnmount, useUpdateEffect } from "react-use";
+import { useMount, useUnmount, useUpdateEffect } from "react-use";
 import { Markdown } from "tiptap-markdown";
 
 import { SimpleLayout } from "src/components/SimpleLayout";
@@ -85,8 +84,6 @@ export const ThoughtDetailView = () => {
 
 const ThoughtDetailViewExisting = ({ thoughtId, isNewMode }: { thoughtId?: string; isNewMode: boolean }) => {
 	const { data: thought, isLoading } = useThought(thoughtId);
-
-	console.log("thoughtdetailview", thoughtId, isNewMode, isLoading);
 
 	return (
 		<SimpleLayout isLoading={Boolean(isLoading && !isNewMode)} className="lg:overflow-hidden items-center">
@@ -275,7 +272,6 @@ const EditorView = ({
 				new Date(latestRemoteContentTs) > lastLocalThoughtContentTs) ||
 			!lastLocalThoughtContentTs
 		) {
-			console.log("updating content", remoteContent);
 			editor?.commands.setContent(remoteContent ?? "");
 		}
 	}, [latestRemoteContentTs]);

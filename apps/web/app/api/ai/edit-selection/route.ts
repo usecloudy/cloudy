@@ -34,7 +34,7 @@ const editSelection = async (payload: Payload) => {
 The text is in HTML format to be used in the Tiptap editor.
 Use the relevant html tags to format the text when needed, such as <ol></ol> for ordered lists, <ul></ul> for unordered lists, <h1></h1> for headings, etc.
 
-Return the entire content after the edit, wrap your new changes with the [[[ and ]]] tags so the user sees it after the change given the instruction. Make sure replacing the content in the [[[ and ]]] tags will not break the HTML formatting.
+Return the content that will replace the selection, wrap your new changes with the [[[ and ]]] tags so the user sees it after the change given the instruction. Make sure replacing the content in the [[[ and ]]] tags will not break the HTML formatting.
 
 Below is the text with the selection marked with [[[ and ]]]:
 ---
@@ -49,15 +49,12 @@ Below is the text with the selection marked with [[[ and ]]]:
 
 Edit the following selection given the instruction:
 "Make the content longer"
-Response:
+Return only the content that will replace the selection, you MUST start with [[[ and end with ]]]:
 ---
-<p>
-<h1>This [[[is the title</h1>
+[[[is the title</h1>
 <p>This is the content and it is much longer</p>
 <ul>
-<li>This is a list]]] item</li>
-</ul>
-</p>
+<li>This is a list]]]
 ---
 
 Below is the text with the selection marked with [[[ and ]]]:
@@ -67,7 +64,7 @@ ${payload.content}
 
 Edit the following selection given the instruction:
 "${payload.instruction}"
-Response:
+Return only the content that will replace the selection, you MUST start with [[[ and end with ]]]:
 ---`,
 			},
 		],
@@ -75,6 +72,7 @@ Response:
 		experimental_telemetry: {
 			isEnabled: true,
 		},
+		stopSequences: ["]]]"],
 	});
 
 	return stream.toTextStreamResponse();
