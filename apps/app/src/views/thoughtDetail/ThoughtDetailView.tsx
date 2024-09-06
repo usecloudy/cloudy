@@ -33,7 +33,7 @@ import { CommentColumn } from "./CommentColumn";
 import { ControlColumn } from "./ControlColumn";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
-import { useEditThought, useThought } from "./hooks";
+import { ThoughtEditPayload, useEditThought, useThought } from "./hooks";
 import { usePreviewContentStore } from "./previewContentStore";
 import { IndentExtension, IndentNode } from "./tabExtension";
 import { useThoughtStore } from "./thoughtStore";
@@ -105,7 +105,7 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 	const navigate = useNavigate();
 
 	const { onChange } = useSave(
-		async (payload: { title?: string; content?: string; contentMd?: string }) => {
+		async (payload: ThoughtEditPayload) => {
 			const updatedThought = await editThought(payload);
 
 			if (!thoughtId && updatedThought?.id) {
@@ -187,7 +187,7 @@ const EditorView = ({
 	latestRemoteContentTs?: string;
 	latestRemoteTitleTs?: string;
 	collections: Collection[];
-	onChange: (payload: { title?: string; content?: string; contentMd?: string }) => void;
+	onChange: (payload: ThoughtEditPayload) => void;
 }) => {
 	const { highlights } = useHighlightStore();
 	const {
@@ -250,8 +250,10 @@ const EditorView = ({
 			const content = editor?.getHTML();
 			const contentMd = editor?.storage.markdown.getMarkdown();
 
-			onChange({ content, contentMd });
-			setLastLocalThoughtContentTs(new Date());
+			const ts = new Date();
+
+			onChange({ content, contentMd, ts });
+			setLastLocalThoughtContentTs(ts);
 			setCurrentContent(content ?? "");
 		}
 	};
@@ -273,6 +275,7 @@ const EditorView = ({
 				new Date(latestRemoteContentTs) > lastLocalThoughtContentTs) ||
 			!lastLocalThoughtContentTs
 		) {
+			console.log("updating content", remoteContent);
 			editor?.commands.setContent(remoteContent ?? "");
 		}
 	}, [latestRemoteContentTs]);
@@ -384,14 +387,16 @@ const EditorView = ({
 	});
 
 	useUpdateEffect(() => {
-		onChange({ title });
-		setLastLocalThoughtTitleTs(new Date());
+		const ts = new Date();
+		onChange({ title, ts });
+		setLastLocalThoughtTitleTs(ts);
 	}, [saveTitleKey]);
 
 	const handleChangeTitle = (title: string) => {
+		const ts = new Date();
 		setTitle(title);
-		onChange({ title });
-		setLastLocalThoughtTitleTs(new Date());
+		onChange({ title, ts });
+		setLastLocalThoughtTitleTs(ts);
 	};
 
 	const handleSetIsHighlighting = (isHighlighting: boolean) => {

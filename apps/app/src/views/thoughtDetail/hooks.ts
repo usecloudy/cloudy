@@ -47,26 +47,31 @@ const triggerAiUpdatesWhenChangeIsSignificant = async (
 	);
 };
 
+export interface ThoughtEditPayload {
+	title?: string;
+	content?: string;
+	contentMd?: string;
+	ts: Date;
+}
+
 export const useEditThought = (thoughtId?: string) => {
 	const isMutating = Boolean(useIsMutating({ mutationKey: ["editThought"] }));
 
 	return useMutation({
 		mutationKey: ["editThought"],
-		mutationFn: async (payload: { title?: string; content?: string; contentMd?: string }) => {
+		mutationFn: async (payload?: ThoughtEditPayload | void) => {
 			if (isMutating) {
 				return;
 			}
 
 			let titleObj = {};
-			if (payload.title !== undefined) {
-				const titleTs = new Date();
-				titleObj = { title: payload.title, title_ts: titleTs.toISOString() };
+			if (payload?.title !== undefined) {
+				titleObj = { title: payload.title, title_ts: payload.ts };
 			}
 
 			let contentObj = {};
-			if (payload.content !== undefined) {
-				const contentTs = new Date();
-				contentObj = { content: payload.content, content_ts: contentTs.toISOString() };
+			if (payload?.content !== undefined) {
+				contentObj = { content: payload.content, content_ts: payload.ts };
 			}
 
 			const newThought = handleSupabaseError(
@@ -76,7 +81,7 @@ export const useEditThought = (thoughtId?: string) => {
 						id: thoughtId,
 						...titleObj,
 						...contentObj,
-						...(payload.contentMd !== undefined && { content_md: payload.contentMd }),
+						...(payload?.contentMd !== undefined && { content_md: payload.contentMd }),
 					})
 					.select()
 					.single(),

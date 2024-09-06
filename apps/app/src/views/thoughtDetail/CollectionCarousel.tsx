@@ -58,7 +58,7 @@ const useNewCollection = () => {
 			let thoughtIdToUse = payload.thoughtId;
 
 			if (!thoughtIdToUse) {
-				const thought = await editThought({});
+				const thought = await editThought();
 				thoughtIdToUse = thought?.id;
 				if (thought?.id) {
 					navigate(`/thoughts/${thought.id}`, { replace: true, preventScrollReset: true });
@@ -97,7 +97,7 @@ const useAddToCollection = () => {
 	return useMutation({
 		mutationFn: async (payload: { collectionId: string; thoughtId?: string | null }) => {
 			if (!payload.thoughtId) {
-				const thought = await editThought({});
+				const thought = await editThought();
 				payload.thoughtId = thought?.id;
 				if (thought?.id) {
 					navigate(`/thoughts/${thought.id}`, { replace: true, preventScrollReset: true });

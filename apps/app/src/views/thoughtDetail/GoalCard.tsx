@@ -20,7 +20,7 @@ const useSetIntent = (thoughtId?: string) => {
 			let thoughtIdToUse = thoughtId;
 
 			if (!thoughtId) {
-				const thought = await editThought({});
+				const thought = await editThought();
 				thoughtIdToUse = thought?.id;
 				if (!thoughtId && thoughtIdToUse) {
 					navigate(`/thoughts/${thoughtIdToUse}`, { replace: true, preventScrollReset: true });
