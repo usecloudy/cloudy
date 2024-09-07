@@ -9,7 +9,9 @@ import { pdfjs } from "react-pdf";
 import { apiClient } from "src/api/client";
 import { Button } from "src/components/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "src/components/Dialog";
+import { Dropdown, DropdownItem } from "src/components/Dropdown";
 import LoadingSpinner from "src/components/LoadingSpinner";
+import { SelectDropdown } from "src/components/SelectDropdown";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -17,7 +19,6 @@ export const useGeneratePDF = (thoughtId: string, options: ThoughtsExportGetRequ
 	const { data, isLoading } = useQuery({
 		queryKey: ["thoughts", thoughtId, "export", JSON.stringify(options)],
 		queryFn: async () => {
-			console.log("options", options);
 			const response = await apiClient.get(`/api/thoughts/${thoughtId}/export`, {
 				params: {
 					options: JSON.stringify(options),
@@ -30,6 +31,7 @@ export const useGeneratePDF = (thoughtId: string, options: ThoughtsExportGetRequ
 
 			return URL.createObjectURL(response.data);
 		},
+		staleTime: 15000,
 	});
 
 	const downloadPdf = () => {
@@ -69,7 +71,8 @@ const ExportDialogInner = ({ thoughtId, onClose }: { thoughtId: string; onClose:
 			hideWatermark: false,
 			hideTitle: false,
 			colorScheme: "default",
-			fontSizePt: 12,
+			fontSizePt: 11,
+			paperSize: "letter",
 		},
 	});
 
@@ -86,25 +89,8 @@ const ExportDialogInner = ({ thoughtId, onClose }: { thoughtId: string; onClose:
 			<div className="w-full h-64 overflow-hidden bg-card flex items-center justify-center p-0 rounded-sm border border-border">
 				{pdf && !isLoading ? <iframe title="pdf" className="w-full h-full" src={pdf} /> : <LoadingSpinner size="sm" />}
 			</div>
-			<form className="space-y-4 mt-4">
-				<div className="flex items-center space-x-2 justify-between">
-					<label htmlFor="hideWatermark">Hide Watermark</label>
-					<Controller
-						name="hideWatermark"
-						control={control}
-						render={({ field }) => <Switch defaultChecked={false} onCheckedChange={field.onChange} />}
-					/>
-				</div>
-				<div className="flex items-center space-x-2 justify-between">
-					<label htmlFor="hideTitle">Hide Title</label>
-					<Controller
-						name="hideTitle"
-						control={control}
-						render={({ field }) => <Switch defaultChecked={false} onCheckedChange={field.onChange} />}
-					/>
-				</div>
-				<div className="flex items-center justify-between space-x-2">
-					<label>Color Scheme</label>
+			<form className="space-y-4 mt-4 mb-4">
+				<FormItem label="Color Scheme" htmlFor="colorScheme">
 					<div className="flex space-x-2">
 						<ColorSwatch
 							scheme="default"
@@ -117,31 +103,56 @@ const ExportDialogInner = ({ thoughtId, onClose }: { thoughtId: string; onClose:
 							onClick={() => setValue("colorScheme", "white")}
 						/>
 					</div>
-				</div>
-				<div className="flex items-center space-x-2 justify-between gap-4">
-					<label htmlFor="fontSizePt" className="whitespace-nowrap">
-						Font Size
-					</label>
-					<Controller
-						render={({ field }) => (
-							<Slider
-								// {...field}
-								min={8}
-								max={18}
-								defaultValue={[11]}
-								onValueCommit={values => {
-									console.log("values", values);
-									field.onChange(values[0]);
-								}}
-								showValue
-							/>
-						)}
-						control={control}
-						name="fontSizePt"
+				</FormItem>
+				<FormItem label="Font Size" htmlFor="fontSizePt">
+					<div className="pl-12 w-full">
+						<Controller
+							render={({ field }) => (
+								<Slider
+									// {...field}
+									min={8}
+									max={18}
+									defaultValue={[11]}
+									onValueCommit={values => {
+										console.log("values", values);
+										field.onChange(values[0]);
+									}}
+									showValue
+								/>
+							)}
+							control={control}
+							name="fontSizePt"
+						/>
+					</div>
+				</FormItem>
+				<FormItem label="Paper Size" htmlFor="paperSize">
+					<SelectDropdown
+						options={[
+							{ value: "a4", label: "A4" },
+							{ value: "letter", label: "Letter" },
+							{ value: "legal", label: "Legal" },
+						]}
+						value={exportOptions.paperSize!}
+						onChange={value => setValue("paperSize", value as "a4" | "letter" | "legal")}
+						className="w-32"
 					/>
-				</div>
+				</FormItem>
+				<FormItem label="Hide Watermark" htmlFor="hideWatermark">
+					<Controller
+						name="hideWatermark"
+						control={control}
+						render={({ field }) => <Switch defaultChecked={false} onCheckedChange={field.onChange} />}
+					/>
+				</FormItem>
+				<FormItem label="Hide Title" htmlFor="hideTitle">
+					<Controller
+						name="hideTitle"
+						control={control}
+						render={({ field }) => <Switch defaultChecked={false} onCheckedChange={field.onChange} />}
+					/>
+				</FormItem>
 			</form>
-			<DialogFooter>
+			<DialogFooter className="flex-col gap-2 md:flex-row">
 				<Button onClick={downloadPdf} disabled={!pdf || isLoading}>
 					{pdf && !isLoading ? (
 						<>
@@ -157,6 +168,17 @@ const ExportDialogInner = ({ thoughtId, onClose }: { thoughtId: string; onClose:
 				</Button>
 			</DialogFooter>
 		</DialogContent>
+	);
+};
+
+const FormItem = ({ label, htmlFor, children }: { label: string; htmlFor: string; children: React.ReactNode }) => {
+	return (
+		<div className="flex items-center space-x-2 justify-between h-8">
+			<label htmlFor={htmlFor} className="whitespace-nowrap">
+				{label}
+			</label>
+			{children}
+		</div>
 	);
 };
 

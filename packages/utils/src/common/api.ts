@@ -22,4 +22,5 @@ export interface ThoughtsExportGetRequestBody {
     hideTitle?: boolean;
     colorScheme?: "default" | "white";
     fontSizePt?: number;
+    paperSize?: "a4" | "letter" | "legal";
 }

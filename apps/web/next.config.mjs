@@ -34,6 +34,7 @@ const config = withPlugins([[withBundleAnalyzer({ enabled: env.ANALYZE })]], {
 			},
 		];
 	},
+
 	// This is required to support PostHog trailing slash API requests
 	skipTrailingSlashRedirect: true,
 });
