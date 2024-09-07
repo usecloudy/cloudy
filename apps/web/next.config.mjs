@@ -6,15 +6,14 @@ import { env } from "./env.mjs";
 /**
  * @type {import('next').NextConfig}
  */
-const config = withPlugins([[withBundleAnalyzer({ enabled: env.ANALYZE })]], {
+const baseConfig = {
 	reactStrictMode: true,
 	logging: {
 		fetches: {
 			fullUrl: true,
 		},
 	},
-	experimental: { instrumentationHook: true },
-	serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
+	experimental: { instrumentationHook: true, serverComponentsExternalPackages: ["puppeteer-core", "@sparticuz/chromium"] },
 	rewrites() {
 		return [
 			{ source: "/healthz", destination: "/api/health" },
@@ -38,6 +37,8 @@ const config = withPlugins([[withBundleAnalyzer({ enabled: env.ANALYZE })]], {
 
 	// This is required to support PostHog trailing slash API requests
 	skipTrailingSlashRedirect: true,
-});
+};
+
+const config = withPlugins([[withBundleAnalyzer({ enabled: env.ANALYZE })]], baseConfig);
 
 export default config;
