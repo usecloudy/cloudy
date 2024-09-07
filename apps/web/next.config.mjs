@@ -14,6 +14,7 @@ const config = withPlugins([[withBundleAnalyzer({ enabled: env.ANALYZE })]], {
 		},
 	},
 	experimental: { instrumentationHook: true },
+	serverExternalPackages: ["@sparticuz/chromium"],
 	rewrites() {
 		return [
 			{ source: "/healthz", destination: "/api/health" },
