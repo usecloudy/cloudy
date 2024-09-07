@@ -60,7 +60,7 @@ export const ExportDialog = ({ thoughtId }: { thoughtId: string }) => {
 					<span>Export Note</span>
 				</Button>
 			</DialogTrigger>
-			<ExportDialogInner thoughtId={thoughtId} onClose={handleOnClose} />
+			{isOpen && <ExportDialogInner thoughtId={thoughtId} onClose={handleOnClose} />}
 		</Dialog>
 	);
 };
