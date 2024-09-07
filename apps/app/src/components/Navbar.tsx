@@ -26,6 +26,7 @@ import { useSubscriptionModalStore } from "src/views/pricing/subscriptionModalSt
 
 import { Button } from "./Button";
 import { Dropdown, DropdownItem } from "./Dropdown";
+import { FeedbackDropdown } from "./Feedback";
 
 const useBillingPortal = () => {
 	return useMutation({
@@ -112,7 +113,7 @@ export const Navbar: FC = () => {
 					{customerStatus?.isTrialing && (
 						<Dropdown
 							trigger={
-								<div className="bg-accent/10 px-2 py-1 rounded flex flex-row items-center gap-1 text-secondary cursor-pointer hover:bg-accent/20">
+								<div className="bg-card px-2 py-1 rounded flex flex-row items-center gap-1 text-secondary cursor-pointer hover:bg-accent/20">
 									<TimerIcon className="h-3.5 w-3.5" />
 									<span className="text-xs">
 										{`${pluralize(customerStatus.remainingDaysInTrial ?? 0, "day")} remaining in trial`}
@@ -126,6 +127,7 @@ export const Navbar: FC = () => {
 						</Dropdown>
 					)}
 				</div>
+				<FeedbackDropdown />
 				<Dropdown
 					trigger={
 						<Button variant="ghost" size="icon" aria-label="New thought">

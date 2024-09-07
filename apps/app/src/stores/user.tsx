@@ -1,5 +1,6 @@
 import * as amplitude from "@amplitude/analytics-browser";
 import { PaymentsCustomersStatusGetResponse } from "@cloudy/utils/common";
+import * as Sentry from "@sentry/react";
 import { Session, User } from "@supabase/supabase-js";
 import { useMutation } from "@tanstack/react-query";
 import posthog from "posthog-js";
@@ -17,8 +18,14 @@ export const createUserIfNotExists = async (user: User) => {
 
 const waitForStripeCustomer = () =>
 	new Promise<void>(resolve => {
+		let iterations = 0;
 		const interval = setInterval(async () => {
 			try {
+				if (iterations >= 8) {
+					clearInterval(interval);
+					resolve();
+					return;
+				}
 				const status = await apiClient
 					.get<PaymentsCustomersStatusGetResponse>("/api/payments/customers/status")
 					.then(res => res.data);
@@ -26,7 +33,10 @@ const waitForStripeCustomer = () =>
 					clearInterval(interval);
 					resolve();
 				}
-			} catch (error) {}
+				iterations++;
+			} catch (error) {
+				iterations++;
+			}
 		}, 1000);
 	});
 
@@ -64,28 +74,34 @@ export const useUserGuard = () => {
 
 export const useUserHandler = () => {
 	const { user, setUser, setIsReady } = useUserStore();
+
+	const handleClearUser = () => {
+		setUser(null, false);
+		setIsReady(false);
+		amplitude.setUserId(undefined);
+		posthog.identify(undefined);
+	};
+
 	const { mutate: handleSetUser } = useMutation({
 		mutationKey: ["handleSetUser"],
 		mutationFn: async (session: Session) => {
 			setUser(session.user);
 
-			amplitude.setUserId(session.user.id);
-			posthog.identify(session.user.id, { email: session.user.email });
-			await setupAuthHeader();
-			await waitForStripeCustomer();
-			await startTrialIfEligible();
-			setIsReady(true);
+			try {
+				amplitude.setUserId(session.user.id);
+				posthog.identify(session.user.id, { email: session.user.email });
+				await setupAuthHeader();
+				await waitForStripeCustomer();
+				await startTrialIfEligible();
+				setIsReady(true);
+			} catch (e) {
+				Sentry.captureException(e);
+				handleClearUser();
+			}
 		},
 	});
 
 	useMount(async () => {
-		const handleClearUser = () => {
-			setUser(null, false);
-			setIsReady(false);
-			amplitude.setUserId(undefined);
-			posthog.identify(undefined);
-		};
-
 		supabase.auth.getSession().then(({ data: { session } }) => {
 			if (session?.user) {
 				handleSetUser(session);
