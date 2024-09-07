@@ -6,10 +6,12 @@ import {
 	CircleFadingArrowUpIcon,
 	CircleHelpIcon,
 	CreditCardIcon,
+	HandshakeIcon,
 	Home,
 	LogOut,
 	MenuIcon,
 	Plus,
+	ScrollTextIcon,
 	TimerIcon,
 } from "lucide-react";
 import { FC } from "react";
@@ -118,7 +120,7 @@ export const Navbar: FC = () => {
 								</div>
 							}>
 							<DropdownItem className="text-accent" onSelect={handleOpenSubscriptionModal}>
-								<CircleFadingArrowUpIcon className="h-4 w-4" />
+								<CircleFadingArrowUpIcon className="size-4" />
 								<span>Subscribe</span>
 							</DropdownItem>
 						</Dropdown>
@@ -132,7 +134,7 @@ export const Navbar: FC = () => {
 					}
 					className="w-64">
 					<div className="flex flex-col mb-2">
-						<div className="flex flex-col gap-1 p-2  border-b border-border">
+						<div className="flex flex-col gap-1 p-2 border-b border-border">
 							<span className="text-sm font-medium text-secondary">Signed in as</span>
 							<span className="text-sm">{user.email}</span>
 						</div>
@@ -147,24 +149,38 @@ export const Navbar: FC = () => {
 					</div>
 					{customerStatus?.isTrialing && (
 						<DropdownItem className="text-accent" onSelect={handleOpenSubscriptionModal}>
-							<CircleFadingArrowUpIcon className="h-4 w-4" />
+							<CircleFadingArrowUpIcon className="size-4" />
 							<span>Subscribe</span>
 						</DropdownItem>
 					)}
 					{customerStatus?.isActive && (
 						<DropdownItem onSelect={handleOpenBillingPortal}>
-							<CreditCardIcon className="h-4 w-4" />
+							<CreditCardIcon className="size-4" />
 							<span>Manage Subscription</span>
 						</DropdownItem>
 					)}
+					<div className="border-b border-border my-2" />
 					<a href="https://usecloudy.com/support">
 						<DropdownItem>
-							<CircleHelpIcon className="h-4 w-4" />
+							<CircleHelpIcon className="size-4" />
 							<span>Support</span>
 						</DropdownItem>
 					</a>
-					<DropdownItem onSelect={handleSignOut}>
-						<LogOut className="h-4 w-4" />
+					<a href="https://usecloudy.com/pp">
+						<DropdownItem>
+							<HandshakeIcon className="size-4" />
+							<span>Privacy Policy</span>
+						</DropdownItem>
+					</a>
+					<a href="https://usecloudy.com/tos">
+						<DropdownItem>
+							<ScrollTextIcon className="size-4" />
+							<span>Terms of Service</span>
+						</DropdownItem>
+					</a>
+					<div className="border-b border-border my-2" />
+					<DropdownItem onSelect={handleSignOut} className="text-red-600">
+						<LogOut className="size-4" />
 						<span>Sign out</span>
 					</DropdownItem>
 				</Dropdown>
