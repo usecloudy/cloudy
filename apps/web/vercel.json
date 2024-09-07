@@ -1,6 +1,6 @@
 {
 	"functions": {
-		"api/thoughts/[thoughtId]/export/route.ts": {
+		"api/thoughts/[thoughtId]/export": {
 			"memory": 2048
 		}
 	}
