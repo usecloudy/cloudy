@@ -1,4 +1,13 @@
+import { Mark, mergeAttributes } from "@tiptap/core";
 import { Extension, Node } from "@tiptap/core";
+import ListKeymap from "@tiptap/extension-list-keymap";
+import Placeholder from "@tiptap/extension-placeholder";
+import TaskItem from "@tiptap/extension-task-item";
+import TaskList from "@tiptap/extension-task-list";
+import Typography from "@tiptap/extension-typography";
+import Underline from "@tiptap/extension-underline";
+import StarterKit from "@tiptap/starter-kit";
+import { Markdown } from "tiptap-markdown";
 
 export const IndentNode = Node.create({
 	name: "indent",
@@ -75,3 +84,60 @@ export const IndentExtension = Extension.create({
 		};
 	},
 });
+
+// Define a custom CommentHighlight mark
+const CommentHighlight = Mark.create({
+	name: "commentHighlight",
+	renderHTML({ HTMLAttributes }) {
+		return ["span", mergeAttributes(HTMLAttributes, { class: "editor-comment-highlight" }), 0];
+	},
+});
+
+const AdditionHighlight = Mark.create({
+	name: "additionHighlight",
+	renderHTML({ HTMLAttributes }) {
+		return ["span", mergeAttributes(HTMLAttributes, { class: "editor-addition-highlight" }), 0];
+	},
+});
+
+const EditHighlight = Mark.create({
+	name: "editHighlight",
+	renderHTML({ HTMLAttributes }) {
+		return ["edit", HTMLAttributes, 0];
+	},
+	parseHTML() {
+		return [{ tag: "edit" }];
+	},
+});
+
+export const tiptapExtensions = [
+	StarterKit.configure({
+		dropcursor: {
+			color: "rgb(var(--color-accent) / 0.6)",
+			width: 4,
+		},
+	}),
+	Placeholder.configure({
+		placeholder: "What are you thinking about?",
+	}),
+	Markdown,
+	CommentHighlight,
+	AdditionHighlight,
+	EditHighlight,
+	Underline,
+	TaskList.configure({
+		HTMLAttributes: {
+			class: "editor-task-list",
+		},
+	}),
+	TaskItem.configure({
+		nested: true,
+		HTMLAttributes: {
+			class: "editor-task-item",
+		},
+	}),
+	Typography,
+	ListKeymap,
+	IndentExtension,
+	IndentNode,
+];

@@ -16,3 +16,10 @@ export interface PaymentsCustomersStatusGetResponse {
     uid: string;
     customerStatus: CustomerStatus | null;
 }
+
+export interface ThoughtsExportGetRequestBody {
+    hideWatermark?: boolean;
+    hideTitle?: boolean;
+    colorScheme?: "default" | "white";
+    fontSizePt?: number;
+}

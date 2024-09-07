@@ -7,6 +7,7 @@ import { ThoughtCard } from "src/components/ThoughtCard";
 
 import { Button } from "../../components/Button";
 import { AiFeed } from "./AiFeed";
+import { ExportDialog } from "./ExportDialog";
 import { GoalCard } from "./GoalCard";
 import { useDeleteThought, useRelatedThoughts, useThought } from "./hooks";
 
@@ -53,11 +54,12 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 						<div className="border-border flex flex-col w-full rounded-md border p-4">
 							<GoalCard thoughtId={thoughtId} />
 							{thoughtId && (
-								<div className="flex flex-col gap-2">
+								<div className="flex flex-col">
 									<div className="flex items-center gap-1 mb-0.5 mt-4">
 										<ZapIcon className="h-4 w-4 text-secondary" />
 										<h4 className="text-sm font-medium text-secondary">Note Actions</h4>
 									</div>
+									<ExportDialog thoughtId={thoughtId} />
 									<Button
 										variant="ghost"
 										className="justify-start text-red-600 hover:bg-red-600"

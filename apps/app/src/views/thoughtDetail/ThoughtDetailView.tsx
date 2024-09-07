@@ -1,14 +1,6 @@
 import { ThoughtSignals } from "@cloudy/utils/common";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
-import { Mark, Node, mergeAttributes } from "@tiptap/core";
-import ListKeymap from "@tiptap/extension-list-keymap";
-import Placeholder from "@tiptap/extension-placeholder";
-import TaskItem from "@tiptap/extension-task-item";
-import TaskList from "@tiptap/extension-task-list";
-import Typography from "@tiptap/extension-typography";
-import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import { diffLines } from "diff";
 import { GripVertical } from "lucide-react";
 import posthog from "posthog-js";
@@ -17,7 +9,6 @@ import { Helmet } from "react-helmet";
 import { useNavigate, useParams } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
 import { useMount, useUnmount, useUpdateEffect } from "react-use";
-import { Markdown } from "tiptap-markdown";
 
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { useHighlightStore } from "src/stores/highlight";
@@ -34,8 +25,8 @@ import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { ThoughtEditPayload, useEditThought, useThought } from "./hooks";
 import { usePreviewContentStore } from "./previewContentStore";
-import { IndentExtension, IndentNode } from "./tabExtension";
 import { useThoughtStore } from "./thoughtStore";
+import { tiptapExtensions } from "./tiptap";
 
 type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
 type Collection = NonNullable<Thought["collections"]>[0];
@@ -144,31 +135,6 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 	);
 };
 
-// Define a custom CommentHighlight mark
-const CommentHighlight = Mark.create({
-	name: "commentHighlight",
-	renderHTML({ HTMLAttributes }) {
-		return ["span", mergeAttributes(HTMLAttributes, { class: "editor-comment-highlight" }), 0];
-	},
-});
-
-const AdditionHighlight = Mark.create({
-	name: "additionHighlight",
-	renderHTML({ HTMLAttributes }) {
-		return ["span", mergeAttributes(HTMLAttributes, { class: "editor-addition-highlight" }), 0];
-	},
-});
-
-const EditHighlight = Mark.create({
-	name: "editHighlight",
-	renderHTML({ HTMLAttributes }) {
-		return ["edit", HTMLAttributes, 0];
-	},
-	parseHTML() {
-		return [{ tag: "edit" }];
-	},
-});
-
 const EditorView = ({
 	thoughtId,
 	remoteContent,
@@ -202,37 +168,7 @@ const EditorView = ({
 	const existingContent = useRef("");
 
 	const editor = useEditor({
-		extensions: [
-			StarterKit.configure({
-				dropcursor: {
-					color: "rgb(var(--color-accent) / 0.6)",
-					width: 4,
-				},
-			}),
-			Placeholder.configure({
-				placeholder: "What are you thinking about?",
-			}),
-			Markdown,
-			CommentHighlight,
-			AdditionHighlight,
-			EditHighlight,
-			Underline,
-			TaskList.configure({
-				HTMLAttributes: {
-					class: "editor-task-list",
-				},
-			}),
-			TaskItem.configure({
-				nested: true,
-				HTMLAttributes: {
-					class: "editor-task-item",
-				},
-			}),
-			Typography,
-			ListKeymap,
-			IndentExtension,
-			IndentNode,
-		],
+		extensions: tiptapExtensions,
 
 		content: remoteContent ?? "",
 		onUpdate: async () => {
