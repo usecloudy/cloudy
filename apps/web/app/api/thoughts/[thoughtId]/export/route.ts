@@ -29,6 +29,8 @@ export const GET = async (req: NextRequest, { params: { thoughtId } }: { params:
 
 	const thought = handleSupabaseError(await supabase.from("thoughts").select("title, content").eq("id", thoughtId).single());
 
+	await chromium.font("https://fonts.gstatic.com/s/notosans/v36/o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5ardu3mhPy1Fig.woff2");
+
 	const isProduction = process.env.NODE_ENV === "production";
 	const executablePath = isProduction ? await chromium.executablePath() : LOCAL_CHROME_EXECUTABLE;
 	const browser = await puppeteer.launch({
@@ -51,22 +53,42 @@ export const GET = async (req: NextRequest, { params: { thoughtId } }: { params:
 
 	const contentHTML = `
 		<!DOCTYPE html>
-		<html lang="en">
+		<html lang="en" class="${options.colorScheme === "white" ? "colorSchemeWhite" : "colorSchemeDefault"}">
 			<head>
 				${head}
 			</head>
-			<body class="${options.colorScheme === "white" ? "colorSchemeWhite" : "colorSchemeDefault"}">
+			<body>
 				${options.hideTitle ? "" : `<h1>${thought.title}</h1>`}
 				<div>${thought.content}</div>
-                ${options.hideWatermark ? "" : `<div class="watermark"><span>written with Cloudy</span><div class="logoContainer"><img class="logo" src="data:image/png;base64,${base64Logo}" /></div><span>usecloudy.com</span></div>`}
 			</body>
 		</html>
 	`;
+
 	await page.setContent(contentHTML ?? "");
 
 	await page.addStyleTag({ content: getExportStyle(options) });
 
-	const pdfBuffer = await page.pdf({ format: options.paperSize ?? "a4", printBackground: true });
+	const footerHtml = `
+    <!DOCTYPE html>
+		<html lang="en">
+			<head>
+                <style>${getFooterCss(options)}</style>
+			</head>
+			<body>
+                <div class="bg"></div>
+				<div class="watermark"><span>written with Cloudy</span><div class="logoContainer"><img class="logo" src="data:image/png;base64,${base64Logo}" /></div><span>usecloudy.com</span></div>
+			</body>
+		</html>
+    `;
+
+	const pdfBuffer = await page.pdf({
+		format: options.paperSize ?? "a4",
+		printBackground: true,
+		margin: { top: 60, left: 60, right: 60, bottom: 60 },
+		displayHeaderFooter: true,
+		headerTemplate: `<div></div>`,
+		footerTemplate: options.hideWatermark ? `<div></div>` : footerHtml,
+	});
 
 	await browser.close();
 
@@ -77,14 +99,48 @@ export const GET = async (req: NextRequest, { params: { thoughtId } }: { params:
 	});
 };
 
-const logoGreySvg = `<svg class="logo" width="324" height="282" viewBox="0 0 324 282" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M318.072 249.068C318.072 267.115 303.442 281.745 285.395 281.745C267.348 281.745 252.718 267.115 252.718 249.068C252.718 231.021 267.348 216.391 285.395 216.391C303.442 216.391 318.072 231.021 318.072 249.068Z" fill="#B1AFAC"/>
-<path d="M141.04 141.523C143.755 180.272 114.545 213.884 75.7962 216.599C37.0479 219.314 3.43522 190.104 0.720214 151.355C-1.99479 112.607 27.216 78.9942 65.9644 76.2792C104.713 73.5642 138.325 102.775 141.04 141.523Z" fill="#B1AFAC"/>
-<path d="M323.246 114.441C326.491 160.761 291.572 200.941 245.253 204.187C198.933 207.432 158.752 172.514 155.506 126.194C152.261 79.8741 187.18 39.6934 233.499 36.4479C279.819 33.2023 320 68.121 323.246 114.441Z" fill="#B1AFAC"/>
-<path d="M243.724 85.9761C247.281 136.75 209.005 180.794 158.231 184.352C107.458 187.909 63.4135 149.633 59.8559 98.8592C56.2983 48.0856 94.5746 4.04135 145.348 0.48376C196.122 -3.07383 240.166 35.2024 243.724 85.9761Z" fill="#B1AFAC"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M252.917 203.31C250.399 203.718 236.093 168.436 233.499 168.617C208.395 170.376 201.382 162.881 184.787 146.479C177.798 148.742 156.641 163.981 148.983 164.518C138.051 165.284 111.944 181.277 101.973 178.457C90.7085 198.159 94.8601 214.735 70.5201 216.44C68.6831 216.569 66.8572 216.626 65.0459 216.613C96.1318 218.127 127.433 217.811 158.795 215.613C190.551 213.388 221.975 209.263 252.917 203.31Z" fill="#B1AFAC"/>
-</svg>`;
+const getFooterCss = (options: ThoughtsExportGetRequestBody) => {
+	return `
+    html {
+        -webkit-print-color-adjust: exact;
+        font-family: "Noto Sans", Helvetica, Arial, sans-serif, system-ui;
+    }
+        
+    .watermark {
+        position: fixed;
+        bottom: 6pt;
+        left: 0;
+        width: 100vw;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 16pt;
+        box-sizing: border-box;
+        align-items: center;
+        text-align: center;
+        font-size: 10pt;
+        color: rgb(177 175 172);
+    }
 
+    .logoContainer {
+        position: fixed;
+        left: 0pt;
+        bottom: 6pt;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        padding: 0 16pt;
+        box-sizing: border-box;
+        align-items: center;
+    }
+
+    .logo {
+        width: 22pt;
+        height: 22pt;
+        object-fit: contain;
+        ${options.colorScheme === "white" ? "filter: grayscale(100%) brightness(0); opacity: 0.2;" : ""}
+    }
+`.replaceAll("\n", "");
+};
 const head = `
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -110,24 +166,29 @@ const head = `
 const getExportStyle = (options: ThoughtsExportGetRequestBody) => {
 	return `
 .colorSchemeDefault {
-    background-color: rgb(232 231 229);
     color: rgb(11 11 11);
 }
 
 .colorSchemeWhite {
-    background-color: rgb(255 255 255);
     color: rgb(11 11 11);
+}
+
+html {
+  -webkit-print-color-adjust: exact;
 }
 
 body {
     --color-card: rgb(224 221 217);
     
-    padding: 60pt;
 	font-family: "Noto Sans", sans-serif;
 	font-size: ${options.fontSizePt ?? 11}pt;
 	line-height: 1.3;
 	letter-spacing: 0.005rem;
 	font-feature-settings: "rlig" 1, "calt" 1;
+    
+    div {
+        z-index: 100;
+    }
 
     > * + * {
         margin: 0.33rem 0;
@@ -273,40 +334,6 @@ body {
         float: left;
         height: 0;
         pointer-events: none;
-    }
-
-    .watermark {
-        position: fixed;
-        bottom: 6pt;
-        left: 0;
-        width: 100vw;
-        display: flex;
-        justify-content: space-between;
-        padding: 0 16pt;
-        box-sizing: border-box;
-        align-items: center;
-        text-align: center;
-        font-size: 10pt;
-        color: rgb(177 175 172);
-    }
-
-    .logoContainer {
-        position: fixed;
-        left: 0pt;
-        bottom: 6pt;
-        width: 100vw;
-        display: flex;
-        justify-content: center;
-        padding: 0 16pt;
-        box-sizing: border-box;
-        align-items: center;
-    }
-
-    .logo {
-        width: 22pt;
-        height: 22pt;
-        object-fit: contain;
-        ${options.colorScheme === "white" ? "filter: grayscale(100%) brightness(0); opacity: 0.2;" : ""}
     }
 }
 `;
