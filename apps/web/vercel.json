@@ -1,0 +1,7 @@
+{
+	"functions": {
+		"api/thoughts/[thoughtId]/export/route.ts": {
+			"memory": 2048
+		}
+	}
+}

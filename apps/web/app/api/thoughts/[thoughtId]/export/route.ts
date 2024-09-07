@@ -9,6 +9,7 @@ import { getSupabase } from "app/api/utils/supabase";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
+export const maxDuration = 30;
 
 // Optional: If you'd like to use the new headless mode. "shell" is the default.
 // NOTE: Because we build the shell binary, this option does not work.
