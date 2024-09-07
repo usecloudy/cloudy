@@ -5,6 +5,8 @@ import * as React from "react";
 
 import { cn } from "src/utils";
 
+import { Button } from "./Button";
+
 const Dialog = AlertDialogPrimitive.Root;
 const DialogTrigger = AlertDialogPrimitive.Trigger;
 const DialogPortal = AlertDialogPrimitive.Portal;
@@ -123,16 +125,18 @@ DialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName;
 
 const DialogAction = React.forwardRef<
 	React.ElementRef<typeof AlertDialogPrimitive.Action>,
-	React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
->(({ className, ...props }, ref) => (
-	<AlertDialogPrimitive.Action
-		ref={ref}
-		className={cn(
-			"inline-flex h-10 items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-background ring-offset-background transition-colors hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-			className,
-		)}
-		{...props}
-	/>
+	React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action> & { destructive?: boolean }
+>(({ className, destructive = false, ...props }, ref) => (
+	<AlertDialogPrimitive.Action asChild ref={ref} {...props}>
+		<Button
+			variant={destructive ? "destructive" : "default"}
+			className={cn(
+				"inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-sm font-semibold ring-offset-background transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+				className,
+			)}>
+			{props.children}
+		</Button>
+	</AlertDialogPrimitive.Action>
 ));
 DialogAction.displayName = AlertDialogPrimitive.Action.displayName;
 
