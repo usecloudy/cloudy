@@ -246,6 +246,7 @@ export const useRelatedThoughts = (thoughtId?: string) => {
 					thought:thoughts!matches_thought_id (
 						id,
 						title,
+						content_md,
 						created_at,
 						updated_at,
 						collection_thoughts (
@@ -268,6 +269,7 @@ export const useRelatedThoughts = (thoughtId?: string) => {
 				{
 					id: string;
 					title: string | null;
+					content_md: string | null;
 					created_at: string;
 					updated_at: string;
 					collections: { id: string; title: string | null }[];
@@ -280,6 +282,7 @@ export const useRelatedThoughts = (thoughtId?: string) => {
 					thoughts[thought.id] = {
 						id: thought.id,
 						title: thought.title,
+						content_md: thought.content_md,
 						created_at: thought.created_at,
 						updated_at: thought.updated_at,
 						collections: thought.collection_thoughts?.flatMap(collection =>

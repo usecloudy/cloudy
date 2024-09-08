@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { toast } from "react-toastify";
 
+import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { SimpleLayout } from "src/components/SimpleLayout";
@@ -15,6 +17,31 @@ import { ThoughtsEmptyState } from "./ThoughtsEmptyState";
 
 const useThoughts = () => {
 	const user = useUser();
+
+	useEffect(() => {
+		const channel = supabase
+			.channel("thoughts")
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "thoughts",
+					filter: `author_id=eq.${user.id}`,
+				},
+				() => {
+					queryClient.invalidateQueries({
+						queryKey: ["thoughts"],
+					});
+				},
+			)
+			.subscribe();
+
+		return () => {
+			channel.unsubscribe();
+		};
+	}, []);
+
 	return useQuery({
 		queryKey: ["thoughts"],
 		queryFn: async () => {

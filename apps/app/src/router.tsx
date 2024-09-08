@@ -1,6 +1,7 @@
 import { FC } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 
+import { MobileTabBar } from "./components/MobileTabBar";
 import { Navbar } from "./components/Navbar";
 import { useUserGuard, useUserHandler } from "./stores/user";
 import { AuthView } from "./views/auth/AuthView";
@@ -36,6 +37,7 @@ const ProtectedLayout: FC = () => {
 		<div className="h-dvh w-screen flex flex-col">
 			<Navbar />
 			<Outlet />
+			<MobileTabBar />
 			<SubscriptionModal />
 			<PaymentSuccessDialog />
 		</div>

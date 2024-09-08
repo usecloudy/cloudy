@@ -46,6 +46,7 @@ export const useCollectionThoughts = (collectionId: string) => {
                         title,
                         created_at,
 						updated_at,
+						content_md,
                         collections:collection_thoughts(
                             collection_id,
                             collection:collections(

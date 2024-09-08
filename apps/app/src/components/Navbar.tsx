@@ -8,6 +8,7 @@ import {
 	CreditCardIcon,
 	HandshakeIcon,
 	Home,
+	LightbulbIcon,
 	LogOut,
 	MenuIcon,
 	Plus,
@@ -23,6 +24,7 @@ import { useUser } from "src/stores/user";
 import { pluralize } from "src/utils/strings";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 import { useSubscriptionModalStore } from "src/views/pricing/subscriptionModalStore";
+import { QuickThoughtDropdown } from "src/views/quickThought/QuickThoughtDropdown";
 
 import { Button } from "./Button";
 import { Dropdown, DropdownItem } from "./Dropdown";
@@ -70,33 +72,34 @@ export const Navbar: FC = () => {
 	return (
 		<nav className="relative bg-background flex w-full flex-row items-center justify-between p-4 z-50">
 			<ul className="flex flex-row items-center gap-4">
-				<div className="flex flex-row items-center gap-2">
+				<div className="flex-row items-center gap-2 hidden md:flex">
 					{!isHomePage && (
 						<li>
 							<Link to="/">
 								<Button aria-label="Home" variant="ghost" size="icon">
-									<Home className="w-6 h-6" />
+									<Home className="size-6" />
 								</Button>
 							</Link>
 						</li>
 					)}
-					<li className="hidden md:block">
+					<li>
 						<Button onClick={() => window.history.back()} aria-label="Go back" variant="ghost" size="icon">
-							<ArrowLeft className="w-6 h-6" />
+							<ArrowLeft className="size-6" />
 						</Button>
 					</li>
-					<li className="hidden md:block">
+					<li>
 						<Button onClick={() => window.history.forward()} aria-label="Go forward" variant="ghost" size="icon">
-							<ArrowRight className="w-6 h-6" />
+							<ArrowRight className="size-6" />
 						</Button>
 					</li>
 					<li>
 						<Link to="/thoughts/new">
 							<Button variant="ghost" size="icon" aria-label="New thought">
-								<Plus className="w-6 h-6" />
+								<Plus className="size-6" />
 							</Button>
 						</Link>
 					</li>
+					{/* <QuickThoughtDropdown /> */}
 				</div>
 			</ul>
 

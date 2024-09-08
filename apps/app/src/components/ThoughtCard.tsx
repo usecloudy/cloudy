@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
 import { cn } from "src/utils";
-import { makeHumanizedTime } from "src/utils/strings";
+import { ellipsizeText, makeHumanizedTime } from "src/utils/strings";
 
 import { Button } from "./Button";
 import { Dropdown, DropdownItem } from "./Dropdown";
@@ -19,6 +19,7 @@ interface Collection {
 interface Thought {
 	id: string;
 	title: string | null;
+	content_md: string | null;
 	created_at: string;
 	updated_at: string | null;
 	collections: Collection[];
@@ -79,7 +80,9 @@ export const ThoughtCard = ({
 								</span>
 							) : null}
 						</span>
-						<h3 className="font-medium">{thought.title || "Untitled"}</h3>
+						<h3 className={cn(thought.title ? "font-medium text-primary" : "font-normal text-primary/80")}>
+							{thought.title || ellipsizeText(thought.content_md ?? "", 36)}
+						</h3>
 					</div>
 				</div>
 				{variant === "default" && (
