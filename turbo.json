@@ -20,7 +20,7 @@
         "@cloudy/web#build": {
             "dependsOn": ["^build"],
             "outputs": [".next/**", "!.next/cache/**"],
-            "env": ["RESEND_API_KEY"]
+            "env": ["RESEND_API_KEY", "BLOB_READ_WRITE_TOKEN"]
         },
         "lint": {
             "dependsOn": ["^lint"]
