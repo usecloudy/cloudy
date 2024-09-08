@@ -535,9 +535,10 @@ const IdeaSuggestion = ({
 	const handleMouseEnter = (suggestion: Suggestion) => {
 		if (mdBreakpoint) {
 			setHighlights(suggestion.related_chunks?.map(chunk => ({ text: chunk })) || []);
-			if (!suggestion.is_seen) {
-				markAsSeen(suggestion.id);
-			}
+		}
+
+		if (!suggestion.is_seen) {
+			markAsSeen(suggestion.id);
 		}
 	};
 
@@ -585,9 +586,12 @@ const IdeaSuggestion = ({
 		<div
 			key={suggestion.id}
 			className={cn(
-				"flex flex-col gap-2 rounded bg-background p-3 text-sm outline-offset-2 animate-in fade-in slide-in-from-bottom-4 fill-mode-forwards",
+				"flex flex-col gap-2 rounded bg-background p-3 text-sm outline-offset-2 animate-in fade-in slide-in-from-bottom-4 fill-mode-forwards active:opacity-80",
 				index > 0 && `delay-${index * 100}`,
-				suggestion.related_chunks && suggestion.related_chunks.length > 0 && mdBreakpoint && "hover:outline hover:outline-accent/40",
+				suggestion.related_chunks &&
+					suggestion.related_chunks.length > 0 &&
+					mdBreakpoint &&
+					"hover:outline hover:outline-accent/40",
 			)}
 			onMouseEnter={() => handleMouseEnter(suggestion)}
 			onMouseLeave={clearHighlights}>

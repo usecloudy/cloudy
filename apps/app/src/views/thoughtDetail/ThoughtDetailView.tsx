@@ -77,7 +77,7 @@ const ThoughtDetailViewExisting = ({ thoughtId, isNewMode }: { thoughtId?: strin
 	const { data: thought, isLoading } = useThought(thoughtId);
 
 	return (
-		<SimpleLayout isLoading={Boolean(isLoading && !isNewMode)} className="lg:overflow-hidden items-center">
+		<SimpleLayout isLoading={Boolean(isLoading && !isNewMode)} className="lg:overflow-hidden items-center px-0">
 			<ThoughtDetailViewInner thoughtId={thoughtId} thought={thought ?? undefined} />
 		</SimpleLayout>
 	);
@@ -169,7 +169,6 @@ const EditorView = ({
 
 	const editor = useEditor({
 		extensions: tiptapExtensions,
-
 		content: remoteContent ?? "",
 		onUpdate: async () => {
 			onUpdate(true);
@@ -336,7 +335,7 @@ const EditorView = ({
 	};
 
 	return (
-		<div className="flex flex-col flex-1 pt-8 lg:py-8 box-border lg:overflow-y-scroll no-scrollbar -ml-8">
+		<div className="flex flex-col flex-1 pt-8 lg:py-8 box-border lg:overflow-y-scroll no-scrollbar -ml-8 px-6 md:px-0">
 			<div className="flex flex-col gap-2 pb-4 ml-8">
 				<div className="flex w-full flex-row items-start justify-between gap-2">
 					<TextareaAutosize
