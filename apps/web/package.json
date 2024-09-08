@@ -55,6 +55,7 @@
 		"@sparticuz/chromium": "^127.0.0",
 		"@supabase/supabase-js": "^2.45.1",
 		"@t3-oss/env-nextjs": "^0.10.1",
+		"@vercel/blob": "^0.23.4",
 		"@vercel/otel": "^1.10.0",
 		"ai": "^3.3.25",
 		"class-variance-authority": "^0.7.0",
