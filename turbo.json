@@ -19,7 +19,8 @@
         },
         "@cloudy/web#build": {
             "dependsOn": ["^build"],
-            "outputs": [".next/**", "!.next/cache/**"]
+            "outputs": [".next/**", "!.next/cache/**"],
+            "env": ["RESEND_API_KEY"]
         },
         "lint": {
             "dependsOn": ["^lint"]
