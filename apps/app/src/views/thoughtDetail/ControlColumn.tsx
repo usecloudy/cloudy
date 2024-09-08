@@ -1,25 +1,12 @@
 import { ThoughtSignals } from "@cloudy/utils/common";
-import { FileSymlinkIcon, TrashIcon, ZapIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { FileSymlinkIcon } from "lucide-react";
+import { useMemo } from "react";
 
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { ThoughtCard } from "src/components/ThoughtCard";
 
-import {
-	Dialog,
-	DialogAction,
-	DialogCancel,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogTitle,
-	DialogTrigger,
-} from "../../components/AlertDialog";
-import { Button } from "../../components/Button";
 import { AiFeed } from "./AiFeed";
-import { ExportDialog } from "./ExportDialog";
-import { GoalCard } from "./GoalCard";
-import { useDeleteThought, useRelatedThoughts, useThought } from "./hooks";
+import { useRelatedThoughts, useThought } from "./hooks";
 
 const useIsAiEmbeddingLoading = (thoughtId?: string) => {
 	const { data: thought } = useThought(thoughtId);
@@ -33,14 +20,6 @@ const useIsAiEmbeddingLoading = (thoughtId?: string) => {
 export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 	const isAiEmbeddingLoading = useIsAiEmbeddingLoading(thoughtId);
 	const { data: relatedThoughts, isLoading } = useRelatedThoughts(thoughtId);
-	const { mutateAsync: deleteThought } = useDeleteThought(thoughtId);
-	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
-	const handleDelete = async () => {
-		await deleteThought();
-		setIsDeleteDialogOpen(false);
-		window.history.back();
-	};
 
 	return (
 		<div className="relative h-full box-border overflow-y-auto flex w-full lg:w-[26rem] no-scrollbar px-1 pt-1 md:pt-0 px-4 md:px-0">
@@ -66,40 +45,6 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 								</div>
 							) : (
 								<div className="text-tertiary text-sm">No related notes (yet, keep typing!)</div>
-							)}
-						</div>
-						<div className="border-border flex flex-col w-full rounded-md border p-4">
-							<GoalCard thoughtId={thoughtId} />
-							{thoughtId && (
-								<div className="flex flex-col">
-									<div className="flex items-center gap-1 mb-0.5 mt-4">
-										<ZapIcon className="h-4 w-4 text-secondary" />
-										<h4 className="text-sm font-medium text-secondary">Note Actions</h4>
-									</div>
-									<ExportDialog thoughtId={thoughtId} />
-									<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-										<DialogTrigger asChild>
-											<Button
-												variant="ghost"
-												className="justify-start text-red-600 hover:bg-red-600 hover:text-white">
-												<TrashIcon className="h-4 w-4" />
-												<span>Delete note</span>
-											</Button>
-										</DialogTrigger>
-										<DialogContent>
-											<DialogTitle>Delete Note</DialogTitle>
-											<DialogDescription>
-												Are you sure you want to delete this note? This action cannot be undone.
-											</DialogDescription>
-											<DialogFooter>
-												<DialogCancel>Cancel</DialogCancel>
-												<DialogAction destructive onClick={handleDelete}>
-													Delete
-												</DialogAction>
-											</DialogFooter>
-										</DialogContent>
-									</Dialog>
-								</div>
 							)}
 						</div>
 					</div>

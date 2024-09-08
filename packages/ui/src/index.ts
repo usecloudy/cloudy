@@ -3,3 +3,4 @@ export * from "./Hero";
 export * from "./Tag";
 export * from "./Slider";
 export * from "./Switch";
+export * from "./Hotkeys";

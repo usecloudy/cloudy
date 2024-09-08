@@ -21,6 +21,7 @@ import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 import { CollectionCarousel } from "./CollectionCarousel";
 import { CommentColumn } from "./CommentColumn";
 import { ControlColumn } from "./ControlColumn";
+import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { ThoughtEditPayload, useEditThought, useThought } from "./hooks";
@@ -336,19 +337,21 @@ const EditorView = ({
 
 	return (
 		<div className="flex flex-col flex-1 pt-8 lg:py-8 box-border lg:overflow-y-scroll no-scrollbar -ml-8 px-6 md:px-0">
-			<div className="flex flex-col gap-2 pb-4 ml-8">
-				<div className="flex w-full flex-row items-start justify-between gap-2">
-					<TextareaAutosize
-						className="w-full resize-none appearance-none border-none bg-transparent text-2xl leading-8 md:text-3xl font-bold md:leading-10 outline-none no-scrollbar"
-						contentEditable={true}
-						placeholder="Untitled"
-						value={title ?? ""}
-						onChange={e => {
-							handleChangeTitle(e.target.value);
-						}}
-						suppressContentEditableWarning
-					/>
-				</div>
+			<div className="ml-8 md:mr-4 md:mt-3">
+				<ControlRow thoughtId={thoughtId} editor={editor} />
+			</div>
+			<div className="flex flex-col gap-3 pb-4 ml-8">
+				<TextareaAutosize
+					className="w-full resize-none appearance-none border-none bg-transparent text-2xl leading-8 md:text-3xl font-bold md:leading-10 outline-none no-scrollbar"
+					contentEditable={true}
+					placeholder="Untitled"
+					value={title ?? ""}
+					onChange={e => {
+						handleChangeTitle(e.target.value);
+					}}
+					suppressContentEditableWarning
+				/>
+
 				<div className="pr-4">
 					<CollectionCarousel thoughtId={thoughtId} collections={collections} />
 				</div>

@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { queryClient } from "./api/queryClient";
 import { ToastContainer } from "./components/Toast";
+import { TooltipProvider } from "./components/Tooltip";
 import { Router } from "./router";
 import "./styles/index.css";
 import "./styles/tailwind.css";
@@ -43,7 +44,9 @@ const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement)
 root.render(
 	<React.StrictMode>
 		<QueryClientProvider client={queryClient}>
-			<Router />
+			<TooltipProvider>
+				<Router />
+			</TooltipProvider>
 			<ToastContainer />
 		</QueryClientProvider>
 	</React.StrictMode>,

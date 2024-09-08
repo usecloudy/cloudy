@@ -1,12 +1,12 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { type VariantProps, cva } from "class-variance-authority";
-import React from "react";
+import React, { useState } from "react";
 
 import { cn } from "../utils";
 
 interface DropdownProps {
 	trigger: React.ReactNode;
-	children: React.ReactNode;
+	children: React.ReactNode | ((props: { open: boolean; close: () => void }) => React.ReactNode);
 	align?: "start" | "center" | "end";
 	side?: "top" | "right" | "bottom" | "left";
 	className?: string;
@@ -21,9 +21,12 @@ export const Dropdown: React.FC<DropdownProps> = ({
 	className,
 	onClose,
 }) => {
+	const [open, setOpen] = useState(false);
 	return (
 		<DropdownMenu.Root
+			open={open}
 			onOpenChange={open => {
+				setOpen(open);
 				if (!open) {
 					onClose?.();
 				}
@@ -38,7 +41,14 @@ export const Dropdown: React.FC<DropdownProps> = ({
 						"z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-background p-1 shadow-md animate-in data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
 						className,
 					)}>
-					{children}
+					{typeof children === "function"
+						? children({
+								open,
+								close: () => {
+									setOpen(false);
+								},
+							})
+						: children}
 				</DropdownMenu.Content>
 			</DropdownMenu.Portal>
 		</DropdownMenu.Root>

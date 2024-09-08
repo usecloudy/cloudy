@@ -9,7 +9,7 @@ import { pdfjs } from "react-pdf";
 import { apiClient } from "src/api/client";
 import { Button } from "src/components/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "src/components/Dialog";
-import { Dropdown, DropdownItem } from "src/components/Dropdown";
+import { DropdownItem } from "src/components/Dropdown";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { SelectDropdown } from "src/components/SelectDropdown";
 
@@ -55,7 +55,7 @@ export const ExportDialog = ({ thoughtId }: { thoughtId: string }) => {
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger>
-				<Button variant="ghost" className="justify-start w-full">
+				<Button variant="ghost" className="justify-start w-full" size="sm">
 					<ShareIcon className="size-4" />
 					<span>Export Note</span>
 				</Button>
