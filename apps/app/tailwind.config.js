@@ -60,6 +60,9 @@ const config = {
 			},
 		},
 	},
+	future: {
+		hoverOnlyWhenSupported: true,
+	},
 	plugins: [tailwindcssAnimate],
 };
 
