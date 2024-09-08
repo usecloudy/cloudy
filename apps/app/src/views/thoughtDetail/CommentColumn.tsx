@@ -1,6 +1,6 @@
 import { Editor } from "@tiptap/react";
 import { CircleIcon, MessageCircleIcon } from "lucide-react";
-import { RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { Button } from "src/components/Button";
 import { cn } from "src/utils";
@@ -34,6 +34,7 @@ const CommentColumnInner = ({
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+	const [resizeKey, setResizeKey] = useState(0);
 
 	const handleResize = useCallback(() => {
 		setWindowWidth(window.innerWidth);
@@ -43,6 +44,12 @@ const CommentColumnInner = ({
 		window.addEventListener("resize", handleResize);
 		return () => window.removeEventListener("resize", handleResize);
 	}, [handleResize]);
+
+	useEffect(() => {
+		setInterval(() => {
+			setResizeKey(prev => prev + 1);
+		}, 1000);
+	}, []);
 
 	useEffect(() => {
 		if (isHighlightingRef.current) return;
@@ -82,11 +89,11 @@ const CommentColumnInner = ({
 		}));
 
 		setCommentsWithOffset(commentsWithOffset);
-	}, [comments, editor, editor.state.doc, isHighlightingRef, windowWidth]);
+	}, [comments, editor, editor.state.doc, isHighlightingRef, windowWidth, resizeKey]);
 
 	return (
 		<div
-			className={cn("h-full w-16 relative -mr-6 md:mr-0", commentsWithOffset.length === 0 && "hidden md:block")}
+			className={cn("h-full w-14 md:w-16 relative -mr-6 md:mr-0", commentsWithOffset.length === 0 && "hidden md:block")}
 			ref={containerRef}>
 			{commentsWithOffset.map(({ offset, comments }) => {
 				const isSelected = commentFilter?.selectedGroupId === offset.toString();

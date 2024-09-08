@@ -34,6 +34,7 @@ import LoadingSpinner from "src/components/LoadingSpinner";
 import { useHighlightStore } from "src/stores/highlight";
 import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
+import { useBreakpoint } from "src/utils/tailwind";
 
 import { AiCommentThread } from "./AiCommentThread";
 import { AiInputBar } from "./AiInputBar";
@@ -529,10 +530,14 @@ const IdeaSuggestion = ({
 	const { mutate: archiveComment } = useArchiveComment(thoughtId);
 	const { mutate: unarchiveComment } = useUnarchiveComment(thoughtId);
 
+	const mdBreakpoint = useBreakpoint("md");
+
 	const handleMouseEnter = (suggestion: Suggestion) => {
-		setHighlights(suggestion.related_chunks?.map(chunk => ({ text: chunk })) || []);
-		if (!suggestion.is_seen) {
-			markAsSeen(suggestion.id);
+		if (mdBreakpoint) {
+			setHighlights(suggestion.related_chunks?.map(chunk => ({ text: chunk })) || []);
+			if (!suggestion.is_seen) {
+				markAsSeen(suggestion.id);
+			}
 		}
 	};
 
@@ -582,7 +587,7 @@ const IdeaSuggestion = ({
 			className={cn(
 				"flex flex-col gap-2 rounded bg-background p-3 text-sm outline-offset-2 animate-in fade-in slide-in-from-bottom-4 fill-mode-forwards",
 				index > 0 && `delay-${index * 100}`,
-				suggestion.related_chunks && suggestion.related_chunks.length > 0 && "hover:outline hover:outline-accent/40",
+				suggestion.related_chunks && suggestion.related_chunks.length > 0 && mdBreakpoint && "hover:outline hover:outline-accent/40",
 			)}
 			onMouseEnter={() => handleMouseEnter(suggestion)}
 			onMouseLeave={clearHighlights}>

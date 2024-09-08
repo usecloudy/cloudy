@@ -1,4 +1,5 @@
 const CracoEnvPlugin = require("craco-plugin-env");
+const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
 
 module.exports = {
 	webpack: {
@@ -16,6 +17,10 @@ module.exports = {
 					configFile: "tsconfig.json",
 				},
 			});
+
+			webpackConfig.resolve.plugins = webpackConfig.resolve.plugins.filter(
+				plugin => !(plugin instanceof ModuleScopePlugin),
+			);
 
 			return webpackConfig;
 		},
