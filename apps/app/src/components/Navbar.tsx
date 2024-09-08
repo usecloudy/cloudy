@@ -52,7 +52,6 @@ export const Navbar: FC = () => {
 
 	const customerStatus = data?.customerStatus;
 	const location = useLocation();
-	const navigate = useNavigate();
 	const isHomePage = location.pathname === "/";
 
 	const handleOpenSubscriptionModal = () => {
@@ -74,7 +73,7 @@ export const Navbar: FC = () => {
 			<ul className="flex flex-row items-center gap-4">
 				<div className="flex-row items-center gap-2 flex">
 					{!isHomePage && (
-						<li>
+						<li className="hidden md:block">
 							<Link to="/">
 								<Button aria-label="Home" variant="ghost" size="icon">
 									<Home className="size-6" />
