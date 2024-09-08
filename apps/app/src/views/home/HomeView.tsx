@@ -81,7 +81,7 @@ export const HomeView = () => {
 			<Helmet>
 				<title>{makeHeadTitle("Home")}</title>
 			</Helmet>
-			<div className="flex flex-col-reverse md:flex-row gap-4 md:py-8 w-full ">
+			<div className="flex flex-col-reverse md:flex-row gap-4 py-4 md:py-8 w-full ">
 				<div className="h-8 md:hidden" />
 				<div className="flex-1 flex-col flex gap-4">
 					{/* <div>

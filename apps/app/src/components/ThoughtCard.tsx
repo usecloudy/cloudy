@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { VariantProps, cva } from "class-variance-authority";
-import { LightbulbIcon, ListIcon, MoreHorizontalIcon, Trash2Icon } from "lucide-react";
+import { LightbulbIcon, ListIcon, MoreHorizontalIcon, NotebookTextIcon, Trash2Icon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { queryClient } from "src/api/queryClient";
@@ -66,7 +66,7 @@ export const ThoughtCard = ({
 			<div className={cn(thoughtCardVariants({ variant }))}>
 				<div className="flex flex-row items-center gap-2">
 					{thought.collections.length > 0 ? (
-						<ListIcon className="text-tertiary size-5 flex-shrink-0" />
+						<NotebookTextIcon className="text-tertiary size-5 flex-shrink-0" />
 					) : (
 						<LightbulbIcon className="text-tertiary size-5 flex-shrink-0" />
 					)}

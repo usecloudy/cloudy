@@ -5,7 +5,7 @@ import { cn } from "src/utils";
 
 export const MobileTabBar = () => {
 	return (
-		<nav className="md:hidden relative bg-background flex w-full flex-row items-center justify-between p-4 z-50">
+		<nav className="md:hidden relative bg-background flex w-full flex-row items-center justify-between py-3 z-50 border-t border-border">
 			<Tab icon={<HomeIcon className="size-5" />} label="Home" href="/" />
 			{/* <Tab icon={<LightbulbIcon className="size-5" />} label="Quick note" onClick={() => {}} /> */}
 			<Tab icon={<PlusIcon className="size-5" />} label="New note" href="/thoughts/new" />

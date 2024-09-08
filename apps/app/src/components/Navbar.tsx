@@ -70,9 +70,9 @@ export const Navbar: FC = () => {
 	};
 
 	return (
-		<nav className="relative bg-background flex w-full flex-row items-center justify-between p-4 z-50">
+		<nav className="relative bg-background flex w-full flex-row items-center justify-between p-4 z-50 border-b border-border">
 			<ul className="flex flex-row items-center gap-4">
-				<div className="flex-row items-center gap-2 hidden md:flex">
+				<div className="flex-row items-center gap-2 flex">
 					{!isHomePage && (
 						<li>
 							<Link to="/">
@@ -92,7 +92,7 @@ export const Navbar: FC = () => {
 							<ArrowRight className="size-6" />
 						</Button>
 					</li>
-					<li>
+					<li className="hidden md:block">
 						<Link to="/thoughts/new">
 							<Button variant="ghost" size="icon" aria-label="New thought">
 								<Plus className="size-6" />
