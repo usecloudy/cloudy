@@ -2,11 +2,11 @@ import { handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
 
 import { startTrialOnCustomer, stripe } from "app/api/utils/stripe";
 
 import { getSupabase } from "../../utils/supabase";
+import { registerUserToResend } from "./utils";
 
 type InsertPayload = {
 	type: "INSERT";
@@ -105,8 +105,9 @@ const handleInsert = async (payload: InsertPayload, supabase: SupabaseClient<Dat
 	await supabase.from("users").update({ stripe_customer_id: customer.id }).eq("id", record.id);
 
 	// Start a trial for them
-
 	await startTrialOnCustomer(customer);
+
+	await registerUserToResend(record.email, userRecord.name);
 
 	return NextResponse.json({ success: true, reason: "created_customer" });
 };
