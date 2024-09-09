@@ -1,9 +1,9 @@
 import { Hotkey } from "@cloudy/ui";
 import { Editor } from "@tiptap/react";
-import { GoalIcon, MoreHorizontalIcon, MoreVerticalIcon, RedoIcon, TargetIcon, UndoIcon } from "lucide-react";
+import { GoalIcon, MoreHorizontalIcon, RedoIcon, UndoIcon } from "lucide-react";
 
 import { Button } from "src/components/Button";
-import { Dropdown, DropdownItem } from "src/components/Dropdown";
+import { Dropdown } from "src/components/Dropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip";
 import { makeHumanizedTime } from "src/utils/strings";
 
@@ -11,13 +11,6 @@ import { DeleteDialog } from "./DeleteDialog";
 import { ExportDialog } from "./ExportDialog";
 import { GoalDropdown } from "./GoalDropdown";
 import { useThought } from "./hooks";
-
-const shortcuts = [
-	{ keys: ["cmd", "C"], label: "Copy" },
-	{ keys: ["cmd", "V"], label: "Paste" },
-	{ keys: ["option", "up"], label: "Move line up" },
-	{ keys: ["option", "down"], label: "Move line down" },
-];
 
 export const ControlRow = ({ thoughtId, editor }: { thoughtId?: string; editor?: Editor | null }) => {
 	const { data: thought } = useThought(thoughtId);

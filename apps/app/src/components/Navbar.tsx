@@ -69,7 +69,7 @@ export const Navbar: FC = () => {
 	};
 
 	return (
-		<nav className="relative bg-background flex w-full flex-row items-center justify-between p-4 z-50 border-b border-border">
+		<nav className="relative bg-background flex w-full flex-row items-center justify-between p-4 z-20 border-b border-border">
 			<ul className="flex flex-row items-center gap-4">
 				<div className="flex-row items-center gap-2 flex">
 					{!isHomePage && (

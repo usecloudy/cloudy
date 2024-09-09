@@ -336,8 +336,8 @@ const EditorView = ({
 	};
 
 	return (
-		<div className="flex flex-col flex-1 pt-8 lg:py-8 box-border lg:overflow-y-scroll no-scrollbar -ml-8 px-6 md:px-0">
-			<div className="ml-8 md:mr-4 md:mt-3">
+		<div className="flex flex-col lg:flex-1 pt-8 lg:py-8 box-border lg:overflow-y-scroll no-scrollbar -ml-8 px-6 md:px-0">
+			<div className="sticky lg:relative top-[-1px] z-30 py-1 bg-background ml-8 -mr-2 md:mr-4 md:mt-3">
 				<ControlRow thoughtId={thoughtId} editor={editor} />
 			</div>
 			<div className="flex flex-col gap-3 pb-4 ml-8">
@@ -351,7 +351,6 @@ const EditorView = ({
 					}}
 					suppressContentEditableWarning
 				/>
-
 				<div className="pr-4">
 					<CollectionCarousel thoughtId={thoughtId} collections={collections} />
 				</div>
@@ -369,7 +368,7 @@ const EditorView = ({
 				)}
 				{editor && thoughtId && (
 					<div>
-						<DragHandle editor={editor} tippyOptions={{ offset: [-4, 4] }}>
+						<DragHandle editor={editor} tippyOptions={{ offset: [-4, 4], zIndex: 10 }}>
 							<div className="hidden md:flex flex-row items-center hover:bg-card border border-transparent hover:border-border rounded py-1 px-0.5 active:bg-accent/20 cursor-grab active:cursor-grabbing">
 								<GripVertical className="h-5 w-5 text-tertiary" />
 							</div>
