@@ -1,6 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 import { VariantProps, cva } from "class-variance-authority";
-import { LightbulbIcon, ListIcon, MoreHorizontalIcon, NotebookTextIcon, Trash2Icon } from "lucide-react";
+import {
+	FileIcon,
+	MoreHorizontalIcon,
+	NotebookTextIcon,
+	Trash2Icon,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { queryClient } from "src/api/queryClient";
@@ -68,7 +73,7 @@ export const ThoughtCard = ({
 					{thought.collections.length > 0 ? (
 						<NotebookTextIcon className="text-tertiary size-5 flex-shrink-0" />
 					) : (
-						<LightbulbIcon className="text-tertiary size-5 flex-shrink-0" />
+						<FileIcon className="text-tertiary size-5 flex-shrink-0" />
 					)}
 					<div className="flex flex-col">
 						<span className="mt-1 text-xs text-secondary">

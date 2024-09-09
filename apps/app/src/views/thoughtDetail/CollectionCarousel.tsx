@@ -1,9 +1,8 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ListIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react";
+import { NotebookIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useUpdateEffect } from "react-use";
 
 import { supabase } from "src/clients/supabase";
 import {
@@ -242,7 +241,7 @@ export const CollectionCarousel = ({ thoughtId, collections }: { thoughtId?: str
 										</Dialog>
 									</div>
 								}>
-								<ListIcon className="h-4 w-4 flex-shrink-0" />
+								<NotebookIcon className="h-4 w-4 flex-shrink-0" />
 								<span>{collection.title}</span>
 							</Chip>
 						</Link>

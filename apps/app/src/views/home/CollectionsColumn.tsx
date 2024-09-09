@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { NotebookIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { supabase } from "src/clients/supabase";
@@ -29,7 +30,10 @@ export const CollectionsColumn = () => {
 	return (
 		<div>
 			<div className="flex md:w-[18rem] lg:w-[28rem] flex-col gap-4 rounded-lg border border-border py-6">
-				<h2 className="font-semibold text-secondary px-6">Collections</h2>
+				<div className="flex items-center gap-1 px-6">
+					<NotebookIcon className="size-4 text-secondary" />
+					<h2 className="font-semibold text-secondary">Collections</h2>
+				</div>
 				<div className="flex flex-col px-3">
 					{data && data.length > 0 ? (
 						data.map(collection => (
