@@ -145,7 +145,7 @@ export const MentionHandler = forwardRef(({ query, command }: SuggestionProps, r
 		}
 	}
 	return (
-		<div className="bg-background border border-border rounded-md p-2 shadow-md w-[28rem]">
+		<div className="bg-background border border-border rounded-md p-2 shadow-md w-full md:w-[28rem]">
 			<div className="text-sm text-secondary mb-2 ml-1">{title}</div>
 			{isLoadingThoughtSearch || isLoadingLatestThoughts ? (
 				<div>
@@ -156,7 +156,7 @@ export const MentionHandler = forwardRef(({ query, command }: SuggestionProps, r
 					<div
 						key={thought.id}
 						className={cn(
-							"flex items-center gap-2 px-2 py-1 rounded-sm cursor-pointer w-full  hover:bg-card",
+							"flex items-center gap-2 px-2 py-1 rounded-sm cursor-pointer w-full hover:bg-card",
 							selectedIndex === index ? "bg-accent/10" : "",
 						)}
 						onClick={() => apply(index)}>
