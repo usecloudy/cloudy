@@ -73,7 +73,7 @@ export const POST = async (req: NextRequest) => {
 	});
 };
 
-export const handleCreateLinks = async (payload: InsertPayload | UpdatePayload, supabase: SupabaseClient<Database>) => {
+const handleCreateLinks = async (payload: InsertPayload | UpdatePayload, supabase: SupabaseClient<Database>) => {
 	const mentionTags = findMentionTags(payload.record.content ?? "");
 	const allLinks = new Set(
 		mentionTags
