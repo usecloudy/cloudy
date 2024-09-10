@@ -1,11 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { VariantProps, cva } from "class-variance-authority";
-import {
-	FileIcon,
-	MoreHorizontalIcon,
-	NotebookTextIcon,
-	Trash2Icon,
-} from "lucide-react";
+import { FileIcon, MoreHorizontalIcon, NotebookTextIcon, Trash2Icon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { queryClient } from "src/api/queryClient";
@@ -25,6 +20,7 @@ interface Thought {
 	id: string;
 	title: string | null;
 	content_md: string | null;
+	content_plaintext: string | null;
 	created_at: string;
 	updated_at: string | null;
 	collections: Collection[];
@@ -61,15 +57,17 @@ const thoughtCardVariants = cva(
 export const ThoughtCard = ({
 	thought,
 	variant = "default",
+	rightContent,
 }: {
 	thought: Thought;
 	variant?: VariantProps<typeof thoughtCardVariants>["variant"];
+	rightContent?: React.ReactNode;
 }) => {
 	const { mutate: deleteThought } = useDeleteThought();
 	return (
 		<Link to={`/thoughts/${thought.id}`}>
 			<div className={cn(thoughtCardVariants({ variant }))}>
-				<div className="flex flex-row items-center gap-2">
+				<div className="flex flex-row items-center gap-2 flex-1">
 					{thought.collections.length > 0 ? (
 						<NotebookTextIcon className="text-tertiary size-5 flex-shrink-0" />
 					) : (
@@ -86,9 +84,10 @@ export const ThoughtCard = ({
 							) : null}
 						</span>
 						<h3 className={cn(thought.title ? "font-medium text-primary" : "font-normal text-primary/80")}>
-							{thought.title || ellipsizeText(thought.content_md ?? "", 36)}
+							{thought.title || ellipsizeText(thought.content_plaintext ?? thought.content_md ?? "", 36)}
 						</h3>
 					</div>
+					{rightContent}
 				</div>
 				{variant === "default" && (
 					<div onClick={e => e.stopPropagation()}>

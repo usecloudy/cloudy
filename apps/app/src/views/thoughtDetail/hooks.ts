@@ -51,6 +51,7 @@ export interface ThoughtEditPayload {
 	title?: string;
 	content?: string;
 	contentMd?: string;
+	contentPlainText?: string;
 	ts: Date;
 }
 
@@ -74,6 +75,16 @@ export const useEditThought = (thoughtId?: string) => {
 				contentObj = { content: payload.content, content_ts: payload.ts };
 			}
 
+			let contentMdObj = {};
+			if (payload?.contentMd !== undefined) {
+				contentMdObj = { content_md: payload.contentMd };
+			}
+
+			let contentPlainTextObj = {};
+			if (payload?.contentPlainText !== undefined) {
+				contentPlainTextObj = { content_plaintext: payload.contentPlainText };
+			}
+
 			const newThought = handleSupabaseError(
 				await supabase
 					.from("thoughts")
@@ -81,7 +92,8 @@ export const useEditThought = (thoughtId?: string) => {
 						id: thoughtId,
 						...titleObj,
 						...contentObj,
-						...(payload?.contentMd !== undefined && { content_md: payload.contentMd }),
+						...contentMdObj,
+						...contentPlainTextObj,
 					})
 					.select()
 					.single(),
@@ -199,102 +211,6 @@ export const useThought = (thoughtId?: string) => {
 			};
 		},
 		enabled: !!thoughtId,
-	});
-};
-
-export const useRelatedThoughts = (thoughtId?: string) => {
-	useEffect(() => {
-		if (!thoughtId) {
-			return;
-		}
-
-		const channel = supabase
-			.channel("thoughtEmbeddings")
-			.on(
-				"postgres_changes",
-				{
-					event: "*",
-					schema: "public",
-					table: "thought_embedding_matches",
-					filter: `thought_id=eq.${thoughtId}`,
-				},
-				() => {
-					queryClient.invalidateQueries({
-						queryKey: ["thoughtEmbeddings", thoughtId],
-					});
-				},
-			)
-			.subscribe();
-
-		return () => {
-			channel.unsubscribe();
-		};
-	}, [thoughtId]);
-
-	return useQuery({
-		queryKey: ["thoughtEmbeddings", thoughtId],
-		queryFn: async () => {
-			if (!thoughtId) {
-				return [];
-			}
-
-			const { data, error } = await supabase
-				.from("thought_embedding_matches")
-				.select(
-					`
-					id,
-					thought:thoughts!matches_thought_id (
-						id,
-						title,
-						content_md,
-						created_at,
-						updated_at,
-						collection_thoughts (
-							collections (
-								id,
-								title
-							)
-						)
-					)
-				`,
-				)
-				.eq("thought_id", thoughtId);
-
-			if (error) {
-				throw error;
-			}
-
-			const thoughts: Record<
-				string,
-				{
-					id: string;
-					title: string | null;
-					content_md: string | null;
-					created_at: string;
-					updated_at: string;
-					collections: { id: string; title: string | null }[];
-				}
-			> = {};
-
-			data.forEach(match => {
-				const thought = fixOneToOne(match.thought);
-				if (thought) {
-					thoughts[thought.id] = {
-						id: thought.id,
-						title: thought.title,
-						content_md: thought.content_md,
-						created_at: thought.created_at,
-						updated_at: thought.updated_at,
-						collections: thought.collection_thoughts?.flatMap(collection =>
-							collection.collections ? [collection.collections] : [],
-						),
-					};
-				}
-			});
-
-			return Object.values(thoughts);
-		},
-		throwOnError: true,
 	});
 };
 

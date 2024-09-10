@@ -1,0 +1,11 @@
+{
+    "name": "redis",
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+        "dev": "docker compose up",
+        "stop": "docker compose down"
+    },
+    "author": "",
+    "license": "ISC"
+}

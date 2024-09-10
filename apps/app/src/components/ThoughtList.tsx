@@ -14,6 +14,7 @@ interface Thought {
 	id: string;
 	title: string | null;
 	content_md: string | null;
+	content_plaintext: string | null;
 	created_at: string;
 	updated_at: string;
 	collections: Collection[];

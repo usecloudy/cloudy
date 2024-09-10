@@ -7,6 +7,8 @@ import {
     ArrowDown,
     ArrowLeft,
     ArrowRight,
+    ArrowDownLeft,
+    CornerDownLeftIcon,
 } from "lucide-react";
 import { cn } from "./utils";
 
@@ -20,6 +22,7 @@ const iconMap: { [key: string]: React.ElementType } = {
     down: ArrowDown,
     left: ArrowLeft,
     right: ArrowRight,
+    enter: CornerDownLeftIcon,
 };
 
 interface HotkeyProps {

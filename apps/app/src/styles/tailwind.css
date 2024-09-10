@@ -239,6 +239,10 @@
 	@apply bg-green-500/30 rounded-sm;
 }
 
+.tiptap .mention {
+	@apply bg-accent/10 rounded-sm text-accent hover:bg-accent/20 hover:underline px-1 cursor-pointer active:bg-accent/10; 
+}
+
 @layer utilities {
 	/* Hide scrollbar for Chrome, Safari and Opera */
 	.no-scrollbar::-webkit-scrollbar {

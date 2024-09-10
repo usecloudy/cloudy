@@ -59,6 +59,7 @@
 		"@tiptap/pm": "^2.4.0",
 		"@tiptap/react": "^2.4.0",
 		"@tiptap/starter-kit": "^2.4.0",
+		"@tiptap/suggestion": "^2.6.6",
 		"@trivago/prettier-plugin-sort-imports": "^4.3.0",
 		"@types/react-helmet": "^6.1.11",
 		"auto-launch": "^5.0.5",

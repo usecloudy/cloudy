@@ -966,12 +966,49 @@ export type Database = {
           },
         ]
       }
+      thought_links: {
+        Row: {
+          created_at: string
+          id: string
+          linked_from: string
+          linked_to: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          linked_from: string
+          linked_to: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          linked_from?: string
+          linked_to?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thought_links_linked_from_fkey"
+            columns: ["linked_from"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thought_links_linked_to_fkey"
+            columns: ["linked_to"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       thoughts: {
         Row: {
           author_id: string
           collection_suggestions: Json | null
           content: string | null
           content_md: string | null
+          content_plaintext: string | null
           content_ts: string
           created_at: string
           embeddings_version: number
@@ -992,6 +1029,7 @@ export type Database = {
           collection_suggestions?: Json | null
           content?: string | null
           content_md?: string | null
+          content_plaintext?: string | null
           content_ts?: string
           created_at?: string
           embeddings_version?: number
@@ -1012,6 +1050,7 @@ export type Database = {
           collection_suggestions?: Json | null
           content?: string | null
           content_md?: string | null
+          content_plaintext?: string | null
           content_ts?: string
           created_at?: string
           embeddings_version?: number
@@ -1246,6 +1285,19 @@ export type Database = {
               similarity: number
             }[]
           }
+      search_thoughts: {
+        Args: {
+          search_query: string
+          user_id: string
+        }
+        Returns: {
+          thought_id: string
+          thought_title: string
+          thought_content_md: string
+          thought_content_plaintext: string
+          thought_updated_at: string
+        }[]
+      }
       sparsevec_out: {
         Args: {
           "": unknown

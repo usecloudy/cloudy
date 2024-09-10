@@ -47,6 +47,7 @@ export const useCollectionThoughts = (collectionId: string) => {
                         created_at,
 						updated_at,
 						content_md,
+						content_plaintext,
                         collections:collection_thoughts(
                             collection_id,
                             collection:collections(

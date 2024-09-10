@@ -9,6 +9,8 @@ import Underline from "@tiptap/extension-underline";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
 
+import { Mention, mention } from "./mention";
+
 export const IndentNode = Node.create({
 	name: "indent",
 	content: "block+",
@@ -140,4 +142,7 @@ export const tiptapExtensions = [
 	ListKeymap,
 	IndentExtension,
 	IndentNode,
+	Mention.configure({
+		suggestion: mention,
+	}),
 ];

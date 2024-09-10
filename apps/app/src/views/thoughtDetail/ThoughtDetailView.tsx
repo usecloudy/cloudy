@@ -182,10 +182,11 @@ const EditorView = ({
 		if (!isHighlightingRef.current) {
 			const content = editor?.getHTML();
 			const contentMd = editor?.storage.markdown.getMarkdown();
+			const contentPlainText = editor?.getText();
 
 			const ts = new Date();
 
-			onChange({ content, contentMd, ts });
+			onChange({ content, contentMd, contentPlainText, ts });
 			setLastLocalThoughtContentTs(ts);
 			setCurrentContent(content ?? "");
 		}
