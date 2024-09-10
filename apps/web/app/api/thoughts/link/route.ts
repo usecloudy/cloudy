@@ -40,6 +40,9 @@ interface LinkGenerationStatusCache {
 
 const makeCacheKey = (thoughtId: string) => `thoughts:${thoughtId}:link-generation`;
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 export const POST = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "service" });
 
