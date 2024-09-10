@@ -84,7 +84,7 @@ export const ThoughtCard = ({
 							) : null}
 						</span>
 						<h3 className={cn(thought.title ? "font-medium text-primary" : "font-normal text-primary/80")}>
-							{thought.title || ellipsizeText(thought.content_plaintext ?? thought.content_md ?? "", 36)}
+							{thought.title || ellipsizeText(thought.content_plaintext ?? thought.content_md ?? "Untitled", 36)}
 						</h3>
 					</div>
 					{rightContent}
