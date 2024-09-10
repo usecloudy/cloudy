@@ -8,7 +8,11 @@ import { addSignal, getLinkedThoughtsPromptDump, getRelatedThoughtsPromptDump, r
 import { ThoughtRecord } from "../utils";
 import { checkIfDiffIsSignificant, generateComments } from "./utils";
 
-export const ideateThought = async (thought: ThoughtRecord, supabase: SupabaseClient<Database>) => {
+export const ideateThought = async (
+	thought: ThoughtRecord,
+	supabase: SupabaseClient<Database>,
+	options?: { force?: boolean },
+) => {
 	await addSignal(ThoughtSignals.AI_SUGGESTIONS, thought.id, supabase);
 	try {
 		const {
@@ -18,7 +22,7 @@ export const ideateThought = async (thought: ThoughtRecord, supabase: SupabaseCl
 			is_suggestion_paused: isPaused,
 		} = thought;
 
-		if (isPaused) {
+		if (!options?.force && isPaused) {
 			return;
 		}
 
@@ -27,7 +31,7 @@ export const ideateThought = async (thought: ThoughtRecord, supabase: SupabaseCl
 		}
 
 		const contentOrDiff = lastContentMd ? jsdiff.createPatch("note", lastContentMd, contentMd) : contentMd;
-		if (lastContentMd) {
+		if (!options?.force && lastContentMd) {
 			const diffIsSignificant = await checkIfDiffIsSignificant({ diffString: contentOrDiff });
 
 			console.log(`Diff is significant: ${diffIsSignificant}`);

@@ -38,7 +38,7 @@ import { useBreakpoint } from "src/utils/tailwind";
 
 import { AiCommentThread } from "./AiCommentThread";
 import { AiInputBar } from "./AiInputBar";
-import { useComments, useThought } from "./hooks";
+import { useComments, useForceAiUpdate, useThought } from "./hooks";
 import { CommentFilter, useThoughtStore } from "./thoughtStore";
 import { useTitleStore } from "./titleStore";
 
@@ -298,6 +298,7 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 	const { mutate: archive } = useArchive(thoughtId, commentFilter);
 	const { mutate: setSuggestionPaused } = useSetSuggestionPaused(thoughtId);
 	const { mutate: deleteAllArchived } = useDeleteAllArchived(thoughtId);
+	const { mutate: forceAiUpdate } = useForceAiUpdate(thoughtId);
 
 	const isUnseenCount = ideaSuggestions.filter(suggestion => !suggestion.is_seen && !suggestion.is_archived).length ?? 0;
 
@@ -435,7 +436,10 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 								}>
 								{isSuggestionPaused ? (
 									<DropdownItem
-										onSelect={() => setSuggestionPaused(false)}
+										onSelect={() => {
+											setSuggestionPaused(false)
+											forceAiUpdate();
+										}}
 										className="bg-accent-secondary/10 font-medium">
 										<PlayIcon className="h-4 w-4" />
 										<span>Resume suggestions</span>

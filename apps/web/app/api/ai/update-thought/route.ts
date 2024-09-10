@@ -67,7 +67,7 @@ const processThought = async (thoughtId: string, supabase: SupabaseClient<Databa
 
 	try {
 		await Promise.all([
-			ideateThought(thoughtRecord, supabase),
+			ideateThought(thoughtRecord, supabase, options),
 			generateEmbeddings(thoughtRecord, supabase),
 			suggestTitle(thoughtRecord, supabase),
 		]);

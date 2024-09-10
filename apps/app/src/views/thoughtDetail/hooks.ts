@@ -124,6 +124,24 @@ export const useEditThought = (thoughtId?: string) => {
 	});
 };
 
+export const useForceAiUpdate = (thoughtId?: string) => {
+	return useMutation({
+		mutationFn: async () => {
+			if (!thoughtId) {
+				return;
+			}
+
+			const { contentMd, lastSuggestionContentMd } = handleSupabaseError(
+				await supabase
+					.from("thoughts")
+					.select("contentMd:content_md, lastSuggestionContentMd:last_suggestion_content_md")
+					.eq("id", thoughtId)
+					.single(),
+			);
+			return triggerAiUpdatesWhenChangeIsSignificant(thoughtId, contentMd ?? "", lastSuggestionContentMd, true);
+		},
+	});
+};
 export const useThought = (thoughtId?: string) => {
 	useEffect(() => {
 		if (!thoughtId) {
