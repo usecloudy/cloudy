@@ -1,7 +1,7 @@
+import { handleSupabaseError } from "@cloudy/utils/common";
+import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createHash } from "crypto";
-
-import { Database } from "app/db/database.types";
 
 type RelatedChunk = Pick<Database["public"]["Tables"]["thought_embeddings"]["Row"], "id" | "hash" | "index" | "thought_id">;
 
@@ -64,79 +64,23 @@ export const chunkAndHashMarkdown = async (mdContent: string): Promise<MarkdownC
 	}));
 };
 
-export const getRelatedChunks = async (thoughtId: string, supabase: SupabaseClient<Database>): Promise<RelatedChunk[]> => {
-	console.log(`Getting related chunks for thought ${thoughtId}`);
+export const getRelatedThoughts = async (thoughtId: string, supabase: SupabaseClient<Database>) => {
+	const data = handleSupabaseError(
+		await supabase
+			.from("thought_embedding_matches")
+			.select(
+				`
+				id,
+				thought:thoughts!matches_thought_id (
+					id,
+					title,
+					contentMd:content_md,
+					updated_at
+				)
+			`,
+			)
+			.eq("thought_id", thoughtId),
+	).flatMap(d => d.thought);
 
-	const { data: currentChunks, error: currentChunksError } = await supabase
-		.from("thought_embeddings")
-		.select("id")
-		.eq("thought_id", thoughtId);
-
-	if (currentChunksError) {
-		throw currentChunksError;
-	}
-
-	console.log(
-		`Found ${currentChunks?.length} current chunks`,
-		currentChunks.map(chunk => chunk.id),
-	);
-
-	// Get related chunks via the join table
-	const { data: relatedChunksData, error: relatedChunksError } = await supabase
-		.from("thought_embedding_matches")
-		.select("thought_embeddings!matches(id, thought_id, index, hash)")
-		.in(
-			"matched_by",
-			currentChunks.map(chunk => chunk.id),
-		);
-
-	if (relatedChunksError) {
-		throw relatedChunksError;
-	}
-
-	console.log(`Found ${relatedChunksData?.length} related chunks`);
-
-	// Extract and deduplicate the related chunks
-	const relatedChunks = Array.from(
-		new Set(relatedChunksData.flatMap(match => (match.thought_embeddings ? match.thought_embeddings : [])).filter(Boolean)),
-	);
-
-	return relatedChunks;
-};
-
-export const getRelatedChunkContents = async (relatedChunks: RelatedChunk[], supabase: SupabaseClient<Database>) => {
-	const relatedChunkHashes = new Set(relatedChunks.map(chunk => chunk.hash));
-	const relatedThoughtIds = relatedChunks.map(chunk => chunk.thought_id);
-	const { data: relatedThoughts, error: relatedThoughtsError } = await supabase
-		.from("thoughts")
-		.select("id, content_md")
-		.in("id", relatedThoughtIds);
-
-	if (relatedThoughtsError) {
-		throw relatedThoughtsError;
-	}
-
-	console.log(`Found ${relatedThoughts?.length} related thoughts`);
-
-	const relatedChunkContents = (
-		await Promise.all(
-			relatedThoughts.flatMap(async thought => {
-				if (!thought.content_md) {
-					return [];
-				}
-
-				const chunks = await chunkAndHashMarkdown(thought.content_md);
-
-				return chunks.filter(chunk => relatedChunkHashes.has(chunk.hash));
-			}),
-		)
-	).flat();
-
-	return relatedChunkContents;
-};
-
-export const getRelatedChunkContentsForThought = async (thoughtId: string, supabase: SupabaseClient<Database>) => {
-	const relatedChunks = await getRelatedChunks(thoughtId, supabase);
-	const relatedChunkContents = await getRelatedChunkContents(relatedChunks, supabase);
-	return relatedChunkContents;
+	return data;
 };

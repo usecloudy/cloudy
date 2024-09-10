@@ -35,11 +35,13 @@ const wrapSelectionAroundWords = (editor: Editor) => {
 
 export const EditorBubbleMenu = ({
 	editor,
+	thoughtId,
 	setIsHighlighting,
 	onUpdate,
 	setIsAiWriting,
 }: {
 	editor: Editor;
+	thoughtId: string;
 	setIsHighlighting: (isHighlighting: boolean) => void;
 	onUpdate: (isUserUpdate: boolean) => void;
 	setIsAiWriting: (isAiWriting: boolean) => void;
@@ -153,6 +155,7 @@ export const EditorBubbleMenu = ({
 			{isEditingSelection && selectionToEdit && (
 				<AiEditorMenu
 					editor={editor}
+					thoughtId={thoughtId}
 					selectionToEdit={selectionToEdit}
 					setIsHighlighting={setIsHighlighting}
 					onCancel={handleOnCancelEditMode}

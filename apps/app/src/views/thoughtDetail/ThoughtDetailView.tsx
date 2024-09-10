@@ -361,6 +361,7 @@ const EditorView = ({
 				className="flex flex-row md:pl-[2px]">
 				{editor && thoughtId && (
 					<EditorBubbleMenu
+						thoughtId={thoughtId}
 						editor={editor}
 						setIsHighlighting={handleSetIsHighlighting}
 						onUpdate={onUpdate}

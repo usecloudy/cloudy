@@ -30,7 +30,7 @@ import { processSearches } from "src/utils/tiptapSearchAndReplace";
 // 	}
 // };
 
-const useEditSelection = (editor: Editor) => {
+const useEditSelection = (editor: Editor, thoughtId: string) => {
 	return useMutation({
 		mutationFn: async ({ instruction, content }: { instruction: string; content: string }) => {
 			const firstEditStart = content.indexOf("<edit>");
@@ -51,6 +51,7 @@ const useEditSelection = (editor: Editor) => {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
+					thoughtId,
 					instruction,
 					content: preppedContent,
 				}),
@@ -130,6 +131,7 @@ const useEditSelection = (editor: Editor) => {
 };
 
 export const AiEditorMenu = ({
+	thoughtId,
 	editor,
 	selectionToEdit,
 	setIsHighlighting,
@@ -138,6 +140,7 @@ export const AiEditorMenu = ({
 	onUpdate,
 	setIsAiWriting,
 }: {
+	thoughtId: string;
 	editor: Editor;
 	selectionToEdit: { from: number; to: number };
 	setIsHighlighting: (isHighlighting: boolean) => void;
@@ -163,7 +166,7 @@ export const AiEditorMenu = ({
 
 	const [isApplyMode, setIsApplyMode] = useState(false);
 	const [editingText, setEditingText] = useState("");
-	const { mutateAsync: editSelection, isPending } = useEditSelection(editor);
+	const { mutateAsync: editSelection, isPending } = useEditSelection(editor, thoughtId);
 
 	const contentHtmlBeforeEdit = useRef<string | null>(null);
 	const contentHtmlAfterEdit = useRef<string | null>(null);

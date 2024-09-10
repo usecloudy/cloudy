@@ -1,8 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { trace } from "@opentelemetry/api";
 import { Database } from "@repo/db";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { generateObject, generateText, tool } from "ai";
+import { generateObject, generateText } from "ai";
 import { z } from "zod";
 
 import { MarkdownChunk } from "app/api/utils/relatedChunks";
@@ -37,13 +36,15 @@ const AddOnlyResponseSchema = z.object({
 });
 
 export const generateComments = async ({
-	relatedChunks,
+	relatedChunksText,
+	linkedThoughtsText,
 	title,
 	contentOrDiff,
 	intent,
 	comments,
 }: {
-	relatedChunks: MarkdownChunk[];
+	relatedChunksText: string;
+	linkedThoughtsText: string;
 	title?: string | null;
 	contentOrDiff: string;
 	intent?: string | null;
@@ -54,7 +55,8 @@ export const generateComments = async ({
 
 	await trace.getTracer("ai").startActiveSpan("generate-comments", async () => {
 		const messages = makeThoughtIdeatePrompts({
-			relatedChunks,
+			relatedChunksText,
+			linkedThoughtsText,
 			thought: {
 				title,
 				contentMd: contentOrDiff,
@@ -118,45 +120,43 @@ export const generateCommentsForSelection = async ({
 }) => {
 	const commentsToAdd: z.infer<typeof IdeaCommentSchema>[] = [];
 
-	await trace.getTracer("ai").startActiveSpan("generate-comments", async () => {
-		const messages = makeThoughtIdeateSelectionPrompts({
-			relatedChunks,
-			thought: {
-				title,
-				contentWithSelection,
-				intent,
-			},
-			comments: comments.map(comment => ({
-				id: comment.id,
-				content: comment.content!,
-				targets: comment.related_chunks!,
-			})),
-		});
+	const messages = makeThoughtIdeateSelectionPrompts({
+		relatedChunks,
+		thought: {
+			title,
+			contentWithSelection,
+			intent,
+		},
+		comments: comments.map(comment => ({
+			id: comment.id,
+			content: comment.content!,
+			targets: comment.related_chunks!,
+		})),
+	});
 
-		const { text } = await generateText({
-			model: openai.languageModel("gpt-4o-2024-08-06"),
-			messages,
-			experimental_telemetry: { isEnabled: true, functionId: "thought-ideate" },
-		});
+	const { text } = await generateText({
+		model: openai.languageModel("gpt-4o-2024-08-06"),
+		messages,
+		experimental_telemetry: { isEnabled: true, functionId: "thought-ideate" },
+	});
 
-		if (text.includes("<NO_ACTION>")) {
-			console.log(`No action taken`);
-			return {
-				commentsToArchive: [],
-				commentsToAdd: [],
-			};
-		}
+	if (text.includes("<NO_ACTION>")) {
+		console.log(`No action taken`);
+		return {
+			commentsToArchive: [],
+			commentsToAdd: [],
+		};
+	}
 
-		const { object: response } = await generateObject({
-			model: openai.languageModel("gpt-4o-mini-2024-07-18", { structuredOutputs: true }),
-			schema: AddOnlyResponseSchema,
-			messages: [{ role: "user", content: `<response>\n${text}\n</response>\n\nFormat the above response in JSON.` }],
-			experimental_telemetry: { isEnabled: true, functionId: "thought-ideate-generate-comments" },
-		});
+	const { object: response } = await generateObject({
+		model: openai.languageModel("gpt-4o-mini-2024-07-18", { structuredOutputs: true }),
+		schema: AddOnlyResponseSchema,
+		messages: [{ role: "user", content: `<response>\n${text}\n</response>\n\nFormat the above response in JSON.` }],
+		experimental_telemetry: { isEnabled: true, functionId: "thought-ideate-generate-comments" },
+	});
 
-		response.commentsToAdd.forEach(comment => {
-			commentsToAdd.push(comment);
-		});
+	response.commentsToAdd.forEach(comment => {
+		commentsToAdd.push(comment);
 	});
 
 	return {

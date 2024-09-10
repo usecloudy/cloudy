@@ -4,7 +4,7 @@ import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { generateText } from "ai";
 
-import { getRelatedChunkContentsForThought } from "app/api/utils/relatedChunks";
+import { getLinkedThoughtsPromptDump, getRelatedThoughtsPromptDump } from "app/api/utils/thoughts";
 import { makeSuggestEditTool } from "app/api/utils/tools";
 
 import { makeCommentRespondPrompts } from "./prompts";
@@ -60,10 +60,9 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 		...threadCommentHistory,
 	];
 
-	const relatedChunks = await getRelatedChunkContentsForThought(thought.id, supabase);
-
 	const messages = makeCommentRespondPrompts({
-		relatedChunks,
+		relatedChunksText: await getRelatedThoughtsPromptDump(thought.id, supabase),
+		linkedThoughtsText: await getLinkedThoughtsPromptDump(thought.id, supabase),
 		thought: {
 			title: thought.title,
 			contentMd: thought.content_md!,

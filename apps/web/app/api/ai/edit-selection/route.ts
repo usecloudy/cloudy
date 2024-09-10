@@ -1,10 +1,14 @@
 import { openai } from "@ai-sdk/openai";
+import { Database } from "@repo/db";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { streamText } from "ai";
 import { NextRequest } from "next/server";
 
 import { getSupabase } from "app/api/utils/supabase";
+import { getLinkedThoughtsPromptDump, getRelatedThoughtsPromptDump } from "app/api/utils/thoughts";
 
 interface Payload {
+	thoughtId: string;
 	content: string;
 	instruction: string;
 }
@@ -15,18 +19,32 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic"; // always run dynamically
 
 export const POST = async (req: NextRequest) => {
-	getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
+	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
 	const payload = (await req.json()) as Payload;
 
-	return editSelection(payload);
+	return editSelection(payload, supabase);
 };
 
-const editSelection = async (payload: Payload) => {
+const editSelection = async (payload: Payload, supabase: SupabaseClient<Database>) => {
+	const relatedThoughtsText = await getRelatedThoughtsPromptDump(payload.thoughtId, supabase);
+	const linkedThoughtsText = await getLinkedThoughtsPromptDump(payload.thoughtId, supabase);
+
+	const hasContext = Boolean(relatedThoughtsText || linkedThoughtsText);
+
 	const stream = await streamText({
 		model: openai.languageModel("gpt-4o-2024-08-06"),
 		system: "You are a helpful assistant that edits text.",
 		messages: [
+			...(hasContext
+				? [
+						{
+							role: "user" as const,
+							content: `Some relevant context for the below instruction:
+${relatedThoughtsText}${linkedThoughtsText}`,
+						},
+					]
+				: []),
 			{
 				role: "user",
 				content: `The selection is marked with the [[[ and ]]] tags, for example, in the following text: "Hi [[[user]]] I'm doing well", the selection is "user".

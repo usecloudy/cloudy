@@ -1,12 +1,12 @@
 import { CoreMessage } from "ai";
 
-import { MarkdownChunk } from "app/api/utils/relatedChunks";
-
 export const makeTitleSuggestionPrompts = ({
-	relatedChunks,
+	relatedThoughtsText,
+	linkedThoughtsText,
 	currentContentMd,
 }: {
-	relatedChunks: MarkdownChunk[];
+	relatedThoughtsText: string;
+	linkedThoughtsText: string;
 	currentContentMd: string;
 }): CoreMessage[] => [
 	{
@@ -15,14 +15,11 @@ export const makeTitleSuggestionPrompts = ({
 	},
 	{
 		role: "user",
-		content: `Below are some relevant notes I've previously written:
-${relatedChunks.map(chunk => `<note>\n${chunk.chunk}\n</note>`).join("\n")}
-
-I'm currently in the process of writing the below note:
+		content: `${linkedThoughtsText}${relatedThoughtsText}I'm currently in the process of writing the below note:
 <note>
 ${currentContentMd}
 </note>
 
-Suggest a meaningful title for this note.`,
+Suggest a meaningful title for this note. Make sure the title is concise, meaningful, and matches the tone of the user's writing.`,
 	},
 ];

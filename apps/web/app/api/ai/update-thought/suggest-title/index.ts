@@ -4,8 +4,7 @@ import { generateObject } from "ai";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { chunkAndHashMarkdown, getRelatedChunkContentsForThought } from "app/api/utils/relatedChunks";
-import { addSignal, removeSignal } from "app/api/utils/thoughts";
+import { addSignal, getLinkedThoughtsPromptDump, getRelatedThoughtsPromptDump, removeSignal } from "app/api/utils/thoughts";
 import { Database } from "app/db/database.types";
 
 import { ThoughtRecord } from "../utils";
@@ -25,7 +24,7 @@ export const suggestTitle = async (thoughtRecord: ThoughtRecord, supabase: Supab
 
 	const { data: existingTitleSuggestion } = await supabase
 		.from("thought_chats")
-		.select("id")
+		.select("id, created_at")
 		.eq("thought_id", thoughtRecord.id)
 		.eq("type", "title_suggestion")
 		.maybeSingle();
@@ -51,16 +50,12 @@ export const suggestTitle = async (thoughtRecord: ThoughtRecord, supabase: Supab
 		await addSignal("suggest-title", thoughtRecord.id, supabase);
 
 		// Get all current chunks for the thought
-		const relatedChunks = await getRelatedChunkContentsForThought(thoughtRecord.id, supabase);
-
-		console.log(`Found ${relatedChunks.length} related chunks`);
-
-		console.log("Will chunk markdown...");
-		const chunks = await chunkAndHashMarkdown(contentMd);
-		console.log(`Generated ${chunks.length} chunks`);
+		const relatedThoughtsText = await getRelatedThoughtsPromptDump(thoughtRecord.id, supabase);
+		const linkedThoughtsText = await getLinkedThoughtsPromptDump(thoughtRecord.id, supabase);
 
 		const messages = makeTitleSuggestionPrompts({
-			relatedChunks,
+			relatedThoughtsText,
+			linkedThoughtsText,
 			currentContentMd: contentMd,
 		});
 

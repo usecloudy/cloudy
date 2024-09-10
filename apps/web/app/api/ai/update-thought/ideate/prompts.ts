@@ -9,12 +9,20 @@ interface Comment {
 	targets: string[];
 }
 
+export interface LinkedThought {
+	id: string;
+	title: string | null;
+	contentMd: string | null;
+}
+
 export const makeThoughtIdeatePrompts = ({
-	relatedChunks,
+	relatedChunksText,
+	linkedThoughtsText,
 	thought,
 	comments,
 }: {
-	relatedChunks: MarkdownChunk[];
+	relatedChunksText: string;
+	linkedThoughtsText: string;
 	thought: {
 		title?: string | null;
 		contentMd: string;
@@ -44,22 +52,14 @@ export const makeThoughtIdeatePrompts = ({
 			"Your task is to add new relevant comments.\n-Make sure you provide a reason why you're adding a new comment";
 	}
 
-	const relatedChunksText =
-		relatedChunks.length > 0
-			? `Below are some relevant notes the user has written, use this as context:
-${relatedChunks.map(chunk => `<note>\n${chunk.chunk}\n</note>`).join("\n")}
-
-`
-			: "";
-
 	return [
 		{
 			role: "system",
-			content: `You are a friendly and helpful assistant that helps users ideate, think through ideas, and better reflect on their notes. Respond in a friendly, concise manner. Talk to the user in your summaries.`,
+			content: `You are a friendly and helpful assistant that helps users ideate, think through ideas, and better reflect on their notes. Respond in a friendly, concise manner. Talk to the user in your comments.`,
 		},
 		{
 			role: "user",
-			content: `${relatedChunksText}The user is currently in the process of writing the below note, a diff has been provided to show the changes. Focus your new comments on what the user has recently written:
+			content: `${relatedChunksText}${linkedThoughtsText}The user is currently in the process of writing the below note, a diff has been provided to show the changes. Focus your new comments on what the user has recently written:
 ${thoughtToPrompt(thought)}${thoughtIntentToPrompt(thought.intent)}
 
 ${commentsText}

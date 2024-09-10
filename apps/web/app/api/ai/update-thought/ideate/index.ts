@@ -2,10 +2,8 @@ import { ThoughtSignals, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import * as jsdiff from "diff";
-import { LangfuseExporter } from "langfuse-vercel";
 
-import { getRelatedChunkContentsForThought } from "app/api/utils/relatedChunks";
-import { addSignal, removeSignal } from "app/api/utils/thoughts";
+import { addSignal, getLinkedThoughtsPromptDump, getRelatedThoughtsPromptDump, removeSignal } from "app/api/utils/thoughts";
 
 import { ThoughtRecord } from "../utils";
 import { checkIfDiffIsSignificant, generateComments } from "./utils";
@@ -49,10 +47,9 @@ export const ideateThought = async (thought: ThoughtRecord, supabase: SupabaseCl
 				.neq("is_archived", true),
 		);
 
-		const relatedChunks = await getRelatedChunkContentsForThought(thoughtId, supabase);
-
 		const { commentsToAdd, commentsToArchive } = await generateComments({
-			relatedChunks,
+			linkedThoughtsText: await getLinkedThoughtsPromptDump(thoughtId, supabase),
+			relatedChunksText: await getRelatedThoughtsPromptDump(thoughtId, supabase),
 			title: thought.title,
 			contentOrDiff,
 			intent: thought.user_intent,
@@ -77,8 +74,6 @@ export const ideateThought = async (thought: ThoughtRecord, supabase: SupabaseCl
 
 			await supabase.from("thought_chats").insert(comments);
 		}
-
-		LangfuseExporter.langfuse?.flushAsync();
 
 		return;
 	} finally {

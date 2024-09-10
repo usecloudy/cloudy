@@ -4,10 +4,12 @@ import { MarkdownChunk } from "app/api/utils/relatedChunks";
 import { thoughtToPrompt } from "app/api/utils/thoughts";
 
 export const makeCommentRespondPrompts = ({
-	relatedChunks,
+	relatedChunksText,
+	linkedThoughtsText,
 	thought,
 }: {
-	relatedChunks: MarkdownChunk[];
+	relatedChunksText: string;
+	linkedThoughtsText: string;
 	thought: { title?: string | null; contentMd: string };
 }): CoreMessage[] => [
 	{
@@ -22,10 +24,8 @@ You are provided with a tool to edit the note when needed. You should use it fre
 	},
 	{
 		role: "user",
-		content: `Below are some relevant notes I've previously written:
-${relatedChunks.map(chunk => `<note>\n${chunk.chunk}\n</note>`).join("\n")}
-
-I'm currently in the process of writing the below note:
+		content: `${relatedChunksText}${linkedThoughtsText}
+The user is in the process of writing the below note:
 ${thoughtToPrompt(thought)}`,
 	},
 ];
