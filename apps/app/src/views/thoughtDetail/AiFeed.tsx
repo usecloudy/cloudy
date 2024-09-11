@@ -23,7 +23,7 @@ import {
 	UserIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
-import { useMount, useUnmount } from "react-use";
+import { useMount, useUnmount, useUpdateEffect } from "react-use";
 import { create } from "zustand";
 
 import { queryClient } from "src/api/queryClient";
@@ -147,6 +147,24 @@ const useMarkAllAsRead = (thoughtId: string) => {
 			if (error) throw error;
 		},
 		onMutate: () => {
+			queryClient.setQueryData(["ideaSuggestions", thoughtId], (data: Suggestion[] | undefined) =>
+				data?.map(suggestion => ({ ...suggestion, is_seen: true })),
+			);
+		},
+	});
+};
+
+const useMarkAsRead = (thoughtId: string) => {
+	return useMutation({
+		mutationFn: async (idsToMark: string[]) => {
+			const { error } = await supabase
+				.from("thought_chats")
+				.update({ is_seen: true })
+				.in("id", idsToMark)
+				.eq("thought_id", thoughtId);
+			if (error) throw error;
+		},
+		onMutate: (idsToMark: string[]) => {
 			queryClient.setQueryData(["ideaSuggestions", thoughtId], (data: Suggestion[] | undefined) =>
 				data?.map(suggestion => ({ ...suggestion, is_seen: true })),
 			);
@@ -295,6 +313,7 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 	const { feedMode, setFeedMode, commentFilter, setCommentFilter, setActiveThreadCommentId } = useThoughtStore();
 
 	const { mutate: markAllAsRead } = useMarkAllAsRead(thoughtId);
+	const { mutate: markAsRead } = useMarkAsRead(thoughtId);
 	const { mutate: archive } = useArchive(thoughtId, commentFilter);
 	const { mutate: setSuggestionPaused } = useSetSuggestionPaused(thoughtId);
 	const { mutate: deleteAllArchived } = useDeleteAllArchived(thoughtId);
@@ -310,6 +329,12 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 						!suggestion.is_archived && (!commentFilter || commentFilter.commentIds.includes(suggestion.id)),
 				);
 	}, [feedMode, ideaSuggestions, commentFilter]);
+
+	useUpdateEffect(() => {
+		if (commentFilter) {
+			markAsRead(commentFilter.commentIds);
+		}
+	}, [commentFilter, markAsRead]);
 
 	useEffect(() => {
 		if (feedMode === "selectedComments" && suggestions.length === 0) {
@@ -437,7 +462,7 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 								{isSuggestionPaused ? (
 									<DropdownItem
 										onSelect={() => {
-											setSuggestionPaused(false)
+											setSuggestionPaused(false);
 											forceAiUpdate();
 										}}
 										className="bg-accent-secondary/10 font-medium">
