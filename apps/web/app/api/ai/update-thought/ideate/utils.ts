@@ -33,10 +33,6 @@ const ResponseSchema = z.object({
 	commentsToAdd: z.array(IdeaCommentSchema),
 });
 
-const AddOnlyResponseSchema = z.object({
-	commentsToAdd: z.array(IdeaCommentSchema),
-});
-
 export const generateComments = async ({
 	relatedChunksText,
 	linkedThoughtsText,
@@ -44,7 +40,7 @@ export const generateComments = async ({
 	thoughtDiffText,
 	intentText,
 	comments,
-	userId,
+	heliconeHeaders,
 }: {
 	relatedChunksText: string;
 	linkedThoughtsText: string;
@@ -52,12 +48,10 @@ export const generateComments = async ({
 	thoughtDiffText: string;
 	intentText: string;
 	comments: Comment[];
-	userId: string;
+	heliconeHeaders: Record<string, string>;
 }) => {
 	const commentsToArchive: string[] = [];
 	const commentsToAdd: z.infer<typeof IdeaCommentSchema>[] = [];
-
-	const ideateSessionId = randomUUID();
 
 	await trace.getTracer("ai").startActiveSpan("generate-comments", async () => {
 		const messages = makeThoughtIdeatePrompts({
@@ -73,18 +67,14 @@ export const generateComments = async ({
 			})),
 		});
 
-		const heliconeHeaders = {
-			"Helicone-User-Id": userId,
-			"Helicone-Session-Name": "Ideate",
-			"Helicone-Session-Path": "thought-ideate",
-			"Helicone-Session-Id": `thought-ideate/${ideateSessionId}`,
-		};
-
 		const { text } = await generateText({
 			model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
 			messages,
 			experimental_telemetry: { isEnabled: true, functionId: "thought-ideate" },
-			headers: heliconeHeaders,
+			headers: {
+				...heliconeHeaders,
+				"Helicone-Session-Path": "thought-ideate/ideate",
+			},
 		});
 
 		if (text.includes("<NO_ACTION>")) {
@@ -100,7 +90,10 @@ export const generateComments = async ({
 			schema: ResponseSchema,
 			messages: [{ role: "user", content: `<response>\n${text}\n</response>\n\nFormat the above response in JSON.` }],
 			experimental_telemetry: { isEnabled: true, functionId: "thought-ideate-generate-comments" },
-			headers: heliconeHeaders,
+			headers: {
+				...heliconeHeaders,
+				"Helicone-Session-Path": "thought-ideate/format",
+			},
 		});
 
 		response.commentsToArchive.forEach(comment => {
@@ -118,75 +111,19 @@ export const generateComments = async ({
 	};
 };
 
-export const generateCommentsForSelection = async ({
-	relatedChunks,
-	title,
-	contentWithSelection,
-	intent,
-	comments,
-}: {
-	relatedChunks: MarkdownChunk[];
-	title?: string | null;
-	contentWithSelection: string;
-	intent?: string | null;
-	comments: Comment[];
-}) => {
-	const commentsToAdd: z.infer<typeof IdeaCommentSchema>[] = [];
-
-	const messages = makeThoughtIdeateSelectionPrompts({
-		relatedChunks,
-		thought: {
-			title,
-			contentWithSelection,
-			intent,
-		},
-		comments: comments.map(comment => ({
-			id: comment.id,
-			content: comment.content!,
-			targets: comment.related_chunks!,
-		})),
-	});
-
-	const { text } = await generateText({
-		model: openai.languageModel("gpt-4o-2024-08-06"),
-		messages,
-		experimental_telemetry: { isEnabled: true, functionId: "thought-ideate" },
-	});
-
-	if (text.includes("<NO_ACTION>")) {
-		console.log(`No action taken`);
-		return {
-			commentsToArchive: [],
-			commentsToAdd: [],
-		};
-	}
-
+export const checkIfDiffIsSignificant = async (diffString: string, heliconeHeaders: Record<string, string>) => {
 	const { object: response } = await generateObject({
-		model: openai.languageModel("gpt-4o-mini-2024-07-18", { structuredOutputs: true }),
-		schema: AddOnlyResponseSchema,
-		messages: [{ role: "user", content: `<response>\n${text}\n</response>\n\nFormat the above response in JSON.` }],
-		experimental_telemetry: { isEnabled: true, functionId: "thought-ideate-generate-comments" },
-	});
-
-	response.commentsToAdd.forEach(comment => {
-		commentsToAdd.push(comment);
-	});
-
-	return {
-		commentsToAdd,
-	};
-};
-
-export const checkIfDiffIsSignificant = async ({ diffString }: { diffString: string }) => {
-	console.log(diffString);
-	const { object: response } = await generateObject({
-		model: openai.languageModel("gpt-4o-mini-2024-07-18", { structuredOutputs: true }),
+		model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18", { structuredOutputs: true }),
 		schema: z.object({
 			diffIsSignificant: z.boolean(),
 		}),
 		messages: makeThoughtIdeateDiffChangePrompts({ diffString }),
 		temperature: 0,
 		experimental_telemetry: { isEnabled: true, functionId: "thought-ideate-generate-comments" },
+		headers: {
+			...heliconeHeaders,
+			"Helicone-Session-Path": "thought-ideate/diff-change",
+		},
 	});
 
 	return response.diffIsSignificant;

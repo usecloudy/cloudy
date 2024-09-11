@@ -1,6 +1,7 @@
 import { ThoughtSignals, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
 import * as jsdiff from "diff";
 
 import {
@@ -38,9 +39,15 @@ export const ideateThought = async (
 			throw new Error("No content_md");
 		}
 
+		const heliconeHeaders = {
+			"Helicone-User-Id": thought.author_id,
+			"Helicone-Session-Name": "Ideate",
+			"Helicone-Session-Id": `thought-ideate/${randomUUID()}`,
+		};
+
 		const contentOrDiff = lastContentMd ? jsdiff.createPatch("note", lastContentMd, contentMd) : contentMd;
 		if (!options?.force && lastContentMd) {
-			const diffIsSignificant = await checkIfDiffIsSignificant({ diffString: contentOrDiff });
+			const diffIsSignificant = await checkIfDiffIsSignificant(contentOrDiff, heliconeHeaders);
 
 			console.log(`Diff is significant: ${diffIsSignificant}`);
 
@@ -66,7 +73,7 @@ export const ideateThought = async (
 			thoughtDiffText: noteDiffToPrompt(contentOrDiff),
 			intentText: thoughtIntentToPrompt(thought.user_intent),
 			comments: existingComments,
-			userId: thought.author_id,
+			heliconeHeaders,
 		});
 
 		console.log(`Adding ${commentsToAdd.length} comments and archiving ${commentsToArchive.length} comments`);
