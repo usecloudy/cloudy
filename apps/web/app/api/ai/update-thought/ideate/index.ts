@@ -66,6 +66,7 @@ export const ideateThought = async (
 			thoughtDiffText: noteDiffToPrompt(contentOrDiff),
 			intentText: thoughtIntentToPrompt(thought.user_intent),
 			comments: existingComments,
+			userId: thought.author_id,
 		});
 
 		console.log(`Adding ${commentsToAdd.length} comments and archiving ${commentsToArchive.length} comments`);

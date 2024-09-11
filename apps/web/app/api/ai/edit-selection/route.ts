@@ -1,9 +1,10 @@
-import { openai } from "@ai-sdk/openai";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { streamText } from "ai";
+import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
 
+import { heliconeOpenAI } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
 import { getLinkedThoughtsPromptDump, getRelatedThoughtsPromptDump } from "app/api/utils/thoughts";
 
@@ -32,8 +33,14 @@ const editSelection = async (payload: Payload, supabase: SupabaseClient<Database
 
 	const hasContext = Boolean(relatedThoughtsText || linkedThoughtsText);
 
+	const userId = (await supabase.auth.getUser()).data?.user?.id;
+
+	if (!userId) {
+		throw new Error("User ID not found");
+	}
+
 	const stream = await streamText({
-		model: openai.languageModel("gpt-4o-2024-08-06"),
+		model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
 		system: "You are a helpful assistant that edits text.",
 		messages: [
 			...(hasContext
@@ -91,6 +98,12 @@ Return only the content that will replace the selection, you MUST start with [[[
 			isEnabled: true,
 		},
 		stopSequences: ["]]]"],
+		headers: {
+			"Helicone-User-Id": userId,
+			"Helicone-Session-Name": "Edit Selection",
+			"Helicone-Session-Path": "edit-selection",
+			"Helicone-Session-Id": `edit-selection/${randomUUID()}`,
+		},
 	});
 
 	return stream.toTextStreamResponse();

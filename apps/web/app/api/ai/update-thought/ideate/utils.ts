@@ -2,8 +2,10 @@ import { openai } from "@ai-sdk/openai";
 import { trace } from "@opentelemetry/api";
 import { Database } from "@repo/db";
 import { generateObject, generateText } from "ai";
+import { randomUUID } from "crypto";
 import { z } from "zod";
 
+import { heliconeOpenAI } from "app/api/utils/helicone";
 import { MarkdownChunk } from "app/api/utils/relatedChunks";
 
 import { makeThoughtIdeateDiffChangePrompts, makeThoughtIdeatePrompts, makeThoughtIdeateSelectionPrompts } from "./prompts";
@@ -42,6 +44,7 @@ export const generateComments = async ({
 	thoughtDiffText,
 	intentText,
 	comments,
+	userId,
 }: {
 	relatedChunksText: string;
 	linkedThoughtsText: string;
@@ -49,9 +52,12 @@ export const generateComments = async ({
 	thoughtDiffText: string;
 	intentText: string;
 	comments: Comment[];
+	userId: string;
 }) => {
 	const commentsToArchive: string[] = [];
 	const commentsToAdd: z.infer<typeof IdeaCommentSchema>[] = [];
+
+	const ideateSessionId = randomUUID();
 
 	await trace.getTracer("ai").startActiveSpan("generate-comments", async () => {
 		const messages = makeThoughtIdeatePrompts({
@@ -67,10 +73,18 @@ export const generateComments = async ({
 			})),
 		});
 
+		const heliconeHeaders = {
+			"Helicone-User-Id": userId,
+			"Helicone-Session-Name": "Ideate",
+			"Helicone-Session-Path": "thought-ideate",
+			"Helicone-Session-Id": `thought-ideate/${ideateSessionId}`,
+		};
+
 		const { text } = await generateText({
-			model: openai.languageModel("gpt-4o-2024-08-06"),
+			model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
 			messages,
 			experimental_telemetry: { isEnabled: true, functionId: "thought-ideate" },
+			headers: heliconeHeaders,
 		});
 
 		if (text.includes("<NO_ACTION>")) {
@@ -82,10 +96,11 @@ export const generateComments = async ({
 		}
 
 		const { object: response } = await generateObject({
-			model: openai.languageModel("gpt-4o-mini-2024-07-18", { structuredOutputs: true }),
+			model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18", { structuredOutputs: true }),
 			schema: ResponseSchema,
 			messages: [{ role: "user", content: `<response>\n${text}\n</response>\n\nFormat the above response in JSON.` }],
 			experimental_telemetry: { isEnabled: true, functionId: "thought-ideate-generate-comments" },
+			headers: heliconeHeaders,
 		});
 
 		response.commentsToArchive.forEach(comment => {

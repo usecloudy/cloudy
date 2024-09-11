@@ -1,9 +1,10 @@
-import { openai } from "@ai-sdk/openai";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { generateObject } from "ai";
+import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { heliconeOpenAI } from "app/api/utils/helicone";
 import { addSignal, getLinkedThoughtsPromptDump, getRelatedThoughtsPromptDump, removeSignal } from "app/api/utils/thoughts";
 import { Database } from "app/db/database.types";
 
@@ -61,13 +62,21 @@ export const suggestTitle = async (thoughtRecord: ThoughtRecord, supabase: Supab
 
 		console.log("Messages:", messages);
 
+		const heliconeSessionId = randomUUID();
+
 		const { object: titleSuggestion } = await generateObject({
-			model: openai.languageModel("gpt-4o-mini-2024-07-18"),
+			model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18"),
 			messages,
 			schema: TitleSuggestionSchema,
 			schemaName: "title_suggestion",
 			temperature: 0.5,
 			maxTokens: 256,
+			headers: {
+				"Helicone-User-Id": thoughtRecord.author_id,
+				"Helicone-Session-Name": "Suggest Title",
+				"Helicone-Session-Path": "thought-suggest-title",
+				"Helicone-Session-Id": `thought-suggest-title/${heliconeSessionId}`,
+			},
 		});
 
 		if (titleSuggestion) {

@@ -1,9 +1,9 @@
-import { openai } from "@ai-sdk/openai";
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { generateText } from "ai";
 
+import { heliconeOpenAI } from "app/api/utils/helicone";
 import { getLinkedThoughtsPromptDump, getRelatedThoughtsPromptDump } from "app/api/utils/thoughts";
 import { makeSuggestEditTool } from "app/api/utils/tools";
 
@@ -79,7 +79,7 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 	const { tool: suggestEditTool, edits, applyEdits } = makeSuggestEditTool(thought.content!);
 
 	const { text: commentText } = await generateText({
-		model: openai.languageModel("gpt-4o-2024-08-06"),
+		model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
 		temperature: 0.5,
 		messages,
 		maxTokens: 1024,
@@ -89,6 +89,13 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 		maxToolRoundtrips: 3,
 		experimental_telemetry: {
 			isEnabled: true,
+		},
+		headers: {
+			"Helicone-Property-ThreadId": threadId,
+			"Helicone-User-Id": thought.author_id,
+			"Helicone-Session-Name": "Thread",
+			"Helicone-Session-Path": "thought-thread-respond",
+			"Helicone-Session-Id": `thought-threads/${threadId}`,
 		},
 	});
 
