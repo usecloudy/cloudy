@@ -116,6 +116,7 @@ export const checkIfDiffIsSignificant = async (diffString: string, heliconeHeade
 		model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18", { structuredOutputs: true }),
 		schema: z.object({
 			diffIsSignificant: z.boolean(),
+			isComplete: z.boolean(),
 		}),
 		messages: makeThoughtIdeateDiffChangePrompts({ diffString }),
 		temperature: 0,
@@ -126,5 +127,5 @@ export const checkIfDiffIsSignificant = async (diffString: string, heliconeHeade
 		},
 	});
 
-	return response.diffIsSignificant;
+	return response;
 };

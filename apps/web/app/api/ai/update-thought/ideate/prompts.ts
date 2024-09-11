@@ -180,7 +180,7 @@ export const makeThoughtIdeateDiffChangePrompts = ({ diffString }: { diffString:
 	{
 		role: "user",
 		content: `
-Given the below diff, determine whether the diff is a significant change to the note or not:
+Given the below diff, determine whether the diff is a significant change to the note or not, also determine if the writing is complete:
 ---
 Index: note
 ===================================================================
@@ -197,9 +197,9 @@ Index: note
  
  - Technical implications: Consider the complexity of integrating neural technology with existing app frameworks.
 ---
-{ "diffIsSignificant": true }
+{ "diffIsSignificant": true, "isComplete": true }
 ------
-Given the below diff, determine whether the diff is a significant change to the note or not:
+Given the below diff, determine whether the diff is a significant change to the note or not, also determine if the writing is complete:
 ---
 Index: note
 ===================================================================
@@ -210,9 +210,9 @@ Index: note
 -Ok so I am thinking about how to make the todo app better.
 +Ok so I am reasoning about how how I can make the app better.
 ---
-{ "diffIsSignificant": false }
+{ "diffIsSignificant": false, "isComplete": true }
 ------
-Given the below diff, determine whether the diff is a significant change to the note or not:
+Given the below diff, determine whether the diff is a significant change to the note or not, also determine if the writing is complete:
 ---
 --- thought
 +++ thought
@@ -227,8 +227,22 @@ Given the below diff, determine whether the diff is a significant change to the 
 -
  I think they're very loud and will alert the rest of the company.
 ---
-{ "diffIsSignificant": false }
+{ "diffIsSignificant": false, "isComplete": false }
 ------
+Given the below diff, determine whether the diff is a significant change to the note or not, also determine if the writing is complete:
+---
+Index: note
+===================================================================
+--- note
++++ note
+@@ -4,8 +4,9 @@
+
++Ok so I am reasoning about how I
+---
+{ "diffIsSignificant": false, "isComplete": false }
+------
+Given the below diff, determine whether the diff is a significant change to the note or not, also determine if the writing is complete:
+---
 ${diffString}
 ---`,
 	},

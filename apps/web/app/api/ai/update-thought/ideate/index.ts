@@ -47,12 +47,16 @@ export const ideateThought = async (
 
 		const contentOrDiff = lastContentMd ? jsdiff.createPatch("note", lastContentMd, contentMd) : contentMd;
 		if (!options?.force && lastContentMd) {
-			const diffIsSignificant = await checkIfDiffIsSignificant(contentOrDiff, heliconeHeaders);
+			const { diffIsSignificant, isComplete } = await checkIfDiffIsSignificant(contentOrDiff, heliconeHeaders);
 
 			console.log(`Diff is significant: ${diffIsSignificant}`);
 
 			if (!diffIsSignificant) {
 				console.log(`Content change not significant`);
+				return;
+			}
+			if (!isComplete) {
+				console.log(`Content change is not complete`);
 				return;
 			}
 		}
