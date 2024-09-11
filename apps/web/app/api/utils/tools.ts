@@ -2,6 +2,8 @@ import { openai } from "@ai-sdk/openai";
 import { CoreMessage, generateObject, tool } from "ai";
 import { z } from "zod";
 
+import { heliconeOpenAI } from "./helicone";
+
 export const makeSuggestEditPrompts = ({
 	instructions,
 	example,
@@ -37,12 +39,12 @@ interface EditInstruction {
 	content: string;
 }
 
-export const makeSuggestEditTool = (thoughtContentHtml: string) => {
+export const makeSuggestEditTool = (thoughtContentHtml: string, heliconeHeaders: Record<string, string>) => {
 	const edits: EditInstruction[] = [];
 
 	const applyEdit = async ({ instructions, content }: EditInstruction) => {
 		const { object: newContent } = await generateObject({
-			model: openai.languageModel("gpt-4o-mini-2024-07-18", {
+			model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18", {
 				structuredOutputs: true,
 			}),
 			messages: makeSuggestEditPrompts({
@@ -54,6 +56,7 @@ export const makeSuggestEditTool = (thoughtContentHtml: string) => {
 				newContent: z.string().describe("The new content of the note"),
 			}),
 			temperature: 0.0,
+			headers: heliconeHeaders,
 		});
 
 		return newContent.newContent;

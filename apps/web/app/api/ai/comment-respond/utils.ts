@@ -76,7 +76,15 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 		});
 	});
 
-	const { tool: suggestEditTool, edits, applyEdits } = makeSuggestEditTool(thought.content!);
+	const sharedHeliconeHeaders = {
+		"Helicone-Property-ThreadId": threadId,
+		"Helicone-User-Id": thought.author_id,
+		"Helicone-Session-Name": "Thread",
+		"Helicone-Session-Path": "thought-thread-respond",
+		"Helicone-Session-Id": `thought-threads/${threadId}`,
+	};
+
+	const { tool: suggestEditTool, edits, applyEdits } = makeSuggestEditTool(thought.content!, sharedHeliconeHeaders);
 
 	const { text: commentText } = await generateText({
 		model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
@@ -90,13 +98,7 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 		experimental_telemetry: {
 			isEnabled: true,
 		},
-		headers: {
-			"Helicone-Property-ThreadId": threadId,
-			"Helicone-User-Id": thought.author_id,
-			"Helicone-Session-Name": "Thread",
-			"Helicone-Session-Path": "thought-thread-respond",
-			"Helicone-Session-Id": `thought-threads/${threadId}`,
-		},
+		headers: sharedHeliconeHeaders,
 	});
 
 	const hasEdits = edits.length > 0;
