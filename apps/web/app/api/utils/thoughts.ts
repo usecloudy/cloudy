@@ -42,6 +42,13 @@ ${thought.contentMd ?? ""}
 </note>`;
 };
 
+export const noteDiffToPrompt = (diff: string) => {
+	return `Below are the most recent changes to the note:
+<recent_changes>
+${diff}
+</recent_changes>`;
+};
+
 export const thoughtIntentToPrompt = (intent?: string | null) => {
 	if (!intent) return "";
 

@@ -38,16 +38,16 @@ const AddOnlyResponseSchema = z.object({
 export const generateComments = async ({
 	relatedChunksText,
 	linkedThoughtsText,
-	title,
-	contentOrDiff,
-	intent,
+	thoughtText,
+	thoughtDiffText,
+	intentText,
 	comments,
 }: {
 	relatedChunksText: string;
 	linkedThoughtsText: string;
-	title?: string | null;
-	contentOrDiff: string;
-	intent?: string | null;
+	thoughtText: string;
+	thoughtDiffText: string;
+	intentText: string;
 	comments: Comment[];
 }) => {
 	const commentsToArchive: string[] = [];
@@ -57,11 +57,9 @@ export const generateComments = async ({
 		const messages = makeThoughtIdeatePrompts({
 			relatedChunksText,
 			linkedThoughtsText,
-			thought: {
-				title,
-				contentMd: contentOrDiff,
-				intent,
-			},
+			thoughtText,
+			thoughtDiffText,
+			intentText,
 			comments: comments.map(comment => ({
 				id: comment.id,
 				content: comment.content!,

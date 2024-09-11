@@ -18,16 +18,16 @@ export interface LinkedThought {
 export const makeThoughtIdeatePrompts = ({
 	relatedChunksText,
 	linkedThoughtsText,
-	thought,
+	thoughtText,
+	thoughtDiffText,
+	intentText,
 	comments,
 }: {
 	relatedChunksText: string;
 	linkedThoughtsText: string;
-	thought: {
-		title?: string | null;
-		contentMd: string;
-		intent?: string | null;
-	};
+	thoughtText: string;
+	thoughtDiffText: string;
+	intentText: string;
 	comments: Comment[];
 }): CoreMessage[] => {
 	let commentsText = "";
@@ -55,12 +55,12 @@ export const makeThoughtIdeatePrompts = ({
 	return [
 		{
 			role: "system",
-			content: `You are a friendly and helpful assistant that helps users ideate, think through ideas, and better reflect on their notes. Respond in a friendly, concise manner. Talk to the user in your comments.`,
+			content: `You are a friendly and helpful assistant that helps users ideate, think through ideas, and better reflect on their notes. Respond in a friendly, concise manner. Talk to the user in your comments. Your goal is to nudge their thought process in the right direction.`,
 		},
 		{
 			role: "user",
 			content: `${relatedChunksText}${linkedThoughtsText}The user is currently in the process of writing the below note, a diff has been provided to show the changes. Focus your new comments on what the user has recently written:
-${thoughtToPrompt(thought)}${thoughtIntentToPrompt(thought.intent)}
+${thoughtText}${thoughtDiffText}${intentText}
 
 ${commentsText}
 

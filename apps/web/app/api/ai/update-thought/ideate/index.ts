@@ -3,7 +3,15 @@ import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import * as jsdiff from "diff";
 
-import { addSignal, getLinkedThoughtsPromptDump, getRelatedThoughtsPromptDump, removeSignal } from "app/api/utils/thoughts";
+import {
+	addSignal,
+	getLinkedThoughtsPromptDump,
+	getRelatedThoughtsPromptDump,
+	noteDiffToPrompt,
+	removeSignal,
+	thoughtIntentToPrompt,
+	thoughtToPrompt,
+} from "app/api/utils/thoughts";
 
 import { ThoughtRecord } from "../utils";
 import { checkIfDiffIsSignificant, generateComments } from "./utils";
@@ -54,9 +62,9 @@ export const ideateThought = async (
 		const { commentsToAdd, commentsToArchive } = await generateComments({
 			linkedThoughtsText: await getLinkedThoughtsPromptDump(thoughtId, supabase),
 			relatedChunksText: await getRelatedThoughtsPromptDump(thoughtId, supabase),
-			title: thought.title,
-			contentOrDiff,
-			intent: thought.user_intent,
+			thoughtText: thoughtToPrompt({ title: thought.title, contentMd }),
+			thoughtDiffText: noteDiffToPrompt(contentOrDiff),
+			intentText: thoughtIntentToPrompt(thought.user_intent),
 			comments: existingComments,
 		});
 
