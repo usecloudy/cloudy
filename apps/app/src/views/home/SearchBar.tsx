@@ -118,7 +118,7 @@ export const SearchBar = () => {
 		}
 
 		return (
-			<div ref={listContainerRef} className="max-h-[300px] overflow-y-auto no-scrollbar">
+			<div ref={listContainerRef} className="max-h-[300px]">
 				{data.map((thought, index) => (
 					<Link
 						to={`/thoughts/${thought.id}`}
@@ -174,8 +174,9 @@ export const SearchBar = () => {
 						ref={refs.setFloating}
 						style={floatingStyles}
 						{...getFloatingProps()}
-						className="z-10 w-full bg-background border border-border rounded-md shadow-md p-2 animate-in fade-in duration-200">
+						className="z-10 w-full bg-background border border-border rounded-md shadow-md p-2 animate-in fade-in duration-200 overflow-y-auto no-scrollbar">
 						{renderSearchResults()}
+						<div className="h-2" />
 					</div>
 				</FloatingFocusManager>
 			)}
