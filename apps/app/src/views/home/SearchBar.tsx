@@ -118,7 +118,7 @@ export const SearchBar = () => {
 		}
 
 		return (
-			<div ref={listContainerRef} className="max-h-[300px] overflow-y-auto">
+			<div ref={listContainerRef} className="max-h-[300px] overflow-y-auto no-scrollbar">
 				{data.map((thought, index) => (
 					<Link
 						to={`/thoughts/${thought.id}`}
