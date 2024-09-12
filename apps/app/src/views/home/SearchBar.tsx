@@ -31,7 +31,7 @@ const useSearchThoughts = (query: string) => {
 		queryFn: async () => {
 			const { data, error } = await supabase
 				.rpc("search_thoughts", {
-					search_query: query,
+					search_query: query.replaceAll(" ", "+"),
 					user_id: user.id,
 				})
 				.order("thought_updated_at", { ascending: false });
