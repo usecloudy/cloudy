@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { FileIcon } from "lucide-react";
 import { useEffect } from "react";
 import { Helmet } from "react-helmet";
-import { toast } from "react-toastify";
 
 import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
-import { Button } from "src/components/Button";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { ThoughtList } from "src/components/ThoughtList";
 import { useUser } from "src/stores/user";
@@ -13,6 +12,7 @@ import { makeHeadTitle } from "src/utils/strings";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
 import { CollectionsColumn } from "./CollectionsColumn";
+import { SearchBar } from "./SearchBar";
 import { ThoughtsEmptyState } from "./ThoughtsEmptyState";
 
 const useThoughts = () => {
@@ -83,10 +83,17 @@ export const HomeView = () => {
 			</Helmet>
 			<div className="flex flex-col-reverse md:flex-row gap-4 py-4 md:py-8 w-full ">
 				<div className="h-8 md:hidden" />
-				<div className="flex-1 flex-col flex gap-4">
+				<div className="flex-1 flex-col flex gap-4 mt-6">
 					{/* <div>
 						<Generate />
 					</div> */}
+					<div className="flex flex-col gap-2">
+						<div className="flex flex-row items-center gap-1">
+							<FileIcon className="size-4 text-secondary" />
+							<h3 className="text-secondary font-semibold whitespace-nowrap">Notes</h3>
+						</div>
+						<SearchBar />
+					</div>
 					{thoughts && thoughts.length > 0 ? <ThoughtList thoughts={thoughts} /> : <ThoughtsEmptyState />}
 				</div>
 				<CollectionsColumn />

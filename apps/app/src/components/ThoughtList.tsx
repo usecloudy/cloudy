@@ -66,7 +66,7 @@ export const ThoughtList = ({ thoughts }: ThoughtListProps) => {
 		<div className="space-y-6">
 			{Object.entries(groupedThoughts).map(([date, thoughtsInGroup]) => (
 				<div key={date} className="space-y-2">
-					<h2 className="mb-1 font-semibold text-secondary">{date}</h2>
+					<h2 className="mb-1 font-medium text-sm text-secondary">{date}</h2>
 					{thoughtsInGroup.map(thought => (
 						<ThoughtCard key={thought.id} thought={thought} />
 					))}
