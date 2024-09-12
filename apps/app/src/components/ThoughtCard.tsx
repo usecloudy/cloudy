@@ -58,10 +58,12 @@ export const ThoughtCard = ({
 	thought,
 	variant = "default",
 	rightContent,
+	hoursOnlyForUpdatedAt = true,
 }: {
 	thought: Thought;
 	variant?: VariantProps<typeof thoughtCardVariants>["variant"];
 	rightContent?: React.ReactNode;
+	hoursOnlyForUpdatedAt?: boolean;
 }) => {
 	const { mutate: deleteThought } = useDeleteThought();
 	return (
@@ -75,7 +77,7 @@ export const ThoughtCard = ({
 					)}
 					<div className="flex flex-col">
 						<span className="mt-1 text-xs text-secondary">
-							{makeHumanizedTime(thought.updated_at ?? thought.created_at, { hoursOnly: true })}
+							{makeHumanizedTime(thought.updated_at ?? thought.created_at, { hoursOnly: hoursOnlyForUpdatedAt })}
 							{thought.collections.length > 0 ? (
 								<span className="text-xs text-secondary">
 									{" • "}

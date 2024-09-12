@@ -220,7 +220,9 @@ const RelatedNotesSection = ({
 			{isLoading && <LoadingSpinner size="xs" className="ml-2" />}
 		</h5>
 		{thoughts && thoughts.length > 0 ? (
-			thoughts.map(thought => <ThoughtCard key={thought.id} thought={thought} variant="compact" />)
+			thoughts.map(thought => (
+				<ThoughtCard key={thought.id} thought={thought} variant="compact" hoursOnlyForUpdatedAt={false} />
+			))
 		) : (
 			<div className="text-tertiary text-sm">{emptyMessage}</div>
 		)}
