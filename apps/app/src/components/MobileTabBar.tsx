@@ -1,14 +1,20 @@
 import { HomeIcon, LightbulbIcon, PlusIcon } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
+import { useWorkspaceSlug, useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
+import { makeThoughtUrl } from "src/utils/thought";
 
 export const MobileTabBar = () => {
+	const { workspace } = useWorkspaceStore();
+
 	return (
 		<nav className="md:hidden relative bg-background flex w-full flex-row items-center justify-between py-3 z-50 border-t border-border">
 			<Tab icon={<HomeIcon className="size-5" />} label="Home" href="/" />
 			{/* <Tab icon={<LightbulbIcon className="size-5" />} label="Quick note" onClick={() => {}} /> */}
-			<Tab icon={<PlusIcon className="size-5" />} label="New note" href="/thoughts/new" />
+			{workspace && (
+				<Tab icon={<PlusIcon className="size-5" />} label="New note" href={makeThoughtUrl(workspace.slug, "new")} />
+			)}
 		</nav>
 	);
 };

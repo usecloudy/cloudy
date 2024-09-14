@@ -9,7 +9,8 @@
     },
     "dependencies": {
         "@supabase/supabase-js": "^2.45.2",
-        "@repo/typescript-config": "*"
+        "@repo/typescript-config": "*",
+        "@repo/db": "*"
     },
     "exports": {
         "./common": "./src/common/index.ts"

@@ -13,8 +13,10 @@ export interface CustomerStatus {
 }
 
 export interface PaymentsCustomersStatusGetResponse {
-    uid: string;
+    wsId: string;
+    wsSlug: string;
     customerStatus: CustomerStatus | null;
+    userCount: number;
 }
 
 export interface ThoughtsExportGetRequestBody {
@@ -23,4 +25,15 @@ export interface ThoughtsExportGetRequestBody {
     colorScheme?: "default" | "white";
     fontSizePt?: number;
     paperSize?: "a4" | "letter" | "legal";
+}
+
+export interface WorkspacesNewPostRequestBody {
+    name: string;
+    slug: string;
+}
+
+export interface WorkspacesNewPostResponse {
+    success: boolean;
+    wsId: string;
+    wsSlug: string;
 }

@@ -48,7 +48,7 @@ export const Pricing = ({
                         </span>
                         {price.recurring && (
                             <span className="text-sm text-secondary ml-1 mb-1">
-                                /{price.recurring.interval}
+                                /seat
                             </span>
                         )}
                     </div>

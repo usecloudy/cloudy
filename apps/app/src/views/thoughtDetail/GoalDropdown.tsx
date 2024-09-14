@@ -1,20 +1,21 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
-import { GoalIcon, SaveIcon, XIcon } from "lucide-react";
+import { GoalIcon, SaveIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
-import { useEffectOnce, useUnmount, useUpdateEffect } from "react-use";
 
 import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
-import { useSave } from "src/utils/useSave";
+import { useWorkspaceSlug } from "src/stores/workspace";
+import { makeThoughtUrl } from "src/utils/thought";
 
 import { useEditThought, useThought } from "./hooks";
 
 const useSetIntent = (thoughtId?: string) => {
 	const { mutateAsync: editThought } = useEditThought();
+	const wsSlug = useWorkspaceSlug();
 
 	const navigate = useNavigate();
 
@@ -26,7 +27,7 @@ const useSetIntent = (thoughtId?: string) => {
 				const thought = await editThought();
 				thoughtIdToUse = thought?.id;
 				if (!thoughtId && thoughtIdToUse) {
-					navigate(`/thoughts/${thoughtIdToUse}`, { replace: true, preventScrollReset: true });
+					navigate(makeThoughtUrl(wsSlug, thoughtIdToUse), { replace: true, preventScrollReset: true });
 				}
 			}
 
