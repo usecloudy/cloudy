@@ -772,6 +772,133 @@ export type Database = {
           },
         ]
       }
+      integration_access_scopes: {
+        Row: {
+          created_at: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      integration_message_embeddings: {
+        Row: {
+          created_at: string
+          embedding: string
+          embedding_ver: string
+          id: string
+          index: number
+          message_id: string
+        }
+        Insert: {
+          created_at?: string
+          embedding: string
+          embedding_ver: string
+          id?: string
+          index: number
+          message_id: string
+        }
+        Update: {
+          created_at?: string
+          embedding?: string
+          embedding_ver?: string
+          id?: string
+          index?: number
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_message_embeddings_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "integration_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          external_id: string
+          id: string
+          link_url: string | null
+          organization: string
+          sent_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          external_id: string
+          id?: string
+          link_url?: string | null
+          organization: string
+          sent_at: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          external_id?: string
+          id?: string
+          link_url?: string | null
+          organization?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_messages_organization_fkey"
+            columns: ["organization"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_setups: {
+        Row: {
+          created_at: string
+          id: string
+          last_synced_at: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       thought_chat_threads: {
         Row: {
           comment_id: string
@@ -1076,6 +1203,71 @@ export type Database = {
           },
         ]
       }
+      topic_message_matches: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string | null
+          topic_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          topic_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          topic_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_message_matches_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "integration_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topic_message_matches_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topics: {
+        Row: {
+          created_at: string
+          id: string
+          organization: string
+          query: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization: string
+          query: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization?: string
+          query?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topics_organization_fkey"
+            columns: ["organization"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string
@@ -1285,6 +1477,17 @@ export type Database = {
               similarity: number
             }[]
           }
+      multi_embedding_search: {
+        Args: {
+          query_embeddings: string[]
+          match_threshold: number
+          max_results: number
+        }
+        Returns: {
+          message_id: string
+          similarity_score: number
+        }[]
+      }
       search_thoughts: {
         Args: {
           search_query: string

@@ -17,6 +17,7 @@ import { LoadingView } from "./views/loading/LoadingView";
 import { SubscriptionModal } from "./views/pricing/PaymentGuard";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
+import { TopicsView } from "./views/topics/TopicsView";
 
 const ProtectedLayout: FC = () => {
 	const { user, isLoading, isReady } = useUserGuard();
@@ -58,6 +59,7 @@ export const Router: FC = () => {
 					<Route path="/" element={<HomeView />} />
 					<Route path="thoughts/:thoughtId" element={<ThoughtDetailView />} />
 					<Route path="collections/:collectionId" element={<CollectionDetailView />} />
+					<Route path="topics" element={<TopicsView />} />
 					<Route path="/auth/password-reset" element={<PasswordResetView />} />
 					<Route path="/signout" element={<SignOutView />} />
 				</Route>
