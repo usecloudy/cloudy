@@ -1511,7 +1511,7 @@ export type Database = {
           match_threshold: number
           match_count: number
           exclude_thought_id: string
-          input_author_id: string
+          input_organization_id: string
         }
         Returns: {
           id: string
@@ -1559,7 +1559,7 @@ export type Database = {
       search_thoughts: {
         Args: {
           search_query: string
-          user_id: string
+          p_organization_id: string
         }
         Returns: {
           thought_id: string

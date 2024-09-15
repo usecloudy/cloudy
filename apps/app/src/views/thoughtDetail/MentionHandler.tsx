@@ -7,12 +7,12 @@ import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 
 import { supabase } from "src/clients/supabase";
 import LoadingSpinner from "src/components/LoadingSpinner";
-import { useUser } from "src/stores/user";
+import { useOrganization } from "src/stores/organization";
 import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
 
 const useSearchThoughts = (query: string) => {
-	const user = useUser();
+	const org = useOrganization();
 
 	return useQuery({
 		enabled: !!query && query.length > 2,
@@ -22,7 +22,7 @@ const useSearchThoughts = (query: string) => {
 				await supabase
 					.rpc("search_thoughts", {
 						search_query: query,
-						user_id: user.id,
+						p_organization_id: org.id,
 					})
 					.order("thought_updated_at", { ascending: false }),
 			);
@@ -40,16 +40,16 @@ const useSearchThoughts = (query: string) => {
 };
 
 const useLatestThoughts = () => {
-	const user = useUser();
+	const org = useOrganization();
 
 	return useQuery({
-		queryKey: ["latest_thoughts", user.id],
+		queryKey: [org.slug, "latest_thoughts"],
 		queryFn: async () => {
 			const results = handleSupabaseError(
 				await supabase
 					.from("thoughts")
 					.select("id, title, content_md, content_plaintext, updated_at")
-					.eq("author_id", user.id)
+					.eq("organization_id", org.id)
 					.order("updated_at", { ascending: false })
 					.limit(8),
 			);

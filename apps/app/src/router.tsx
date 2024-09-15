@@ -14,6 +14,7 @@ import { SignUp } from "./views/auth/SignUp";
 // Add this import
 import { CollectionDetailView } from "./views/collectionDetail/CollectionDetailView";
 import { HomeView } from "./views/home/HomeView";
+import { RedirectToDefaultOrg } from "./views/home/RedirectToDefaultOrg";
 import { LoadingView } from "./views/loading/LoadingView";
 import { NewOrganizationView } from "./views/organizations/NewOrganizationView";
 import { OrganizationLayout } from "./views/organizations/OrganizationLayout";
@@ -42,7 +43,6 @@ const ProtectedLayout: FC = () => {
 			<Navbar />
 			<Outlet />
 			<MobileTabBar />
-
 			<PaymentSuccessDialog />
 		</div>
 	);
@@ -59,14 +59,15 @@ export const Router: FC = () => {
 					<Route path="/auth/forgot-password" element={<ForgotPassword />} />
 				</Route>
 				<Route element={<ProtectedLayout />}>
+					<Route path="/" element={<RedirectToDefaultOrg />} />
 					<Route path="/organizations/new" element={<NewOrganizationView />} />
 					<Route element={<OrganizationLayout />}>
 						<Route path="/organizations/:orgSlug" element={<HomeView />} />
 						<Route path="/organizations/:orgSlug/settings" element={<OrganizationSettingsView />} />
 						<Route path="/organizations/:orgSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
 						<Route path="/organizations/:orgSlug/collections/:collectionId" element={<CollectionDetailView />} />
+						<Route path="/organizations/:orgSlug/topics" element={<TopicsView />} />
 					</Route>
-					<Route path="/organizations/:orgSlug/topics" element={<TopicsView />} />
 					<Route path="/auth/password-reset" element={<PasswordResetView />} />
 					<Route path="/signout" element={<SignOutView />} />
 				</Route>

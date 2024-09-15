@@ -18,14 +18,13 @@ import TextareaAutosize from "react-textarea-autosize";
 
 import { supabase } from "src/clients/supabase";
 import LoadingSpinner from "src/components/LoadingSpinner";
-import { useOrganizationSlug } from "src/stores/organization";
-import { useUser } from "src/stores/user";
+import { useOrganization, useOrganizationSlug } from "src/stores/organization";
 import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
 import { makeThoughtUrl } from "src/utils/thought";
 
 const useSearchThoughts = (query: string) => {
-	const user = useUser();
+	const org = useOrganization();
 
 	return useQuery({
 		enabled: !!query && query.length > 1,
@@ -34,7 +33,7 @@ const useSearchThoughts = (query: string) => {
 			const { data, error } = await supabase
 				.rpc("search_thoughts", {
 					search_query: query.replaceAll(" ", "+"),
-					user_id: user.id,
+					p_organization_id: org.id,
 				})
 				.order("thought_updated_at", { ascending: false });
 
