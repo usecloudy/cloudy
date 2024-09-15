@@ -745,6 +745,7 @@ export type Database = {
           author_id: string | null
           created_at: string
           id: string
+          organization_id: string | null
           title: string | null
           updated_at: string | null
         }
@@ -752,6 +753,7 @@ export type Database = {
           author_id?: string | null
           created_at?: string
           id?: string
+          organization_id?: string | null
           title?: string | null
           updated_at?: string | null
         }
@@ -759,6 +761,7 @@ export type Database = {
           author_id?: string | null
           created_at?: string
           id?: string
+          organization_id?: string | null
           title?: string | null
           updated_at?: string | null
         }
@@ -768,6 +771,13 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -881,21 +891,66 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_users: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_users_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
           id: string
           name: string
+          slug: string
+          stripe_customer_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
+          slug?: string
+          stripe_customer_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
+          slug?: string
+          stripe_customer_id?: string | null
         }
         Relationships: []
       }
@@ -1143,6 +1198,7 @@ export type Database = {
           ignored_collection_suggestions: Json | null
           is_suggestion_paused: boolean
           last_suggestion_content_md: string | null
+          organization_id: string | null
           signals: Json | null
           suggestion_index: number
           suggestion_status: string
@@ -1164,6 +1220,7 @@ export type Database = {
           ignored_collection_suggestions?: Json | null
           is_suggestion_paused?: boolean
           last_suggestion_content_md?: string | null
+          organization_id?: string | null
           signals?: Json | null
           suggestion_index?: number
           suggestion_status?: string
@@ -1185,6 +1242,7 @@ export type Database = {
           ignored_collection_suggestions?: Json | null
           is_suggestion_paused?: boolean
           last_suggestion_content_md?: string | null
+          organization_id?: string | null
           signals?: Json | null
           suggestion_index?: number
           suggestion_status?: string
@@ -1199,6 +1257,13 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thoughts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]

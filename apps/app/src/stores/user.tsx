@@ -2,13 +2,15 @@ import * as amplitude from "@amplitude/analytics-browser";
 import { PaymentsCustomersStatusGetResponse } from "@cloudy/utils/common";
 import * as Sentry from "@sentry/react";
 import { Session, User } from "@supabase/supabase-js";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { useMount } from "react-use";
 import { create } from "zustand";
 
 import { apiClient, setupAuthHeader } from "src/api/client";
 import { supabase } from "src/clients/supabase";
+
+import { getAllUserOrganizations, getUserOrganizationAndRole, useOrganizationStore } from "./organization";
 
 export const createUserIfNotExists = async (user: User) => {
 	return supabase.from("users").upsert({
@@ -74,9 +76,12 @@ export const useUserGuard = () => {
 
 export const useUserHandler = () => {
 	const { user, setUser, setIsReady } = useUserStore();
+	const { setOrganization, setRole } = useOrganizationStore();
 
 	const handleClearUser = () => {
 		setUser(null, false);
+		setOrganization(null);
+		setRole(null);
 		setIsReady(false);
 		amplitude.setUserId(undefined);
 		posthog.identify(undefined);
@@ -93,6 +98,9 @@ export const useUserHandler = () => {
 				await setupAuthHeader();
 				await waitForStripeCustomer();
 				await startTrialIfEligible();
+				// const organizationAndRole = await getUserOrganizationAndRole(session.user.id);
+				// setOrganization(organizationAndRole.organization);
+				// setRole(organizationAndRole.role);
 				setIsReady(true);
 			} catch (e) {
 				Sentry.captureException(e);
@@ -123,4 +131,12 @@ export const useUserHandler = () => {
 	});
 
 	return { user };
+};
+
+export const useAllUserOrganizations = () => {
+	const user = useUser();
+	return useQuery({
+		queryKey: ["userOrganizations"],
+		queryFn: () => getAllUserOrganizations(user.id),
+	});
 };

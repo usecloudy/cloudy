@@ -3,6 +3,9 @@ import { useMutation } from "@tanstack/react-query";
 import {
 	ArrowLeft,
 	ArrowRight,
+	CheckCircle2Icon,
+	CheckCircleIcon,
+	CheckIcon,
 	CircleFadingArrowUpIcon,
 	CircleHelpIcon,
 	CreditCardIcon,
@@ -20,8 +23,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { apiClient } from "src/api/client";
 import { supabase } from "src/clients/supabase";
-import { useUser } from "src/stores/user";
+import { useOrganization, useOrganizationSlug, useOrganizationStore } from "src/stores/organization";
+import { useAllUserOrganizations, useUser } from "src/stores/user";
+import { cn } from "src/utils";
 import { pluralize } from "src/utils/strings";
+import { makeThoughtUrl } from "src/utils/thought";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 import { useSubscriptionModalStore } from "src/views/pricing/subscriptionModalStore";
 import { QuickThoughtDropdown } from "src/views/quickThought/QuickThoughtDropdown";
@@ -45,6 +51,8 @@ const useBillingPortal = () => {
 
 export const Navbar: FC = () => {
 	const user = useUser();
+	const { organization } = useOrganizationStore();
+
 	const { data } = useCustomerStatus();
 	const { mutateAsync: getBillingPortalUrl } = useBillingPortal();
 
@@ -74,7 +82,7 @@ export const Navbar: FC = () => {
 				<div className="flex-row items-center gap-2 flex">
 					{!isHomePage && (
 						<li className="hidden md:block">
-							<Link to="/">
+							<Link to={`/organizations/${organization?.slug}`}>
 								<Button aria-label="Home" variant="ghost" size="icon">
 									<Home className="size-6" />
 								</Button>
@@ -91,13 +99,15 @@ export const Navbar: FC = () => {
 							<ArrowRight className="size-6" />
 						</Button>
 					</li>
-					<li className="hidden md:block">
-						<Link to="/thoughts/new">
-							<Button variant="ghost" size="icon" aria-label="New thought">
-								<Plus className="size-6" />
-							</Button>
-						</Link>
-					</li>
+					{organization && (
+						<li className="hidden md:block">
+							<Link to={makeThoughtUrl(organization.slug, "new")}>
+								<Button variant="ghost" size="icon" aria-label="New thought">
+									<Plus className="size-6" />
+								</Button>
+							</Link>
+						</li>
+					)}
 					{/* <QuickThoughtDropdown /> */}
 				</div>
 			</ul>
@@ -136,27 +146,30 @@ export const Navbar: FC = () => {
 							<MenuIcon size={24} />
 						</Button>
 					}
-					className="w-64">
-					<div className="flex flex-col mb-2">
-						<div className="flex flex-col gap-1 p-2 border-b border-border">
-							<span className="text-sm font-medium text-secondary">Signed in as</span>
-							<span className="text-sm">{user.email}</span>
-						</div>
-						{customerStatus?.isTrialing && (
-							<div className="flex flex-col gap-1 p-2 border-b border-border">
+					className="w-64 pt-2">
+					<div className="flex flex-col gap-1 px-2">
+						<span className="text-sm font-medium text-secondary">Signed in as</span>
+						<span className="text-sm">{user.email}</span>
+					</div>
+					<div className="border-b border-border my-2" />
+					<OrganizationList />
+					{customerStatus?.isTrialing && (
+						<>
+							<div className="border-b border-border my-2" />
+							<div className="flex flex-col gap-1 px-2">
 								<span className="text-sm font-medium text-secondary">Trial Status</span>
 								<span className="text-sm">
 									{`${pluralize(customerStatus.remainingDaysInTrial ?? 0, "day")} remaining`}
 								</span>
 							</div>
-						)}
-					</div>
-					{customerStatus?.isTrialing && (
-						<DropdownItem className="text-accent" onSelect={handleOpenSubscriptionModal}>
-							<CircleFadingArrowUpIcon className="size-4" />
-							<span>Subscribe</span>
-						</DropdownItem>
+							<div className="border-b border-border my-2" />
+							<DropdownItem className="text-accent" onSelect={handleOpenSubscriptionModal}>
+								<CircleFadingArrowUpIcon className="size-4" />
+								<span>Subscribe</span>
+							</DropdownItem>
+						</>
 					)}
+					<div className="border-b border-border my-2" />
 					{customerStatus?.isActive && (
 						<DropdownItem onSelect={handleOpenBillingPortal}>
 							<CreditCardIcon className="size-4" />
@@ -190,5 +203,36 @@ export const Navbar: FC = () => {
 				</Dropdown>
 			</div>
 		</nav>
+	);
+};
+
+const OrganizationList = () => {
+	const currentOrganization = useOrganization();
+	const { data: allUserOrganizations } = useAllUserOrganizations();
+
+	return (
+		<div className="flex flex-col">
+			<span className="text-sm font-medium text-secondary px-2">Organization</span>
+			{allUserOrganizations?.map(organization => (
+				<Link to={`/organizations/${organization.slug}`} key={organization.id}>
+					<DropdownItem className={cn(organization.id === currentOrganization.id ? "bg-card/50" : "")}>
+						{organization.id === currentOrganization.id ? (
+							<CheckIcon className="size-4 stroke-[2.5]" />
+						) : (
+							<span className="w-4" />
+						)}
+						<span className={cn("text-sm", organization.id === currentOrganization.id ? "font-medium" : "")}>
+							{organization.name}
+						</span>
+					</DropdownItem>
+				</Link>
+			))}
+			<Link to="/organizations/new">
+				<DropdownItem>
+					<Plus className="size-4" />
+					<span className="text-sm">Create new organization</span>
+				</DropdownItem>
+			</Link>
+		</div>
 	);
 };

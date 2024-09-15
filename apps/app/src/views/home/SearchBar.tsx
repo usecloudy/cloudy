@@ -18,9 +18,11 @@ import TextareaAutosize from "react-textarea-autosize";
 
 import { supabase } from "src/clients/supabase";
 import LoadingSpinner from "src/components/LoadingSpinner";
+import { useOrganizationSlug } from "src/stores/organization";
 import { useUser } from "src/stores/user";
 import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
+import { makeThoughtUrl } from "src/utils/thought";
 
 const useSearchThoughts = (query: string) => {
 	const user = useUser();
@@ -57,6 +59,7 @@ export const SearchBar = () => {
 	const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
 	const navigate = useNavigate();
+	const orgSlug = useOrganizationSlug();
 
 	const listRef = useRef<Array<HTMLElement | null>>([]);
 	const listContainerRef = useRef<HTMLDivElement>(null);
@@ -102,7 +105,7 @@ export const SearchBar = () => {
 			if (activeIndex !== null) {
 				const thought = data?.[activeIndex];
 				if (thought) {
-					navigate(`/thoughts/${thought.id}`);
+					navigate(makeThoughtUrl(orgSlug, thought.id));
 				}
 			}
 		}
@@ -121,7 +124,7 @@ export const SearchBar = () => {
 			<div ref={listContainerRef} className="max-h-[300px]">
 				{data.map((thought, index) => (
 					<Link
-						to={`/thoughts/${thought.id}`}
+						to={makeThoughtUrl(orgSlug, thought.id)}
 						key={thought.id}
 						ref={node => {
 							listRef.current[index] = node;

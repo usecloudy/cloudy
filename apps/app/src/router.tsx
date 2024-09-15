@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom
 
 import { MobileTabBar } from "./components/MobileTabBar";
 import { Navbar } from "./components/Navbar";
+import { useOrganizationStore } from "./stores/organization";
 import { useUserGuard, useUserHandler } from "./stores/user";
 import { AuthView } from "./views/auth/AuthView";
 import { ForgotPassword } from "./views/auth/ForgotPassword";
@@ -14,6 +15,8 @@ import { SignUp } from "./views/auth/SignUp";
 import { CollectionDetailView } from "./views/collectionDetail/CollectionDetailView";
 import { HomeView } from "./views/home/HomeView";
 import { LoadingView } from "./views/loading/LoadingView";
+import { NewOrganizationView } from "./views/organizations/NewOrganizationView";
+import { OrganizationLayout } from "./views/organizations/OrganizationLayout";
 import { SubscriptionModal } from "./views/pricing/PaymentGuard";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
@@ -56,10 +59,13 @@ export const Router: FC = () => {
 					<Route path="/auth/forgot-password" element={<ForgotPassword />} />
 				</Route>
 				<Route element={<ProtectedLayout />}>
-					<Route path="/" element={<HomeView />} />
-					<Route path="thoughts/:thoughtId" element={<ThoughtDetailView />} />
-					<Route path="collections/:collectionId" element={<CollectionDetailView />} />
-					<Route path="topics" element={<TopicsView />} />
+					<Route path="/organizations/new" element={<NewOrganizationView />} />
+					<Route element={<OrganizationLayout />}>
+						<Route path="/organizations/:orgSlug" element={<HomeView />} />
+						<Route path="/organizations/:orgSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
+						<Route path="/organizations/:orgSlug/collections/:collectionId" element={<CollectionDetailView />} />
+					</Route>
+					<Route path="/organizations/:orgSlug/topics" element={<TopicsView />} />
 					<Route path="/auth/password-reset" element={<PasswordResetView />} />
 					<Route path="/signout" element={<SignOutView />} />
 				</Route>

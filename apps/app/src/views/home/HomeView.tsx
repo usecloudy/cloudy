@@ -7,6 +7,7 @@ import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { ThoughtList } from "src/components/ThoughtList";
+import { useOrganization } from "src/stores/organization";
 import { useUser } from "src/stores/user";
 import { makeHeadTitle } from "src/utils/strings";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
@@ -16,7 +17,7 @@ import { SearchBar } from "./SearchBar";
 import { ThoughtsEmptyState } from "./ThoughtsEmptyState";
 
 const useThoughts = () => {
-	const user = useUser();
+	const organization = useOrganization();
 
 	useEffect(() => {
 		const channel = supabase
@@ -27,7 +28,7 @@ const useThoughts = () => {
 					event: "*",
 					schema: "public",
 					table: "thoughts",
-					filter: `author_id=eq.${user.id}`,
+					filter: `organization_id.eq.${organization.id}`,
 				},
 				() => {
 					queryClient.invalidateQueries({
@@ -40,10 +41,10 @@ const useThoughts = () => {
 		return () => {
 			channel.unsubscribe();
 		};
-	}, []);
+	}, [organization.id]);
 
 	return useQuery({
-		queryKey: ["thoughts"],
+		queryKey: [organization.id, "thoughts"],
 		queryFn: async () => {
 			const { data, error } = await supabase
 				.from("thoughts")
@@ -57,7 +58,7 @@ const useThoughts = () => {
 						)
 					)`,
 				)
-				.eq("author_id", user.id);
+				.eq("organization_id", organization.id);
 
 			if (error) {
 				throw error;
