@@ -25,11 +25,14 @@ import { WorkspaceSettingsView } from "./views/workspaces/WorkspaceSettingsView"
 const ProtectedLayout: FC = () => {
 	const { user, isLoadingAuth, isReady } = useUserGuard();
 
+	console.log("guard", user, isLoadingAuth, isReady);
+
 	if (isLoadingAuth) {
 		return <LoadingView />;
 	}
 
 	if (!user) {
+		console.log("navigating to /auth");
 		return <Navigate to="/auth" />;
 	}
 
@@ -60,7 +63,7 @@ export const Router: FC = () => {
 				<Route element={<ProtectedLayout />}>
 					<Route path="/" element={<RedirectToDefaultOrg />} />
 					<Route path="/workspaces/new" element={<NewWorkspaceView />} />
-					<Route element={<WorkspaceLayout />}>
+					<Route path="/workspaces/:wsSlug" element={<WorkspaceLayout />}>
 						<Route path="/workspaces/:wsSlug" element={<HomeView />} />
 						<Route path="/workspaces/:wsSlug/settings" element={<WorkspaceSettingsView />} />
 						<Route path="/workspaces/:wsSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />

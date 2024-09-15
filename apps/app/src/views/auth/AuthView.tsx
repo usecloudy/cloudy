@@ -35,6 +35,7 @@ export const AuthView = () => {
 	const location = useLocation();
 
 	if (user) {
+		console.log("this is hitting");
 		return <Navigate to="/" />;
 	}
 

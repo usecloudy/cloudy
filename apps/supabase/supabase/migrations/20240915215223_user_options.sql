@@ -1,0 +1,1 @@
+alter table "public"."users" add column "options" json not null default '{}'::json;

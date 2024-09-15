@@ -1276,6 +1276,7 @@ export type Database = {
           email: string | null
           id: string
           name: string | null
+          options: Json
           stripe_customer_id: string | null
         }
         Insert: {
@@ -1283,6 +1284,7 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string | null
+          options?: Json
           stripe_customer_id?: string | null
         }
         Update: {
@@ -1290,6 +1292,7 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string | null
+          options?: Json
           stripe_customer_id?: string | null
         }
         Relationships: [

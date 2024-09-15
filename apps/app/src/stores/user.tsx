@@ -2,7 +2,7 @@ import * as amplitude from "@amplitude/analytics-browser";
 import { PaymentsCustomersStatusGetResponse, UserRecord, handleSupabaseError } from "@cloudy/utils/common";
 import * as Sentry from "@sentry/react";
 import { Session, User } from "@supabase/supabase-js";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { useEffect } from "react";
 import { useMount } from "react-use";
@@ -76,7 +76,7 @@ export const useUserStore = create<{
 	user: null,
 	userRecord: null,
 	isReady: false,
-	isLoadingAuth: false,
+	isLoadingAuth: true,
 	setUser: user => set({ user }),
 	setUserRecord: userRecord => set({ userRecord }),
 	setIsReady: isReady => set({ isReady }),
@@ -95,6 +95,33 @@ export const useUserGuard = () => {
 export const useUserRecord = () => {
 	const userRecord = useUserStore(s => s.userRecord);
 	return userRecord!;
+};
+
+export const useUserOptions = () => {
+	const userRecord = useUserRecord();
+
+	const userMutation = useMutation({
+		mutationFn: async (option: { key: string; value: string }) => {
+			const options = handleSupabaseError(
+				await supabase.from("users").select("options").eq("id", userRecord.id).single(),
+			);
+			handleSupabaseError(
+				await supabase
+					.from("users")
+					.update({ options: { ...options, [option.key]: option.value } })
+					.eq("id", userRecord.id),
+			);
+		},
+	});
+
+	return {
+		get: (key: string, defaultValue: any = null) => {
+			return (userRecord.options as Record<string, any> | null)?.[key] ?? defaultValue;
+		},
+		set: async (key: string, value: string) => {
+			await userMutation.mutateAsync({ key, value });
+		},
+	};
 };
 
 export const useUserHandler = () => {

@@ -1,9 +1,10 @@
 import { WorkspaceRole, handleSupabaseError } from "@cloudy/utils/common";
+import { useEffect } from "react";
 import { Navigate, Outlet, useParams } from "react-router-dom";
 import { useAsync } from "react-use";
 
 import { supabase } from "src/clients/supabase";
-import { useUser } from "src/stores/user";
+import { useUser, useUserOptions } from "src/stores/user";
 import { useWorkspaceStore } from "src/stores/workspace";
 
 import { LoadingView } from "../loading/LoadingView";
@@ -35,10 +36,19 @@ const useWorkspaceSlug = (wsSlug: string) => {
 
 export const WorkspaceLayout = () => {
 	const { wsSlug } = useParams();
-
+	const userOptions = useUserOptions();
 	const isReady = useWorkspaceSlug(wsSlug!);
 
+	useEffect(() => {
+		if (wsSlug && wsSlug !== "undefined") {
+			userOptions.set("last_opened_workspace", wsSlug);
+		}
+	}, [wsSlug]);
+
+	console.log("wsSlug", wsSlug);
+
 	if (!wsSlug || wsSlug === "undefined") {
+		console.log("navigating to /");
 		return <Navigate to="/" />;
 	}
 
