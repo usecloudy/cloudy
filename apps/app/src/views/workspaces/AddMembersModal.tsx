@@ -1,6 +1,7 @@
 import { WorkspaceRole, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { SendIcon, UserPlus2Icon } from "lucide-react";
+import { useFeatureFlagEnabled } from "posthog-js/react";
 import { useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 
@@ -34,6 +35,8 @@ const useAddMembers = () => {
 };
 
 export const AddMembersModal = () => {
+	const enableAddWorkspaceMembers = useFeatureFlagEnabled("enable-add-workspace-members");
+
 	const [isOpen, setIsOpen] = useState(false);
 	const [emails, setEmails] = useState("");
 	const { mutate: addMembers, isPending } = useAddMembers();
@@ -51,7 +54,7 @@ export const AddMembersModal = () => {
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>
-				<Button variant="outline" size="sm" className="self-start" disabled>
+				<Button variant="outline" size="sm" className="self-start" disabled={!enableAddWorkspaceMembers}>
 					<UserPlus2Icon className="size-4" />
 					<span>Add members</span>
 				</Button>
