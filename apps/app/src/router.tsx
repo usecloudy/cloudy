@@ -23,9 +23,9 @@ import { WorkspaceLayout } from "./views/workspaces/WorkspaceLayout";
 import { WorkspaceSettingsView } from "./views/workspaces/WorkspaceSettingsView";
 
 const ProtectedLayout: FC = () => {
-	const { user, isLoading, isReady } = useUserGuard();
+	const { user, isLoadingAuth, isReady } = useUserGuard();
 
-	if (isLoading) {
+	if (isLoadingAuth) {
 		return <LoadingView />;
 	}
 

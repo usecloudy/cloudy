@@ -20,8 +20,12 @@ export const RedirectToDefaultOrg = () => {
 
 	const wsSlug = orgs?.at(0)?.workspaces?.slug;
 
-	if (isLoading || !wsSlug) {
+	if (isLoading) {
 		return <LoadingView />;
+	}
+
+	if (!wsSlug) {
+		return <Navigate to={`/workspaces/new?setup=true`} />;
 	}
 
 	return <Navigate to={`/workspaces/${wsSlug}`} />;

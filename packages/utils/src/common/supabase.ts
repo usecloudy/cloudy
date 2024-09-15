@@ -1,4 +1,5 @@
-import { PostgrestSingleResponse } from "@supabase/supabase-js";
+import { Database } from "@repo/db";
+import { PostgrestSingleResponse, SupabaseClient } from "@supabase/supabase-js";
 
 export const handleSupabaseError = <T>(
     response: PostgrestSingleResponse<T>
