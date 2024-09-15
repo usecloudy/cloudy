@@ -1,75 +1,44 @@
 import { Tag } from "@cloudy/ui";
-import { useMutation } from "@tanstack/react-query";
 import {
 	ArrowLeft,
 	ArrowRight,
-	CheckCircle2Icon,
-	CheckCircleIcon,
 	CheckIcon,
-	CircleFadingArrowUpIcon,
 	CircleHelpIcon,
 	CreditCardIcon,
 	HandshakeIcon,
 	Home,
-	LightbulbIcon,
 	LogOut,
 	MenuIcon,
 	Plus,
 	ScrollTextIcon,
+	SettingsIcon,
 	TimerIcon,
 } from "lucide-react";
 import { FC } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
-import { apiClient } from "src/api/client";
 import { supabase } from "src/clients/supabase";
-import { useOrganization, useOrganizationSlug, useOrganizationStore } from "src/stores/organization";
+import { useOrganization, useOrganizationStore } from "src/stores/organization";
 import { useAllUserOrganizations, useUser } from "src/stores/user";
 import { cn } from "src/utils";
 import { pluralize } from "src/utils/strings";
 import { makeThoughtUrl } from "src/utils/thought";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
-import { useSubscriptionModalStore } from "src/views/pricing/subscriptionModalStore";
-import { QuickThoughtDropdown } from "src/views/quickThought/QuickThoughtDropdown";
 
 import { Button } from "./Button";
 import { Dropdown, DropdownItem } from "./Dropdown";
 import { FeedbackDropdown } from "./Feedback";
-
-const useBillingPortal = () => {
-	return useMutation({
-		mutationFn: async () => {
-			const res = await apiClient.get<{ url: string }>(`/api/payments/billing`, {
-				params: {
-					returnUrl: window.location.href,
-				},
-			});
-			return res.data;
-		},
-	});
-};
 
 export const Navbar: FC = () => {
 	const user = useUser();
 	const { organization } = useOrganizationStore();
 
 	const { data } = useCustomerStatus();
-	const { mutateAsync: getBillingPortalUrl } = useBillingPortal();
-
-	const { setIsOpen: setShowSubscriptionModal } = useSubscriptionModalStore();
 
 	const customerStatus = data?.customerStatus;
+
 	const location = useLocation();
 	const isHomePage = location.pathname === "/";
-
-	const handleOpenSubscriptionModal = () => {
-		setShowSubscriptionModal(true, true);
-	};
-
-	const handleOpenBillingPortal = async () => {
-		const { url } = await getBillingPortalUrl();
-		window.location.href = url;
-	};
 
 	const handleSignOut = () => {
 		console.log("Signing out");
@@ -132,10 +101,12 @@ export const Navbar: FC = () => {
 									</span>
 								</div>
 							}>
-							<DropdownItem className="text-accent" onSelect={handleOpenSubscriptionModal}>
-								<CircleFadingArrowUpIcon className="size-4" />
-								<span>Subscribe</span>
-							</DropdownItem>
+							<Link to={`/organizations/${organization?.slug}/settings`}>
+								<DropdownItem className="text-accent">
+									<CreditCardIcon className="size-4" />
+									<span>Manage subscription</span>
+								</DropdownItem>
+							</Link>
 						</Dropdown>
 					)}
 				</div>
@@ -162,19 +133,7 @@ export const Navbar: FC = () => {
 									{`${pluralize(customerStatus.remainingDaysInTrial ?? 0, "day")} remaining`}
 								</span>
 							</div>
-							<div className="border-b border-border my-2" />
-							<DropdownItem className="text-accent" onSelect={handleOpenSubscriptionModal}>
-								<CircleFadingArrowUpIcon className="size-4" />
-								<span>Subscribe</span>
-							</DropdownItem>
 						</>
-					)}
-					<div className="border-b border-border my-2" />
-					{customerStatus?.isActive && (
-						<DropdownItem onSelect={handleOpenBillingPortal}>
-							<CreditCardIcon className="size-4" />
-							<span>Manage Subscription</span>
-						</DropdownItem>
 					)}
 					<div className="border-b border-border my-2" />
 					<a href="https://usecloudy.com/support">
@@ -221,9 +180,18 @@ const OrganizationList = () => {
 						) : (
 							<span className="w-4" />
 						)}
-						<span className={cn("text-sm", organization.id === currentOrganization.id ? "font-medium" : "")}>
+						<span
+							className={cn(
+								"text-sm flex flex-1",
+								organization.id === currentOrganization.id ? "font-medium" : "",
+							)}>
 							{organization.name}
 						</span>
+						<Link to={`/organizations/${organization.slug}/settings`}>
+							<Button variant="ghost" size="icon-xs">
+								<SettingsIcon className="size-4" />
+							</Button>
+						</Link>
 					</DropdownItem>
 				</Link>
 			))}

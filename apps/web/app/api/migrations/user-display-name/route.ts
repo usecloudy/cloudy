@@ -33,12 +33,17 @@ const attemptToSetNameForUser = async (user: UserRecord, supabase: SupabaseClien
 
 	if (name) {
 		console.log("Found name", name);
-		handleSupabaseError(
-			await supabase.from("users").update({
-				name: name,
-			}),
-		);
 	} else {
 		console.log("No name found", user.id);
 	}
+
+	handleSupabaseError(
+		await supabase
+			.from("users")
+			.update({
+				name,
+				email: authUser.email,
+			})
+			.eq("id", user.id),
+	);
 };

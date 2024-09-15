@@ -1,4 +1,6 @@
-import { CustomerStatus } from "@cloudy/utils/common";
+import { CustomerStatus, handleSupabaseError } from "@cloudy/utils/common";
+import { Database } from "@repo/db";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { differenceInDays, sub } from "date-fns";
 import Stripe from "stripe";
 
@@ -75,4 +77,31 @@ export const startTrialOnCustomer = async (customer: Stripe.Customer) => {
 	});
 
 	console.log("Started trial on customer", customer.id);
+};
+
+export const getOrgStripeCustomerId = async (
+	{ orgId, orgSlug }: { orgId?: string; orgSlug?: string },
+	supabase: SupabaseClient<Database>,
+) => {
+	if (!orgId && !orgSlug) {
+		throw new Error("Either orgId or orgSlug must be provided");
+	}
+
+	const { stripeCustomerId } = orgId
+		? handleSupabaseError(
+				await supabase.from("organizations").select("stripeCustomerId:stripe_customer_id").eq("id", orgId).single(),
+			)
+		: handleSupabaseError(
+				await supabase
+					.from("organizations")
+					.select("stripeCustomerId:stripe_customer_id")
+					.eq("slug", orgSlug!)
+					.single(),
+			);
+
+	if (!stripeCustomerId) {
+		return null;
+	}
+
+	return stripeCustomerId;
 };

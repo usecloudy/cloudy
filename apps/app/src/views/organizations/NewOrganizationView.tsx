@@ -1,9 +1,10 @@
-import { OrganizationRole, handleSupabaseError } from "@cloudy/utils/common";
+import { OrganizationRole, OrganizationsNewPostResponse, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
+import { apiClient } from "src/api/client";
 import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
@@ -18,18 +19,10 @@ type FormData = {
 };
 
 const useCreateOrganization = () => {
-	const user = useUser();
 	return useMutation({
 		mutationFn: async (data: FormData) => {
-			const org = handleSupabaseError(await supabase.from("organizations").insert(data).select().single());
-
-			await supabase.from("organization_users").insert({
-				organization_id: org.id,
-				user_id: user.id,
-				role: OrganizationRole.OWNER,
-			});
-
-			return org;
+			const org = await apiClient.post<OrganizationsNewPostResponse>("/api/organizations/new", data);
+			return org.data;
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["userOrganizations"] });
@@ -48,9 +41,9 @@ export const NewOrganizationView = () => {
 	const navigate = useNavigate();
 
 	const onSubmit = async (data: FormData) => {
-		const org = await createOrganization(data);
+		const { orgSlug } = await createOrganization(data);
 
-		navigate(`/organizations/${org.slug}`);
+		navigate(`/organizations/${orgSlug}`);
 	};
 
 	const watchSlug = watch("slug");

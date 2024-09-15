@@ -17,7 +17,7 @@ import { HomeView } from "./views/home/HomeView";
 import { LoadingView } from "./views/loading/LoadingView";
 import { NewOrganizationView } from "./views/organizations/NewOrganizationView";
 import { OrganizationLayout } from "./views/organizations/OrganizationLayout";
-import { SubscriptionModal } from "./views/pricing/PaymentGuard";
+import { OrganizationSettingsView } from "./views/organizations/OrganizationSettingsView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
 import { TopicsView } from "./views/topics/TopicsView";
@@ -42,7 +42,7 @@ const ProtectedLayout: FC = () => {
 			<Navbar />
 			<Outlet />
 			<MobileTabBar />
-			<SubscriptionModal />
+
 			<PaymentSuccessDialog />
 		</div>
 	);
@@ -62,6 +62,7 @@ export const Router: FC = () => {
 					<Route path="/organizations/new" element={<NewOrganizationView />} />
 					<Route element={<OrganizationLayout />}>
 						<Route path="/organizations/:orgSlug" element={<HomeView />} />
+						<Route path="/organizations/:orgSlug/settings" element={<OrganizationSettingsView />} />
 						<Route path="/organizations/:orgSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
 						<Route path="/organizations/:orgSlug/collections/:collectionId" element={<CollectionDetailView />} />
 					</Route>

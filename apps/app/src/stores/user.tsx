@@ -18,29 +18,29 @@ export const createUserIfNotExists = async (user: User) => {
 	});
 };
 
-const waitForStripeCustomer = () =>
-	new Promise<void>(resolve => {
-		let iterations = 0;
-		const interval = setInterval(async () => {
-			try {
-				if (iterations >= 8) {
-					clearInterval(interval);
-					resolve();
-					return;
-				}
-				const status = await apiClient
-					.get<PaymentsCustomersStatusGetResponse>("/api/payments/customers/status")
-					.then(res => res.data);
-				if (status.customerStatus) {
-					clearInterval(interval);
-					resolve();
-				}
-				iterations++;
-			} catch (error) {
-				iterations++;
-			}
-		}, 1000);
-	});
+// const waitForStripeCustomer = () =>
+// 	new Promise<void>(resolve => {
+// 		let iterations = 0;
+// 		const interval = setInterval(async () => {
+// 			try {
+// 				if (iterations >= 8) {
+// 					clearInterval(interval);
+// 					resolve();
+// 					return;
+// 				}
+// 				const status = await apiClient
+// 					.get<PaymentsCustomersStatusGetResponse>("/api/payments/customers/status")
+// 					.then(res => res.data);
+// 				if (status.customerStatus) {
+// 					clearInterval(interval);
+// 					resolve();
+// 				}
+// 				iterations++;
+// 			} catch (error) {
+// 				iterations++;
+// 			}
+// 		}, 1000);
+// 	});
 
 const startTrialIfEligible = async () => {
 	const status = await apiClient
@@ -96,8 +96,8 @@ export const useUserHandler = () => {
 				amplitude.setUserId(session.user.id);
 				posthog.identify(session.user.id, { email: session.user.email });
 				await setupAuthHeader();
-				await waitForStripeCustomer();
-				await startTrialIfEligible();
+				// await waitForStripeCustomer();
+				// await startTrialIfEligible();
 				// const organizationAndRole = await getUserOrganizationAndRole(session.user.id);
 				// setOrganization(organizationAndRole.organization);
 				// setRole(organizationAndRole.role);

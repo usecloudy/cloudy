@@ -1,13 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import { FileIcon } from "lucide-react";
+import { FileIcon, MessageCircleWarningIcon } from "lucide-react";
 import { useEffect } from "react";
 import { Helmet } from "react-helmet";
+import { Link } from "react-router-dom";
 
 import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
+import { Button } from "src/components/Button";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { ThoughtList } from "src/components/ThoughtList";
-import { useOrganization } from "src/stores/organization";
+import { useOrganization, useOrganizationSlug } from "src/stores/organization";
 import { useUser } from "src/stores/user";
 import { makeHeadTitle } from "src/utils/strings";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
@@ -74,8 +76,9 @@ const useThoughts = () => {
 };
 
 export const HomeView = () => {
+	const orgSlug = useOrganizationSlug();
 	const { data: thoughts, isLoading } = useThoughts();
-	const { isLoading: isCustomerStatusLoading } = useCustomerStatus();
+	const { isLoading: isCustomerStatusLoading, data: customerStatus } = useCustomerStatus();
 
 	return (
 		<SimpleLayout isLoading={isLoading || isCustomerStatusLoading}>
@@ -85,9 +88,6 @@ export const HomeView = () => {
 			<div className="flex flex-col-reverse md:flex-row gap-4 py-4 md:py-8 w-full ">
 				<div className="h-8 md:hidden" />
 				<div className="flex-1 flex-col flex gap-4 mt-6">
-					{/* <div>
-						<Generate />
-					</div> */}
 					<div className="flex flex-col gap-2">
 						<div className="flex flex-row items-center gap-1">
 							<FileIcon className="size-4 text-secondary" />
@@ -95,6 +95,20 @@ export const HomeView = () => {
 						</div>
 						<SearchBar />
 					</div>
+					{!customerStatus?.customerStatus?.isActive && (
+						<div className="flex flex-row gap-2 items-center w-full border border-red-400 rounded-md p-4 text-red-600">
+							<MessageCircleWarningIcon className="size-5" />
+							<p className="flex-1">
+								Your subscription plan is inactive, you will not be able to create new notes.
+							</p>
+							<Link to={`/organizations/${orgSlug}/settings`}>
+								<Button variant="default" className="text-background" size="sm">
+									{" "}
+									Go to organization settings
+								</Button>
+							</Link>
+						</div>
+					)}
 					{thoughts && thoughts.length > 0 ? <ThoughtList thoughts={thoughts} /> : <ThoughtsEmptyState />}
 				</div>
 				<CollectionsColumn />

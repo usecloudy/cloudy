@@ -7,6 +7,7 @@ import { useOrganizationStore } from "src/stores/organization";
 import { useUser } from "src/stores/user";
 
 import { LoadingView } from "../loading/LoadingView";
+import { SubscriptionModal } from "../pricing/PaymentGuard";
 
 const useOrganizationSlug = (orgSlug: string) => {
 	const user = useUser();
@@ -44,5 +45,10 @@ export const OrganizationLayout = () => {
 		return <LoadingView />;
 	}
 
-	return <Outlet />;
+	return (
+		<>
+			<Outlet />
+			<SubscriptionModal />
+		</>
+	);
 };

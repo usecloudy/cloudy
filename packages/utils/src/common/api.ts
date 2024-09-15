@@ -13,8 +13,10 @@ export interface CustomerStatus {
 }
 
 export interface PaymentsCustomersStatusGetResponse {
-    uid: string;
+    orgId: string;
+    orgSlug: string;
     customerStatus: CustomerStatus | null;
+    userCount: number;
 }
 
 export interface ThoughtsExportGetRequestBody {
@@ -23,4 +25,15 @@ export interface ThoughtsExportGetRequestBody {
     colorScheme?: "default" | "white";
     fontSizePt?: number;
     paperSize?: "a4" | "letter" | "legal";
+}
+
+export interface OrganizationsNewPostRequestBody {
+    name: string;
+    slug: string;
+}
+
+export interface OrganizationsNewPostResponse {
+    success: boolean;
+    orgId: string;
+    orgSlug: string;
 }
