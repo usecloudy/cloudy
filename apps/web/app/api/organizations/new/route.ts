@@ -1,4 +1,4 @@
-import { OrganizationRole, handleSupabaseError } from "@cloudy/utils/common";
+import { WorkspaceRole, handleSupabaseError } from "@cloudy/utils/common";
 import { NextRequest, NextResponse } from "next/server";
 
 import { startTrialOnCustomer, stripe } from "app/api/utils/stripe";
@@ -31,9 +31,9 @@ export const POST = async (req: NextRequest) => {
 		email: user.email,
 	});
 
-	const org = handleSupabaseError(
+	const workspace = handleSupabaseError(
 		await supabase
-			.from("organizations")
+			.from("workspaces")
 			.insert({
 				name,
 				slug,
@@ -44,15 +44,15 @@ export const POST = async (req: NextRequest) => {
 	);
 
 	handleSupabaseError(
-		await supabase.from("organization_users").insert({
+		await supabase.from("workspace_users").insert({
 			user_id: user.id,
-			organization_id: org.id,
-			role: OrganizationRole.OWNER,
+			workspace_id: workspace.id,
+			role: WorkspaceRole.OWNER,
 		}),
 	);
 
 	// Start a trial for them
 	await startTrialOnCustomer(customer);
 
-	return NextResponse.json({ success: true, orgId: org.id, orgSlug: org.slug });
+	return NextResponse.json({ success: true, wsId: workspace.id, wsSlug: workspace.slug });
 };

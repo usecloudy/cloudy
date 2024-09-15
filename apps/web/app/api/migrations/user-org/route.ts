@@ -1,4 +1,4 @@
-import { OrganizationRole, handleSupabaseError } from "@cloudy/utils/common";
+import { WorkspaceRole, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
@@ -19,16 +19,16 @@ export const POST = async (req: NextRequest) => {
 
 const createPersonalOrgForUserAndMigrateThoughts = async (user: UserRecord, supabase: SupabaseClient<Database>) => {
 	const orgName = user.name ? `${user.name}'s Space` : "Personal Space";
-	const orgSlug = await getOrgSlug(user, supabase);
+	const wsSlug = await getOrgSlug(user, supabase);
 
-	console.log(`Creating personal org for user ${user.id} with name ${orgName} and slug ${orgSlug}`);
+	console.log(`Creating personal workspace for user ${user.id} with name ${orgName} and slug ${wsSlug}`);
 
-	const org = handleSupabaseError(
+	const workspace = handleSupabaseError(
 		await supabase
-			.from("organizations")
+			.from("workspaces")
 			.insert({
 				name: orgName,
-				slug: orgSlug,
+				slug: wsSlug,
 				stripe_customer_id: user.stripe_customer_id,
 			})
 			.select()
@@ -36,25 +36,25 @@ const createPersonalOrgForUserAndMigrateThoughts = async (user: UserRecord, supa
 	);
 
 	handleSupabaseError(
-		await supabase.from("organization_users").insert({
+		await supabase.from("workspace_users").insert({
 			user_id: user.id,
-			organization_id: org.id,
-			role: OrganizationRole.OWNER,
+			workspace_id: workspace.id,
+			role: WorkspaceRole.OWNER,
 		}),
 	);
 
-	await migrateThoughts(org.id, user.id, supabase);
-	await migrateCollections(org.id, user.id, supabase);
+	await migrateThoughts(workspace.id, user.id, supabase);
+	await migrateCollections(workspace.id, user.id, supabase);
 
 	console.log(`Migrated user ${user.id}`);
 };
 
-const migrateThoughts = async (orgId: string, userId: string, supabase: SupabaseClient<Database>) => {
+const migrateThoughts = async (wsId: string, userId: string, supabase: SupabaseClient<Database>) => {
 	const thoughts = handleSupabaseError(
 		await supabase
 			.from("thoughts")
 			.update({
-				organization_id: orgId,
+				workspace_id: wsId,
 			})
 			.eq("author_id", userId)
 			.select("id"),
@@ -63,12 +63,12 @@ const migrateThoughts = async (orgId: string, userId: string, supabase: Supabase
 	console.log(`Migrated ${thoughts.length} thoughts for user ${userId}`);
 };
 
-const migrateCollections = async (orgId: string, userId: string, supabase: SupabaseClient<Database>) => {
+const migrateCollections = async (wsId: string, userId: string, supabase: SupabaseClient<Database>) => {
 	const collections = handleSupabaseError(
 		await supabase
 			.from("collections")
 			.update({
-				organization_id: orgId,
+				workspace_id: wsId,
 			})
 			.eq("author_id", userId)
 			.select("id"),

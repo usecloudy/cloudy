@@ -9,8 +9,8 @@ import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { ThoughtList } from "src/components/ThoughtList";
-import { useOrganization, useOrganizationSlug } from "src/stores/organization";
 import { useUser } from "src/stores/user";
+import { useWorkspace, useWorkspaceSlug } from "src/stores/workspace";
 import { makeHeadTitle } from "src/utils/strings";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
@@ -19,7 +19,7 @@ import { SearchBar } from "./SearchBar";
 import { ThoughtsEmptyState } from "./ThoughtsEmptyState";
 
 const useThoughts = () => {
-	const organization = useOrganization();
+	const workspace = useWorkspace();
 
 	useEffect(() => {
 		const channel = supabase
@@ -30,7 +30,7 @@ const useThoughts = () => {
 					event: "*",
 					schema: "public",
 					table: "thoughts",
-					filter: `organization_id.eq.${organization.id}`,
+					filter: `workspace_id.eq.${workspace.id}`,
 				},
 				() => {
 					queryClient.invalidateQueries({
@@ -43,10 +43,10 @@ const useThoughts = () => {
 		return () => {
 			channel.unsubscribe();
 		};
-	}, [organization.id]);
+	}, [workspace.id]);
 
 	return useQuery({
-		queryKey: [organization.id, "thoughts"],
+		queryKey: [workspace.id, "thoughts"],
 		queryFn: async () => {
 			const { data, error } = await supabase
 				.from("thoughts")
@@ -60,7 +60,7 @@ const useThoughts = () => {
 						)
 					)`,
 				)
-				.eq("organization_id", organization.id);
+				.eq("workspace_id", workspace.id);
 
 			if (error) {
 				throw error;
@@ -76,7 +76,7 @@ const useThoughts = () => {
 };
 
 export const HomeView = () => {
-	const orgSlug = useOrganizationSlug();
+	const wsSlug = useWorkspaceSlug();
 	const { data: thoughts, isLoading } = useThoughts();
 	const { isLoading: isCustomerStatusLoading, data: customerStatus } = useCustomerStatus();
 
@@ -101,10 +101,10 @@ export const HomeView = () => {
 							<p className="flex-1">
 								Your subscription plan is inactive, you will not be able to create new notes.
 							</p>
-							<Link to={`/organizations/${orgSlug}/settings`}>
+							<Link to={`/workspaces/${wsSlug}/settings`}>
 								<Button variant="default" className="text-background" size="sm">
 									{" "}
-									Go to organization settings
+									Go to workspace settings
 								</Button>
 							</Link>
 						</div>

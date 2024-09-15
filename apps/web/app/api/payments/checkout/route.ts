@@ -11,12 +11,12 @@ export const GET = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
 	const { searchParams } = new URL(req.url);
-	const orgSlug = searchParams.get("orgSlug");
+	const wsSlug = searchParams.get("wsSlug");
 	const priceId = searchParams.get("priceId");
 	const successUrl = searchParams.get("successUrl");
 	const cancelUrl = searchParams.get("cancelUrl");
 
-	if (!priceId || !successUrl || !cancelUrl || !orgSlug) {
+	if (!priceId || !successUrl || !cancelUrl || !wsSlug) {
 		return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
 	}
 
@@ -29,18 +29,18 @@ export const GET = async (req: NextRequest) => {
 		return NextResponse.json({ error: "Failed to get user" }, { status: 500 });
 	}
 
-	const organization = handleSupabaseError(await supabase.from("organizations").select("*").eq("slug", orgSlug).single());
+	const workspace = handleSupabaseError(await supabase.from("workspaces").select("*").eq("slug", wsSlug).single());
 	const organizationUserCount = handleSupabaseError(
-		await supabase.from("organization_users").select("id").eq("organization_id", organization.id),
+		await supabase.from("workspace_users").select("id").eq("workspace_id", workspace.id),
 	).length;
 
-	if (!organization.stripe_customer_id) {
+	if (!workspace.stripe_customer_id) {
 		return NextResponse.json({ error: "Organization does not have a stripe customer id" }, { status: 400 });
 	}
 
 	const checkoutSession = await stripe.checkout.sessions.create({
 		mode: "subscription",
-		customer: organization.stripe_customer_id,
+		customer: workspace.stripe_customer_id,
 		line_items: [
 			{
 				price: priceId,

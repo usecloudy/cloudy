@@ -12,7 +12,7 @@ const useCreateTopic = () => {
 
 	return useMutation({
 		mutationFn: async (query: string) => {
-			await apiClient.post("/api/topics/new", { query, organization: "745671ff-df59-42a1-9902-b1bc2674abd9" });
+			await apiClient.post("/api/topics/new", { query, workspace: "745671ff-df59-42a1-9902-b1bc2674abd9" });
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["topics"] });

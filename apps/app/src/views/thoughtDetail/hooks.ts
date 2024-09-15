@@ -4,7 +4,7 @@ import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
 import { useEffect } from "react";
 
-import { useOrganization } from "src/stores/organization";
+import { useWorkspace } from "src/stores/workspace";
 
 import { apiClient } from "../../api/client";
 import { queryClient } from "../../api/queryClient";
@@ -57,7 +57,7 @@ export interface ThoughtEditPayload {
 }
 
 export const useEditThought = (thoughtId?: string) => {
-	const organization = useOrganization();
+	const workspace = useWorkspace();
 
 	const isMutating = Boolean(useIsMutating({ mutationKey: ["editThought"] }));
 
@@ -93,7 +93,7 @@ export const useEditThought = (thoughtId?: string) => {
 					.from("thoughts")
 					.upsert({
 						id: thoughtId,
-						organization_id: organization.id,
+						workspace_id: workspace.id,
 						...titleObj,
 						...contentObj,
 						...contentMdObj,

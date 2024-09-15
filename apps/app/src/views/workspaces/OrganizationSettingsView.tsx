@@ -13,8 +13,8 @@ import { Button } from "src/components/Button";
 import { Input } from "src/components/Input";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { SimpleLayout } from "src/components/SimpleLayout";
-import { useOrganization, useOrganizationSlug, useOrganizationStore } from "src/stores/organization";
 import { useUser } from "src/stores/user";
+import { useWorkspace, useWorkspaceSlug, useWorkspaceStore } from "src/stores/workspace";
 import { pluralize } from "src/utils/strings";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
@@ -27,24 +27,24 @@ interface FormData {
 }
 
 const useUpdateOrganization = () => {
-	const org = useOrganization();
+	const workspace = useWorkspace();
 	return useMutation({
 		mutationFn: async (data: FormData) => {
-			const newOrg = await supabase.from("organizations").update(data).eq("id", org.id).select().single();
+			const newOrg = await supabase.from("workspaces").update(data).eq("id", workspace.id).select().single();
 			return newOrg;
 		},
 	});
 };
 
 const useBillingPortal = () => {
-	const orgSlug = useOrganizationSlug();
+	const wsSlug = useWorkspaceSlug();
 
 	return useQuery({
-		queryKey: [orgSlug, "billingPortal"],
+		queryKey: [wsSlug, "billingPortal"],
 		queryFn: async () => {
 			const res = await apiClient.get<{ url: string }>(`/api/payments/billing`, {
 				params: {
-					orgSlug,
+					wsSlug,
 					returnUrl: window.location.href,
 				},
 			});
@@ -53,17 +53,17 @@ const useBillingPortal = () => {
 	});
 };
 
-const useOrganizationMembers = () => {
-	const org = useOrganization();
+const useWorkspaceMembers = () => {
+	const workspace = useWorkspace();
 
 	return useQuery({
-		queryKey: [org.slug, "members"],
+		queryKey: [workspace.slug, "members"],
 		queryFn: async () => {
 			const users = handleSupabaseError(
 				await supabase
-					.from("organization_users")
+					.from("workspace_users")
 					.select("user:users(id, name, email), role")
-					.eq("organization_id", org.id),
+					.eq("workspace_id", workspace.id),
 			);
 			return users.filter(user => user.user !== null) as {
 				user: NonNullable<(typeof users)[number]["user"]>;
@@ -74,24 +74,24 @@ const useOrganizationMembers = () => {
 };
 
 const useRemoveMember = () => {
-	const org = useOrganization();
+	const workspace = useWorkspace();
 	return useMutation({
 		mutationFn: async (userId: string) => {
-			await supabase.from("organization_users").delete().eq("organization_id", org.id).eq("user_id", userId);
+			await supabase.from("workspace_users").delete().eq("workspace_id", workspace.id).eq("user_id", userId);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [org.slug, "members"] });
+			queryClient.invalidateQueries({ queryKey: [workspace.slug, "members"] });
 		},
 	});
 };
 
 export const OrganizationSettingsView = () => {
-	const org = useOrganization();
+	const workspace = useWorkspace();
 	const currentUser = useUser();
 
 	const { data: customerStatus } = useCustomerStatus();
 	const { data: billingPortalUrl } = useBillingPortal();
-	const { data: members } = useOrganizationMembers();
+	const { data: members } = useWorkspaceMembers();
 	const { mutate: removeMember } = useRemoveMember();
 
 	const {
@@ -102,8 +102,8 @@ export const OrganizationSettingsView = () => {
 		formState: { errors },
 	} = useForm<FormData>({
 		defaultValues: {
-			name: org.name,
-			slug: org.slug,
+			name: workspace.name,
+			slug: workspace.slug,
 		},
 	});
 
@@ -121,10 +121,10 @@ export const OrganizationSettingsView = () => {
 
 	useEffect(() => {
 		reset({
-			name: org.name,
-			slug: org.slug,
+			name: workspace.name,
+			slug: workspace.slug,
 		});
-	}, [org]);
+	}, [workspace]);
 
 	const watchSlug = watch("slug");
 	const watchName = watch("name");
@@ -146,7 +146,7 @@ export const OrganizationSettingsView = () => {
 					<div className="flex flex-col gap-1">
 						<label htmlFor="slug">Organization slug</label>
 						<div className="flex items-center">
-							<span className="text-secondary mr-2 text-sm">app.usecloudy.com/organizations/</span>
+							<span className="text-secondary mr-2 text-sm">app.usecloudy.com/workspaces/</span>
 							<Input
 								{...register("slug", {
 									required: "Slug is required",

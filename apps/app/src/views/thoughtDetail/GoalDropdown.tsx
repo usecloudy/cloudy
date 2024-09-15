@@ -8,14 +8,14 @@ import TextareaAutosize from "react-textarea-autosize";
 import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
-import { useOrganizationSlug } from "src/stores/organization";
+import { useWorkspaceSlug } from "src/stores/workspace";
 import { makeThoughtUrl } from "src/utils/thought";
 
 import { useEditThought, useThought } from "./hooks";
 
 const useSetIntent = (thoughtId?: string) => {
 	const { mutateAsync: editThought } = useEditThought();
-	const orgSlug = useOrganizationSlug();
+	const wsSlug = useWorkspaceSlug();
 
 	const navigate = useNavigate();
 
@@ -27,7 +27,7 @@ const useSetIntent = (thoughtId?: string) => {
 				const thought = await editThought();
 				thoughtIdToUse = thought?.id;
 				if (!thoughtId && thoughtIdToUse) {
-					navigate(makeThoughtUrl(orgSlug, thoughtIdToUse), { replace: true, preventScrollReset: true });
+					navigate(makeThoughtUrl(wsSlug, thoughtIdToUse), { replace: true, preventScrollReset: true });
 				}
 			}
 

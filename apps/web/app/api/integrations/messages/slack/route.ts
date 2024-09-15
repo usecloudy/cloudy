@@ -120,7 +120,7 @@ export const POST = async (req: NextRequest) => {
 					messagesToStore.map((message, i) => ({
 						external_id: message.client_msg_id!,
 						content: message.text,
-						organization: "745671ff-df59-42a1-9902-b1bc2674abd9",
+						workspace: "745671ff-df59-42a1-9902-b1bc2674abd9",
 						sent_at: new Date(parseInt(message.ts!.split(".")[0]!, 10) * 1000).toISOString(),
 						link_url: messageLinks[i],
 					})),

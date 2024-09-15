@@ -1,3 +1,3 @@
-export const makeThoughtUrl = (orgSlug: string, thoughtId: string) => {
-	return `/organizations/${orgSlug}/thoughts/${thoughtId}`;
+export const makeThoughtUrl = (wsSlug: string, thoughtId: string) => {
+	return `/workspaces/${wsSlug}/thoughts/${thoughtId}`;
 };

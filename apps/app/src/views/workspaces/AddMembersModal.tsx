@@ -1,4 +1,4 @@
-import { OrganizationRole, handleSupabaseError } from "@cloudy/utils/common";
+import { WorkspaceRole, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { SendIcon, UserPlus2Icon } from "lucide-react";
 import { useState } from "react";
@@ -8,27 +8,27 @@ import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "src/components/Dialog";
-import { useOrganization } from "src/stores/organization";
+import { useWorkspace } from "src/stores/workspace";
 
 const useAddMembers = () => {
-	const org = useOrganization();
+	const workspace = useWorkspace();
 
 	return useMutation({
 		mutationFn: async (emails: string[]) => {
 			const userIds = handleSupabaseError(await supabase.from("users").select("id").in("email", emails));
 			handleSupabaseError(
-				await supabase.from("organization_users").insert(
+				await supabase.from("workspace_users").insert(
 					userIds.map(user => ({
-						organization_id: org.id,
+						workspace_id: workspace.id,
 						user_id: user.id,
-						role: OrganizationRole.MEMBER,
+						role: WorkspaceRole.MEMBER,
 					})),
 				),
 			);
 		},
 		onSuccess: () => {
 			// Invalidate and refetch relevant queries
-			queryClient.invalidateQueries({ queryKey: [org.slug, "members"] });
+			queryClient.invalidateQueries({ queryKey: [workspace.slug, "members"] });
 		},
 	});
 };

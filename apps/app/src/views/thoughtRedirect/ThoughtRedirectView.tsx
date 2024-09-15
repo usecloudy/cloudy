@@ -13,11 +13,11 @@ export const ThoughtRedirectView = () => {
 
 	useAsync(async () => {
 		const result = handleSupabaseError(
-			await supabase.from("thoughts").select("organization:organizations(slug)").eq("id", thoughtId!).single(),
+			await supabase.from("thoughts").select("workspace:workspaces(slug)").eq("id", thoughtId!).single(),
 		);
 
-		if (result.organization?.slug) {
-			navigate(makeThoughtUrl(result.organization.slug, thoughtId!));
+		if (result.workspace?.slug) {
+			navigate(makeThoughtUrl(result.workspace.slug, thoughtId!));
 		} else {
 			// TODO: handle this error
 		}

@@ -6,13 +6,13 @@ import { getSupabase } from "app/api/utils/supabase";
 
 interface Payload {
 	query: string;
-	organization: string;
+	workspace: string;
 }
 
 export const POST = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
-	const { query, organization } = (await req.json()) as Payload;
+	const { query, workspace } = (await req.json()) as Payload;
 
 	// Generate query embeddings
 	const queryEmbeddings = await generateQueryEmbedding(query);
@@ -22,7 +22,7 @@ export const POST = async (req: NextRequest) => {
 	}
 
 	// Insert new topic
-	const newTopic = handleSupabaseError(await supabase.from("topics").insert({ organization, query }).select().single());
+	const newTopic = handleSupabaseError(await supabase.from("topics").insert({ workspace, query }).select().single());
 
 	// Perform embedding search
 	const results = handleSupabaseError(

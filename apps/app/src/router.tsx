@@ -3,7 +3,6 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom
 
 import { MobileTabBar } from "./components/MobileTabBar";
 import { Navbar } from "./components/Navbar";
-import { useOrganizationStore } from "./stores/organization";
 import { useUserGuard, useUserHandler } from "./stores/user";
 import { AuthView } from "./views/auth/AuthView";
 import { ForgotPassword } from "./views/auth/ForgotPassword";
@@ -16,12 +15,12 @@ import { CollectionDetailView } from "./views/collectionDetail/CollectionDetailV
 import { HomeView } from "./views/home/HomeView";
 import { RedirectToDefaultOrg } from "./views/home/RedirectToDefaultOrg";
 import { LoadingView } from "./views/loading/LoadingView";
-import { NewOrganizationView } from "./views/organizations/NewOrganizationView";
-import { OrganizationLayout } from "./views/organizations/OrganizationLayout";
-import { OrganizationSettingsView } from "./views/organizations/OrganizationSettingsView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
 import { TopicsView } from "./views/topics/TopicsView";
+import { NewOrganizationView } from "./views/workspaces/NewOrganizationView";
+import { OrganizationLayout } from "./views/workspaces/OrganizationLayout";
+import { OrganizationSettingsView } from "./views/workspaces/OrganizationSettingsView";
 
 const ProtectedLayout: FC = () => {
 	const { user, isLoading, isReady } = useUserGuard();
@@ -60,13 +59,13 @@ export const Router: FC = () => {
 				</Route>
 				<Route element={<ProtectedLayout />}>
 					<Route path="/" element={<RedirectToDefaultOrg />} />
-					<Route path="/organizations/new" element={<NewOrganizationView />} />
+					<Route path="/workspaces/new" element={<NewOrganizationView />} />
 					<Route element={<OrganizationLayout />}>
-						<Route path="/organizations/:orgSlug" element={<HomeView />} />
-						<Route path="/organizations/:orgSlug/settings" element={<OrganizationSettingsView />} />
-						<Route path="/organizations/:orgSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
-						<Route path="/organizations/:orgSlug/collections/:collectionId" element={<CollectionDetailView />} />
-						<Route path="/organizations/:orgSlug/topics" element={<TopicsView />} />
+						<Route path="/workspaces/:wsSlug" element={<HomeView />} />
+						<Route path="/workspaces/:wsSlug/settings" element={<OrganizationSettingsView />} />
+						<Route path="/workspaces/:wsSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
+						<Route path="/workspaces/:wsSlug/collections/:collectionId" element={<CollectionDetailView />} />
+						<Route path="/workspaces/:wsSlug/topics" element={<TopicsView />} />
 					</Route>
 					<Route path="/auth/password-reset" element={<PasswordResetView />} />
 					<Route path="/signout" element={<SignOutView />} />

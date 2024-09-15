@@ -10,19 +10,19 @@ import { LoadingView } from "../loading/LoadingView";
 export const RedirectToDefaultOrg = () => {
 	const user = useUser();
 	const { data: orgs, isLoading } = useQuery({
-		queryKey: ["organizations"],
+		queryKey: ["workspaces"],
 		queryFn: async () => {
 			return handleSupabaseError(
-				await supabase.from("organization_users").select("organizations(slug)").eq("user_id", user.id),
+				await supabase.from("workspace_users").select("workspaces(slug)").eq("user_id", user.id),
 			);
 		},
 	});
 
-	const orgSlug = orgs?.at(0)?.organizations?.slug;
+	const wsSlug = orgs?.at(0)?.workspaces?.slug;
 
-	if (isLoading || !orgSlug) {
+	if (isLoading || !wsSlug) {
 		return <LoadingView />;
 	}
 
-	return <Navigate to={`/organizations/${orgSlug}`} />;
+	return <Navigate to={`/workspaces/${wsSlug}`} />;
 };

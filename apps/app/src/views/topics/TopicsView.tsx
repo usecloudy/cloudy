@@ -37,7 +37,7 @@ const useTopics = () => {
 			const { data, error } = await supabase
 				.from("topics")
 				.select("*")
-				.eq("organization", "745671ff-df59-42a1-9902-b1bc2674abd9")
+				.eq("workspace", "745671ff-df59-42a1-9902-b1bc2674abd9")
 				.order("created_at", { ascending: false });
 
 			if (error) throw error;

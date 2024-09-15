@@ -13,8 +13,8 @@ export interface CustomerStatus {
 }
 
 export interface PaymentsCustomersStatusGetResponse {
-    orgId: string;
-    orgSlug: string;
+    wsId: string;
+    wsSlug: string;
     customerStatus: CustomerStatus | null;
     userCount: number;
 }
@@ -34,6 +34,6 @@ export interface OrganizationsNewPostRequestBody {
 
 export interface OrganizationsNewPostResponse {
     success: boolean;
-    orgId: string;
-    orgSlug: string;
+    wsId: string;
+    wsSlug: string;
 }

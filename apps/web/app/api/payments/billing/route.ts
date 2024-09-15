@@ -10,14 +10,14 @@ export const GET = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
 	const searchParams = req.nextUrl.searchParams;
-	const orgSlug = searchParams.get("orgSlug");
+	const wsSlug = searchParams.get("wsSlug");
 	const returnUrl = searchParams.get("returnUrl");
 
-	if (!orgSlug || !returnUrl) {
+	if (!wsSlug || !returnUrl) {
 		return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
 	}
 
-	const stripeCustomerId = await getOrgStripeCustomerId({ orgSlug }, supabase);
+	const stripeCustomerId = await getOrgStripeCustomerId({ wsSlug }, supabase);
 
 	if (!stripeCustomerId) {
 		return NextResponse.json({ error: "Organization not found" }, { status: 404 });

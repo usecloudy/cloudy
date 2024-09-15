@@ -1,3 +1,3 @@
-export const makeCollectionUrl = (orgSlug: string, collectionId: string) => {
-	return `/organizations/${orgSlug}/collections/${collectionId}`;
+export const makeCollectionUrl = (wsSlug: string, collectionId: string) => {
+	return `/workspaces/${wsSlug}/collections/${collectionId}`;
 };

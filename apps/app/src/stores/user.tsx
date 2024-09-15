@@ -10,7 +10,7 @@ import { create } from "zustand";
 import { apiClient, setupAuthHeader } from "src/api/client";
 import { supabase } from "src/clients/supabase";
 
-import { getAllUserOrganizations, getUserOrganizationAndRole, useOrganizationStore } from "./organization";
+import { getAllUserOrganizations, getUserOrganizationAndRole, useWorkspaceStore } from "./workspace";
 
 export const createUserIfNotExists = async (user: User) => {
 	return supabase.from("users").upsert({
@@ -76,11 +76,11 @@ export const useUserGuard = () => {
 
 export const useUserHandler = () => {
 	const { user, setUser, setIsReady } = useUserStore();
-	const { setOrganization, setRole } = useOrganizationStore();
+	const { setWorkspace, setRole } = useWorkspaceStore();
 
 	const handleClearUser = () => {
 		setUser(null, false);
-		setOrganization(null);
+		setWorkspace(null);
 		setRole(null);
 		setIsReady(false);
 		amplitude.setUserId(undefined);
@@ -98,9 +98,9 @@ export const useUserHandler = () => {
 				await setupAuthHeader();
 				// await waitForStripeCustomer();
 				// await startTrialIfEligible();
-				// const organizationAndRole = await getUserOrganizationAndRole(session.user.id);
-				// setOrganization(organizationAndRole.organization);
-				// setRole(organizationAndRole.role);
+				// const workspaceAndRole = await getUserOrganizationAndRole(session.user.id);
+				// setWorkspace(workspaceAndRole.workspace);
+				// setRole(workspaceAndRole.role);
 				setIsReady(true);
 			} catch (e) {
 				Sentry.captureException(e);

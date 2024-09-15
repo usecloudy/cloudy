@@ -745,25 +745,25 @@ export type Database = {
           author_id: string | null
           created_at: string
           id: string
-          organization_id: string | null
           title: string | null
           updated_at: string | null
+          workspace_id: string | null
         }
         Insert: {
           author_id?: string | null
           created_at?: string
           id?: string
-          organization_id?: string | null
           title?: string | null
           updated_at?: string | null
+          workspace_id?: string | null
         }
         Update: {
           author_id?: string | null
           created_at?: string
           id?: string
-          organization_id?: string | null
           title?: string | null
           updated_at?: string | null
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -775,9 +775,9 @@ export type Database = {
           },
           {
             foreignKeyName: "collections_organization_id_fkey"
-            columns: ["organization_id"]
+            columns: ["workspace_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -865,7 +865,7 @@ export type Database = {
             foreignKeyName: "integration_messages_organization_fkey"
             columns: ["organization"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -888,69 +888,6 @@ export type Database = {
           id?: string
           last_synced_at?: string | null
           type?: string
-        }
-        Relationships: []
-      }
-      organization_users: {
-        Row: {
-          created_at: string
-          id: string
-          organization_id: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          organization_id: string
-          role: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          organization_id?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "organization_users_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "organization_users_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      organizations: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          slug: string
-          stripe_customer_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          slug?: string
-          stripe_customer_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          slug?: string
-          stripe_customer_id?: string | null
         }
         Relationships: []
       }
@@ -1198,7 +1135,6 @@ export type Database = {
           ignored_collection_suggestions: Json | null
           is_suggestion_paused: boolean
           last_suggestion_content_md: string | null
-          organization_id: string | null
           signals: Json | null
           suggestion_index: number
           suggestion_status: string
@@ -1206,6 +1142,7 @@ export type Database = {
           title_ts: string
           updated_at: string
           user_intent: string | null
+          workspace_id: string | null
         }
         Insert: {
           author_id?: string
@@ -1220,7 +1157,6 @@ export type Database = {
           ignored_collection_suggestions?: Json | null
           is_suggestion_paused?: boolean
           last_suggestion_content_md?: string | null
-          organization_id?: string | null
           signals?: Json | null
           suggestion_index?: number
           suggestion_status?: string
@@ -1228,6 +1164,7 @@ export type Database = {
           title_ts?: string
           updated_at?: string
           user_intent?: string | null
+          workspace_id?: string | null
         }
         Update: {
           author_id?: string
@@ -1242,7 +1179,6 @@ export type Database = {
           ignored_collection_suggestions?: Json | null
           is_suggestion_paused?: boolean
           last_suggestion_content_md?: string | null
-          organization_id?: string | null
           signals?: Json | null
           suggestion_index?: number
           suggestion_status?: string
@@ -1250,6 +1186,7 @@ export type Database = {
           title_ts?: string
           updated_at?: string
           user_intent?: string | null
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -1261,9 +1198,9 @@ export type Database = {
           },
           {
             foreignKeyName: "thoughts_organization_id_fkey"
-            columns: ["organization_id"]
+            columns: ["workspace_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -1328,7 +1265,7 @@ export type Database = {
             foreignKeyName: "topics_organization_fkey"
             columns: ["organization"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -1364,6 +1301,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      workspace_users: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_users_organization_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspaces: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug?: string
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          stripe_customer_id?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -1511,7 +1511,7 @@ export type Database = {
           match_threshold: number
           match_count: number
           exclude_thought_id: string
-          input_organization_id: string
+          input_workspace_id: string
         }
         Returns: {
           id: string
@@ -1559,7 +1559,7 @@ export type Database = {
       search_thoughts: {
         Args: {
           search_query: string
-          p_organization_id: string
+          p_workspace_id: string
         }
         Returns: {
           thought_id: string

@@ -17,7 +17,7 @@ export const generateMatchPairs = async (thoughtRecord: ThoughtRecord, supabase:
 					match_threshold: 0.4,
 					match_count: 4,
 					exclude_thought_id: record.thought_id,
-					input_organization_id: thoughtRecord.organization_id!,
+					input_workspace_id: thoughtRecord.workspace_id!,
 				});
 
 				const matchedThoughtIds = Array.from(new Set(data?.map(d => d.thought_id)));

@@ -18,8 +18,8 @@ import { FC } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import { supabase } from "src/clients/supabase";
-import { useOrganization, useOrganizationStore } from "src/stores/organization";
 import { useAllUserOrganizations, useUser } from "src/stores/user";
+import { useWorkspace, useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { pluralize } from "src/utils/strings";
 import { makeThoughtUrl } from "src/utils/thought";
@@ -31,7 +31,7 @@ import { FeedbackDropdown } from "./Feedback";
 
 export const Navbar: FC = () => {
 	const user = useUser();
-	const { organization } = useOrganizationStore();
+	const { workspace } = useWorkspaceStore();
 
 	const { data } = useCustomerStatus();
 
@@ -51,7 +51,7 @@ export const Navbar: FC = () => {
 				<div className="flex-row items-center gap-2 flex">
 					{!isHomePage && (
 						<li className="hidden md:block">
-							<Link to={`/organizations/${organization?.slug}`}>
+							<Link to={`/workspaces/${workspace?.slug}`}>
 								<Button aria-label="Home" variant="ghost" size="icon">
 									<Home className="size-6" />
 								</Button>
@@ -68,9 +68,9 @@ export const Navbar: FC = () => {
 							<ArrowRight className="size-6" />
 						</Button>
 					</li>
-					{organization && (
+					{workspace && (
 						<li className="hidden md:block">
-							<Link to={makeThoughtUrl(organization.slug, "new")}>
+							<Link to={makeThoughtUrl(workspace.slug, "new")}>
 								<Button variant="ghost" size="icon" aria-label="New thought">
 									<Plus className="size-6" />
 								</Button>
@@ -101,7 +101,7 @@ export const Navbar: FC = () => {
 									</span>
 								</div>
 							}>
-							<Link to={`/organizations/${organization?.slug}/settings`}>
+							<Link to={`/workspaces/${workspace?.slug}/settings`}>
 								<DropdownItem className="text-accent">
 									<CreditCardIcon className="size-4" />
 									<span>Manage subscription</span>
@@ -166,28 +166,25 @@ export const Navbar: FC = () => {
 };
 
 const OrganizationList = () => {
-	const currentOrganization = useOrganization();
+	const currentOrganization = useWorkspace();
 	const { data: allUserOrganizations } = useAllUserOrganizations();
 
 	return (
 		<div className="flex flex-col">
 			<span className="text-sm font-medium text-secondary px-2">Organization</span>
-			{allUserOrganizations?.map(organization => (
-				<Link to={`/organizations/${organization.slug}`} key={organization.id}>
-					<DropdownItem className={cn(organization.id === currentOrganization.id ? "bg-card/50" : "")}>
-						{organization.id === currentOrganization.id ? (
+			{allUserOrganizations?.map(workspace => (
+				<Link to={`/workspaces/${workspace.slug}`} key={workspace.id}>
+					<DropdownItem className={cn(workspace.id === currentOrganization.id ? "bg-card/50" : "")}>
+						{workspace.id === currentOrganization.id ? (
 							<CheckIcon className="size-4 stroke-[2.5]" />
 						) : (
 							<span className="w-4" />
 						)}
 						<span
-							className={cn(
-								"text-sm flex flex-1",
-								organization.id === currentOrganization.id ? "font-medium" : "",
-							)}>
-							{organization.name}
+							className={cn("text-sm flex flex-1", workspace.id === currentOrganization.id ? "font-medium" : "")}>
+							{workspace.name}
 						</span>
-						<Link to={`/organizations/${organization.slug}/settings`}>
+						<Link to={`/workspaces/${workspace.slug}/settings`}>
 							<Button variant="ghost" size="icon-xs">
 								<SettingsIcon className="size-4" />
 							</Button>
@@ -195,10 +192,10 @@ const OrganizationList = () => {
 					</DropdownItem>
 				</Link>
 			))}
-			<Link to="/organizations/new">
+			<Link to="/workspaces/new">
 				<DropdownItem>
 					<Plus className="size-4" />
-					<span className="text-sm">Create new organization</span>
+					<span className="text-sm">Create new workspace</span>
 				</DropdownItem>
 			</Link>
 		</div>

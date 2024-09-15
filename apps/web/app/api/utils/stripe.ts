@@ -80,23 +80,19 @@ export const startTrialOnCustomer = async (customer: Stripe.Customer) => {
 };
 
 export const getOrgStripeCustomerId = async (
-	{ orgId, orgSlug }: { orgId?: string; orgSlug?: string },
+	{ wsId, wsSlug }: { wsId?: string; wsSlug?: string },
 	supabase: SupabaseClient<Database>,
 ) => {
-	if (!orgId && !orgSlug) {
-		throw new Error("Either orgId or orgSlug must be provided");
+	if (!wsId && !wsSlug) {
+		throw new Error("Either wsId or wsSlug must be provided");
 	}
 
-	const { stripeCustomerId } = orgId
+	const { stripeCustomerId } = wsId
 		? handleSupabaseError(
-				await supabase.from("organizations").select("stripeCustomerId:stripe_customer_id").eq("id", orgId).single(),
+				await supabase.from("workspaces").select("stripeCustomerId:stripe_customer_id").eq("id", wsId).single(),
 			)
 		: handleSupabaseError(
-				await supabase
-					.from("organizations")
-					.select("stripeCustomerId:stripe_customer_id")
-					.eq("slug", orgSlug!)
-					.single(),
+				await supabase.from("workspaces").select("stripeCustomerId:stripe_customer_id").eq("slug", wsSlug!).single(),
 			);
 
 	if (!stripeCustomerId) {

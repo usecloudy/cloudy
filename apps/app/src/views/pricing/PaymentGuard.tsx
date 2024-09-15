@@ -10,7 +10,7 @@ import { queryClient } from "src/api/queryClient";
 import { Button } from "src/components/Button";
 import { Dialog, DialogContent } from "src/components/Dialog";
 import LoadingSpinner from "src/components/LoadingSpinner";
-import { useOrganizationSlug, useOrganizationStore } from "src/stores/organization";
+import { useWorkspaceSlug, useWorkspaceStore } from "src/stores/workspace";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
 import { useSubscriptionModalStore } from "./subscriptionModalStore";
@@ -23,13 +23,13 @@ const useProducts = () => {
 };
 
 const useCheckout = () => {
-	const orgSlug = useOrganizationSlug();
+	const wsSlug = useWorkspaceSlug();
 	return useMutation({
 		mutationFn: async (priceId: string) => {
 			const res = await apiClient
 				.get<{ url: string }>(`/api/payments/checkout`, {
 					params: {
-						orgSlug,
+						wsSlug,
 						priceId,
 						successUrl: window.location.origin + window.location.pathname,
 						cancelUrl: window.location.origin + window.location.pathname,

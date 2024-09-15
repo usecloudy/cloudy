@@ -12,7 +12,7 @@ import { useMount, useUnmount, useUpdateEffect } from "react-use";
 
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { useHighlightStore } from "src/stores/highlight";
-import { useOrganizationSlug } from "src/stores/organization";
+import { useWorkspaceSlug } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { ellipsizeText, makeHeadTitle } from "src/utils/strings";
 import { makeThoughtUrl } from "src/utils/thought";
@@ -88,7 +88,7 @@ const ThoughtDetailViewExisting = ({ thoughtId, isNewMode }: { thoughtId?: strin
 
 const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; thought?: Thought }) => {
 	const { mutateAsync: editThought } = useEditThought(thoughtId);
-	const orgSlug = useOrganizationSlug();
+	const wsSlug = useWorkspaceSlug();
 
 	const { setIsAiSuggestionLoading } = useThoughtStore();
 
@@ -101,7 +101,7 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 			const updatedThought = await editThought(payload);
 
 			if (!thoughtId && updatedThought?.id) {
-				navigate(makeThoughtUrl(orgSlug, updatedThought.id), {
+				navigate(makeThoughtUrl(wsSlug, updatedThought.id), {
 					replace: true,
 					preventScrollReset: true,
 				});

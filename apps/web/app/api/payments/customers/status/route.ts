@@ -1,9 +1,9 @@
 import { PaymentsCustomersStatusGetResponse, handleSupabaseError } from "@cloudy/utils/common";
 import { NextRequest, NextResponse } from "next/server";
 
-import { getOrganizationUserCount } from "app/api/utils/organizations";
 import { getCustomerSubscriptionStatus } from "app/api/utils/stripe";
 import { getSupabase } from "app/api/utils/supabase";
+import { getOrganizationUserCount } from "app/api/utils/workspaces";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -11,14 +11,14 @@ export const fetchCache = "force-no-store";
 export const GET = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
-	const orgSlug = req.nextUrl.searchParams.get("orgSlug");
+	const wsSlug = req.nextUrl.searchParams.get("wsSlug");
 
-	if (!orgSlug) {
+	if (!wsSlug) {
 		return NextResponse.json({ error: "Organization slug is required" }, { status: 400 });
 	}
 
-	const { id: orgId, stripe_customer_id } = handleSupabaseError(
-		await supabase.from("organizations").select("id, stripe_customer_id").eq("slug", orgSlug).single(),
+	const { id: wsId, stripe_customer_id } = handleSupabaseError(
+		await supabase.from("workspaces").select("id, stripe_customer_id").eq("slug", wsSlug).single(),
 	);
 
 	console.log("stripe_customer_id", stripe_customer_id);
@@ -33,11 +33,11 @@ export const GET = async (req: NextRequest) => {
 	}
 
 	const customerStatus = await getCustomerSubscriptionStatus(stripe_customer_id);
-	const userCount = await getOrganizationUserCount(orgId, supabase);
+	const userCount = await getOrganizationUserCount(wsId, supabase);
 
 	return NextResponse.json({
-		orgId: orgId,
-		orgSlug,
+		wsId: wsId,
+		wsSlug,
 		customerStatus,
 		userCount,
 	} satisfies PaymentsCustomersStatusGetResponse);

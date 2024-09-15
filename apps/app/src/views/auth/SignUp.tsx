@@ -11,6 +11,7 @@ import { Input } from "../../components/Input";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 type SignUpFormData = {
+	fullName: string;
 	email: string;
 	password: string;
 	confirmPassword: string;
@@ -34,6 +35,9 @@ export const SignUp = () => {
 				password: data.password,
 				options: {
 					emailRedirectTo: window.location.href,
+					data: {
+						full_name: data.fullName,
+					},
 				},
 			});
 			if (error) throw error;
@@ -53,6 +57,16 @@ export const SignUp = () => {
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} className="mt-4 flex flex-col gap-2">
+			<label htmlFor="fullName" className="font-medium text-secondary">
+				Full Name
+			</label>
+			<Input
+				type="text"
+				className="bg-white/30"
+				placeholder="John Doe"
+				{...register("fullName", { required: "Full name is required" })}
+			/>
+			{errors.fullName && <p className="text-red-500 text-sm">{errors.fullName.message}</p>}
 			<label htmlFor="email" className="font-medium text-secondary">
 				Email
 			</label>

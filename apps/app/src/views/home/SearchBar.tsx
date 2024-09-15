@@ -18,13 +18,13 @@ import TextareaAutosize from "react-textarea-autosize";
 
 import { supabase } from "src/clients/supabase";
 import LoadingSpinner from "src/components/LoadingSpinner";
-import { useOrganization, useOrganizationSlug } from "src/stores/organization";
+import { useWorkspace, useWorkspaceSlug } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
 import { makeThoughtUrl } from "src/utils/thought";
 
 const useSearchThoughts = (query: string) => {
-	const org = useOrganization();
+	const workspace = useWorkspace();
 
 	return useQuery({
 		enabled: !!query && query.length > 1,
@@ -33,7 +33,7 @@ const useSearchThoughts = (query: string) => {
 			const { data, error } = await supabase
 				.rpc("search_thoughts", {
 					search_query: query.replaceAll(" ", "+"),
-					p_organization_id: org.id,
+					p_workspace_id: workspace.id,
 				})
 				.order("thought_updated_at", { ascending: false });
 
@@ -58,7 +58,7 @@ export const SearchBar = () => {
 	const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
 	const navigate = useNavigate();
-	const orgSlug = useOrganizationSlug();
+	const wsSlug = useWorkspaceSlug();
 
 	const listRef = useRef<Array<HTMLElement | null>>([]);
 	const listContainerRef = useRef<HTMLDivElement>(null);
@@ -104,7 +104,7 @@ export const SearchBar = () => {
 			if (activeIndex !== null) {
 				const thought = data?.[activeIndex];
 				if (thought) {
-					navigate(makeThoughtUrl(orgSlug, thought.id));
+					navigate(makeThoughtUrl(wsSlug, thought.id));
 				}
 			}
 		}
@@ -123,7 +123,7 @@ export const SearchBar = () => {
 			<div ref={listContainerRef} className="max-h-[300px]">
 				{data.map((thought, index) => (
 					<Link
-						to={makeThoughtUrl(orgSlug, thought.id)}
+						to={makeThoughtUrl(wsSlug, thought.id)}
 						key={thought.id}
 						ref={node => {
 							listRef.current[index] = node;
