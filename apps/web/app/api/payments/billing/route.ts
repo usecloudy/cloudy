@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getOrgStripeCustomerId, stripe } from "app/api/utils/stripe";
+import { getWorkspaceStripeCustomerId, stripe } from "app/api/utils/stripe";
 import { getSupabase } from "app/api/utils/supabase";
 
 export const dynamic = "force-dynamic";
@@ -17,10 +17,10 @@ export const GET = async (req: NextRequest) => {
 		return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
 	}
 
-	const stripeCustomerId = await getOrgStripeCustomerId({ wsSlug }, supabase);
+	const stripeCustomerId = await getWorkspaceStripeCustomerId({ wsSlug }, supabase);
 
 	if (!stripeCustomerId) {
-		return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+		return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
 	}
 
 	const billingPortalSession = await stripe.billingPortal.sessions.create({

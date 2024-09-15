@@ -58,7 +58,7 @@ export const AddMembersModal = () => {
 			</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Add Members to Organization</DialogTitle>
+					<DialogTitle>Add Members to Workspace</DialogTitle>
 				</DialogHeader>
 				<div className="flex flex-col gap-4 py-4">
 					<TextareaAutosize

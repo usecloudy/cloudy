@@ -27,12 +27,12 @@ export interface ThoughtsExportGetRequestBody {
     paperSize?: "a4" | "letter" | "legal";
 }
 
-export interface OrganizationsNewPostRequestBody {
+export interface WorkspacesNewPostRequestBody {
     name: string;
     slug: string;
 }
 
-export interface OrganizationsNewPostResponse {
+export interface WorkspacesNewPostResponse {
     success: boolean;
     wsId: string;
     wsSlug: string;

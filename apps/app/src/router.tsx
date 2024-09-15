@@ -18,9 +18,9 @@ import { LoadingView } from "./views/loading/LoadingView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
 import { TopicsView } from "./views/topics/TopicsView";
-import { NewOrganizationView } from "./views/workspaces/NewOrganizationView";
-import { OrganizationLayout } from "./views/workspaces/OrganizationLayout";
-import { OrganizationSettingsView } from "./views/workspaces/OrganizationSettingsView";
+import { NewWorkspaceView } from "./views/workspaces/NewWorkspaceView";
+import { WorkspaceLayout } from "./views/workspaces/WorkspaceLayout";
+import { WorkspaceSettingsView } from "./views/workspaces/WorkspaceSettingsView";
 
 const ProtectedLayout: FC = () => {
 	const { user, isLoading, isReady } = useUserGuard();
@@ -59,10 +59,10 @@ export const Router: FC = () => {
 				</Route>
 				<Route element={<ProtectedLayout />}>
 					<Route path="/" element={<RedirectToDefaultOrg />} />
-					<Route path="/workspaces/new" element={<NewOrganizationView />} />
-					<Route element={<OrganizationLayout />}>
+					<Route path="/workspaces/new" element={<NewWorkspaceView />} />
+					<Route element={<WorkspaceLayout />}>
 						<Route path="/workspaces/:wsSlug" element={<HomeView />} />
-						<Route path="/workspaces/:wsSlug/settings" element={<OrganizationSettingsView />} />
+						<Route path="/workspaces/:wsSlug/settings" element={<WorkspaceSettingsView />} />
 						<Route path="/workspaces/:wsSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
 						<Route path="/workspaces/:wsSlug/collections/:collectionId" element={<CollectionDetailView />} />
 						<Route path="/workspaces/:wsSlug/topics" element={<TopicsView />} />

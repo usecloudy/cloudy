@@ -1,4 +1,4 @@
-import { OrganizationsNewPostResponse } from "@cloudy/utils/common";
+import { WorkspacesNewPostResponse } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -15,30 +15,30 @@ type FormData = {
 	slug: string;
 };
 
-const useCreateOrganization = () => {
+const useCreateWorkspace = () => {
 	return useMutation({
 		mutationFn: async (data: FormData) => {
-			const workspace = await apiClient.post<OrganizationsNewPostResponse>("/api/workspaces/new", data);
+			const workspace = await apiClient.post<WorkspacesNewPostResponse>("/api/workspaces/new", data);
 			return workspace.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["userOrganizations"] });
+			queryClient.invalidateQueries({ queryKey: ["userWorkspaces"] });
 		},
 	});
 };
 
-export const NewOrganizationView = () => {
+export const NewWorkspaceView = () => {
 	const {
 		register,
 		handleSubmit,
 		watch,
 		formState: { errors },
 	} = useForm<FormData>();
-	const { mutateAsync: createOrganization, isPending } = useCreateOrganization();
+	const { mutateAsync: createWorkspace, isPending } = useCreateWorkspace();
 	const navigate = useNavigate();
 
 	const onSubmit = async (data: FormData) => {
-		const { wsSlug } = await createOrganization(data);
+		const { wsSlug } = await createWorkspace(data);
 
 		navigate(`/workspaces/${wsSlug}`);
 	};
@@ -54,7 +54,7 @@ export const NewOrganizationView = () => {
 					<div className="flex flex-col gap-1">
 						<label htmlFor="name">Workspace name</label>
 						<Input
-							{...register("name", { required: "Organization name is required" })}
+							{...register("name", { required: "Workspace name is required" })}
 							placeholder="Brain Fog Inc."
 							error={!!errors.name}
 						/>

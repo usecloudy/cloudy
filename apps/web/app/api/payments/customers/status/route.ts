@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getCustomerSubscriptionStatus } from "app/api/utils/stripe";
 import { getSupabase } from "app/api/utils/supabase";
-import { getOrganizationUserCount } from "app/api/utils/workspaces";
+import { getWorkspaceUserCount } from "app/api/utils/workspaces";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -14,7 +14,7 @@ export const GET = async (req: NextRequest) => {
 	const wsSlug = req.nextUrl.searchParams.get("wsSlug");
 
 	if (!wsSlug) {
-		return NextResponse.json({ error: "Organization slug is required" }, { status: 400 });
+		return NextResponse.json({ error: "Workspace slug is required" }, { status: 400 });
 	}
 
 	const { id: wsId, stripe_customer_id } = handleSupabaseError(
@@ -33,7 +33,7 @@ export const GET = async (req: NextRequest) => {
 	}
 
 	const customerStatus = await getCustomerSubscriptionStatus(stripe_customer_id);
-	const userCount = await getOrganizationUserCount(wsId, supabase);
+	const userCount = await getWorkspaceUserCount(wsId, supabase);
 
 	return NextResponse.json({
 		wsId: wsId,

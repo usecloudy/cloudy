@@ -25,8 +25,6 @@ const useWorkspaceSlug = (wsSlug: string) => {
 				.single(),
 		);
 
-		console.log("workspace", workspace);
-
 		setWorkspace(workspace);
 		setRole(role as WorkspaceRole);
 
@@ -36,7 +34,7 @@ const useWorkspaceSlug = (wsSlug: string) => {
 	return Boolean(workspace && role);
 };
 
-export const OrganizationLayout = () => {
+export const WorkspaceLayout = () => {
 	const { wsSlug } = useParams();
 
 	const isReady = useWorkspaceSlug(wsSlug!);

@@ -18,7 +18,7 @@ import { FC } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import { supabase } from "src/clients/supabase";
-import { useAllUserOrganizations, useUser } from "src/stores/user";
+import { useAllUserWorkspaces, useUser } from "src/stores/user";
 import { useWorkspace, useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { pluralize } from "src/utils/strings";
@@ -123,7 +123,7 @@ export const Navbar: FC = () => {
 						<span className="text-sm">{user.email}</span>
 					</div>
 					<div className="border-b border-border my-2" />
-					<OrganizationList />
+					<WorkspaceList />
 					{customerStatus?.isTrialing && (
 						<>
 							<div className="border-b border-border my-2" />
@@ -165,23 +165,22 @@ export const Navbar: FC = () => {
 	);
 };
 
-const OrganizationList = () => {
-	const currentOrganization = useWorkspace();
-	const { data: allUserOrganizations } = useAllUserOrganizations();
+const WorkspaceList = () => {
+	const currentWorkspace = useWorkspace();
+	const { data: allUserWorkspaces } = useAllUserWorkspaces();
 
 	return (
 		<div className="flex flex-col">
-			<span className="text-sm font-medium text-secondary px-2">Organization</span>
-			{allUserOrganizations?.map(workspace => (
+			<span className="text-sm font-medium text-secondary px-2">Workspace</span>
+			{allUserWorkspaces?.map(workspace => (
 				<Link to={`/workspaces/${workspace.slug}`} key={workspace.id}>
-					<DropdownItem className={cn(workspace.id === currentOrganization.id ? "bg-card/50" : "")}>
-						{workspace.id === currentOrganization.id ? (
+					<DropdownItem className={cn(workspace.id === currentWorkspace.id ? "bg-card/50" : "")}>
+						{workspace.id === currentWorkspace.id ? (
 							<CheckIcon className="size-4 stroke-[2.5]" />
 						) : (
 							<span className="w-4" />
 						)}
-						<span
-							className={cn("text-sm flex flex-1", workspace.id === currentOrganization.id ? "font-medium" : "")}>
+						<span className={cn("text-sm flex flex-1", workspace.id === currentWorkspace.id ? "font-medium" : "")}>
 							{workspace.name}
 						</span>
 						<Link to={`/workspaces/${workspace.slug}/settings`}>

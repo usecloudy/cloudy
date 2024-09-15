@@ -79,7 +79,7 @@ export const startTrialOnCustomer = async (customer: Stripe.Customer) => {
 	console.log("Started trial on customer", customer.id);
 };
 
-export const getOrgStripeCustomerId = async (
+export const getWorkspaceStripeCustomerId = async (
 	{ wsId, wsSlug }: { wsId?: string; wsSlug?: string },
 	supabase: SupabaseClient<Database>,
 ) => {

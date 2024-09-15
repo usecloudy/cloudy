@@ -30,12 +30,12 @@ export const GET = async (req: NextRequest) => {
 	}
 
 	const workspace = handleSupabaseError(await supabase.from("workspaces").select("*").eq("slug", wsSlug).single());
-	const organizationUserCount = handleSupabaseError(
+	const workspaceUserCount = handleSupabaseError(
 		await supabase.from("workspace_users").select("id").eq("workspace_id", workspace.id),
 	).length;
 
 	if (!workspace.stripe_customer_id) {
-		return NextResponse.json({ error: "Organization does not have a stripe customer id" }, { status: 400 });
+		return NextResponse.json({ error: "Workspace does not have a stripe customer id" }, { status: 400 });
 	}
 
 	const checkoutSession = await stripe.checkout.sessions.create({
@@ -44,7 +44,7 @@ export const GET = async (req: NextRequest) => {
 		line_items: [
 			{
 				price: priceId,
-				quantity: organizationUserCount,
+				quantity: workspaceUserCount,
 			},
 		],
 		payment_method_collection: "if_required",

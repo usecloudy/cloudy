@@ -10,7 +10,7 @@ import { create } from "zustand";
 import { apiClient, setupAuthHeader } from "src/api/client";
 import { supabase } from "src/clients/supabase";
 
-import { getAllUserOrganizations, getUserOrganizationAndRole, useWorkspaceStore } from "./workspace";
+import { getAllUserWorkspaces, useWorkspaceStore } from "./workspace";
 
 export const createUserIfNotExists = async (user: User) => {
 	return supabase.from("users").upsert({
@@ -98,7 +98,7 @@ export const useUserHandler = () => {
 				await setupAuthHeader();
 				// await waitForStripeCustomer();
 				// await startTrialIfEligible();
-				// const workspaceAndRole = await getUserOrganizationAndRole(session.user.id);
+				// const workspaceAndRole = await getUserWorkspaceAndRole(session.user.id);
 				// setWorkspace(workspaceAndRole.workspace);
 				// setRole(workspaceAndRole.role);
 				setIsReady(true);
@@ -133,10 +133,10 @@ export const useUserHandler = () => {
 	return { user };
 };
 
-export const useAllUserOrganizations = () => {
+export const useAllUserWorkspaces = () => {
 	const user = useUser();
 	return useQuery({
-		queryKey: ["userOrganizations"],
-		queryFn: () => getAllUserOrganizations(user.id),
+		queryKey: ["userWorkspaces"],
+		queryFn: () => getAllUserWorkspaces(user.id),
 	});
 };
