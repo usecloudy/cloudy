@@ -28,7 +28,7 @@ const attemptToSetNameForUser = async (user: UserRecord, supabase: SupabaseClien
 		return;
 	}
 
-	const name = authUser.user_metadata.name;
+	const name = authUser.user_metadata.name || authUser.user_metadata.full_name;
 	console.log(authUser.user_metadata);
 
 	if (name) {

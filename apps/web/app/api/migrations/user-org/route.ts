@@ -18,6 +18,13 @@ export const POST = async (req: NextRequest) => {
 };
 
 const createPersonalOrgForUserAndMigrateThoughts = async (user: UserRecord, supabase: SupabaseClient<Database>) => {
+	const userHasWorkspace = handleSupabaseError(await supabase.from("workspace_users").select("id").eq("user_id", user.id));
+
+	if (userHasWorkspace.length > 0) {
+		console.log(`User ${user.id} already has a workspace, skipping`);
+		return;
+	}
+
 	const orgName = user.name ? `${user.name}'s Space` : "Personal Space";
 	const wsSlug = await getOrgSlug(user, supabase);
 
