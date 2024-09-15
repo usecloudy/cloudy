@@ -5,8 +5,10 @@ import { Link } from "react-router-dom";
 
 import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
+import { useWorkspaceSlug } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { ellipsizeText, makeHumanizedTime } from "src/utils/strings";
+import { makeThoughtUrl } from "src/utils/thought";
 
 import { Button } from "./Button";
 import { Dropdown, DropdownItem } from "./Dropdown";
@@ -65,9 +67,11 @@ export const ThoughtCard = ({
 	rightContent?: React.ReactNode;
 	hoursOnlyForUpdatedAt?: boolean;
 }) => {
+	const wsSlug = useWorkspaceSlug();
 	const { mutate: deleteThought } = useDeleteThought();
+
 	return (
-		<Link to={`/thoughts/${thought.id}`}>
+		<Link to={makeThoughtUrl(wsSlug, thought.id)}>
 			<div className={cn(thoughtCardVariants({ variant }))}>
 				<div className="flex flex-row items-center gap-2 flex-1">
 					{thought.collections.length > 0 ? (

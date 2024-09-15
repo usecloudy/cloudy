@@ -18,7 +18,9 @@ import {
 } from "src/components/AlertDialog";
 import { Chip } from "src/components/Chip";
 import { CollectionDropdown } from "src/components/CollectionDropdown";
-import { useUser } from "src/stores/user";
+import { useWorkspace, useWorkspaceSlug } from "src/stores/workspace";
+import { makeCollectionUrl } from "src/utils/collection";
+import { makeThoughtUrl } from "src/utils/thought";
 
 import { useEditThought, useThought } from "./hooks";
 
@@ -28,14 +30,14 @@ interface Collection {
 }
 
 const useCollections = () => {
-	const user = useUser();
+	const workspace = useWorkspace();
 	return useQuery({
-		queryKey: ["collections"],
+		queryKey: [workspace.slug, "collections"],
 		queryFn: async () => {
 			const { data, error } = await supabase
 				.from("collections")
 				.select("*")
-				.eq("author_id", user.id)
+				.eq("workspace_id", workspace.id)
 				.order("created_at", { ascending: false });
 
 			if (error) {
@@ -49,6 +51,7 @@ const useCollections = () => {
 
 const useNewCollection = () => {
 	const { mutateAsync: editThought } = useEditThought();
+	const workspace = useWorkspace();
 
 	const navigate = useNavigate();
 
@@ -60,7 +63,7 @@ const useNewCollection = () => {
 				const thought = await editThought();
 				thoughtIdToUse = thought?.id;
 				if (thought?.id) {
-					navigate(`/thoughts/${thought.id}`, { replace: true, preventScrollReset: true });
+					navigate(makeThoughtUrl(workspace.slug, thought.id), { replace: true, preventScrollReset: true });
 				}
 			}
 
@@ -73,6 +76,7 @@ const useNewCollection = () => {
 					.from("collections")
 					.insert({
 						title: payload.title,
+						workspace_id: workspace.id,
 					})
 					.select()
 					.single(),
@@ -90,6 +94,7 @@ const useNewCollection = () => {
 
 const useAddToCollection = () => {
 	const { mutateAsync: editThought } = useEditThought();
+	const wsSlug = useWorkspaceSlug();
 
 	const navigate = useNavigate();
 
@@ -99,7 +104,7 @@ const useAddToCollection = () => {
 				const thought = await editThought();
 				payload.thoughtId = thought?.id;
 				if (thought?.id) {
-					navigate(`/thoughts/${thought.id}`, { replace: true, preventScrollReset: true });
+					navigate(makeThoughtUrl(wsSlug, thought.id), { replace: true, preventScrollReset: true });
 				}
 			}
 			if (!payload.thoughtId) {
@@ -172,6 +177,7 @@ const useIgnoreCollectionSuggestion = () => {
 export const CollectionCarousel = ({ thoughtId, collections }: { thoughtId?: string; collections: Collection[] }) => {
 	const { data: allCollections } = useCollections();
 	const { data: thought } = useThought(thoughtId);
+	const wsSlug = useWorkspaceSlug();
 
 	const { mutateAsync: createCollection } = useNewCollection();
 	const { mutateAsync: addToCollection } = useAddToCollection();
@@ -202,7 +208,7 @@ export const CollectionCarousel = ({ thoughtId, collections }: { thoughtId?: str
 			<div className="flex flex-nowrap gap-2 pb-2">
 				{thoughtId &&
 					collections?.map(collection => (
-						<Link key={collection.id} to={`/collections/${collection.id}`}>
+						<Link key={collection.id} to={makeCollectionUrl(wsSlug, collection.id)}>
 							<Chip
 								size="sm"
 								variant="secondary"

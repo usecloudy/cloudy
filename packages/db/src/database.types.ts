@@ -747,6 +747,7 @@ export type Database = {
           id: string
           title: string | null
           updated_at: string | null
+          workspace_id: string | null
         }
         Insert: {
           author_id?: string | null
@@ -754,6 +755,7 @@ export type Database = {
           id?: string
           title?: string | null
           updated_at?: string | null
+          workspace_id?: string | null
         }
         Update: {
           author_id?: string | null
@@ -761,6 +763,7 @@ export type Database = {
           id?: string
           title?: string | null
           updated_at?: string | null
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -770,7 +773,123 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "collections_organization_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      integration_access_scopes: {
+        Row: {
+          created_at: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      integration_message_embeddings: {
+        Row: {
+          created_at: string
+          embedding: string
+          embedding_ver: string
+          id: string
+          index: number
+          message_id: string
+        }
+        Insert: {
+          created_at?: string
+          embedding: string
+          embedding_ver: string
+          id?: string
+          index: number
+          message_id: string
+        }
+        Update: {
+          created_at?: string
+          embedding?: string
+          embedding_ver?: string
+          id?: string
+          index?: number
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_message_embeddings_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "integration_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          external_id: string
+          id: string
+          link_url: string | null
+          organization: string
+          sent_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          external_id: string
+          id?: string
+          link_url?: string | null
+          organization: string
+          sent_at: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          external_id?: string
+          id?: string
+          link_url?: string | null
+          organization?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_messages_organization_fkey"
+            columns: ["organization"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_setups: {
+        Row: {
+          created_at: string
+          id: string
+          last_synced_at: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          type?: string
+        }
+        Relationships: []
       }
       thought_chat_threads: {
         Row: {
@@ -1023,6 +1142,7 @@ export type Database = {
           title_ts: string
           updated_at: string
           user_intent: string | null
+          workspace_id: string | null
         }
         Insert: {
           author_id?: string
@@ -1044,6 +1164,7 @@ export type Database = {
           title_ts?: string
           updated_at?: string
           user_intent?: string | null
+          workspace_id?: string | null
         }
         Update: {
           author_id?: string
@@ -1065,6 +1186,7 @@ export type Database = {
           title_ts?: string
           updated_at?: string
           user_intent?: string | null
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -1074,23 +1196,98 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "thoughts_organization_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topic_message_matches: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string | null
+          topic_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          topic_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          topic_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_message_matches_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "integration_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topic_message_matches_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topics: {
+        Row: {
+          created_at: string
+          id: string
+          organization: string
+          query: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization: string
+          query: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization?: string
+          query?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topics_organization_fkey"
+            columns: ["organization"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
       }
       users: {
         Row: {
           created_at: string
+          email: string | null
           id: string
           name: string | null
           stripe_customer_id: string | null
         }
         Insert: {
           created_at?: string
+          email?: string | null
           id?: string
           name?: string | null
           stripe_customer_id?: string | null
         }
         Update: {
           created_at?: string
+          email?: string | null
           id?: string
           name?: string | null
           stripe_customer_id?: string | null
@@ -1104,6 +1301,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      workspace_users: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_users_organization_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspaces: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug?: string
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          stripe_customer_id?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -1251,7 +1511,7 @@ export type Database = {
           match_threshold: number
           match_count: number
           exclude_thought_id: string
-          input_author_id: string
+          input_workspace_id: string
         }
         Returns: {
           id: string
@@ -1285,10 +1545,21 @@ export type Database = {
               similarity: number
             }[]
           }
+      multi_embedding_search: {
+        Args: {
+          query_embeddings: string[]
+          match_threshold: number
+          max_results: number
+        }
+        Returns: {
+          message_id: string
+          similarity_score: number
+        }[]
+      }
       search_thoughts: {
         Args: {
           search_query: string
-          user_id: string
+          p_workspace_id: string
         }
         Returns: {
           thought_id: string

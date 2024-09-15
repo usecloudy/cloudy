@@ -2,16 +2,20 @@ import { PaymentsCustomersStatusGetResponse } from "@cloudy/utils/common";
 import { useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "src/api/client";
-import { useUserGuard } from "src/stores/user";
+import { useWorkspaceStore } from "src/stores/workspace";
 
 export const useCustomerStatus = () => {
-	const { user, isReady } = useUserGuard();
+	const { workspace } = useWorkspaceStore();
 
 	return useQuery({
-		queryKey: ["payments", "customers", "status"],
+		queryKey: [workspace?.slug, "payments", "customers", "status"],
 		queryFn: () =>
-			apiClient.get<PaymentsCustomersStatusGetResponse>("/api/payments/customers/status").then(res => res.data),
-		enabled: Boolean(user && isReady),
+			apiClient
+				.get<PaymentsCustomersStatusGetResponse>("/api/payments/customers/status", {
+					params: { wsSlug: workspace!.slug },
+				})
+				.then(res => res.data),
+		enabled: Boolean(workspace),
 		retry: 3,
 	});
 };

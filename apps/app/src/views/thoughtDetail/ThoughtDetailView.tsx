@@ -12,8 +12,10 @@ import { useMount, useUnmount, useUpdateEffect } from "react-use";
 
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { useHighlightStore } from "src/stores/highlight";
+import { useWorkspaceSlug } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { ellipsizeText, makeHeadTitle } from "src/utils/strings";
+import { makeThoughtUrl } from "src/utils/thought";
 import { processSearches } from "src/utils/tiptapSearchAndReplace";
 import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
@@ -86,6 +88,7 @@ const ThoughtDetailViewExisting = ({ thoughtId, isNewMode }: { thoughtId?: strin
 
 const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; thought?: Thought }) => {
 	const { mutateAsync: editThought } = useEditThought(thoughtId);
+	const wsSlug = useWorkspaceSlug();
 
 	const { setIsAiSuggestionLoading } = useThoughtStore();
 
@@ -98,7 +101,10 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 			const updatedThought = await editThought(payload);
 
 			if (!thoughtId && updatedThought?.id) {
-				navigate(`/thoughts/${updatedThought.id}`, { replace: true, preventScrollReset: true });
+				navigate(makeThoughtUrl(wsSlug, updatedThought.id), {
+					replace: true,
+					preventScrollReset: true,
+				});
 			}
 		},
 		{ debounceDurationMs: thoughtId ? 500 : 0 },

@@ -3,8 +3,6 @@ import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
-import { startTrialOnCustomer, stripe } from "app/api/utils/stripe";
-
 import { getSupabase } from "../../utils/supabase";
 import { registerUserToResend } from "./utils";
 
@@ -63,11 +61,14 @@ const handleInsert = async (payload: InsertPayload, supabase: SupabaseClient<Dat
 
 	const { record } = payload;
 
+	const userMetaData = (record.raw_user_meta_data as { full_name: string | null } | null) ?? null;
 	const userRecord = handleSupabaseError(
 		await supabase
 			.from("users")
 			.insert({
 				id: record.id,
+				name: userMetaData?.full_name ?? null,
+				email: record.email,
 			})
 			.select()
 			.single(),
@@ -81,33 +82,7 @@ const handleInsert = async (payload: InsertPayload, supabase: SupabaseClient<Dat
 		throw new Error("User email is required on insert");
 	}
 
-	const customers = await stripe.customers.search({
-		query: `email:"${record.email}"`,
-	});
-
-	const existingCustomer = customers.data.at(0);
-
-	if (existingCustomer && !existingCustomer.deleted) {
-		console.log("User already has a stripe customer id on insert, using that.");
-
-		await supabase.from("users").update({ stripe_customer_id: existingCustomer.id }).eq("id", payload.record.id);
-
-		return NextResponse.json({ success: true, reason: "existing_customer" });
-	}
-
-	console.log(`Creating new stripe customer for user ${record.id}, ${record.email}`);
-
-	const customer = await stripe.customers.create({
-		name: userRecord.name ?? undefined,
-		email: record.email,
-	});
-
-	await supabase.from("users").update({ stripe_customer_id: customer.id }).eq("id", record.id);
-
-	// Start a trial for them
-	await startTrialOnCustomer(customer);
-
 	await registerUserToResend(record.email, userRecord.name);
 
-	return NextResponse.json({ success: true, reason: "created_customer" });
+	return NextResponse.json({ success: true, reason: "created_user_record" });
 };

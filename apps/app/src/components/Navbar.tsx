@@ -1,67 +1,44 @@
 import { Tag } from "@cloudy/ui";
-import { useMutation } from "@tanstack/react-query";
 import {
 	ArrowLeft,
 	ArrowRight,
-	CircleFadingArrowUpIcon,
+	CheckIcon,
 	CircleHelpIcon,
 	CreditCardIcon,
 	HandshakeIcon,
 	Home,
-	LightbulbIcon,
 	LogOut,
 	MenuIcon,
 	Plus,
 	ScrollTextIcon,
+	SettingsIcon,
 	TimerIcon,
 } from "lucide-react";
 import { FC } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
-import { apiClient } from "src/api/client";
 import { supabase } from "src/clients/supabase";
-import { useUser } from "src/stores/user";
+import { useAllUserWorkspaces, useUser } from "src/stores/user";
+import { useWorkspace, useWorkspaceStore } from "src/stores/workspace";
+import { cn } from "src/utils";
 import { pluralize } from "src/utils/strings";
+import { makeThoughtUrl } from "src/utils/thought";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
-import { useSubscriptionModalStore } from "src/views/pricing/subscriptionModalStore";
-import { QuickThoughtDropdown } from "src/views/quickThought/QuickThoughtDropdown";
 
 import { Button } from "./Button";
 import { Dropdown, DropdownItem } from "./Dropdown";
 import { FeedbackDropdown } from "./Feedback";
 
-const useBillingPortal = () => {
-	return useMutation({
-		mutationFn: async () => {
-			const res = await apiClient.get<{ url: string }>(`/api/payments/billing`, {
-				params: {
-					returnUrl: window.location.href,
-				},
-			});
-			return res.data;
-		},
-	});
-};
-
 export const Navbar: FC = () => {
 	const user = useUser();
-	const { data } = useCustomerStatus();
-	const { mutateAsync: getBillingPortalUrl } = useBillingPortal();
+	const { workspace } = useWorkspaceStore();
 
-	const { setIsOpen: setShowSubscriptionModal } = useSubscriptionModalStore();
+	const { data } = useCustomerStatus();
 
 	const customerStatus = data?.customerStatus;
+
 	const location = useLocation();
 	const isHomePage = location.pathname === "/";
-
-	const handleOpenSubscriptionModal = () => {
-		setShowSubscriptionModal(true, true);
-	};
-
-	const handleOpenBillingPortal = async () => {
-		const { url } = await getBillingPortalUrl();
-		window.location.href = url;
-	};
 
 	const handleSignOut = () => {
 		console.log("Signing out");
@@ -74,7 +51,7 @@ export const Navbar: FC = () => {
 				<div className="flex-row items-center gap-2 flex">
 					{!isHomePage && (
 						<li className="hidden md:block">
-							<Link to="/">
+							<Link to={`/workspaces/${workspace?.slug}`}>
 								<Button aria-label="Home" variant="ghost" size="icon">
 									<Home className="size-6" />
 								</Button>
@@ -91,13 +68,15 @@ export const Navbar: FC = () => {
 							<ArrowRight className="size-6" />
 						</Button>
 					</li>
-					<li className="hidden md:block">
-						<Link to="/thoughts/new">
-							<Button variant="ghost" size="icon" aria-label="New thought">
-								<Plus className="size-6" />
-							</Button>
-						</Link>
-					</li>
+					{workspace && (
+						<li className="hidden md:block">
+							<Link to={makeThoughtUrl(workspace.slug, "new")}>
+								<Button variant="ghost" size="icon" aria-label="New thought">
+									<Plus className="size-6" />
+								</Button>
+							</Link>
+						</li>
+					)}
 					{/* <QuickThoughtDropdown /> */}
 				</div>
 			</ul>
@@ -122,10 +101,12 @@ export const Navbar: FC = () => {
 									</span>
 								</div>
 							}>
-							<DropdownItem className="text-accent" onSelect={handleOpenSubscriptionModal}>
-								<CircleFadingArrowUpIcon className="size-4" />
-								<span>Subscribe</span>
-							</DropdownItem>
+							<Link to={`/workspaces/${workspace?.slug}/settings`}>
+								<DropdownItem className="text-accent">
+									<CreditCardIcon className="size-4" />
+									<span>Manage subscription</span>
+								</DropdownItem>
+							</Link>
 						</Dropdown>
 					)}
 				</div>
@@ -136,32 +117,23 @@ export const Navbar: FC = () => {
 							<MenuIcon size={24} />
 						</Button>
 					}
-					className="w-64">
-					<div className="flex flex-col mb-2">
-						<div className="flex flex-col gap-1 p-2 border-b border-border">
-							<span className="text-sm font-medium text-secondary">Signed in as</span>
-							<span className="text-sm">{user.email}</span>
-						</div>
-						{customerStatus?.isTrialing && (
-							<div className="flex flex-col gap-1 p-2 border-b border-border">
+					className="w-64 pt-2">
+					<div className="flex flex-col gap-1 px-2">
+						<span className="text-sm font-medium text-secondary">Signed in as</span>
+						<span className="text-sm">{user.email}</span>
+					</div>
+					<div className="border-b border-border my-2" />
+					<WorkspaceList />
+					{customerStatus?.isTrialing && (
+						<>
+							<div className="border-b border-border my-2" />
+							<div className="flex flex-col gap-1 px-2">
 								<span className="text-sm font-medium text-secondary">Trial Status</span>
 								<span className="text-sm">
 									{`${pluralize(customerStatus.remainingDaysInTrial ?? 0, "day")} remaining`}
 								</span>
 							</div>
-						)}
-					</div>
-					{customerStatus?.isTrialing && (
-						<DropdownItem className="text-accent" onSelect={handleOpenSubscriptionModal}>
-							<CircleFadingArrowUpIcon className="size-4" />
-							<span>Subscribe</span>
-						</DropdownItem>
-					)}
-					{customerStatus?.isActive && (
-						<DropdownItem onSelect={handleOpenBillingPortal}>
-							<CreditCardIcon className="size-4" />
-							<span>Manage Subscription</span>
-						</DropdownItem>
+						</>
 					)}
 					<div className="border-b border-border my-2" />
 					<a href="https://usecloudy.com/support">
@@ -190,5 +162,41 @@ export const Navbar: FC = () => {
 				</Dropdown>
 			</div>
 		</nav>
+	);
+};
+
+const WorkspaceList = () => {
+	const currentWorkspace = useWorkspace();
+	const { data: allUserWorkspaces } = useAllUserWorkspaces();
+
+	return (
+		<div className="flex flex-col">
+			<span className="text-sm font-medium text-secondary px-2">Workspace</span>
+			{allUserWorkspaces?.map(workspace => (
+				<Link to={`/workspaces/${workspace.slug}`} key={workspace.id}>
+					<DropdownItem className={cn(workspace.id === currentWorkspace.id ? "bg-card/50" : "")}>
+						{workspace.id === currentWorkspace.id ? (
+							<CheckIcon className="size-4 stroke-[2.5]" />
+						) : (
+							<span className="w-4" />
+						)}
+						<span className={cn("text-sm flex flex-1", workspace.id === currentWorkspace.id ? "font-medium" : "")}>
+							{workspace.name}
+						</span>
+						<Link to={`/workspaces/${workspace.slug}/settings`}>
+							<Button variant="ghost" size="icon-xs">
+								<SettingsIcon className="size-4" />
+							</Button>
+						</Link>
+					</DropdownItem>
+				</Link>
+			))}
+			<Link to="/workspaces/new">
+				<DropdownItem>
+					<Plus className="size-4" />
+					<span className="text-sm">Create new workspace</span>
+				</DropdownItem>
+			</Link>
+		</div>
 	);
 };

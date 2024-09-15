@@ -3,18 +3,19 @@ import { NotebookIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { supabase } from "src/clients/supabase";
-import { useUser } from "src/stores/user";
+import { useWorkspace, useWorkspaceSlug } from "src/stores/workspace";
+import { makeCollectionUrl } from "src/utils/collection";
 import { makeHumanizedTime, pluralize } from "src/utils/strings";
 
 const useLatestCollections = () => {
-	const user = useUser();
+	const workspace = useWorkspace();
 	return useQuery({
-		queryKey: ["latestCollections"],
+		queryKey: [workspace.slug, "latestCollections"],
 		queryFn: async () => {
 			const { data } = await supabase
 				.from("collections")
 				.select("*, collection_thoughts(id)")
-				.eq("author_id", user.id)
+				.eq("workspace_id", workspace.id)
 				.order("updated_at", { ascending: false })
 				.limit(20);
 			return data?.map(collection => ({
@@ -26,6 +27,7 @@ const useLatestCollections = () => {
 };
 
 export const CollectionsColumn = () => {
+	const wsSlug = useWorkspaceSlug();
 	const { data } = useLatestCollections();
 	return (
 		<div>
@@ -37,7 +39,7 @@ export const CollectionsColumn = () => {
 				<div className="flex flex-col px-3">
 					{data && data.length > 0 ? (
 						data.map(collection => (
-							<Link key={collection.id} to={`/collections/${collection.id}`}>
+							<Link key={collection.id} to={makeCollectionUrl(wsSlug, collection.id)}>
 								<div className="flex flex-col hover:bg-card rounded py-2 px-3 cursor-pointer">
 									<div className="text-xs text-secondary">
 										{`${makeHumanizedTime(collection.updated_at ?? collection.created_at)} • ${pluralize(collection.thoughtsCount, "note")}`}

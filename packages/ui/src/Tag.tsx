@@ -10,7 +10,7 @@ export const Tag = ({
     return (
         <div
             className={cn(
-                "text-xs text-accent font-medium bg-card rounded px-2 py-0.5",
+                "text-xs text-accent font-medium bg-card rounded px-2 py-0.5 flex items-center",
                 className
             )}
         >

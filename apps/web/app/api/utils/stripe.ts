@@ -1,4 +1,6 @@
-import { CustomerStatus } from "@cloudy/utils/common";
+import { CustomerStatus, handleSupabaseError } from "@cloudy/utils/common";
+import { Database } from "@repo/db";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { differenceInDays, sub } from "date-fns";
 import Stripe from "stripe";
 
@@ -75,4 +77,27 @@ export const startTrialOnCustomer = async (customer: Stripe.Customer) => {
 	});
 
 	console.log("Started trial on customer", customer.id);
+};
+
+export const getWorkspaceStripeCustomerId = async (
+	{ wsId, wsSlug }: { wsId?: string; wsSlug?: string },
+	supabase: SupabaseClient<Database>,
+) => {
+	if (!wsId && !wsSlug) {
+		throw new Error("Either wsId or wsSlug must be provided");
+	}
+
+	const { stripeCustomerId } = wsId
+		? handleSupabaseError(
+				await supabase.from("workspaces").select("stripeCustomerId:stripe_customer_id").eq("id", wsId).single(),
+			)
+		: handleSupabaseError(
+				await supabase.from("workspaces").select("stripeCustomerId:stripe_customer_id").eq("slug", wsSlug!).single(),
+			);
+
+	if (!stripeCustomerId) {
+		return null;
+	}
+
+	return stripeCustomerId;
 };
