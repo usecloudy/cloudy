@@ -1,4 +1,4 @@
-import { WorkspaceRole, handleSupabaseError } from "@cloudy/utils/common";
+import { WorkspaceRole, createNonConflictingSlug, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
@@ -79,8 +79,7 @@ const migrateCollections = async (wsId: string, userId: string, supabase: Supaba
 
 const getOrgSlug = async (user: UserRecord, supabase: SupabaseClient<Database>) => {
 	if (user.name) {
-		const slug = nameToSlug(user.name);
-		return `${slug}-personal`;
+		return createNonConflictingSlug(user.name, supabase);
 	}
 
 	const data = await supabase.auth.admin.getUserById(user.id);
@@ -90,15 +89,11 @@ const getOrgSlug = async (user: UserRecord, supabase: SupabaseClient<Database>) 
 	if (email) {
 		const firstPart = email.split("@")[0];
 		if (firstPart) {
-			return `${firstPart}-personal`;
+			return createNonConflictingSlug(firstPart, supabase);
 		}
 	}
 
 	return generateRandomSlug();
-};
-
-const nameToSlug = (name: string) => {
-	return name.toLowerCase().replace(/ /g, "-");
 };
 
 const generateRandomSlug = (length = 8) => {
