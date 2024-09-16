@@ -1,23 +1,35 @@
 import { ThoughtSignals } from "@cloudy/utils/common";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
+import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
+import Document from "@tiptap/extension-document";
+import Paragraph from "@tiptap/extension-paragraph";
+import Text from "@tiptap/extension-text";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { diffLines } from "diff";
 import { GripVertical } from "lucide-react";
 import posthog from "posthog-js";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useNavigate, useParams } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
 import { useMount, useUnmount, useUpdateEffect } from "react-use";
+import { Awareness } from "y-protocols/awareness.js";
+import { WebrtcProvider } from "y-webrtc";
+import * as Y from "yjs";
 
+import { supabase } from "src/clients/supabase";
+import LoadingSpinner from "src/components/LoadingSpinner";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { useHighlightStore } from "src/stores/highlight";
+import { useUserRecord } from "src/stores/user";
 import { useWorkspaceSlug } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { ellipsizeText, makeHeadTitle } from "src/utils/strings";
 import { makeThoughtUrl } from "src/utils/thought";
 import { processSearches } from "src/utils/tiptapSearchAndReplace";
 import { useSave } from "src/utils/useSave";
+import { SupabaseProvider } from "src/utils/yjsSyncProvider";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
 import { CollectionCarousel } from "./CollectionCarousel";
@@ -40,38 +52,37 @@ export const ThoughtDetailView = () => {
 	const [prevThoughtId, setPreviousThoughtId] = useState<string | null>(null);
 
 	const [isNewMode, setIsNewMode] = useState(thoughtId === "new");
-	const [key, setKey] = useState(0);
-	const { thoughtId: activeThoughtId, setThoughtId, reset } = useThoughtStore();
+	// const [key, setKey] = useState(0);
+	// const { thoughtId: activeThoughtId, setThoughtId, reset } = useThoughtStore();
 
-	// Update isNewMode and key when thoughtId changes
-	useEffect(() => {
-		// Check if we're entering or staying in "new" mode
-		if (prevThoughtId === "new" || thoughtId === "new") {
-			// If we're transitioning from an existing thought to a new one
-			if (prevThoughtId !== "new" && thoughtId === "new") {
-				// Generate a new key to force a re-render
-				setKey(Date.now());
-			}
-			// Set the mode to "new" for creating a new thought
-			setIsNewMode(true);
-			reset();
-			posthog.capture("new_thought");
-		} else {
-			console.log("isnotnew", "existing", thoughtId);
-			// We're viewing an existing thought
-			setIsNewMode(false);
-			// Generate a new key to force a re-render when switching between existing thoughts
-			setKey(Date.now());
-			reset();
-			posthog.capture("view_thought");
-		}
-		setThoughtId(thoughtId === "new" ? null : (thoughtId ?? null));
-		setPreviousThoughtId(thoughtId ?? null);
-	}, [thoughtId]); // This effect runs whenever thoughtId changes
+	// // Update isNewMode and key when thoughtId changes
+	// useEffect(() => {
+	// 	// Check if we're entering or staying in "new" mode
+	// 	if (prevThoughtId === "new" || thoughtId === "new") {
+	// 		// If we're transitioning from an existing thought to a new one
+	// 		if (prevThoughtId !== "new" && thoughtId === "new") {
+	// 			// Generate a new key to force a re-render
+	// 			setKey(Date.now());
+	// 		}
+	// 		// Set the mode to "new" for creating a new thought
+	// 		setIsNewMode(true);
+	// 		reset();
+	// 		posthog.capture("new_thought");
+	// 	} else {
+	// 		// We're viewing an existing thought
+	// 		setIsNewMode(false);
+	// 		// Generate a new key to force a re-render when switching between existing thoughts
+	// 		setKey(Date.now());
+	// 		reset();
+	// 		posthog.capture("view_thought");
+	// 	}
+	// 	setThoughtId(thoughtId === "new" ? null : (thoughtId ?? null));
+	// 	setPreviousThoughtId(thoughtId ?? null);
+	// }, [thoughtId]); // This effect runs whenever thoughtId changes
 
 	return (
 		<EditorErrorBoundary>
-			<ThoughtDetailViewExisting isNewMode={isNewMode} thoughtId={activeThoughtId ?? undefined} key={key} />
+			<ThoughtDetailViewExisting isNewMode={isNewMode} thoughtId={thoughtId} />
 		</EditorErrorBoundary>
 	);
 };
@@ -127,15 +138,17 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 				<title>{headTitle}</title>
 			</Helmet>
 			<div className="flex w-full flex-col lg:flex-row lg:h-full xl:max-w-screen-2xl">
-				<EditorView
-					thoughtId={thoughtId}
-					collections={thought?.collections ?? []}
-					remoteContent={thought?.content ?? undefined}
-					remoteTitle={thought?.title ?? undefined}
-					latestRemoteContentTs={thought?.content_ts ?? undefined}
-					latestRemoteTitleTs={thought?.title_ts ?? undefined}
-					onChange={onChange}
-				/>
+				{thoughtId && (
+					<EditorView
+						thoughtId={thoughtId}
+						collections={thought?.collections ?? []}
+						remoteContent={thought?.content ?? undefined}
+						remoteTitle={thought?.title ?? undefined}
+						latestRemoteContentTs={thought?.content_ts ?? undefined}
+						latestRemoteTitleTs={thought?.title_ts ?? undefined}
+						onChange={onChange}
+					/>
+				)}
 				<ControlColumn thoughtId={thoughtId} />
 			</div>
 		</>
@@ -159,6 +172,7 @@ const EditorView = ({
 	collections: Collection[];
 	onChange: (payload: ThoughtEditPayload) => void;
 }) => {
+	const userRecord = useUserRecord();
 	const { highlights } = useHighlightStore();
 	const {
 		lastLocalThoughtContentTs,
@@ -170,28 +184,67 @@ const EditorView = ({
 	const { title, setTitle, saveTitleKey } = useTitleStore();
 	const { previewContent, applyKey, setPreviewContent } = usePreviewContentStore();
 	const [isAiWriting, setIsAiWriting] = useState(false);
+	const [isConnected, setIsConnected] = useState(false);
 
 	const isHighlightingRef = useRef(false);
 	const existingContent = useRef("");
 
+	const { doc: ydoc, provider } = useMemo(() => {
+		console.log("gen", thoughtId);
+		const doc = new Y.Doc({ guid: thoughtId });
+		const p = new SupabaseProvider(supabase, {
+			id: thoughtId!,
+			name: `thought:${thoughtId}`,
+			document: doc,
+			databaseDetails: {
+				schema: "public",
+				table: "notes_test",
+				updateColumns: { name: "id", content: "content" },
+				conflictColumns: "id",
+			},
+		});
+
+		return { provider: p, doc };
+	}, [thoughtId]);
+
+	useUnmount(() => {
+		console.log("unmount", thoughtId);
+	});
+
 	const editor = useEditor({
-		extensions: tiptapExtensions,
-		content: remoteContent ?? "",
+		extensions: [
+			...tiptapExtensions,
+			Collaboration.configure({
+				document: ydoc,
+			}),
+			CollaborationCursor.configure({
+				provider,
+				user: {
+					name: userRecord.name ?? userRecord.email,
+					color: "#b694ff",
+				},
+			}),
+		],
 		onUpdate: async () => {
 			onUpdate(true);
 		},
 		autofocus: !thoughtId,
 		editable: !isAiWriting,
-	});
+	}); //
+
+	useEffect(() => {
+		console.log("? effect");
+		provider.on("synced", () => {
+			setIsConnected(true);
+		});
+	}, [provider]);
 
 	const onUpdate = (isUserUpdate: boolean) => {
 		if (!isHighlightingRef.current) {
 			const content = editor?.getHTML();
 			const contentMd = editor?.storage.markdown.getMarkdown();
 			const contentPlainText = editor?.getText();
-
 			const ts = new Date();
-
 			onChange({ content, contentMd, contentPlainText, ts });
 			setLastLocalThoughtContentTs(ts);
 			setCurrentContent(content ?? "");
@@ -207,17 +260,19 @@ const EditorView = ({
 		setTitle("");
 	});
 
-	useUpdateEffect(() => {
-		// If the remote content has changed, update the local content
-		if (
-			(latestRemoteContentTs &&
-				lastLocalThoughtContentTs &&
-				new Date(latestRemoteContentTs) > lastLocalThoughtContentTs) ||
-			!lastLocalThoughtContentTs
-		) {
-			editor?.commands.setContent(remoteContent ?? "");
-		}
-	}, [latestRemoteContentTs]);
+	// useUpdateEffect(() => {
+	// 	// If the remote content has changed, update the local content
+	// 	console.log("latestRemoteContentTs", latestRemoteContentTs, "lastLocalThoughtContentTs", lastLocalThoughtContentTs);
+	// 	if (
+	// 		(latestRemoteContentTs &&
+	// 			lastLocalThoughtContentTs &&
+	// 			new Date(latestRemoteContentTs) > lastLocalThoughtContentTs) ||
+	// 		!lastLocalThoughtContentTs
+	// 	) {
+	// 		editor?.commands.setContent(remoteContent ?? "");
+	// 		console.log("set via remote content");
+	// 	}
+	// }, [latestRemoteContentTs]);
 
 	useUpdateEffect(() => {
 		// If the remote title has changed, update the local title
@@ -262,7 +317,7 @@ const EditorView = ({
 			editor?.commands.setContent(existingContent.current);
 			isHighlightingRef.current = false;
 		}
-	}, [previewContent]);
+	}, [previewContent]); //
 
 	useUpdateEffect(() => {
 		isHighlightingRef.current = false;
@@ -323,6 +378,7 @@ const EditorView = ({
 
 	useUnmount(() => {
 		setCurrentContent(null);
+		setLastLocalThoughtContentTs(null);
 	});
 
 	useUpdateEffect(() => {
@@ -383,7 +439,13 @@ const EditorView = ({
 						</DragHandle>
 					</div>
 				)}
-				<EditorContent editor={editor} className={cn("w-full", isAiWriting && "pointer-events-none opacity-70")} />
+				{isConnected ? (
+					<EditorContent editor={editor} className={cn("w-full", isAiWriting && "pointer-events-none opacity-70")} />
+				) : (
+					<div className="w-full h-full flex items-center justify-center">
+						<LoadingSpinner size="sm" />
+					</div>
+				)}
 				<CommentColumn editor={editor} thoughtId={thoughtId} isHighlightingRef={isHighlightingRef} />
 			</div>
 		</div>

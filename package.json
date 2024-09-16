@@ -18,7 +18,8 @@
     },
     "overrides": {
         "typescript": "5.5.3",
-        "prettier": "3.3.3"
+        "prettier": "3.3.3",
+        "yjs": "13.6.19"
     },
     "engines": {
         "node": ">=18"

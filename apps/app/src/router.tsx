@@ -25,14 +25,11 @@ import { WorkspaceSettingsView } from "./views/workspaces/WorkspaceSettingsView"
 const ProtectedLayout: FC = () => {
 	const { user, isLoadingAuth, isReady } = useUserGuard();
 
-	console.log("guard", user, isLoadingAuth, isReady);
-
 	if (isLoadingAuth) {
 		return <LoadingView />;
 	}
 
 	if (!user) {
-		console.log("navigating to /auth");
 		return <Navigate to="/auth" />;
 	}
 

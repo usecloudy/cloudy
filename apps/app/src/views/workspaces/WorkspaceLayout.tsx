@@ -45,8 +45,6 @@ export const WorkspaceLayout = () => {
 		}
 	}, [wsSlug]);
 
-	console.log("wsSlug", wsSlug);
-
 	if (!wsSlug || wsSlug === "undefined") {
 		console.log("navigating to /");
 		return <Navigate to="/" />;
