@@ -1,7 +1,9 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { generateText } from "ai";
 
+import { heliconeOpenAI } from "./helicone";
 import { getRelatedThoughts } from "./relatedChunks";
 
 export const checkForSignal = async (signal: string, thoughtId: string, supabase: SupabaseClient) => {
@@ -97,4 +99,40 @@ ${relatedThoughts.map(thought => thoughtToPrompt(thought)).join("\n")}
 
 `
 		: "";
+};
+
+export const getContextForThought = async (
+	thoughtId: string,
+	supabase: SupabaseClient<Database>,
+	headers: Record<string, string>,
+) => {
+	const linkedThoughtsText = await getLinkedThoughtsPromptDump(thoughtId, supabase);
+	const relatedThoughtsText = await getRelatedThoughtsPromptDump(thoughtId, supabase);
+
+	if ((linkedThoughtsText + relatedThoughtsText).length > 2048) {
+		return condenseContext(linkedThoughtsText, relatedThoughtsText, headers);
+	}
+
+	return linkedThoughtsText + relatedThoughtsText;
+};
+
+const condenseContext = async (linkedThoughtsText: string, relatedThoughtsText: string, headers: Record<string, string>) => {
+	const { text: condensedText } = await generateText({
+		model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18"),
+		temperature: 0.0,
+		messages: [
+			{
+				role: "user",
+				content: `Given the below relevant notes, provide a 1-2 paragraph summary of the most important information:
+${linkedThoughtsText}
+${relatedThoughtsText}`,
+			},
+		],
+		headers,
+	});
+
+	return `<relevant_context>
+${condensedText}
+</relevant_context>
+`;
 };

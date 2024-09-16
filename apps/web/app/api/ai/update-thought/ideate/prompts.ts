@@ -1,8 +1,5 @@
 import { CoreMessage } from "ai";
 
-import { MarkdownChunk } from "app/api/utils/relatedChunks";
-import { thoughtIntentToPrompt, thoughtToPrompt } from "app/api/utils/thoughts";
-
 interface Comment {
 	id: string;
 	content: string;
@@ -16,15 +13,13 @@ export interface LinkedThought {
 }
 
 export const makeThoughtIdeatePrompts = ({
-	relatedChunksText,
-	linkedThoughtsText,
+	contextText,
 	thoughtText,
 	thoughtDiffText,
 	intentText,
 	comments,
 }: {
-	relatedChunksText: string;
-	linkedThoughtsText: string;
+	contextText: string;
 	thoughtText: string;
 	thoughtDiffText: string;
 	intentText: string;
@@ -59,7 +54,7 @@ export const makeThoughtIdeatePrompts = ({
 		},
 		{
 			role: "user",
-			content: `${relatedChunksText}${linkedThoughtsText}The user is currently in the process of writing the below note, a diff has been provided to show the changes. Focus your new comments on what the user has recently written:
+			content: `${contextText}The user is currently in the process of writing the below note, a diff has been provided to show the changes. Focus your new comments on what the user has recently written:
 ${thoughtText}${thoughtDiffText}${intentText}
 
 ${commentsText}
@@ -83,86 +78,6 @@ Ask questions and provide constructive criticism on what the user is writing abo
 - Ensure new comments are not redundant with existing or other new comments.
 - When archiving a comment, provide a brief explanation for why it's no longer relevant.
 - If there are no comments to add or archive, respond ONLY with "<NO_ACTION>"
-
-An example of a comment is:
-**Suggestion**
-Commenting on: "I am thinking about how to make the todo app better."
-Comment: "I think they're very loud and will alert the rest of the company."
-
-Make sure you think step by step before responding. Also make sure each comment you provide is insightful and impactful.
-
-${tasksText}`,
-		},
-	];
-};
-
-export const makeThoughtIdeateSelectionPrompts = ({
-	relatedChunks,
-	thought,
-	comments,
-}: {
-	relatedChunks: MarkdownChunk[];
-	thought: {
-		title?: string | null;
-		contentWithSelection: string;
-		intent?: string | null;
-	};
-	comments: Comment[];
-}): CoreMessage[] => {
-	let commentsText = "";
-	let tasksText = "";
-	if (comments.length > 0) {
-		commentsText =
-			"Currently, the below comments are on the note:\n" +
-			comments
-				.map(
-					comment =>
-						`<comment id="${comment.id}" targets="[${comment.targets?.join(", ") ?? ""}]">\n${
-							comment.content
-						}\n</comment>`,
-				)
-				.join("\n");
-
-		tasksText = `\n\nYour task is to archive irrelevant comments and add new relevant comments.
-- When archiving, make sure to include the id of the comment to archive
-- Make sure you provide reasoning behind why you're archiving a comment or adding a new comment`;
-	} else {
-		tasksText =
-			"Your task is to add new relevant comments.\n-Make sure you provide a reason why you're adding a new comment";
-	}
-
-	const relatedChunksText =
-		relatedChunks.length > 0
-			? `Below are some relevant notes the user has written, use this as context:
-${relatedChunks.map(chunk => `<note>\n${chunk.chunk}\n</note>`).join("\n")}
-
-`
-			: "";
-
-	return [
-		{
-			role: "system",
-			content: `You are a friendly and helpful assistant that helps users ideate, think through ideas, and better reflect on their notes. Respond in a friendly, concise manner. Talk to the user in your summaries.`,
-		},
-		{
-			role: "user",
-			content: `${relatedChunksText}The user is currently in the process of writing the below note, a diff has been provided to show the changes. The user has selected a section of the note to edit, focus your new comments on that selection. The selection is marked with the [[[ and ]]] tags, for example, in the following text: "Hi [[[user]]] I'm doing well", the selection is "user".
-${thoughtToPrompt({ title: thought.title, contentMd: thought.contentWithSelection })}${thoughtIntentToPrompt(thought.intent)}
-
-${commentsText}
-
-Ask questions and provide constructive criticism on what the user is writing about as a writing assistant.
-- Make sure all your responses are in the same language as the note and concise.
-- Ask clarifying questions to understand the user's perspective and help them ideate.
-- Suggest edits and improvements to the note. For example, If the note is disorganized or not focused, suggest edits to improve it.
-- Provide next steps/actions if applicable.
-- Mark each new comment with the appropriate type: 'comment', 'action', 'suggestion', 'idea', or 'question'.
-- For each comment, clearly include the piece of the note that you are commenting on.
-- Focus on the current note, use the previous notes as reference but only comment on the current note.
-- Make sure you keep the comments short, concise, and to the point.
-- Focus on improving ideation, creativity, and critical thinking over writing for other readers.
-- To not overwhelm the user, make sure only 5-10 comments are active at a time.
-- If there are no comments to add or archive, say ONLY "<NO_ACTION>"
 
 An example of a comment is:
 **Suggestion**

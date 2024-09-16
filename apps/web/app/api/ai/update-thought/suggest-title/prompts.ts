@@ -1,12 +1,10 @@
 import { CoreMessage } from "ai";
 
 export const makeTitleSuggestionPrompts = ({
-	relatedThoughtsText,
-	linkedThoughtsText,
+	contextText,
 	currentContentMd,
 }: {
-	relatedThoughtsText: string;
-	linkedThoughtsText: string;
+	contextText: string;
 	currentContentMd: string;
 }): CoreMessage[] => [
 	{
@@ -15,7 +13,7 @@ export const makeTitleSuggestionPrompts = ({
 	},
 	{
 		role: "user",
-		content: `${linkedThoughtsText}${relatedThoughtsText}I'm currently in the process of writing the below note:
+		content: `${contextText}I'm currently in the process of writing the below note:
 <note>
 ${currentContentMd}
 </note>

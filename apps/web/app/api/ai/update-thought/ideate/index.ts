@@ -6,6 +6,7 @@ import * as jsdiff from "diff";
 
 import {
 	addSignal,
+	getContextForThought,
 	getLinkedThoughtsPromptDump,
 	getRelatedThoughtsPromptDump,
 	noteDiffToPrompt,
@@ -71,8 +72,10 @@ export const ideateThought = async (
 		);
 
 		const { commentsToAdd, commentsToArchive } = await generateComments({
-			linkedThoughtsText: await getLinkedThoughtsPromptDump(thoughtId, supabase),
-			relatedChunksText: await getRelatedThoughtsPromptDump(thoughtId, supabase),
+			contextText: await getContextForThought(thoughtId, supabase, {
+				...heliconeHeaders,
+				"Helicone-Session-Path": "thought-ideate/context",
+			}),
 			thoughtText: thoughtToPrompt({ title: thought.title, contentMd }),
 			thoughtDiffText: noteDiffToPrompt(contentOrDiff),
 			intentText: thoughtIntentToPrompt(thought.user_intent),

@@ -1,14 +1,11 @@
-import { openai } from "@ai-sdk/openai";
 import { trace } from "@opentelemetry/api";
 import { Database } from "@repo/db";
 import { generateObject, generateText } from "ai";
-import { randomUUID } from "crypto";
 import { z } from "zod";
 
 import { heliconeOpenAI } from "app/api/utils/helicone";
-import { MarkdownChunk } from "app/api/utils/relatedChunks";
 
-import { makeThoughtIdeateDiffChangePrompts, makeThoughtIdeatePrompts, makeThoughtIdeateSelectionPrompts } from "./prompts";
+import { makeThoughtIdeateDiffChangePrompts, makeThoughtIdeatePrompts } from "./prompts";
 
 type Comment = Database["public"]["Tables"]["thought_chats"]["Row"];
 
@@ -34,16 +31,14 @@ const ResponseSchema = z.object({
 });
 
 export const generateComments = async ({
-	relatedChunksText,
-	linkedThoughtsText,
+	contextText,
 	thoughtText,
 	thoughtDiffText,
 	intentText,
 	comments,
 	heliconeHeaders,
 }: {
-	relatedChunksText: string;
-	linkedThoughtsText: string;
+	contextText: string;
 	thoughtText: string;
 	thoughtDiffText: string;
 	intentText: string;
@@ -55,8 +50,7 @@ export const generateComments = async ({
 
 	await trace.getTracer("ai").startActiveSpan("generate-comments", async () => {
 		const messages = makeThoughtIdeatePrompts({
-			relatedChunksText,
-			linkedThoughtsText,
+			contextText,
 			thoughtText,
 			thoughtDiffText,
 			intentText,

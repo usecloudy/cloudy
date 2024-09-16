@@ -6,7 +6,7 @@ import { NextRequest } from "next/server";
 
 import { heliconeOpenAI } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
-import { getLinkedThoughtsPromptDump, getRelatedThoughtsPromptDump } from "app/api/utils/thoughts";
+import { getContextForThought } from "app/api/utils/thoughts";
 
 interface Payload {
 	thoughtId: string;
@@ -28,16 +28,23 @@ export const POST = async (req: NextRequest) => {
 };
 
 const editSelection = async (payload: Payload, supabase: SupabaseClient<Database>) => {
-	const relatedThoughtsText = await getRelatedThoughtsPromptDump(payload.thoughtId, supabase);
-	const linkedThoughtsText = await getLinkedThoughtsPromptDump(payload.thoughtId, supabase);
-
-	const hasContext = Boolean(relatedThoughtsText || linkedThoughtsText);
-
 	const userId = (await supabase.auth.getUser()).data?.user?.id;
 
 	if (!userId) {
 		throw new Error("User ID not found");
 	}
+
+	const heliconeHeaders = {
+		"Helicone-User-Id": userId,
+		"Helicone-Session-Name": "Edit Selection",
+		"Helicone-Session-Id": `edit-selection/${randomUUID()}`,
+	};
+	const contextText = await getContextForThought(payload.thoughtId, supabase, {
+		...heliconeHeaders,
+		"Helicone-Session-Path": "edit-selection/context",
+	});
+
+	const hasContext = Boolean(contextText);
 
 	const stream = await streamText({
 		model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
@@ -48,7 +55,7 @@ const editSelection = async (payload: Payload, supabase: SupabaseClient<Database
 						{
 							role: "user" as const,
 							content: `Some relevant context for the below instruction:
-${relatedThoughtsText}${linkedThoughtsText}`,
+${contextText}`,
 						},
 					]
 				: []),
@@ -99,10 +106,8 @@ Return only the content that will replace the selection, you MUST start with [[[
 		},
 		stopSequences: ["]]]"],
 		headers: {
-			"Helicone-User-Id": userId,
-			"Helicone-Session-Name": "Edit Selection",
+			...heliconeHeaders,
 			"Helicone-Session-Path": "edit-selection",
-			"Helicone-Session-Id": `edit-selection/${randomUUID()}`,
 		},
 	});
 

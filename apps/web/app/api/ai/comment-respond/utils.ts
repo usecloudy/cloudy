@@ -4,7 +4,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { generateText } from "ai";
 
 import { heliconeOpenAI } from "app/api/utils/helicone";
-import { getLinkedThoughtsPromptDump, getRelatedThoughtsPromptDump } from "app/api/utils/thoughts";
+import { getContextForThought } from "app/api/utils/thoughts";
 import { makeSuggestEditTool } from "app/api/utils/tools";
 
 import { makeCommentRespondPrompts } from "./prompts";
@@ -17,7 +17,6 @@ interface Comment {
 }
 
 export const respondToComment = async (threadId: string, supabase: SupabaseClient<Database>) => {
-	console.log("threadId", threadId);
 	const { data: existingThread } = await supabase
 		.from("thought_chat_threads")
 		.select("*")
@@ -60,9 +59,19 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 		...threadCommentHistory,
 	];
 
+	const sharedHeliconeHeaders = {
+		"Helicone-Property-ThreadId": threadId,
+		"Helicone-User-Id": thought.author_id,
+		"Helicone-Session-Name": "Thread",
+		"Helicone-Session-Path": "thought-thread-respond",
+		"Helicone-Session-Id": `thought-threads/${threadId}`,
+	};
+
 	const messages = makeCommentRespondPrompts({
-		relatedChunksText: await getRelatedThoughtsPromptDump(thought.id, supabase),
-		linkedThoughtsText: await getLinkedThoughtsPromptDump(thought.id, supabase),
+		contextText: await getContextForThought(thought.id, supabase, {
+			...sharedHeliconeHeaders,
+			"Helicone-Session-Path": "thought-thread-respond/context-condense",
+		}),
 		thought: {
 			title: thought.title,
 			contentMd: thought.content_md!,
@@ -75,14 +84,6 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 			content: comment.content,
 		});
 	});
-
-	const sharedHeliconeHeaders = {
-		"Helicone-Property-ThreadId": threadId,
-		"Helicone-User-Id": thought.author_id,
-		"Helicone-Session-Name": "Thread",
-		"Helicone-Session-Path": "thought-thread-respond",
-		"Helicone-Session-Id": `thought-threads/${threadId}`,
-	};
 
 	const { tool: suggestEditTool, edits, applyEdits } = makeSuggestEditTool(thought.content!, sharedHeliconeHeaders);
 

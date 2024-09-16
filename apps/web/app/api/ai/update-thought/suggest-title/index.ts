@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { heliconeOpenAI } from "app/api/utils/helicone";
-import { addSignal, getLinkedThoughtsPromptDump, getRelatedThoughtsPromptDump, removeSignal } from "app/api/utils/thoughts";
+import { addSignal, getContextForThought, removeSignal } from "app/api/utils/thoughts";
 import { Database } from "app/db/database.types";
 
 import { ThoughtRecord } from "../utils";
@@ -50,19 +50,22 @@ export const suggestTitle = async (thoughtRecord: ThoughtRecord, supabase: Supab
 
 		await addSignal("suggest-title", thoughtRecord.id, supabase);
 
-		// Get all current chunks for the thought
-		const relatedThoughtsText = await getRelatedThoughtsPromptDump(thoughtRecord.id, supabase);
-		const linkedThoughtsText = await getLinkedThoughtsPromptDump(thoughtRecord.id, supabase);
+		const heliconeSessionId = randomUUID();
+		const heliconeHeaders = {
+			"Helicone-User-Id": thoughtRecord.author_id,
+			"Helicone-Session-Name": "Suggest Title",
+			"Helicone-Session-Id": `thought-suggest-title/${heliconeSessionId}`,
+		};
 
 		const messages = makeTitleSuggestionPrompts({
-			relatedThoughtsText,
-			linkedThoughtsText,
+			contextText: await getContextForThought(thoughtRecord.id, supabase, {
+				...heliconeHeaders,
+				"Helicone-Session-Path": "thought-suggest-title/context",
+			}),
 			currentContentMd: contentMd,
 		});
 
 		console.log("Messages:", messages);
-
-		const heliconeSessionId = randomUUID();
 
 		const { object: titleSuggestion } = await generateObject({
 			model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18"),
@@ -72,10 +75,8 @@ export const suggestTitle = async (thoughtRecord: ThoughtRecord, supabase: Supab
 			temperature: 0.5,
 			maxTokens: 256,
 			headers: {
-				"Helicone-User-Id": thoughtRecord.author_id,
-				"Helicone-Session-Name": "Suggest Title",
+				...heliconeHeaders,
 				"Helicone-Session-Path": "thought-suggest-title",
-				"Helicone-Session-Id": `thought-suggest-title/${heliconeSessionId}`,
 			},
 		});
 

@@ -1,15 +1,12 @@
 import { CoreMessage } from "ai";
 
-import { MarkdownChunk } from "app/api/utils/relatedChunks";
 import { thoughtToPrompt } from "app/api/utils/thoughts";
 
 export const makeCommentRespondPrompts = ({
-	relatedChunksText,
-	linkedThoughtsText,
+	contextText,
 	thought,
 }: {
-	relatedChunksText: string;
-	linkedThoughtsText: string;
+	contextText: string;
 	thought: { title?: string | null; contentMd: string };
 }): CoreMessage[] => [
 	{
@@ -24,7 +21,7 @@ You are provided with a tool to edit the note when needed. You should use it fre
 	},
 	{
 		role: "user",
-		content: `${relatedChunksText}${linkedThoughtsText}
+		content: `${contextText}
 The user is in the process of writing the below note:
 ${thoughtToPrompt(thought)}`,
 	},
