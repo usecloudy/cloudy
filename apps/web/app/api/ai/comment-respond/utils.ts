@@ -91,7 +91,7 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 		model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
 		temperature: 0.5,
 		messages,
-		maxTokens: 1024,
+		maxTokens: 4096,
 		tools: {
 			suggestEdit: suggestEditTool,
 		},
