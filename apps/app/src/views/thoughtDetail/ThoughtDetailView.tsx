@@ -93,6 +93,12 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		editable: !isEditingDisabled,
 	});
 
+	useEffect(() => {
+		if (isConnected && thought.content && !editor?.getText()) {
+			editor?.commands.setContent(thought.content);
+		}
+	}, [isConnected]);
+
 	const onUpdate = useCallback(
 		(isUserUpdate: boolean) => {
 			if (isConnected && !disableUpdatesRef.current) {

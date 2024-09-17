@@ -18,6 +18,7 @@ import { LoadingView } from "./views/loading/LoadingView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { NewThoughtView } from "./views/thoughtDetail/NewThoughtView";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
+import { WorkspacelessThoughtRedirectView } from "./views/thoughtDetail/WorkspacelessThoughtRedirectView";
 import { TopicsView } from "./views/topics/TopicsView";
 import { NewWorkspaceView } from "./views/workspaces/NewWorkspaceView";
 import { WorkspaceLayout } from "./views/workspaces/WorkspaceLayout";
@@ -61,6 +62,7 @@ export const Router: FC = () => {
 				<Route element={<ProtectedLayout />}>
 					<Route path="/" element={<RedirectToDefaultOrg />} />
 					<Route path="/workspaces/new" element={<NewWorkspaceView />} />
+					<Route path="/thoughts/:thoughtId" element={<WorkspacelessThoughtRedirectView />} />
 					<Route path="/workspaces/:wsSlug" element={<WorkspaceLayout />}>
 						<Route path="/workspaces/:wsSlug" element={<HomeView />} />
 						<Route path="/workspaces/:wsSlug/settings" element={<WorkspaceSettingsView />} />
