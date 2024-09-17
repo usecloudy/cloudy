@@ -15,8 +15,11 @@ import { CollectionDetailView } from "./views/collectionDetail/CollectionDetailV
 import { HomeView } from "./views/home/HomeView";
 import { RedirectToDefaultOrg } from "./views/home/RedirectToDefaultOrg";
 import { LoadingView } from "./views/loading/LoadingView";
+import { NotFoundView } from "./views/notFound/NotFoundView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
+import { NewThoughtView } from "./views/thoughtDetail/NewThoughtView";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
+import { WorkspacelessThoughtRedirectView } from "./views/thoughtDetail/WorkspacelessThoughtRedirectView";
 import { TopicsView } from "./views/topics/TopicsView";
 import { NewWorkspaceView } from "./views/workspaces/NewWorkspaceView";
 import { WorkspaceLayout } from "./views/workspaces/WorkspaceLayout";
@@ -25,14 +28,11 @@ import { WorkspaceSettingsView } from "./views/workspaces/WorkspaceSettingsView"
 const ProtectedLayout: FC = () => {
 	const { user, isLoadingAuth, isReady } = useUserGuard();
 
-	console.log("guard", user, isLoadingAuth, isReady);
-
 	if (isLoadingAuth) {
 		return <LoadingView />;
 	}
 
 	if (!user) {
-		console.log("navigating to /auth");
 		return <Navigate to="/auth" />;
 	}
 
@@ -62,10 +62,13 @@ export const Router: FC = () => {
 				</Route>
 				<Route element={<ProtectedLayout />}>
 					<Route path="/" element={<RedirectToDefaultOrg />} />
+					<Route path="/404" element={<NotFoundView />} />
 					<Route path="/workspaces/new" element={<NewWorkspaceView />} />
+					<Route path="/thoughts/:thoughtId" element={<WorkspacelessThoughtRedirectView />} />
 					<Route path="/workspaces/:wsSlug" element={<WorkspaceLayout />}>
 						<Route path="/workspaces/:wsSlug" element={<HomeView />} />
 						<Route path="/workspaces/:wsSlug/settings" element={<WorkspaceSettingsView />} />
+						<Route path="/workspaces/:wsSlug/thoughts/new" element={<NewThoughtView />} />
 						<Route path="/workspaces/:wsSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
 						<Route path="/workspaces/:wsSlug/collections/:collectionId" element={<CollectionDetailView />} />
 						<Route path="/workspaces/:wsSlug/topics" element={<TopicsView />} />

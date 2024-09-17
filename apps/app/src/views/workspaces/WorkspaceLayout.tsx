@@ -1,6 +1,6 @@
 import { WorkspaceRole, handleSupabaseError } from "@cloudy/utils/common";
 import { useEffect } from "react";
-import { Navigate, Outlet, useParams } from "react-router-dom";
+import { Navigate, Outlet, useNavigate, useParams } from "react-router-dom";
 import { useAsync } from "react-use";
 
 import { supabase } from "src/clients/supabase";
@@ -14,21 +14,28 @@ const useWorkspaceSlug = (wsSlug: string) => {
 	const user = useUser();
 	const { workspace, role, setWorkspace, setRole } = useWorkspaceStore();
 
+	const navigate = useNavigate();
+
 	useAsync(async () => {
-		const workspace = handleSupabaseError(await supabase.from("workspaces").select("*").eq("slug", wsSlug).single());
-		const { role } = handleSupabaseError(
-			await supabase
-				.from("workspace_users")
-				.select("role")
-				.eq("user_id", user.id)
-				.eq("workspace_id", workspace.id)
-				.single(),
-		);
+		try {
+			const workspace = handleSupabaseError(await supabase.from("workspaces").select("*").eq("slug", wsSlug).single());
+			const { role } = handleSupabaseError(
+				await supabase
+					.from("workspace_users")
+					.select("role")
+					.eq("user_id", user.id)
+					.eq("workspace_id", workspace.id)
+					.single(),
+			);
 
-		setWorkspace(workspace);
-		setRole(role as WorkspaceRole);
+			setWorkspace(workspace);
+			setRole(role as WorkspaceRole);
 
-		return workspace;
+			return workspace;
+		} catch (error) {
+			console.error(error);
+			navigate("/404");
+		}
 	}, [wsSlug, user.id]);
 
 	return Boolean(workspace && role);
@@ -44,8 +51,6 @@ export const WorkspaceLayout = () => {
 			userOptions.set("last_opened_workspace", wsSlug);
 		}
 	}, [wsSlug]);
-
-	console.log("wsSlug", wsSlug);
 
 	if (!wsSlug || wsSlug === "undefined") {
 		console.log("navigating to /");

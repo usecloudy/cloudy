@@ -1,7 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { CheckCircle2Icon, ChevronsLeftIcon, RefreshCwIcon, SparklesIcon, UserIcon } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { diffLines } from "diff";
+import { CheckCircle2Icon, ChevronsLeftIcon, RefreshCwIcon, SparklesIcon, UserIcon, XIcon } from "lucide-react";
+import { useContext, useEffect, useRef } from "react";
 import Markdown from "react-markdown";
+import { useUnmount } from "react-use";
 
 import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
@@ -9,9 +11,10 @@ import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
+import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
 import { useRespond } from "./hooks";
-import { usePreviewContentStore } from "./previewContentStore";
+import { ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
 
 const useAiCommentThread = (commentId: string) => {
@@ -127,11 +130,8 @@ export const AiCommentThread = () => {
 };
 
 const AiCommentThreadInner = ({ commentId }: { commentId: string }) => {
-	const { setPreviewContent, apply } = usePreviewContentStore();
-
 	const { data: comment, isLoading } = useAiCommentThread(commentId);
 
-	const { mutate: markAsApplied } = useMarkAsApplied(commentId);
 	const { mutate: regenerate } = useRegenerate(commentId);
 
 	const threadRef = useRef<HTMLDivElement>(null);
@@ -153,6 +153,7 @@ const AiCommentThreadInner = ({ commentId }: { commentId: string }) => {
 			{comment ? (
 				<>
 					<ThreadComment
+						threadCommentId={comment.id}
 						role={comment.role as "user" | "assistant"}
 						content={comment.content!}
 						createdAt={comment.created_at}
@@ -160,22 +161,13 @@ const AiCommentThreadInner = ({ commentId }: { commentId: string }) => {
 					{comment.thought_chat_threads.map((threadComment, i, arr) => (
 						<ThreadComment
 							key={threadComment.id}
+							threadCommentId={threadComment.id}
 							role={threadComment.role as "user" | "assistant"}
 							content={threadComment.content!}
 							createdAt={threadComment.created_at}
-							hasSuggestion={Boolean(threadComment.suggestion)}
+							suggestion={threadComment.suggestion}
 							isLoadingSuggestion={Boolean(threadComment.is_loading_suggestion)}
 							isApplied={threadComment.is_applied}
-							onMouseEnter={() => {
-								setPreviewContent(threadComment.suggestion);
-							}}
-							onMouseLeave={() => {
-								setPreviewContent(null);
-							}}
-							apply={() => {
-								apply();
-								markAsApplied(threadComment.id);
-							}}
 							regenerate={() => {
 								regenerate();
 							}}
@@ -198,30 +190,102 @@ const AiCommentThreadInner = ({ commentId }: { commentId: string }) => {
 };
 
 const ThreadComment = ({
+	threadCommentId,
 	role,
 	content,
 	createdAt,
-	hasSuggestion,
+	suggestion,
 	isLoadingSuggestion,
-	onMouseEnter,
-	onMouseLeave,
-	apply,
 	isApplied,
 	regenerate,
 	isLast,
 }: {
+	threadCommentId: string;
 	role: "user" | "assistant";
 	content: string;
 	createdAt: string;
-	hasSuggestion?: boolean;
+	suggestion?: string | null;
 	isLoadingSuggestion?: boolean;
-	onMouseEnter?: () => void;
-	onMouseLeave?: () => void;
-	apply?: () => void;
 	isApplied?: boolean;
 	regenerate?: () => void;
 	isLast?: boolean;
 }) => {
+	const {
+		editor,
+		disableUpdatesRef,
+		setIsEditingDisabled,
+		previewingKey,
+		setPreviewingKey,
+		storeContentIfNeeded,
+		restoreFromLastContent,
+		clearStoredContent,
+	} = useContext(ThoughtContext);
+
+	const markAsAppliedMutation = useMarkAsApplied(threadCommentId);
+
+	const currentIsPreviewing = previewingKey === threadCommentId;
+
+	const showPreviewContent = () => {
+		if (!suggestion) {
+			return;
+		}
+
+		storeContentIfNeeded();
+		disableUpdatesRef.current = true;
+		setIsEditingDisabled(true);
+		setPreviewingKey(threadCommentId);
+
+		const existingContentText = editor?.getText() ?? "";
+
+		editor?.commands.setContent(suggestion);
+
+		const newContentText = editor?.getText() ?? "";
+		const diff = diffLines(existingContentText, newContentText);
+
+		const addedLines = diff.filter(part => part.added);
+		addedLines.forEach(part => {
+			if (editor) {
+				const lines = part.value.split("\n").filter(line => line.trim().length > 0);
+				lines.forEach(line => {
+					const results = processSearches(editor.state.doc, line);
+
+					const firstResult = results?.at(0);
+
+					if (firstResult) {
+						editor.commands.setTextSelection(firstResult);
+						editor.commands.setMark("additionHighlight");
+					}
+				});
+			}
+		});
+	};
+
+	const applyPreviewContent = () => {
+		if (!suggestion || !currentIsPreviewing) {
+			return;
+		}
+
+		disableUpdatesRef.current = false;
+		editor?.commands.setContent(suggestion);
+		clearStoredContent();
+		setIsEditingDisabled(false);
+		setPreviewingKey(null);
+		markAsAppliedMutation.mutate(threadCommentId);
+	};
+
+	const removePreviewContent = () => {
+		if (currentIsPreviewing) {
+			restoreFromLastContent();
+			disableUpdatesRef.current = false;
+			setIsEditingDisabled(false);
+			setPreviewingKey(null);
+		}
+	};
+
+	useUnmount(() => {
+		removePreviewContent();
+	});
+
 	return (
 		<div className="flex flex-col gap-2 rounded bg-background p-3 text-sm outline-offset-2 animate-in fade-in slide-in-from-top-4 fill-mode-forwards hover:outline-accent/40">
 			<div className="flex flex-row items-center justify-between gap-1">
@@ -243,25 +307,38 @@ const ThreadComment = ({
 					<LoadingSpinner size="sm" />
 				</div>
 			)}
-			{hasSuggestion && (
+			{currentIsPreviewing ? (
 				<div className="flex flex-row gap-1 items-center">
-					<Button
-						size="sm"
-						variant={isApplied ? "outline" : "secondary"}
-						onMouseEnter={onMouseEnter}
-						onMouseLeave={onMouseLeave}
-						onClick={apply}
-						className={cn({ "text-accent border-accent": isApplied })}
-						disabled={isApplied}>
-						{isApplied ? <CheckCircle2Icon className="w-4 h-4" /> : <ChevronsLeftIcon className="w-4 h-4" />}
-						<span>{isApplied ? "Applied" : "Apply"}</span>
+					<Button size="sm" className="bg-green-600 hover:bg-green-600/60" onClick={applyPreviewContent}>
+						<CheckCircle2Icon className="w-4 h-4" />
+						<span>Apply changes</span>
 					</Button>
-					{isLast && (
-						<Button size="icon-sm" variant="secondary" onClick={regenerate}>
-							<RefreshCwIcon className="w-4 h-4" />
-						</Button>
-					)}
+					<Button size="sm" variant="destructive" onClick={removePreviewContent}>
+						<XIcon className="w-4 h-4" />
+						<span>Cancel</span>
+					</Button>
 				</div>
+			) : (
+				suggestion && (
+					<div className="flex flex-row gap-1 items-center">
+						<Button
+							size="sm"
+							variant={isApplied ? "outline" : "secondary"}
+							onClick={() => {
+								showPreviewContent();
+							}}
+							className={cn({ "text-accent border-accent": isApplied })}
+							disabled={isApplied}>
+							{isApplied ? <CheckCircle2Icon className="w-4 h-4" /> : <ChevronsLeftIcon className="w-4 h-4" />}
+							<span>{isApplied ? "Applied" : "Preview changes"}</span>
+						</Button>
+						{isLast && (
+							<Button size="icon-sm" variant="secondary" onClick={regenerate}>
+								<RefreshCwIcon className="w-4 h-4" />
+							</Button>
+						)}
+					</div>
+				)
 			)}
 		</div>
 	);

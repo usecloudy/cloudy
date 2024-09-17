@@ -2,13 +2,14 @@ import { handleSupabaseError } from "@cloudy/utils/common";
 import { useIsMutating, useMutation, useQuery } from "@tanstack/react-query";
 import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 
-import { useWorkspace } from "src/stores/workspace";
+import { useWorkspace, useWorkspaceSlug } from "src/stores/workspace";
 
 import { apiClient } from "../../api/client";
 import { queryClient } from "../../api/queryClient";
 import { supabase } from "../../clients/supabase";
+import { ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
 
 const MINIMUM_CONTENT_LENGTH = 3;
@@ -236,17 +237,16 @@ export const useThought = (thoughtId?: string) => {
 	});
 };
 
-export const useDeleteThought = (thoughtId?: string) => {
+export const useDeleteThought = () => {
+	const wsSlug = useWorkspaceSlug();
+
 	return useMutation({
-		mutationFn: async () => {
-			if (!thoughtId) {
-				return;
-			}
+		mutationFn: async (thoughtId: string) => {
 			return supabase.from("thoughts").delete().eq("id", thoughtId);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: ["thoughts"],
+				queryKey: [wsSlug, "thoughts"],
 			});
 		},
 	});
@@ -309,7 +309,8 @@ export const useComments = (thoughtId: string) => {
 };
 
 export const useRespond = (commentId?: string | null) => {
-	const { thoughtId, setActiveThreadCommentId } = useThoughtStore();
+	const { thoughtId } = useContext(ThoughtContext);
+	const { setActiveThreadCommentId } = useThoughtStore();
 
 	return useMutation({
 		mutationFn: async (content: string) => {

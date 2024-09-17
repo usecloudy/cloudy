@@ -118,6 +118,7 @@ export const tiptapExtensions = [
 			color: "rgb(var(--color-accent) / 0.6)",
 			width: 4,
 		},
+		history: false,
 	}),
 	Placeholder.configure({
 		placeholder: "What are you thinking about?",

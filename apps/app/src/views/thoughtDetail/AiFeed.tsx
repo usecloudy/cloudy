@@ -22,7 +22,7 @@ import {
 	TrashIcon,
 	UserIcon,
 } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useContext, useEffect, useMemo, useRef } from "react";
 import { useMount, useUnmount, useUpdateEffect } from "react-use";
 import { create } from "zustand";
 
@@ -31,14 +31,15 @@ import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Dropdown, DropdownItem } from "src/components/Dropdown";
 import LoadingSpinner from "src/components/LoadingSpinner";
-import { useHighlightStore } from "src/stores/highlight";
 import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
 import { useBreakpoint } from "src/utils/tailwind";
+import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
 import { AiCommentThread } from "./AiCommentThread";
 import { AiInputBar } from "./AiInputBar";
 import { useComments, useForceAiUpdate, useThought } from "./hooks";
+import { ThoughtContext } from "./thoughtContext";
 import { CommentFilter, useThoughtStore } from "./thoughtStore";
 import { useTitleStore } from "./titleStore";
 
@@ -548,7 +549,8 @@ const IdeaSuggestion = ({
 	suggestion: SuggestionWithThreadCount;
 	index: number;
 }) => {
-	const { setHighlights } = useHighlightStore();
+	const { editor, disableUpdatesRef } = useContext(ThoughtContext);
+
 	const { setTitle } = useTitleStore();
 	const { setActiveThreadCommentId } = useThoughtStore();
 
@@ -561,9 +563,37 @@ const IdeaSuggestion = ({
 
 	const mdBreakpoint = useBreakpoint("md");
 
-	const handleMouseEnter = (suggestion: Suggestion) => {
-		if (mdBreakpoint) {
-			setHighlights(suggestion.related_chunks?.map(chunk => ({ text: chunk })) || []);
+	const handleHighlight = (suggestion: Suggestion) => {
+		if (editor && mdBreakpoint) {
+			const chunksToHighlight = suggestion.related_chunks;
+			if (chunksToHighlight) {
+				disableUpdatesRef.current = true;
+				const existingSelection = editor.state.selection;
+
+				// Clear all existing comment highlights first
+				editor.commands.setTextSelection({
+					from: 0,
+					to: editor.state.doc.content.size,
+				});
+				editor.commands.unsetMark("commentHighlight");
+
+				chunksToHighlight.forEach(highlightText => {
+					const results = processSearches(editor.state.doc, highlightText);
+
+					const firstResult = results?.at(0);
+
+					if (firstResult) {
+						editor.commands.setTextSelection(firstResult);
+						editor.commands.setMark("commentHighlight");
+					}
+				});
+
+				// Clear the selection after applying highlights
+				editor.commands.setTextSelection({
+					from: existingSelection.from,
+					to: existingSelection.to,
+				});
+			}
 		}
 
 		if (!suggestion.is_seen) {
@@ -571,7 +601,22 @@ const IdeaSuggestion = ({
 		}
 	};
 
-	const clearHighlights = () => setHighlights([]);
+	const clearHighlights = () => {
+		if (editor) {
+			const existingSelection = editor.state.selection;
+			editor.commands.setTextSelection({
+				from: 0,
+				to: editor.state.doc.content.size,
+			});
+			editor.commands.unsetMark("commentHighlight");
+			editor.commands.setTextSelection({
+				from: existingSelection.from,
+				to: existingSelection.to,
+			});
+		}
+
+		disableUpdatesRef.current = false;
+	};
 
 	const handleApplyTitle = () => {
 		setTitle(suggestion.content!, true);
@@ -622,7 +667,7 @@ const IdeaSuggestion = ({
 					mdBreakpoint &&
 					"hover:outline hover:outline-accent/40",
 			)}
-			onMouseEnter={() => handleMouseEnter(suggestion)}
+			onMouseEnter={() => handleHighlight(suggestion)}
 			onMouseLeave={clearHighlights}>
 			<div className="flex w-full flex-row items-center justify-between gap-2 text-xs text-secondary">
 				<div className="flex flex-row items-center gap-1 font-medium">

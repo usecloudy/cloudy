@@ -9,8 +9,6 @@ export type CommentFilter = {
 export type FeedMode = "default" | "archive" | "selectedComments" | "thread";
 
 interface ThoughtStore {
-	thoughtId: string | null;
-	setThoughtId: (id: string | null) => void;
 	currentContent: string | null;
 	setCurrentContent: (content: string | null) => void;
 	selectionToEdit: Selection | null;
@@ -27,12 +25,12 @@ interface ThoughtStore {
 	setFeedMode: (mode: FeedMode) => void;
 	activeThreadCommentId: string | null;
 	setActiveThreadCommentId: (id: string | null) => void;
+	isAiWriting: boolean;
+	setIsAiWriting: (isWriting: boolean) => void;
 	reset: () => void;
 }
 
 export const useThoughtStore = create<ThoughtStore>(set => ({
-	thoughtId: null,
-	setThoughtId: id => set({ thoughtId: id }),
 	currentContent: null,
 	setCurrentContent: content => set({ currentContent: content }),
 	selectionToEdit: null,
@@ -51,9 +49,10 @@ export const useThoughtStore = create<ThoughtStore>(set => ({
 	activeThreadCommentId: null,
 	setActiveThreadCommentId: id =>
 		set({ activeThreadCommentId: id, feedMode: id ? "thread" : "default", commentFilter: null }),
+	isAiWriting: false,
+	setIsAiWriting: isWriting => set({ isAiWriting: isWriting }),
 	reset: () =>
 		set({
-			thoughtId: null,
 			currentContent: null,
 			selectionToEdit: null,
 			lastLocalThoughtTitleTs: null,
@@ -62,5 +61,6 @@ export const useThoughtStore = create<ThoughtStore>(set => ({
 			commentFilter: null,
 			feedMode: "default",
 			activeThreadCommentId: null,
+			isAiWriting: false,
 		}),
 }));

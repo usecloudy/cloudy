@@ -2,7 +2,7 @@ import { FloatingFocusManager, offset, shift, useFloating } from "@floating-ui/r
 import { useMutation } from "@tanstack/react-query";
 import { Editor } from "@tiptap/react";
 import { ChevronsLeftIcon, SendHorizonalIcon, SparklesIcon, XIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { useMount } from "react-use";
 
@@ -10,6 +10,8 @@ import { apiClient } from "src/api/client";
 import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { processSearches } from "src/utils/tiptapSearchAndReplace";
+
+import { ThoughtContext } from "./thoughtContext";
 
 // const selectEditNode = (editor: Editor) => {
 // 	let nodePosition = -1;
@@ -134,21 +136,18 @@ export const AiEditorMenu = ({
 	thoughtId,
 	editor,
 	selectionToEdit,
-	setIsHighlighting,
 	onCancel,
 	onClose,
-	onUpdate,
-	setIsAiWriting,
 }: {
 	thoughtId: string;
 	editor: Editor;
 	selectionToEdit: { from: number; to: number };
-	setIsHighlighting: (isHighlighting: boolean) => void;
 	onCancel: (isSelectionEvent?: boolean) => void;
 	onClose: () => void;
-	onUpdate: (isUserUpdate: boolean) => void;
-	setIsAiWriting: (isAiWriting: boolean) => void;
 }) => {
+	const { disableUpdatesRef, setIsEditingDisabled } = useContext(ThoughtContext);
+	const { onUpdate } = useContext(ThoughtContext);
+
 	const { refs, floatingStyles, context } = useFloating({
 		open: true,
 		placement: "top",
@@ -173,7 +172,7 @@ export const AiEditorMenu = ({
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
 	const handleOnCancel = (isSelectionEvent?: boolean) => {
-		setIsHighlighting(true);
+		disableUpdatesRef.current = true;
 
 		if (selectionToEdit) {
 			if (contentHtmlBeforeEdit.current) {
@@ -190,7 +189,7 @@ export const AiEditorMenu = ({
 				.run();
 		}
 
-		setIsHighlighting(false);
+		disableUpdatesRef.current = false;
 		setIsApplyMode(false);
 		contentHtmlBeforeEdit.current = null;
 		contentHtmlAfterEdit.current = null;
@@ -205,7 +204,7 @@ export const AiEditorMenu = ({
 		contentHtmlBeforeEdit.current = null;
 		contentHtmlAfterEdit.current = null;
 		onClose();
-		setIsHighlighting(false);
+		disableUpdatesRef.current = false;
 		onUpdate(false);
 	};
 
@@ -214,19 +213,19 @@ export const AiEditorMenu = ({
 			const contentHtmlWithSelectionMarked = editor.getHTML();
 			contentHtmlBeforeEdit.current = contentHtmlWithSelectionMarked;
 			setIsApplyMode(true);
-			setIsAiWriting(true);
+			setIsEditingDisabled(true);
 			await editSelection({
 				instruction: editingText,
 				content: contentHtmlWithSelectionMarked,
 			});
 			contentHtmlAfterEdit.current = editor.getHTML();
-			setIsAiWriting(false);
+			setIsEditingDisabled(false);
 		}
 	};
 
 	const handleRevertHover = () => {
 		if (contentHtmlAfterEdit.current) {
-			setIsHighlighting(true);
+			disableUpdatesRef.current = true;
 			editor.commands.blur();
 			editor.commands.setContent(contentHtmlBeforeEdit.current);
 		}
@@ -236,7 +235,7 @@ export const AiEditorMenu = ({
 		if (contentHtmlBeforeEdit.current) {
 			editor.commands.blur();
 			editor.commands.setContent(contentHtmlAfterEdit.current);
-			setIsHighlighting(false);
+			disableUpdatesRef.current = false;
 		}
 	};
 

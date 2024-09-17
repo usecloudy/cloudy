@@ -1,22 +1,20 @@
 import { ThoughtSignals } from "@cloudy/utils/common";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
+import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import { EditorContent, useEditor } from "@tiptap/react";
-import { diffLines } from "diff";
 import { GripVertical } from "lucide-react";
-import posthog from "posthog-js";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
 import { useMount, useUnmount, useUpdateEffect } from "react-use";
 
+import LoadingSpinner from "src/components/LoadingSpinner";
 import { SimpleLayout } from "src/components/SimpleLayout";
-import { useHighlightStore } from "src/stores/highlight";
-import { useWorkspaceSlug } from "src/stores/workspace";
+import { useUserRecord } from "src/stores/user";
 import { cn } from "src/utils";
 import { ellipsizeText, makeHeadTitle } from "src/utils/strings";
-import { makeThoughtUrl } from "src/utils/thought";
-import { processSearches } from "src/utils/tiptapSearchAndReplace";
 import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
@@ -27,9 +25,10 @@ import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { ThoughtEditPayload, useEditThought, useThought } from "./hooks";
-import { usePreviewContentStore } from "./previewContentStore";
+import { ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
 import { tiptapExtensions } from "./tiptap";
+import { useYProvider } from "./yProvider";
 
 type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
 type Collection = NonNullable<Thought["collections"]>[0];
@@ -37,80 +36,103 @@ type Collection = NonNullable<Thought["collections"]>[0];
 export const ThoughtDetailView = () => {
 	const { thoughtId } = useParams<{ thoughtId: string }>();
 
-	const [prevThoughtId, setPreviousThoughtId] = useState<string | null>(null);
+	const { data: thought, isError } = useThought(thoughtId);
 
-	const [isNewMode, setIsNewMode] = useState(thoughtId === "new");
-	const [key, setKey] = useState(0);
-	const { thoughtId: activeThoughtId, setThoughtId, reset } = useThoughtStore();
+	const title = useTitleStore(s => s.title);
 
-	// Update isNewMode and key when thoughtId changes
-	useEffect(() => {
-		// Check if we're entering or staying in "new" mode
-		if (prevThoughtId === "new" || thoughtId === "new") {
-			// If we're transitioning from an existing thought to a new one
-			if (prevThoughtId !== "new" && thoughtId === "new") {
-				// Generate a new key to force a re-render
-				setKey(Date.now());
-			}
-			// Set the mode to "new" for creating a new thought
-			setIsNewMode(true);
-			reset();
-			posthog.capture("new_thought");
-		} else {
-			console.log("isnotnew", "existing", thoughtId);
-			// We're viewing an existing thought
-			setIsNewMode(false);
-			// Generate a new key to force a re-render when switching between existing thoughts
-			setKey(Date.now());
-			reset();
-			posthog.capture("view_thought");
-		}
-		setThoughtId(thoughtId === "new" ? null : (thoughtId ?? null));
-		setPreviousThoughtId(thoughtId ?? null);
-	}, [thoughtId]); // This effect runs whenever thoughtId changes
+	const headTitle = title ? makeHeadTitle(ellipsizeText(title, 16)) : makeHeadTitle("New Thought");
 
 	return (
 		<EditorErrorBoundary>
-			<ThoughtDetailViewExisting isNewMode={isNewMode} thoughtId={activeThoughtId ?? undefined} key={key} />
+			<SimpleLayout className="lg:overflow-hidden items-center px-0">
+				<Helmet>
+					<title>{headTitle}</title>
+				</Helmet>
+				{thought && <ThoughtContent thoughtId={thoughtId!} thought={thought} />}
+			</SimpleLayout>
 		</EditorErrorBoundary>
 	);
 };
 
-const ThoughtDetailViewExisting = ({ thoughtId, isNewMode }: { thoughtId?: string; isNewMode: boolean }) => {
-	const { data: thought, isLoading } = useThought(thoughtId);
+const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Thought }) => {
+	const userRecord = useUserRecord();
 
-	return (
-		<SimpleLayout isLoading={Boolean(isLoading && !isNewMode)} className="lg:overflow-hidden items-center px-0">
-			<ThoughtDetailViewInner thoughtId={thoughtId} thought={thought ?? undefined} />
-		</SimpleLayout>
-	);
-};
-
-const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; thought?: Thought }) => {
 	const { mutateAsync: editThought } = useEditThought(thoughtId);
-	const wsSlug = useWorkspaceSlug();
+
+	const [isEditingDisabled, setIsEditingDisabled] = useState(false);
+	const [previewingKey, setPreviewingKey] = useState<string | null>(null);
+
+	const { onChange } = useSave(editThought, { debounceDurationMs: thoughtId ? 500 : 0 });
+
+	const disableUpdatesRef = useRef(false);
+	const storedContentRef = useRef<string | null>(null);
 
 	const { setIsAiSuggestionLoading } = useThoughtStore();
 
-	const { title } = useTitleStore();
+	const { isConnected, ydoc, provider } = useYProvider(thoughtId!, disableUpdatesRef);
 
-	const navigate = useNavigate();
+	const editor = useEditor({
+		extensions: [
+			...tiptapExtensions,
+			Collaboration.configure({
+				document: ydoc,
+			}),
+			CollaborationCursor.configure({
+				provider,
+				user: {
+					name: userRecord.name ?? userRecord.email,
+					color: "#b694ff",
+				},
+			}),
+		],
+		content: thought.content,
+		onUpdate: ({ transaction }) => {
+			if (transaction.getMeta("y-sync$")) {
+				// Ignore y-sync updates
+				return;
+			}
+			onUpdate(true);
+		},
+		autofocus: !thoughtId,
+		editable: !isEditingDisabled,
+	});
 
-	const { onChange } = useSave(
-		async (payload: ThoughtEditPayload) => {
-			const updatedThought = await editThought(payload);
+	useEffect(() => {
+		if (isConnected && thought.content && !editor?.getText()) {
+			editor?.commands.setContent(thought.content);
+		}
+	}, [isConnected]);
 
-			if (!thoughtId && updatedThought?.id) {
-				navigate(makeThoughtUrl(wsSlug, updatedThought.id), {
-					replace: true,
-					preventScrollReset: true,
-				});
+	const onUpdate = useCallback(
+		(isUserUpdate: boolean) => {
+			if (isConnected && !disableUpdatesRef.current) {
+				const content = editor?.getHTML();
+				const contentMd = editor?.storage.markdown.getMarkdown();
+				const contentPlainText = editor?.getText();
+				const ts = new Date();
+				onChange({ content, contentMd, contentPlainText, ts });
+				console.log("onUpdate", content);
 			}
 		},
-		{ debounceDurationMs: thoughtId ? 500 : 0 },
+		[isConnected, editor, onChange, disableUpdatesRef],
 	);
 
-	const headTitle = title ? makeHeadTitle(ellipsizeText(title, 16)) : makeHeadTitle("New Thought");
+	const storeContentIfNeeded = useCallback(() => {
+		if (!storedContentRef.current) {
+			storedContentRef.current = editor?.getHTML() ?? null;
+		}
+	}, [editor]);
+
+	const restoreFromLastContent = useCallback(() => {
+		if (storedContentRef.current) {
+			editor?.commands.setContent(storedContentRef.current);
+			storedContentRef.current = null;
+		}
+	}, [editor]);
+
+	const clearStoredContent = useCallback(() => {
+		storedContentRef.current = null;
+	}, []);
 
 	useEffect(() => {
 		const signals = (thought?.signals as string[] | null) ?? [];
@@ -122,102 +144,65 @@ const ThoughtDetailViewInner = ({ thoughtId, thought }: { thoughtId?: string; th
 	}, [setIsAiSuggestionLoading, thought?.signals]);
 
 	return (
-		<>
-			<Helmet>
-				<title>{headTitle}</title>
-			</Helmet>
+		<ThoughtContext.Provider
+			value={{
+				thoughtId,
+				editor,
+				disableUpdatesRef,
+				onUpdate,
+				isConnected,
+				isEditingDisabled,
+				setIsEditingDisabled,
+				previewingKey,
+				setPreviewingKey,
+				storeContentIfNeeded,
+				restoreFromLastContent,
+				clearStoredContent,
+			}}>
 			<div className="flex w-full flex-col lg:flex-row lg:h-full xl:max-w-screen-2xl">
 				<EditorView
-					thoughtId={thoughtId}
+					thoughtId={thoughtId!}
 					collections={thought?.collections ?? []}
-					remoteContent={thought?.content ?? undefined}
 					remoteTitle={thought?.title ?? undefined}
-					latestRemoteContentTs={thought?.content_ts ?? undefined}
 					latestRemoteTitleTs={thought?.title_ts ?? undefined}
 					onChange={onChange}
 				/>
 				<ControlColumn thoughtId={thoughtId} />
 			</div>
-		</>
+		</ThoughtContext.Provider>
 	);
 };
 
 const EditorView = ({
 	thoughtId,
-	remoteContent,
 	remoteTitle,
-	latestRemoteContentTs,
 	latestRemoteTitleTs,
 	collections,
 	onChange,
 }: {
-	thoughtId?: string;
-	remoteContent?: string;
+	thoughtId: string;
 	remoteTitle?: string;
-	latestRemoteContentTs?: string;
 	latestRemoteTitleTs?: string;
 	collections: Collection[];
 	onChange: (payload: ThoughtEditPayload) => void;
 }) => {
-	const { highlights } = useHighlightStore();
+	const { editor, disableUpdatesRef, isConnected } = useContext(ThoughtContext);
 	const {
-		lastLocalThoughtContentTs,
+		isAiWriting,
 		lastLocalThoughtTitleTs,
 		setCurrentContent,
 		setLastLocalThoughtContentTs,
 		setLastLocalThoughtTitleTs,
 	} = useThoughtStore();
 	const { title, setTitle, saveTitleKey } = useTitleStore();
-	const { previewContent, applyKey, setPreviewContent } = usePreviewContentStore();
-	const [isAiWriting, setIsAiWriting] = useState(false);
-
-	const isHighlightingRef = useRef(false);
-	const existingContent = useRef("");
-
-	const editor = useEditor({
-		extensions: tiptapExtensions,
-		content: remoteContent ?? "",
-		onUpdate: async () => {
-			onUpdate(true);
-		},
-		autofocus: !thoughtId,
-		editable: !isAiWriting,
-	});
-
-	const onUpdate = (isUserUpdate: boolean) => {
-		if (!isHighlightingRef.current) {
-			const content = editor?.getHTML();
-			const contentMd = editor?.storage.markdown.getMarkdown();
-			const contentPlainText = editor?.getText();
-
-			const ts = new Date();
-
-			onChange({ content, contentMd, contentPlainText, ts });
-			setLastLocalThoughtContentTs(ts);
-			setCurrentContent(content ?? "");
-		}
-	};
 
 	useMount(() => {
 		setTitle(remoteTitle ?? "");
-		setCurrentContent(remoteContent ?? "");
 	});
 
 	useUnmount(() => {
 		setTitle("");
 	});
-
-	useUpdateEffect(() => {
-		// If the remote content has changed, update the local content
-		if (
-			(latestRemoteContentTs &&
-				lastLocalThoughtContentTs &&
-				new Date(latestRemoteContentTs) > lastLocalThoughtContentTs) ||
-			!lastLocalThoughtContentTs
-		) {
-			editor?.commands.setContent(remoteContent ?? "");
-		}
-	}, [latestRemoteContentTs]);
 
 	useUpdateEffect(() => {
 		// If the remote title has changed, update the local title
@@ -229,100 +214,9 @@ const EditorView = ({
 		}
 	}, [latestRemoteTitleTs]);
 
-	useUpdateEffect(() => {
-		if (previewContent) {
-			existingContent.current = editor?.getHTML() ?? "";
-			isHighlightingRef.current = true;
-
-			const existingContentText = editor?.getText() ?? "";
-
-			editor?.commands.setContent(previewContent);
-
-			const newContentText = editor?.getText() ?? "";
-			const diff = diffLines(existingContentText, newContentText);
-
-			const addedLines = diff.filter(part => part.added);
-			addedLines.forEach(part => {
-				if (editor) {
-					const lines = part.value.split("\n").filter(line => line.trim().length > 0);
-					lines.forEach(line => {
-						const results = processSearches(editor.state.doc, line);
-
-						const firstResult = results?.at(0);
-
-						if (firstResult) {
-							editor.commands.setTextSelection(firstResult);
-							editor.commands.setMark("additionHighlight");
-						}
-					});
-				}
-			});
-		} else {
-			editor?.commands.unsetMark("additionHighlight");
-			editor?.commands.setContent(existingContent.current);
-			isHighlightingRef.current = false;
-		}
-	}, [previewContent]);
-
-	useUpdateEffect(() => {
-		isHighlightingRef.current = false;
-		editor?.commands.unsetMark("additionHighlight");
-		existingContent.current = editor?.getHTML() ?? "";
-		editor?.commands.setContent(existingContent.current);
-		setPreviewContent(null);
-		onUpdate(false);
-	}, [applyKey]);
-
-	// Update this effect to use the new CommentHighlight mark
-	useEffect(() => {
-		if (editor) {
-			if (highlights.length > 0) {
-				isHighlightingRef.current = true;
-				const existingSelection = editor.state.selection;
-
-				// Clear all existing comment highlights first
-				editor.commands.setTextSelection({
-					from: 0,
-					to: editor.state.doc.content.size,
-				});
-				editor.commands.unsetMark("commentHighlight");
-
-				highlights.forEach(highlight => {
-					const results = processSearches(editor.state.doc, highlight.text);
-
-					const firstResult = results?.at(0);
-
-					if (firstResult) {
-						editor.commands.setTextSelection(firstResult);
-						editor.commands.setMark("commentHighlight");
-					}
-				});
-
-				// Clear the selection after applying highlights
-				editor.commands.setTextSelection({
-					from: existingSelection.from,
-					to: existingSelection.to,
-				});
-			} else {
-				// Clear all comment highlight marks
-				const existingSelection = editor.state.selection;
-				editor.commands.setTextSelection({
-					from: 0,
-					to: editor.state.doc.content.size,
-				});
-				editor.commands.unsetMark("commentHighlight");
-				editor.commands.setTextSelection({
-					from: existingSelection.from,
-					to: existingSelection.to,
-				});
-
-				isHighlightingRef.current = false;
-			}
-		}
-	}, [editor, highlights]);
-
 	useUnmount(() => {
 		setCurrentContent(null);
+		setLastLocalThoughtContentTs(null);
 	});
 
 	useUpdateEffect(() => {
@@ -336,10 +230,6 @@ const EditorView = ({
 		setTitle(title);
 		onChange({ title, ts });
 		setLastLocalThoughtTitleTs(ts);
-	};
-
-	const handleSetIsHighlighting = (isHighlighting: boolean) => {
-		isHighlightingRef.current = isHighlighting;
 	};
 
 	return (
@@ -365,15 +255,7 @@ const EditorView = ({
 			<div
 				// On larger screens, we need left padding to avoid some characters being cut off
 				className="flex flex-row md:pl-[2px]">
-				{editor && thoughtId && (
-					<EditorBubbleMenu
-						thoughtId={thoughtId}
-						editor={editor}
-						setIsHighlighting={handleSetIsHighlighting}
-						onUpdate={onUpdate}
-						setIsAiWriting={setIsAiWriting}
-					/>
-				)}
+				{editor && thoughtId && <EditorBubbleMenu />}
 				{editor && thoughtId && (
 					<div>
 						<DragHandle editor={editor} tippyOptions={{ offset: [-4, 4], zIndex: 10 }}>
@@ -383,8 +265,14 @@ const EditorView = ({
 						</DragHandle>
 					</div>
 				)}
-				<EditorContent editor={editor} className={cn("w-full", isAiWriting && "pointer-events-none opacity-70")} />
-				<CommentColumn editor={editor} thoughtId={thoughtId} isHighlightingRef={isHighlightingRef} />
+				{isConnected ? (
+					<EditorContent editor={editor} className={cn("w-full", isAiWriting && "pointer-events-none opacity-70")} />
+				) : (
+					<div className="w-full h-full flex items-center justify-center">
+						<LoadingSpinner size="sm" />
+					</div>
+				)}
+				<CommentColumn editor={editor} thoughtId={thoughtId} disableUpdatesRef={disableUpdatesRef} />
 			</div>
 		</div>
 	);

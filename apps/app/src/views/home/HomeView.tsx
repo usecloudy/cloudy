@@ -46,7 +46,7 @@ const useThoughts = () => {
 	}, [workspace.id]);
 
 	return useQuery({
-		queryKey: [workspace.id, "thoughts"],
+		queryKey: [workspace.slug, "thoughts"],
 		queryFn: async () => {
 			const { data, error } = await supabase
 				.from("thoughts")
