@@ -76,8 +76,6 @@ export class SupabaseProvider extends EventEmitter {
 		this.awareness?.on("update", this.debouncedAwarenessUpdateHandler);
 		this.connect();
 
-		console.log("SupabaseProvider constructor");
-
 		if (typeof window !== "undefined") {
 			window.addEventListener("beforeunload", this.removeSelfFromAwarenessOnUnload);
 		} else if (typeof process !== "undefined") {
@@ -172,7 +170,6 @@ export class SupabaseProvider extends EventEmitter {
 			try {
 				const dbDocument = toUint8Array(data[this.configuration.databaseDetails.updateColumns.content]);
 				this.version++;
-				console.log("applying update", data[this.configuration.databaseDetails.updateColumns.content]);
 				Y.applyUpdate(this.document, dbDocument);
 			} catch (error) {
 				console.error(error);

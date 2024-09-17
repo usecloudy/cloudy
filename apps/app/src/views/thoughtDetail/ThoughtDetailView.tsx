@@ -112,7 +112,6 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				const contentPlainText = editor?.getText();
 				const ts = new Date();
 				onChange({ content, contentMd, contentPlainText, ts });
-				console.log("onUpdate", content);
 			}
 		},
 		[isConnected, editor, onChange, disableUpdatesRef],
