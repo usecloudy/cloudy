@@ -134,7 +134,7 @@ export const AiEditorMenu = ({
 	thoughtId,
 	editor,
 	selectionToEdit,
-	setIsHighlighting,
+	setDisableUpdates,
 	onCancel,
 	onClose,
 	onUpdate,
@@ -143,7 +143,7 @@ export const AiEditorMenu = ({
 	thoughtId: string;
 	editor: Editor;
 	selectionToEdit: { from: number; to: number };
-	setIsHighlighting: (isHighlighting: boolean) => void;
+	setDisableUpdates: (isHighlighting: boolean) => void;
 	onCancel: (isSelectionEvent?: boolean) => void;
 	onClose: () => void;
 	onUpdate: (isUserUpdate: boolean) => void;
@@ -173,7 +173,7 @@ export const AiEditorMenu = ({
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
 	const handleOnCancel = (isSelectionEvent?: boolean) => {
-		setIsHighlighting(true);
+		setDisableUpdates(true);
 
 		if (selectionToEdit) {
 			if (contentHtmlBeforeEdit.current) {
@@ -190,7 +190,7 @@ export const AiEditorMenu = ({
 				.run();
 		}
 
-		setIsHighlighting(false);
+		setDisableUpdates(false);
 		setIsApplyMode(false);
 		contentHtmlBeforeEdit.current = null;
 		contentHtmlAfterEdit.current = null;
@@ -205,7 +205,7 @@ export const AiEditorMenu = ({
 		contentHtmlBeforeEdit.current = null;
 		contentHtmlAfterEdit.current = null;
 		onClose();
-		setIsHighlighting(false);
+		setDisableUpdates(false);
 		onUpdate(false);
 	};
 
@@ -226,7 +226,7 @@ export const AiEditorMenu = ({
 
 	const handleRevertHover = () => {
 		if (contentHtmlAfterEdit.current) {
-			setIsHighlighting(true);
+			setDisableUpdates(true);
 			editor.commands.blur();
 			editor.commands.setContent(contentHtmlBeforeEdit.current);
 		}
@@ -236,7 +236,7 @@ export const AiEditorMenu = ({
 		if (contentHtmlBeforeEdit.current) {
 			editor.commands.blur();
 			editor.commands.setContent(contentHtmlAfterEdit.current);
-			setIsHighlighting(false);
+			setDisableUpdates(false);
 		}
 	};
 

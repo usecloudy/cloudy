@@ -11,20 +11,20 @@ import { useThoughtStore } from "./thoughtStore";
 
 type Comment = ReturnType<typeof useComments>["data"][number];
 
-export const CommentColumn = (props: { editor: Editor | null; thoughtId?: string; isHighlightingRef: RefObject<boolean> }) => {
+export const CommentColumn = (props: { editor: Editor | null; thoughtId?: string; disableUpdatesRef: RefObject<boolean> }) => {
 	if (!props.thoughtId || !props.editor) return null;
 
-	return <CommentColumnInner thoughtId={props.thoughtId} editor={props.editor} isHighlightingRef={props.isHighlightingRef} />;
+	return <CommentColumnInner thoughtId={props.thoughtId} editor={props.editor} disableUpdatesRef={props.disableUpdatesRef} />;
 };
 
 const CommentColumnInner = ({
 	thoughtId,
 	editor,
-	isHighlightingRef,
+	disableUpdatesRef,
 }: {
 	thoughtId: string;
 	editor: Editor;
-	isHighlightingRef: RefObject<boolean>;
+	disableUpdatesRef: RefObject<boolean>;
 }) => {
 	const { data: comments } = useComments(thoughtId);
 	const { commentFilter, setCommentFilter } = useThoughtStore();
@@ -52,7 +52,7 @@ const CommentColumnInner = ({
 	}, []);
 
 	useEffect(() => {
-		if (isHighlightingRef.current) return;
+		if (disableUpdatesRef.current) return;
 
 		let groupedComments: Record<string, { comments: Comment[]; offset: number }> = {};
 
@@ -89,7 +89,7 @@ const CommentColumnInner = ({
 		}));
 
 		setCommentsWithOffset(commentsWithOffset);
-	}, [comments, editor, editor.state.doc, isHighlightingRef, windowWidth, resizeKey]);
+	}, [comments, editor, editor.state.doc, disableUpdatesRef, windowWidth, resizeKey]);
 
 	return (
 		<div

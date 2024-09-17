@@ -1,7 +1,9 @@
+import { handleSupabaseError } from "@cloudy/utils/common";
 import { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import debounce from "debounce";
 import { EventEmitter } from "events";
 import { fromUint8Array, toUint8Array } from "js-base64";
+import { MutableRefObject } from "react";
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate, removeAwarenessStates } from "y-protocols/awareness";
 import * as Y from "yjs";
 
@@ -28,6 +30,7 @@ export interface SupabaseProviderConfiguration {
 		updateColumns: { name: string; content: string };
 		conflictColumns: string;
 	};
+	disableUpdatesRef: MutableRefObject<boolean>;
 }
 
 export class SupabaseProvider extends EventEmitter {
@@ -43,6 +46,7 @@ export class SupabaseProvider extends EventEmitter {
 			updateColumns: { name: "", content: "" },
 			conflictColumns: "",
 		},
+		disableUpdatesRef: { current: false },
 	};
 
 	private supabase: SupabaseClient;
@@ -94,6 +98,10 @@ export class SupabaseProvider extends EventEmitter {
 		if (origin === this) {
 			return;
 		}
+		if (this.configuration.disableUpdatesRef.current) {
+			console.log("updates disabled");
+			return;
+		}
 
 		const dbDocument = fromUint8Array(Y.encodeStateAsUpdate(this.document));
 
@@ -142,15 +150,25 @@ export class SupabaseProvider extends EventEmitter {
 
 	private async onConnect() {
 		console.log("onConnect");
-		const { data, error } = await this.supabase
-			.from(this.configuration.databaseDetails.table)
-			.select<string, { [key: string]: string }>(`${this.configuration.databaseDetails.updateColumns.content}`)
-			.eq(this.configuration.databaseDetails.updateColumns.name, this.configuration.id)
-			.single();
+		let data = handleSupabaseError(
+			await this.supabase
+				.from(this.configuration.databaseDetails.table)
+				.select<string, { [key: string]: string }>(`${this.configuration.databaseDetails.updateColumns.content}`)
+				.eq(this.configuration.databaseDetails.updateColumns.name, this.configuration.id)
+				.maybeSingle(),
+		);
 
-		if (error) {
-			console.error(error);
-			return;
+		if (!data) {
+			data = handleSupabaseError(
+				await this.supabase
+					.from(this.configuration.databaseDetails.table)
+					.insert({
+						[this.configuration.databaseDetails.updateColumns.name]: this.configuration.id,
+						[this.configuration.databaseDetails.updateColumns.content]: "",
+					})
+					.select()
+					.single(),
+			);
 		}
 
 		if (data && data[this.configuration.databaseDetails.updateColumns.content]) {

@@ -36,13 +36,13 @@ const wrapSelectionAroundWords = (editor: Editor) => {
 export const EditorBubbleMenu = ({
 	editor,
 	thoughtId,
-	setIsHighlighting,
+	setDisableUpdates,
 	onUpdate,
 	setIsAiWriting,
 }: {
 	editor: Editor;
 	thoughtId: string;
-	setIsHighlighting: (isHighlighting: boolean) => void;
+	setDisableUpdates: (isHighlighting: boolean) => void;
 	onUpdate: (isUserUpdate: boolean) => void;
 	setIsAiWriting: (isAiWriting: boolean) => void;
 }) => {
@@ -53,7 +53,7 @@ export const EditorBubbleMenu = ({
 	const bubbleMenuRef = useRef<HTMLDivElement>(null);
 
 	const handleOnEdit = () => {
-		setIsHighlighting(true);
+		setDisableUpdates(true);
 
 		const selection = wrapSelectionAroundWords(editor);
 		setSelectionToEdit(selection);
@@ -157,7 +157,7 @@ export const EditorBubbleMenu = ({
 					editor={editor}
 					thoughtId={thoughtId}
 					selectionToEdit={selectionToEdit}
-					setIsHighlighting={setIsHighlighting}
+					setDisableUpdates={setDisableUpdates}
 					onCancel={handleOnCancelEditMode}
 					onClose={handleOnCloseEditMode}
 					onUpdate={onUpdate}
