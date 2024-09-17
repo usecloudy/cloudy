@@ -2,7 +2,8 @@ import { ThoughtSignals } from "@cloudy/utils/common";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { NodeType } from "@tiptap/pm/model";
+import { Editor, EditorContent, useEditor } from "@tiptap/react";
 import { GripVertical } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
@@ -25,6 +26,7 @@ import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { ThoughtEditPayload, useEditThought, useThought } from "./hooks";
+import { updateMentionNodeNames } from "./mention";
 import { ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
 import { tiptapExtensions } from "./tiptap";
@@ -36,7 +38,7 @@ type Collection = NonNullable<Thought["collections"]>[0];
 export const ThoughtDetailView = () => {
 	const { thoughtId } = useParams<{ thoughtId: string }>();
 
-	const { data: thought, isError } = useThought(thoughtId);
+	const { data: thought } = useThought(thoughtId);
 
 	const title = useTitleStore(s => s.title);
 
@@ -48,7 +50,7 @@ export const ThoughtDetailView = () => {
 				<Helmet>
 					<title>{headTitle}</title>
 				</Helmet>
-				{thought && <ThoughtContent thoughtId={thoughtId!} thought={thought} />}
+				{thought && <ThoughtContent key={thoughtId} thoughtId={thoughtId!} thought={thought} />}
 			</SimpleLayout>
 		</EditorErrorBoundary>
 	);
@@ -101,6 +103,10 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		if (isConnected && thought.content && !editor?.getText()) {
 			console.log("I am setting content");
 			editor?.commands.setContent(thought.content);
+		}
+
+		if (editor) {
+			updateMentionNodeNames(editor);
 		}
 	}, [isConnected]);
 

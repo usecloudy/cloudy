@@ -1,9 +1,13 @@
+import { handleSupabaseError } from "@cloudy/utils/common";
 import { Node, mergeAttributes } from "@tiptap/core";
 import { DOMOutputSpec, Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { PluginKey } from "@tiptap/pm/state";
-import { ReactRenderer } from "@tiptap/react";
+import { Editor, ReactRenderer } from "@tiptap/react";
 import Suggestion, { SuggestionOptions } from "@tiptap/suggestion";
 import tippy, { Instance } from "tippy.js";
+
+import { supabase } from "src/clients/supabase";
+import { makeThoughtLabel } from "src/utils/thought";
 
 import { MentionHandler } from "./MentionHandler";
 
@@ -343,3 +347,56 @@ export const Mention = Node.create<MentionOptions>({
 		];
 	},
 });
+
+export const getAllMentionNodes = (editor: Editor) => {
+	const mentions: { id: string; label: string; pos: number }[] = [];
+
+	editor.view.state.doc.descendants((node, pos) => {
+		if (node.type.name === "mention") {
+			mentions.push({
+				pos,
+				id: node.attrs.id,
+				label: node.attrs.label,
+			});
+		}
+	});
+
+	return mentions;
+};
+
+export const updateNodeAttributes = (editor: Editor, pos: number, attributes: Record<string, any>) => {
+	const { state } = editor;
+	const { tr } = state;
+	const node = state.doc.nodeAt(pos);
+
+	if (node) {
+		tr.setNodeMarkup(pos, null, {
+			...node.attrs,
+			...attributes,
+		});
+		editor.view.dispatch(tr);
+	}
+};
+
+export const updateMentionNodeNames = async (editor: Editor) => {
+	const mentions = getAllMentionNodes(editor);
+
+	const potentialThoughtLabels = handleSupabaseError(
+		await supabase
+			.from("thoughts")
+			.select("id, title, content_plaintext, content_md")
+			.in(
+				"id",
+				mentions.map(mention => mention.id),
+			),
+	);
+
+	const labelIdList = potentialThoughtLabels.map(thought => ({ id: thought.id, label: makeThoughtLabel(thought) }));
+
+	mentions.forEach(mention => {
+		const label = labelIdList.find(label => label.id === mention.id)?.label;
+		if (label && mention.label !== label) {
+			updateNodeAttributes(editor, mention.pos, { label });
+		}
+	});
+};

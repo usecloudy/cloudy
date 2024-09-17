@@ -101,11 +101,12 @@ const useRelatedThoughts = (thoughtId?: string) => {
 					.eq("thought_id", thoughtId),
 			).flatMap(d => d.thought);
 
-			const linkedData = handleSupabaseError(
+			const linkedFromData = handleSupabaseError(
 				await supabase
 					.from("thought_links")
 					.select(
-						`id,
+						`
+                        id,
                         thought:thoughts!linked_to (
                             id,
                             title,
@@ -118,12 +119,40 @@ const useRelatedThoughts = (thoughtId?: string) => {
                                     id,
                                     title
                                 )
-                            ))`,
+                            )
+                        )
+                    `,
 					)
-					.or(`linked_from.eq.${thoughtId},linked_to.eq.${thoughtId}`),
-			)
+					.eq("linked_from", thoughtId),
+			);
+
+			const linkedToData = handleSupabaseError(
+				await supabase
+					.from("thought_links")
+					.select(
+						`
+                        id,
+                        thought:thoughts!linked_from (
+                            id,
+                            title,
+                            content_md,
+                            content_plaintext,
+                            created_at,
+                            updated_at,
+                            collection_thoughts (
+                                collections (
+                                    id,
+                                    title
+                                )
+                            )
+                        )
+                    `,
+					)
+					.eq("linked_to", thoughtId),
+			);
+
+			const linkedData = [...linkedFromData, ...linkedToData]
 				.flatMap(d => d.thought)
-				.filter(thought => thought.id !== thoughtId)
 				.map(thought => ({ ...thought, isLinkedManually: true }));
 
 			const thoughts: Record<
