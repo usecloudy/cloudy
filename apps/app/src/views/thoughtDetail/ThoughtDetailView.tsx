@@ -85,7 +85,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				},
 			}),
 		],
-		content: thought.content,
+		content: "",
 		onUpdate: ({ transaction }) => {
 			if (transaction.getMeta("y-sync$")) {
 				// Ignore y-sync updates
@@ -99,6 +99,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 
 	useEffect(() => {
 		if (isConnected && thought.content && !editor?.getText()) {
+			console.log("I am setting content");
 			editor?.commands.setContent(thought.content);
 		}
 	}, [isConnected]);
