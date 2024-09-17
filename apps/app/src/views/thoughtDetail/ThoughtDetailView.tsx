@@ -3,9 +3,8 @@ import DragHandle from "@tiptap-pro/extension-drag-handle-react";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import { EditorContent, useEditor } from "@tiptap/react";
-import { diffLines } from "diff";
 import { GripVertical } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
@@ -13,12 +12,9 @@ import { useMount, useUnmount, useUpdateEffect } from "react-use";
 
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { SimpleLayout } from "src/components/SimpleLayout";
-import { useHighlightStore } from "src/stores/highlight";
 import { useUserRecord } from "src/stores/user";
-import { useWorkspaceSlug } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { ellipsizeText, makeHeadTitle } from "src/utils/strings";
-import { processSearches } from "src/utils/tiptapSearchAndReplace";
 import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
@@ -29,7 +25,7 @@ import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { ThoughtEditPayload, useEditThought, useThought } from "./hooks";
-import { usePreviewContentStore } from "./previewContentStore";
+import { ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
 import { tiptapExtensions } from "./tiptap";
 import { useYProvider } from "./yProvider";
@@ -40,24 +36,9 @@ type Collection = NonNullable<Thought["collections"]>[0];
 export const ThoughtDetailView = () => {
 	const { thoughtId } = useParams<{ thoughtId: string }>();
 
-	const wsSlug = useWorkspaceSlug();
+	const { data: thought } = useThought(thoughtId);
 
-	const { data: thought, isLoading } = useThought(thoughtId);
-	const { mutateAsync: editThought } = useEditThought(thoughtId);
-
-	const setIsAiSuggestionLoading = useThoughtStore(s => s.setIsAiSuggestionLoading);
 	const title = useTitleStore(s => s.title);
-
-	const { onChange } = useSave(editThought, { debounceDurationMs: thoughtId ? 500 : 0 });
-
-	useEffect(() => {
-		const signals = (thought?.signals as string[] | null) ?? [];
-		if (signals.includes(ThoughtSignals.AI_SUGGESTIONS)) {
-			setIsAiSuggestionLoading(true);
-		} else {
-			setIsAiSuggestionLoading(false);
-		}
-	}, [setIsAiSuggestionLoading, thought?.signals]);
 
 	const headTitle = title ? makeHeadTitle(ellipsizeText(title, 16)) : makeHeadTitle("New Thought");
 
@@ -67,47 +48,28 @@ export const ThoughtDetailView = () => {
 				<Helmet>
 					<title>{headTitle}</title>
 				</Helmet>
-				<div className="flex w-full flex-col lg:flex-row lg:h-full xl:max-w-screen-2xl">
-					<EditorView
-						thoughtId={thoughtId!}
-						collections={thought?.collections ?? []}
-						remoteContent={thought?.content ?? undefined}
-						remoteTitle={thought?.title ?? undefined}
-						latestRemoteTitleTs={thought?.title_ts ?? undefined}
-						onChange={onChange}
-					/>
-					<ControlColumn thoughtId={thoughtId} />
-				</div>
+				{thought && <ThoughtContent thoughtId={thoughtId!} thought={thought} />}
 			</SimpleLayout>
 		</EditorErrorBoundary>
 	);
 };
 
-const EditorView = ({
-	thoughtId,
-	remoteContent,
-	remoteTitle,
-	latestRemoteTitleTs,
-	collections,
-	onChange,
-}: {
-	thoughtId: string;
-	remoteContent?: string;
-	remoteTitle?: string;
-	latestRemoteTitleTs?: string;
-	collections: Collection[];
-	onChange: (payload: ThoughtEditPayload) => void;
-}) => {
+const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Thought }) => {
 	const userRecord = useUserRecord();
-	const { highlights } = useHighlightStore();
-	const { lastLocalThoughtTitleTs, setCurrentContent, setLastLocalThoughtContentTs, setLastLocalThoughtTitleTs } =
-		useThoughtStore();
-	const { title, setTitle, saveTitleKey } = useTitleStore();
-	const [isAiWriting, setIsAiWriting] = useState(false);
+
+	const { mutateAsync: editThought } = useEditThought(thoughtId);
+
+	const [isEditingDisabled, setIsEditingDisabled] = useState(false);
+	const [previewingKey, setPreviewingKey] = useState<string | null>(null);
+
+	const { onChange } = useSave(editThought, { debounceDurationMs: thoughtId ? 500 : 0 });
 
 	const disableUpdatesRef = useRef(false);
+	const storedContentRef = useRef<string | null>(null);
 
-	const { isConnected, ydoc, provider } = useYProvider(thoughtId, disableUpdatesRef);
+	const { setIsAiSuggestionLoading } = useThoughtStore();
+
+	const { isConnected, ydoc, provider } = useYProvider(thoughtId!, disableUpdatesRef);
 
 	const editor = useEditor({
 		extensions: [
@@ -123,27 +85,106 @@ const EditorView = ({
 				},
 			}),
 		],
-		content: remoteContent,
+		content: thought.content,
 		onUpdate: async () => {
 			onUpdate(true);
 		},
 		autofocus: !thoughtId,
-		editable: !isAiWriting,
+		editable: !isEditingDisabled,
 	});
 
-	const onUpdate = (isUserUpdate: boolean) => {
-		if (isConnected && !disableUpdatesRef.current) {
-			const content = editor?.getHTML();
-			const contentMd = editor?.storage.markdown.getMarkdown();
-			const contentPlainText = editor?.getText();
-			const ts = new Date();
-			onChange({ content, contentMd, contentPlainText, ts });
-			setLastLocalThoughtContentTs(ts);
-			setCurrentContent(content ?? "");
+	const onUpdate = useCallback(
+		(isUserUpdate: boolean) => {
+			if (isConnected && !disableUpdatesRef.current) {
+				const content = editor?.getHTML();
+				const contentMd = editor?.storage.markdown.getMarkdown();
+				const contentPlainText = editor?.getText();
+				const ts = new Date();
+				onChange({ content, contentMd, contentPlainText, ts });
+				console.log("onUpdate", content);
+			}
+		},
+		[isConnected, editor, onChange, disableUpdatesRef],
+	);
 
-			console.log("onUpdate", content);
+	const storeContentIfNeeded = useCallback(() => {
+		if (!storedContentRef.current) {
+			storedContentRef.current = editor?.getHTML() ?? null;
 		}
-	};
+	}, [editor]);
+
+	const restoreFromLastContent = useCallback(() => {
+		if (storedContentRef.current) {
+			editor?.commands.setContent(storedContentRef.current);
+			storedContentRef.current = null;
+		}
+	}, [editor]);
+
+	const clearStoredContent = useCallback(() => {
+		storedContentRef.current = null;
+	}, []);
+
+	useEffect(() => {
+		const signals = (thought?.signals as string[] | null) ?? [];
+		if (signals.includes(ThoughtSignals.AI_SUGGESTIONS)) {
+			setIsAiSuggestionLoading(true);
+		} else {
+			setIsAiSuggestionLoading(false);
+		}
+	}, [setIsAiSuggestionLoading, thought?.signals]);
+
+	return (
+		<ThoughtContext.Provider
+			value={{
+				thoughtId,
+				editor,
+				disableUpdatesRef,
+				onUpdate,
+				isConnected,
+				isEditingDisabled,
+				setIsEditingDisabled,
+				previewingKey,
+				setPreviewingKey,
+				storeContentIfNeeded,
+				restoreFromLastContent,
+				clearStoredContent,
+			}}>
+			<div className="flex w-full flex-col lg:flex-row lg:h-full xl:max-w-screen-2xl">
+				<EditorView
+					thoughtId={thoughtId!}
+					collections={thought?.collections ?? []}
+					remoteTitle={thought?.title ?? undefined}
+					latestRemoteTitleTs={thought?.title_ts ?? undefined}
+					onChange={onChange}
+				/>
+				<ControlColumn thoughtId={thoughtId} />
+			</div>
+		</ThoughtContext.Provider>
+	);
+};
+
+const EditorView = ({
+	thoughtId,
+	remoteTitle,
+	latestRemoteTitleTs,
+	collections,
+	onChange,
+}: {
+	thoughtId: string;
+	remoteTitle?: string;
+	latestRemoteTitleTs?: string;
+	collections: Collection[];
+	onChange: (payload: ThoughtEditPayload) => void;
+}) => {
+	const { editor, disableUpdatesRef, isConnected } = useContext(ThoughtContext);
+	const {
+		isAiWriting,
+		lastLocalThoughtTitleTs,
+		setCurrentContent,
+		setLastLocalThoughtContentTs,
+		setLastLocalThoughtTitleTs,
+	} = useThoughtStore();
+	const { title, setTitle, saveTitleKey } = useTitleStore();
 
 	useMount(() => {
 		setTitle(remoteTitle ?? "");
@@ -163,98 +204,6 @@ const EditorView = ({
 		}
 	}, [latestRemoteTitleTs]);
 
-	// useUpdateEffect(() => {
-	// 	if (previewContent) {
-	// 		existingContent.current = editor?.getHTML() ?? "";
-	// 		disableUpdatesRef.current = true;
-
-	// 		const existingContentText = editor?.getText() ?? "";
-
-	// 		editor?.commands.setContent(previewContent);
-
-	// 		const newContentText = editor?.getText() ?? "";
-	// 		const diff = diffLines(existingContentText, newContentText);
-
-	// 		const addedLines = diff.filter(part => part.added);
-	// 		addedLines.forEach(part => {
-	// 			if (editor) {
-	// 				const lines = part.value.split("\n").filter(line => line.trim().length > 0);
-	// 				lines.forEach(line => {
-	// 					const results = processSearches(editor.state.doc, line);
-
-	// 					const firstResult = results?.at(0);
-
-	// 					if (firstResult) {
-	// 						editor.commands.setTextSelection(firstResult);
-	// 						editor.commands.setMark("additionHighlight");
-	// 					}
-	// 				});
-	// 			}
-	// 		});
-	// 	} else {
-	// 		editor?.commands.unsetMark("additionHighlight");
-	// 		editor?.commands.setContent(existingContent.current);
-	// 		disableUpdatesRef.current = false;
-	// 	}
-	// }, [previewContent]);
-
-	// useUpdateEffect(() => {
-	// 	disableUpdatesRef.current = false;
-	// 	editor?.commands.unsetMark("additionHighlight");
-	// 	existingContent.current = editor?.getHTML() ?? "";
-	// 	editor?.commands.setContent(existingContent.current);
-	// 	setPreviewContent(null);
-	// 	onUpdate(false);
-	// }, [applyKey]);
-
-	// Update this effect to use the new CommentHighlight mark
-	useEffect(() => {
-		if (editor) {
-			if (highlights.length > 0) {
-				disableUpdatesRef.current = true;
-				const existingSelection = editor.state.selection;
-
-				// Clear all existing comment highlights first
-				editor.commands.setTextSelection({
-					from: 0,
-					to: editor.state.doc.content.size,
-				});
-				editor.commands.unsetMark("commentHighlight");
-
-				highlights.forEach(highlight => {
-					const results = processSearches(editor.state.doc, highlight.text);
-
-					const firstResult = results?.at(0);
-
-					if (firstResult) {
-						editor.commands.setTextSelection(firstResult);
-						editor.commands.setMark("commentHighlight");
-					}
-				});
-
-				// Clear the selection after applying highlights
-				editor.commands.setTextSelection({
-					from: existingSelection.from,
-					to: existingSelection.to,
-				});
-			} else {
-				// Clear all comment highlight marks
-				const existingSelection = editor.state.selection;
-				editor.commands.setTextSelection({
-					from: 0,
-					to: editor.state.doc.content.size,
-				});
-				editor.commands.unsetMark("commentHighlight");
-				editor.commands.setTextSelection({
-					from: existingSelection.from,
-					to: existingSelection.to,
-				});
-
-				disableUpdatesRef.current = false;
-			}
-		}
-	}, [editor, highlights]);
-
 	useUnmount(() => {
 		setCurrentContent(null);
 		setLastLocalThoughtContentTs(null);
@@ -271,10 +220,6 @@ const EditorView = ({
 		setTitle(title);
 		onChange({ title, ts });
 		setLastLocalThoughtTitleTs(ts);
-	};
-
-	const handleSetDisableUpdates = (shouldDisable: boolean) => {
-		disableUpdatesRef.current = shouldDisable;
 	};
 
 	return (
@@ -300,15 +245,7 @@ const EditorView = ({
 			<div
 				// On larger screens, we need left padding to avoid some characters being cut off
 				className="flex flex-row md:pl-[2px]">
-				{editor && thoughtId && (
-					<EditorBubbleMenu
-						thoughtId={thoughtId}
-						editor={editor}
-						setDisableUpdates={handleSetDisableUpdates}
-						onUpdate={onUpdate}
-						setIsAiWriting={setIsAiWriting}
-					/>
-				)}
+				{editor && thoughtId && <EditorBubbleMenu />}
 				{editor && thoughtId && (
 					<div>
 						<DragHandle editor={editor} tippyOptions={{ offset: [-4, 4], zIndex: 10 }}>

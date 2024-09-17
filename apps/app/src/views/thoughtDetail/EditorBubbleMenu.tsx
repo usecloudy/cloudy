@@ -10,11 +10,12 @@ import {
 	TextQuoteIcon,
 	UnderlineIcon,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 
 import { Button } from "src/components/Button";
 
 import { AiEditorMenu } from "./AiEditorMenu";
+import { ThoughtContext } from "./thoughtContext";
 
 const wrapSelectionAroundWords = (editor: Editor) => {
 	const selection = editor.state.selection;
@@ -33,19 +34,8 @@ const wrapSelectionAroundWords = (editor: Editor) => {
 	};
 };
 
-export const EditorBubbleMenu = ({
-	editor,
-	thoughtId,
-	setDisableUpdates,
-	onUpdate,
-	setIsAiWriting,
-}: {
-	editor: Editor;
-	thoughtId: string;
-	setDisableUpdates: (isHighlighting: boolean) => void;
-	onUpdate: (isUserUpdate: boolean) => void;
-	setIsAiWriting: (isAiWriting: boolean) => void;
-}) => {
+export const EditorBubbleMenu = () => {
+	const { editor, thoughtId, disableUpdatesRef } = useContext(ThoughtContext);
 	const [isEditingSelection, setIsEditingSelection] = useState(false);
 
 	const [selectionToEdit, setSelectionToEdit] = useState<{ from: number; to: number } | null>(null);
@@ -53,7 +43,9 @@ export const EditorBubbleMenu = ({
 	const bubbleMenuRef = useRef<HTMLDivElement>(null);
 
 	const handleOnEdit = () => {
-		setDisableUpdates(true);
+		if (!editor) return;
+
+		disableUpdatesRef.current = true;
 
 		const selection = wrapSelectionAroundWords(editor);
 		setSelectionToEdit(selection);
@@ -65,7 +57,7 @@ export const EditorBubbleMenu = ({
 	const handleOnCancelEditMode = (isSelectionEvent?: boolean) => {
 		setIsEditingSelection(false);
 		if (selectionToEdit && !isSelectionEvent) {
-			editor.chain().focus().setTextSelection(selectionToEdit).run();
+			editor?.chain().focus().setTextSelection(selectionToEdit).run();
 		}
 		setSelectionToEdit(null);
 	};
@@ -73,7 +65,10 @@ export const EditorBubbleMenu = ({
 	const handleOnCloseEditMode = () => {
 		setIsEditingSelection(false);
 		setSelectionToEdit(null);
+		disableUpdatesRef.current = false;
 	};
+
+	if (!editor) return null;
 
 	return (
 		<div>
@@ -157,11 +152,8 @@ export const EditorBubbleMenu = ({
 					editor={editor}
 					thoughtId={thoughtId}
 					selectionToEdit={selectionToEdit}
-					setDisableUpdates={setDisableUpdates}
 					onCancel={handleOnCancelEditMode}
 					onClose={handleOnCloseEditMode}
-					onUpdate={onUpdate}
-					setIsAiWriting={setIsAiWriting}
 				/>
 			)}
 		</div>

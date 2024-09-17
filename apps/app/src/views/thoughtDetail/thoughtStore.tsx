@@ -27,6 +27,8 @@ interface ThoughtStore {
 	setFeedMode: (mode: FeedMode) => void;
 	activeThreadCommentId: string | null;
 	setActiveThreadCommentId: (id: string | null) => void;
+	isAiWriting: boolean;
+	setIsAiWriting: (isWriting: boolean) => void;
 	reset: () => void;
 }
 
@@ -51,6 +53,8 @@ export const useThoughtStore = create<ThoughtStore>(set => ({
 	activeThreadCommentId: null,
 	setActiveThreadCommentId: id =>
 		set({ activeThreadCommentId: id, feedMode: id ? "thread" : "default", commentFilter: null }),
+	isAiWriting: false,
+	setIsAiWriting: isWriting => set({ isAiWriting: isWriting }),
 	reset: () =>
 		set({
 			thoughtId: null,
@@ -62,5 +66,6 @@ export const useThoughtStore = create<ThoughtStore>(set => ({
 			commentFilter: null,
 			feedMode: "default",
 			activeThreadCommentId: null,
+			isAiWriting: false,
 		}),
 }));
