@@ -16,10 +16,10 @@ import { Button } from "src/components/Button";
 import { useDeleteThought } from "./hooks";
 
 export const DeleteDialog = ({ thoughtId }: { thoughtId: string }) => {
-	const { mutateAsync: deleteThought } = useDeleteThought(thoughtId);
+	const { mutateAsync: deleteThought } = useDeleteThought();
 
 	const handleDelete = async () => {
-		await deleteThought();
+		await deleteThought(thoughtId);
 		setIsDeleteDialogOpen(false);
 		window.history.back();
 	};

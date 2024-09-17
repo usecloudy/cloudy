@@ -36,7 +36,7 @@ type Collection = NonNullable<Thought["collections"]>[0];
 export const ThoughtDetailView = () => {
 	const { thoughtId } = useParams<{ thoughtId: string }>();
 
-	const { data: thought } = useThought(thoughtId);
+	const { data: thought, isError } = useThought(thoughtId);
 
 	const title = useTitleStore(s => s.title);
 
@@ -86,7 +86,11 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 			}),
 		],
 		content: thought.content,
-		onUpdate: async () => {
+		onUpdate: ({ transaction }) => {
+			if (transaction.getMeta("y-sync$")) {
+				// Ignore y-sync updates
+				return;
+			}
 			onUpdate(true);
 		},
 		autofocus: !thoughtId,

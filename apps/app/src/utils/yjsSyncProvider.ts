@@ -94,7 +94,6 @@ export class SupabaseProvider extends EventEmitter {
 	}
 
 	private async documentUpdateHandler(update: Uint8Array, origin?: any) {
-		console.log("update attempt", origin);
 		if (origin === this) {
 			return;
 		}
@@ -104,8 +103,6 @@ export class SupabaseProvider extends EventEmitter {
 		}
 
 		const dbDocument = fromUint8Array(Y.encodeStateAsUpdate(this.document));
-
-		console.log("documentUpdateHandler", dbDocument, this.isConnected);
 
 		const res = await this.supabase.from(this.configuration.databaseDetails.table).upsert(
 			{
@@ -228,7 +225,6 @@ export class SupabaseProvider extends EventEmitter {
 
 	private onReceiveUpdate({ event, payload }: { event: string; [key: string]: any }) {
 		const update = toUint8Array(payload.dbDocument);
-		console.log("update received", payload.dbDocument);
 		try {
 			this.version++;
 			Y.applyUpdate(this.document, update, this);

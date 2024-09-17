@@ -9,8 +9,6 @@ export type CommentFilter = {
 export type FeedMode = "default" | "archive" | "selectedComments" | "thread";
 
 interface ThoughtStore {
-	thoughtId: string | null;
-	setThoughtId: (id: string | null) => void;
 	currentContent: string | null;
 	setCurrentContent: (content: string | null) => void;
 	selectionToEdit: Selection | null;
@@ -33,8 +31,6 @@ interface ThoughtStore {
 }
 
 export const useThoughtStore = create<ThoughtStore>(set => ({
-	thoughtId: null,
-	setThoughtId: id => set({ thoughtId: id }),
 	currentContent: null,
 	setCurrentContent: content => set({ currentContent: content }),
 	selectionToEdit: null,
@@ -57,7 +53,6 @@ export const useThoughtStore = create<ThoughtStore>(set => ({
 	setIsAiWriting: isWriting => set({ isAiWriting: isWriting }),
 	reset: () =>
 		set({
-			thoughtId: null,
 			currentContent: null,
 			selectionToEdit: null,
 			lastLocalThoughtTitleTs: null,

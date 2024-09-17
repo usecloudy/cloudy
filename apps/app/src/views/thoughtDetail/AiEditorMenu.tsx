@@ -12,7 +12,6 @@ import LoadingSpinner from "src/components/LoadingSpinner";
 import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
 import { ThoughtContext } from "./thoughtContext";
-import { useThoughtStore } from "./thoughtStore";
 
 // const selectEditNode = (editor: Editor) => {
 // 	let nodePosition = -1;

@@ -9,6 +9,7 @@ import { useWorkspaceSlug } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { ellipsizeText, makeHumanizedTime } from "src/utils/strings";
 import { makeThoughtUrl } from "src/utils/thought";
+import { useDeleteThought } from "src/views/thoughtDetail/hooks";
 
 import { Button } from "./Button";
 import { Dropdown, DropdownItem } from "./Dropdown";
@@ -27,19 +28,6 @@ interface Thought {
 	updated_at: string | null;
 	collections: Collection[];
 }
-
-const useDeleteThought = () => {
-	return useMutation({
-		mutationFn: async (thoughtId: string) => {
-			return supabase.from("thoughts").delete().eq("id", thoughtId);
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["thoughts"],
-			});
-		},
-	});
-};
 
 const thoughtCardVariants = cva(
 	"flex flex-row items-center justify-between gap-2 rounded-md bg-background px-4 py-1 hover:bg-card",
