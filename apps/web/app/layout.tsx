@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import { Noto_Sans, Red_Hat_Display } from "next/font/google";
 import "styles/tailwind.css";
 
+import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
 import { PHProvider } from "./providers";
 
@@ -28,7 +29,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 				<body>
 					<PostHogPageView />
 					<Navbar />
-					{children}
+					<div className="min-h-screen">{children}</div>
+					<Footer />
 				</body>
 			</PHProvider>
 		</html>

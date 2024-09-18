@@ -61,7 +61,6 @@ export default function Support() {
 					</div>
 				</div>
 			</section>
-			<div className="text-tertiary fixed bottom-0 flex w-full justify-center pb-4 text-sm">© 2024 Brain Fog Inc.</div>
 		</div>
 	);
 }

@@ -43,6 +43,35 @@
 	textarea::placeholder {
 		@apply text-placeholder;
 	}
+
+	.prose {
+		h1 {
+			@apply text-2xl font-bold;
+		}
+		h2 {
+			@apply text-xl font-bold;
+		}
+		h3 {
+			@apply text-lg font-bold;
+		}
+		p {
+			@apply text-base py-2;
+		}
+		a {
+			@apply text-accent font-medium hover:underline;
+		}
+		li {
+			@apply text-base py-2 pl-1;
+		}
+		ol {
+			@apply pl-5;
+			list-style-type: decimal;
+		}
+		ul {
+			@apply pl-5;
+			list-style-type: disc;
+		}
+	}
 }
 
 @layer utilities {

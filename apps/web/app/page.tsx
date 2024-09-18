@@ -75,7 +75,6 @@ export default function Web() {
 					</div>
 				</div>
 			</section>
-			<div className="mt-8 flex w-full justify-center pb-4 text-sm opacity-25">© 2024 Brain Fog Inc.</div>
 		</div>
 	);
 }
