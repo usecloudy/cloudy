@@ -101,7 +101,7 @@ export const useUserOptions = () => {
 	const userRecord = useUserRecord();
 
 	const userMutation = useMutation({
-		mutationFn: async (option: { key: string; value: string }) => {
+		mutationFn: async (option: { key: string; value: string | null }) => {
 			const options = handleSupabaseError(
 				await supabase.from("users").select("options").eq("id", userRecord.id).single(),
 			);
@@ -118,7 +118,7 @@ export const useUserOptions = () => {
 		get: (key: string, defaultValue: any = null) => {
 			return (userRecord.options as Record<string, any> | null)?.[key] ?? defaultValue;
 		},
-		set: async (key: string, value: string) => {
+		set: async (key: string, value: string | null) => {
 			await userMutation.mutateAsync({ key, value });
 		},
 	};

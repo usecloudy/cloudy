@@ -25,7 +25,6 @@ export const RedirectToDefaultOrg = () => {
 			);
 			return { orgs, pendingInvites };
 		},
-		enabled: !lastOpenedWorkspaceSlug,
 		staleTime: 0,
 	});
 
@@ -37,13 +36,15 @@ export const RedirectToDefaultOrg = () => {
 		return <Navigate to={`/auth/invite-accept?inviteId=${data.pendingInvites.at(0)!.id}`} />;
 	}
 
-	const wsSlug = lastOpenedWorkspaceSlug ? lastOpenedWorkspaceSlug : data?.orgs?.at(0)?.workspaces?.slug;
-
-	if (isLoading) {
+	if (isLoading || !data) {
 		return <LoadingView />;
 	}
 
-	if (!wsSlug) {
+	const validSlugs = new Set(data.orgs.flatMap(org => (org.workspaces ? [org.workspaces.slug] : [])));
+	const wsSlug = lastOpenedWorkspaceSlug ? lastOpenedWorkspaceSlug : data?.orgs?.at(0)?.workspaces?.slug;
+
+	if (!wsSlug || !validSlugs.has(wsSlug)) {
+		userOptions.set("last_opened_workspace", null);
 		return <Navigate to={`/workspaces/new?setup=true`} />;
 	}
 

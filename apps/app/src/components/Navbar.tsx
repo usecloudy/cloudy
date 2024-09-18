@@ -18,7 +18,7 @@ import { FC } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import { supabase } from "src/clients/supabase";
-import { useAllUserWorkspaces, useUser } from "src/stores/user";
+import { useAllUserWorkspaces, useUser, useUserStore } from "src/stores/user";
 import { useWorkspace, useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { pluralize } from "src/utils/strings";
@@ -30,8 +30,8 @@ import { Dropdown, DropdownItem } from "./Dropdown";
 import { FeedbackDropdown } from "./Feedback";
 
 export const Navbar: FC = () => {
-	const user = useUser();
-	const { workspace } = useWorkspaceStore();
+	const user = useUserStore(s => s.user);
+	const workspace = useWorkspaceStore(s => s.workspace);
 
 	const { data } = useCustomerStatus();
 
@@ -118,10 +118,12 @@ export const Navbar: FC = () => {
 						</Button>
 					}
 					className="w-64 pt-2">
-					<div className="flex flex-col gap-1 px-2">
-						<span className="text-sm font-medium text-secondary">Signed in as</span>
-						<span className="text-sm">{user.email}</span>
-					</div>
+					{user && (
+						<div className="flex flex-col gap-1 px-2">
+							<span className="text-sm font-medium text-secondary">Signed in as</span>
+							<span className="text-sm">{user.email}</span>
+						</div>
+					)}
 					<div className="border-b border-border my-2" />
 					<WorkspaceList />
 					{customerStatus?.isTrialing && (
