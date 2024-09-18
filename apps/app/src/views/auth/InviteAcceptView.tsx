@@ -87,10 +87,10 @@ export const InviteAcceptView = () => {
 	};
 
 	const handleGoogleLink = async () => {
-		const { error } = await supabase.auth.signInWithOAuth({
+		const { error } = await supabase.auth.linkIdentity({
 			provider: "google",
 			options: {
-				redirectTo: `${window.location.origin}/auth/callback`,
+				redirectTo: window.location.origin,
 			},
 		});
 		if (error) setError(`Error linking Google account: ${error.message}`);
