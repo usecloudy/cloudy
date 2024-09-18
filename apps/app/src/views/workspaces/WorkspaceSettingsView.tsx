@@ -3,6 +3,7 @@ import { formatCurrency, handleSupabaseError } from "@cloudy/utils/common";
 import { WorkspaceRole } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CircleFadingArrowUpIcon, CreditCardIcon, UserPlus2Icon, UserRoundMinusIcon, XIcon } from "lucide-react";
+import posthog from "posthog-js";
 import { useEffect } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -116,12 +117,24 @@ const useAddMember = () => {
 					user_id: user.id,
 					role: WorkspaceRole.MEMBER,
 				});
+
+				posthog.capture("workspace_member_added", {
+					workspace_id: workspace.id,
+					user_id: user.id,
+				});
+
 				return { added: true };
 			} else {
 				await apiClient.post("/api/workspaces/members/invite", {
 					email,
 					workspaceId: workspace.id,
 				});
+
+				posthog.capture("workspace_member_invited", {
+					workspace_id: workspace.id,
+					email,
+				});
+
 				return { added: false, invited: true };
 			}
 		},

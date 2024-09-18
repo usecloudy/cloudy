@@ -5,6 +5,7 @@ import {
 	createNonConflictingSlug,
 } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -90,6 +91,13 @@ export const NewWorkspaceView = () => {
 
 	const onSubmit = async (data: FormData) => {
 		const { wsSlug } = await createWorkspaceMutation.mutateAsync(data);
+
+		posthog.capture("workspace_created", {
+			workspace_id: wsSlug,
+			user_id: userRecord.id,
+			is_setup: shouldSetDefaults,
+		});
+
 		navigate(`/workspaces/${wsSlug}`);
 	};
 
