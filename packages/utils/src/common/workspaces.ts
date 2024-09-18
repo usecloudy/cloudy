@@ -24,16 +24,27 @@ export const createNonConflictingSlug = async (
     name: string,
     supabase: SupabaseClient<Database>
 ) => {
-    const slugAttempt = name.toLowerCase().replace(/[^a-z0-9-]/g, "-");
-
-    const existingSlugs = await supabase
+    const slugBase = name.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+    const { data: existingSlugs } = await supabase
         .from("workspaces")
-        .select("slug", { count: "exact" })
-        .eq("slug", slugAttempt);
+        .select("slug")
+        .ilike("slug", `${slugBase}%`);
 
-    if (existingSlugs.count === 0) {
-        return slugAttempt;
+    if (!existingSlugs || existingSlugs.length === 0) {
+        return slugBase;
     }
 
-    return `${slugAttempt}-${existingSlugs.count}`;
+    const slugNumbers = existingSlugs
+        .map((workspace) => {
+            const match = workspace.slug.match(
+                new RegExp(`^${slugBase}-(\\d+)$`)
+            );
+            return match ? parseInt(match[1], 10) : 0;
+        })
+        .sort((a, b) => a - b);
+
+    const nextNumber = slugNumbers.length
+        ? slugNumbers[slugNumbers.length - 1] + 1
+        : 1;
+    return `${slugBase}-${nextNumber}`;
 };
