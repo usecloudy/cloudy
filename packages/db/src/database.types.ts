@@ -891,6 +891,35 @@ export type Database = {
         }
         Relationships: []
       }
+      note_contents: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          title: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          title?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_contents_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       thought_chat_threads: {
         Row: {
           comment_id: string
@@ -1270,11 +1299,48 @@ export type Database = {
           },
         ]
       }
+      user_pending_invites: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_pending_invites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_pending_invites_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string
           email: string | null
           id: string
+          is_pending: boolean | null
           name: string | null
           options: Json
           stripe_customer_id: string | null
@@ -1283,6 +1349,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_pending?: boolean | null
           name?: string | null
           options?: Json
           stripe_customer_id?: string | null
@@ -1291,6 +1358,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_pending?: boolean | null
           name?: string | null
           options?: Json
           stripe_customer_id?: string | null

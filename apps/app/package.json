@@ -33,6 +33,7 @@
 		"@cloudy/utils": "*",
 		"@electron/remote": "^2.0.8",
 		"@floating-ui/react": "^0.26.23",
+		"@icons-pack/react-simple-icons": "^10.0.0",
 		"@kodingdotninja/use-tailwind-breakpoint": "^1.0.0",
 		"@radix-ui/react-alert-dialog": "^1.1.1",
 		"@radix-ui/react-checkbox": "^1.1.0",
@@ -101,7 +102,6 @@
 		"use-debounce": "^10.0.1",
 		"y-prosemirror": "^1.2.12",
 		"y-protocols": "^1.0.6",
-		"y-supabase": "^0.0.4-7-alpha",
 		"y-webrtc": "^10.3.0",
 		"yjs": "13.6.19",
 		"zustand": "^4.5.3"

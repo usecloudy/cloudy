@@ -1,5 +1,5 @@
 import { Check, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { ComponentProps, useState } from "react";
 
 import { cn } from "../utils";
 import { Button } from "./Button";
@@ -16,6 +16,8 @@ interface SelectDropdownProps {
 	onChange: (value: string) => void;
 	placeholder?: string;
 	className?: string;
+	size?: ComponentProps<typeof Button>["size"];
+	disabled?: boolean;
 }
 
 export const SelectDropdown = ({
@@ -24,6 +26,8 @@ export const SelectDropdown = ({
 	onChange,
 	placeholder = "Select an option",
 	className,
+	size = "default",
+	disabled = false,
 }: SelectDropdownProps) => {
 	const [isOpen, setIsOpen] = useState(false);
 
@@ -39,10 +43,12 @@ export const SelectDropdown = ({
 			trigger={
 				<Button
 					variant="outline"
-					className={cn("w-full justify-between", className)}
-					onClick={() => setIsOpen(!isOpen)}>
+					className={cn("inline-flex justify-between items-center", className)}
+					size={size}
+					onClick={() => setIsOpen(!isOpen)}
+					disabled={disabled}>
 					{selectedOption ? selectedOption.label : placeholder}
-					<ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+					<ChevronDown className={cn("h-4 w-4 transition-transform shrink-0 ml-2", isOpen && "rotate-180")} />
 				</Button>
 			}
 			align="start"

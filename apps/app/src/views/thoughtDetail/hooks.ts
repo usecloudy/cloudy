@@ -335,7 +335,6 @@ export const useRespond = (commentId?: string | null) => {
 					});
 				}
 			} else {
-				console.log("commentId", commentId);
 				await supabase
 					.from("thought_chat_threads")
 					.insert({

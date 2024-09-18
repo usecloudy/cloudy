@@ -1,16 +1,17 @@
 import { FC } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 
+import { useChannelListeners } from "./channelListeners";
 import { MobileTabBar } from "./components/MobileTabBar";
 import { Navbar } from "./components/Navbar";
 import { useUserGuard, useUserHandler } from "./stores/user";
 import { AuthView } from "./views/auth/AuthView";
 import { ForgotPassword } from "./views/auth/ForgotPassword";
+import { InviteAcceptView } from "./views/auth/InviteAcceptView";
 import { PasswordResetView } from "./views/auth/PasswordResetView";
 import { SignIn } from "./views/auth/SignIn";
 import { SignOutView } from "./views/auth/SignOutView";
 import { SignUp } from "./views/auth/SignUp";
-// Add this import
 import { CollectionDetailView } from "./views/collectionDetail/CollectionDetailView";
 import { HomeView } from "./views/home/HomeView";
 import { RedirectToDefaultOrg } from "./views/home/RedirectToDefaultOrg";
@@ -27,6 +28,8 @@ import { WorkspaceSettingsView } from "./views/workspaces/WorkspaceSettingsView"
 
 const ProtectedLayout: FC = () => {
 	const { user, isLoadingAuth, isReady } = useUserGuard();
+
+	useChannelListeners();
 
 	if (isLoadingAuth) {
 		return <LoadingView />;
@@ -74,6 +77,7 @@ export const Router: FC = () => {
 						<Route path="/workspaces/:wsSlug/topics" element={<TopicsView />} />
 					</Route>
 					<Route path="/auth/password-reset" element={<PasswordResetView />} />
+					<Route path="/auth/invite-accept" element={<InviteAcceptView />} />
 					<Route path="/signout" element={<SignOutView />} />
 				</Route>
 			</Routes>

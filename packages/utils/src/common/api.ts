@@ -10,6 +10,9 @@ export interface CustomerStatus {
     isTrialing: boolean;
     isEligibleForTrial: boolean;
     remainingDaysInTrial: number | null;
+    unitPrice: number | null;
+    unitCount: number | null;
+    totalPrice: number | null;
 }
 
 export interface PaymentsCustomersStatusGetResponse {

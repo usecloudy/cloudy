@@ -30,12 +30,20 @@ export const getCustomerSubscriptionStatus = async (stripeCustomerId: string) =>
 			? differenceInDays(trialSubscription.trial_end * 1000, new Date()) + 1
 			: null;
 
+	const calculatedPrice = activeSubscription ? calculateTotalPrice(activeSubscription) : null;
+	const unitPrice = activeSubscription?.items.data[0]?.price.unit_amount ?? null;
+	const unitCount = activeSubscription?.items.data[0]?.quantity ?? null;
+	const totalPrice = calculatedPrice?.finalAmount ?? null;
+
 	return {
 		stripeCustomerId,
 		isActive,
 		isTrialing,
 		isEligibleForTrial,
 		remainingDaysInTrial,
+		unitPrice,
+		unitCount,
+		totalPrice,
 	} satisfies CustomerStatus;
 };
 
@@ -100,4 +108,33 @@ export const getWorkspaceStripeCustomerId = async (
 	}
 
 	return stripeCustomerId;
+};
+
+export const calculateTotalPrice = (subscription: Stripe.Subscription) => {
+	let totalAmount = 0;
+	let discountAmount = 0;
+
+	// Calculate the total amount from all subscription items
+	subscription.items.data.forEach(item => {
+		totalAmount += (item.price.unit_amount ?? 0) * (item.quantity ?? 0);
+	});
+
+	// Apply discount if present
+	if (subscription.discount) {
+		const discount = subscription.discount.coupon;
+		if (discount.amount_off) {
+			discountAmount = discount.amount_off;
+		} else if (discount.percent_off) {
+			discountAmount = Math.round(totalAmount * (discount.percent_off / 100));
+		}
+	}
+
+	const finalAmount = totalAmount - discountAmount;
+
+	return {
+		originalAmount: totalAmount,
+		discountAmount: discountAmount,
+		finalAmount: finalAmount,
+		currency: subscription.currency,
+	};
 };

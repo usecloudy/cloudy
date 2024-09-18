@@ -101,7 +101,6 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 
 	useEffect(() => {
 		if (isConnected && thought.content && !editor?.getText()) {
-			console.log("I am setting content");
 			editor?.commands.setContent(thought.content);
 		}
 

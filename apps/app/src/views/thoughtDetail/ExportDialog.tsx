@@ -114,7 +114,6 @@ const ExportDialogInner = ({ thoughtId, onClose }: { thoughtId: string; onClose:
 									max={18}
 									defaultValue={[11]}
 									onValueCommit={values => {
-										console.log("values", values);
 										field.onChange(values[0]);
 									}}
 									showValue

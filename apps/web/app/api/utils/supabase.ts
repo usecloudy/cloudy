@@ -1,7 +1,15 @@
 import { Database } from "@repo/db";
 import { createClient } from "@supabase/supabase-js";
 
-export const getSupabase = ({ authHeader, mode }: { authHeader?: string | null; mode: "service" | "client" }) => {
+export const getSupabase = ({
+	authHeader,
+	mode,
+	bypassAuth,
+}: {
+	authHeader?: string | null;
+	mode: "service" | "client";
+	bypassAuth?: boolean;
+}) => {
 	const { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_SECRET } = process.env;
 
 	if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -16,6 +24,10 @@ export const getSupabase = ({ authHeader, mode }: { authHeader?: string | null; 
 		return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
 			global: { headers: { Authorization: authHeader } },
 		});
+	}
+
+	if (bypassAuth) {
+		return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 	}
 
 	if (!authHeader) {

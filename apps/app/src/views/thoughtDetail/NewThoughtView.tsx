@@ -15,8 +15,6 @@ export const NewThoughtView = () => {
 
 	useMount(async () => {
 		const newThought = await editThoughtMutation.mutateAsync();
-
-		console.log("newThought", newThought);
 		if (newThought) {
 			navigate(makeThoughtUrl(wsSlug, newThought.id));
 		}

@@ -13,17 +13,25 @@ export const RedirectToDefaultOrg = () => {
 
 	const lastOpenedWorkspaceSlug = userOptions.get("last_opened_workspace") as string | null;
 
-	const { data: orgs, isLoading } = useQuery({
+	const { data, isLoading } = useQuery({
 		queryKey: ["workspaces"],
 		queryFn: async () => {
-			return handleSupabaseError(
+			const orgs = handleSupabaseError(
 				await supabase.from("workspace_users").select("workspaces(slug)").eq("user_id", user.id),
 			);
+			const pendingInvites = handleSupabaseError(
+				await supabase.from("user_pending_invites").select("id").eq("user_id", user.id),
+			);
+			return { orgs, pendingInvites };
 		},
 		enabled: !lastOpenedWorkspaceSlug,
 	});
 
-	const wsSlug = lastOpenedWorkspaceSlug ? lastOpenedWorkspaceSlug : orgs?.at(0)?.workspaces?.slug;
+	if (data?.pendingInvites.length) {
+		return <Navigate to={`/auth/invite-accept?inviteId=${data.pendingInvites.at(0)!.id}`} />;
+	}
+
+	const wsSlug = lastOpenedWorkspaceSlug ? lastOpenedWorkspaceSlug : data?.orgs?.at(0)?.workspaces?.slug;
 
 	if (isLoading) {
 		return <LoadingView />;

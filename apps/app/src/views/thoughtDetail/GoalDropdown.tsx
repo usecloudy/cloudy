@@ -35,7 +35,6 @@ const useSetIntent = (thoughtId?: string) => {
 				return;
 			}
 
-			console.log("saving");
 			handleSupabaseError(
 				await supabase
 					.from("thoughts")
