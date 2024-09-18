@@ -1,7 +1,7 @@
 import { SiGoogle } from "@icons-pack/react-simple-icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CheckCircle2Icon, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -50,6 +50,15 @@ export const InviteAcceptView = () => {
 		enabled: !!inviteId,
 	});
 
+	const { data: userData } = useQuery({
+		queryKey: ["googleAccount"],
+		queryFn: async () => {
+			const { data, error } = await supabase.auth.getUser();
+			if (error) throw error;
+			return data;
+		},
+	});
+
 	const acceptInviteMutation = useMutation({
 		mutationFn: async ({ displayName, password }: FormData) => {
 			const { error: updateError } = await supabase.auth.updateUser({
@@ -95,6 +104,15 @@ export const InviteAcceptView = () => {
 		});
 		if (error) setError(`Error linking Google account: ${error.message}`);
 	};
+
+	useEffect(() => {
+		if (userData?.user.app_metadata.provider && userData?.user.app_metadata.provider !== "email") {
+			acceptInviteMutation.mutate({
+				displayName: userData?.user.user_metadata.display_name,
+				password: "",
+			});
+		}
+	}, [userData, acceptInviteMutation]);
 
 	if (isLoadingInvite) {
 		return <LoadingSpinner />;
