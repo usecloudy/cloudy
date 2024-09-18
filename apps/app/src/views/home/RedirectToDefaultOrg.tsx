@@ -3,13 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Navigate } from "react-router-dom";
 
 import { supabase } from "src/clients/supabase";
-import { useUser, useUserOptions } from "src/stores/user";
+import { useUser, useUserOptions, useUserRecord } from "src/stores/user";
 
 import { LoadingView } from "../loading/LoadingView";
 
 export const RedirectToDefaultOrg = () => {
 	const user = useUser();
 	const userOptions = useUserOptions();
+	const userRecord = useUserRecord();
 
 	const lastOpenedWorkspaceSlug = userOptions.get("last_opened_workspace") as string | null;
 
@@ -26,6 +27,10 @@ export const RedirectToDefaultOrg = () => {
 		},
 		enabled: !lastOpenedWorkspaceSlug,
 	});
+
+	if (userRecord.is_pending) {
+		return <Navigate to="/auth/complete-account-setup" />;
+	}
 
 	if (data?.pendingInvites.length) {
 		return <Navigate to={`/auth/invite-accept?inviteId=${data.pendingInvites.at(0)!.id}`} />;

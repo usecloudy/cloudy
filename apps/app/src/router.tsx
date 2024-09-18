@@ -9,6 +9,7 @@ import { AuthView } from "./views/auth/AuthView";
 import { ForgotPassword } from "./views/auth/ForgotPassword";
 import { InviteAcceptView } from "./views/auth/InviteAcceptView";
 import { PasswordResetView } from "./views/auth/PasswordResetView";
+import { PendingAccountSetupView } from "./views/auth/PendingAccountSetupView";
 import { SignIn } from "./views/auth/SignIn";
 import { SignOutView } from "./views/auth/SignOutView";
 import { SignUp } from "./views/auth/SignUp";
@@ -78,6 +79,7 @@ export const Router: FC = () => {
 					</Route>
 					<Route path="/auth/password-reset" element={<PasswordResetView />} />
 					<Route path="/auth/invite-accept" element={<InviteAcceptView />} />
+					<Route path="/auth/complete-account-setup" element={<PendingAccountSetupView />} />
 					<Route path="/signout" element={<SignOutView />} />
 				</Route>
 			</Routes>
