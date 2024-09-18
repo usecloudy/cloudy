@@ -9,6 +9,7 @@ import { useMount } from "react-use";
 import { create } from "zustand";
 
 import { apiClient, setupAuthHeader } from "src/api/client";
+import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
 
 import { getAllUserWorkspaces, useWorkspaceStore } from "./workspace";
@@ -137,6 +138,8 @@ export const useUserHandler = () => {
 
 		workspaceStore.setWorkspace(null);
 		workspaceStore.setRole(null);
+
+		queryClient.clear();
 
 		amplitude.setUserId(undefined);
 		posthog.identify(undefined);

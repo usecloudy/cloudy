@@ -1,5 +1,6 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 
 import { supabase } from "src/clients/supabase";
@@ -28,6 +29,15 @@ export const RedirectToDefaultOrg = () => {
 		staleTime: 0,
 	});
 
+	const wsSlug = lastOpenedWorkspaceSlug ? lastOpenedWorkspaceSlug : data?.orgs?.at(0)?.workspaces?.slug;
+
+	useEffect(() => {
+		const validSlugs = new Set(data?.orgs.flatMap(org => (org.workspaces ? [org.workspaces.slug] : [])));
+		if (lastOpenedWorkspaceSlug && !validSlugs.has(lastOpenedWorkspaceSlug)) {
+			userOptions.set("last_opened_workspace", null);
+		}
+	}, [lastOpenedWorkspaceSlug, data, userOptions]);
+
 	if (userRecord.is_pending) {
 		return <Navigate to="/auth/complete-account-setup" />;
 	}
@@ -40,11 +50,7 @@ export const RedirectToDefaultOrg = () => {
 		return <LoadingView />;
 	}
 
-	const validSlugs = new Set(data.orgs.flatMap(org => (org.workspaces ? [org.workspaces.slug] : [])));
-	const wsSlug = lastOpenedWorkspaceSlug ? lastOpenedWorkspaceSlug : data?.orgs?.at(0)?.workspaces?.slug;
-
-	if (!wsSlug || !validSlugs.has(wsSlug)) {
-		userOptions.set("last_opened_workspace", null);
+	if (!wsSlug) {
 		return <Navigate to={`/workspaces/new?setup=true`} />;
 	}
 
