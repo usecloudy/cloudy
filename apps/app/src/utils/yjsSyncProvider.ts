@@ -1,4 +1,5 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
+import * as Sentry from "@sentry/react";
 import { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import debounce from "debounce";
 import { EventEmitter } from "events";
@@ -200,13 +201,14 @@ export class SupabaseProvider extends EventEmitter {
 				applyAwarenessUpdate(this.awareness!, update, this);
 			})
 			.subscribe((status, err) => {
-				console.log("subscribing", status);
+				console.log("subscribing", status, err);
 				switch (status) {
 					case "SUBSCRIBED":
 						this.emit("connect", this);
 						break;
 					case "CHANNEL_ERROR":
 						// this.emit('error', this);
+						Sentry.captureException(err);
 						break;
 					case "TIMED_OUT":
 						this.emit("disconnect", this);
