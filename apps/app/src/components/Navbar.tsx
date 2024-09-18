@@ -51,7 +51,7 @@ export const Navbar: FC = () => {
 				<div className="flex-row items-center gap-2 flex">
 					{!isHomePage && (
 						<li className="hidden md:block">
-							<Link to={`/workspaces/${workspace?.slug}`}>
+							<Link to="/">
 								<Button aria-label="Home" variant="ghost" size="icon">
 									<Home className="size-6" />
 								</Button>
