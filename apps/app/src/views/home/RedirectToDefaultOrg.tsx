@@ -26,6 +26,7 @@ export const RedirectToDefaultOrg = () => {
 			return { orgs, pendingInvites };
 		},
 		enabled: !lastOpenedWorkspaceSlug,
+		staleTime: 0,
 	});
 
 	if (userRecord.is_pending) {
