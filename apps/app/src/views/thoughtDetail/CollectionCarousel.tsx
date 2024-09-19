@@ -1,7 +1,7 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { NotebookIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react";
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { supabase } from "src/clients/supabase";
@@ -23,11 +23,7 @@ import { makeCollectionUrl } from "src/utils/collection";
 import { makeThoughtUrl } from "src/utils/thought";
 
 import { useEditThought, useThought } from "./hooks";
-
-interface Collection {
-	id: string;
-	title: string | null;
-}
+import { ThoughtContext } from "./thoughtContext";
 
 const useCollections = () => {
 	const workspace = useWorkspace();
@@ -174,7 +170,9 @@ const useIgnoreCollectionSuggestion = () => {
 	});
 };
 
-export const CollectionCarousel = ({ thoughtId, collections }: { thoughtId?: string; collections: Collection[] }) => {
+export const CollectionCarousel = () => {
+	const { thoughtId } = useContext(ThoughtContext);
+
 	const { data: allCollections } = useCollections();
 	const { data: thought } = useThought(thoughtId);
 	const wsSlug = useWorkspaceSlug();
@@ -184,7 +182,10 @@ export const CollectionCarousel = ({ thoughtId, collections }: { thoughtId?: str
 	const { mutateAsync: removeFromCollection } = useRemoveFromCollection();
 	const { mutateAsync: ignoreCollectionSuggestion } = useIgnoreCollectionSuggestion();
 
-	const thoughtCollectionSet = useMemo(() => new Set(collections?.map(collection => collection.id)), [collections]);
+	const thoughtCollectionSet = useMemo(
+		() => new Set(thought?.collections?.map(collection => collection.id)),
+		[thought?.collections],
+	);
 
 	const collectionsWhereThoughtIsNotIn = useMemo(
 		() => allCollections?.filter(collection => !thoughtCollectionSet.has(collection.id)),
@@ -192,8 +193,8 @@ export const CollectionCarousel = ({ thoughtId, collections }: { thoughtId?: str
 	);
 
 	const collectionIds = useMemo(() => {
-		return new Set(collections?.map(collection => collection.id) ?? []);
-	}, [collections]);
+		return new Set(thought?.collections?.map(collection => collection.id) ?? []);
+	}, [thought?.collections]);
 
 	const suggestedCollections = useMemo(() => {
 		return (thought?.collection_suggestions as string[] | null)
@@ -207,7 +208,7 @@ export const CollectionCarousel = ({ thoughtId, collections }: { thoughtId?: str
 		<div className="w-screen -ml-6 pl-6 md:ml-0 md:pl-0 md:w-full overflow-x-auto no-scrollbar">
 			<div className="flex flex-nowrap gap-2 pb-2">
 				{thoughtId &&
-					collections?.map(collection => (
+					thought?.collections?.map(collection => (
 						<Link key={collection.id} to={makeCollectionUrl(wsSlug, collection.id)}>
 							<Chip
 								size="sm"

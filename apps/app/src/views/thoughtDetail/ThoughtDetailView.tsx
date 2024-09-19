@@ -25,7 +25,7 @@ import { ControlColumn } from "./ControlColumn";
 import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
-import { ThoughtEditPayload, useEditThought, useThought } from "./hooks";
+import { ThoughtEditPayload, useEditThought, useThought, useThoughtChannelListeners } from "./hooks";
 import { updateMentionNodeNames } from "./mention";
 import { ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
@@ -57,6 +57,7 @@ export const ThoughtDetailView = () => {
 };
 
 const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Thought }) => {
+	useThoughtChannelListeners(thoughtId);
 	const userRecord = useUserRecord();
 
 	const { mutateAsync: editThought } = useEditThought(thoughtId);
@@ -167,7 +168,6 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 			<div className="flex w-full flex-col lg:flex-row lg:h-full xl:max-w-screen-2xl">
 				<EditorView
 					thoughtId={thoughtId!}
-					collections={thought?.collections ?? []}
 					remoteTitle={thought?.title ?? undefined}
 					latestRemoteTitleTs={thought?.title_ts ?? undefined}
 					onChange={onChange}
@@ -182,13 +182,11 @@ const EditorView = ({
 	thoughtId,
 	remoteTitle,
 	latestRemoteTitleTs,
-	collections,
 	onChange,
 }: {
 	thoughtId: string;
 	remoteTitle?: string;
 	latestRemoteTitleTs?: string;
-	collections: Collection[];
 	onChange: (payload: ThoughtEditPayload) => void;
 }) => {
 	const { editor, disableUpdatesRef, isConnected } = useContext(ThoughtContext);
@@ -254,7 +252,7 @@ const EditorView = ({
 					suppressContentEditableWarning
 				/>
 				<div className="pr-4">
-					<CollectionCarousel thoughtId={thoughtId} collections={collections} />
+					<CollectionCarousel />
 				</div>
 			</div>
 			<div

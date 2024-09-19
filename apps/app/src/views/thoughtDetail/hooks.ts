@@ -147,12 +147,9 @@ export const useForceAiUpdate = (thoughtId?: string) => {
 		},
 	});
 };
-export const useThought = (thoughtId?: string) => {
-	useEffect(() => {
-		if (!thoughtId) {
-			return;
-		}
 
+export const useThoughtChannelListeners = (thoughtId: string) => {
+	useEffect(() => {
 		const channel = supabase
 			.channel("thought")
 			.on(
@@ -177,10 +174,6 @@ export const useThought = (thoughtId?: string) => {
 	}, [thoughtId]);
 
 	useEffect(() => {
-		if (!thoughtId) {
-			return;
-		}
-
 		const channel = supabase
 			.channel("thoughtCollectionsLoad")
 			.on(
@@ -203,7 +196,9 @@ export const useThought = (thoughtId?: string) => {
 			channel.unsubscribe();
 		};
 	}, [thoughtId]);
+};
 
+export const useThought = (thoughtId?: string) => {
 	return useQuery({
 		queryKey: ["thought", thoughtId ?? "new"],
 		queryFn: async () => {
