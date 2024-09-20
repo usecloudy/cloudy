@@ -21,8 +21,8 @@ export const SidebarView = () => {
 
 	if (isSidebarCollapsed) {
 		return (
-			<div className="hidden md:flex sticky top-0 w-16 h-screen py-4 gap-2 flex-col items-center justify-between border-r border-border">
-				<div className="flex flex-col gap-2 w-full items-center">
+			<div className="sticky top-0 hidden h-screen w-16 flex-col items-center justify-between gap-2 border-r border-border py-4 md:flex">
+				<div className="flex w-full flex-col items-center gap-2">
 					<Button
 						onClick={() => setIsSidebarCollapsed(false)}
 						variant="ghost"
@@ -40,7 +40,7 @@ export const SidebarView = () => {
 					{workspace && (
 						<Tooltip>
 							<TooltipTrigger>
-								<Link to={makeThoughtUrl(workspace.slug, "new")} className="px-4 mt-4">
+								<Link to={makeThoughtUrl(workspace.slug, "new")} className="mt-4 px-4">
 									<Button variant="ghost" size="icon">
 										<FilePlusIcon className="size-5" />
 									</Button>
@@ -56,9 +56,9 @@ export const SidebarView = () => {
 	}
 
 	return (
-		<div className="hidden md:flex sticky top-0 w-64 h-screen py-2 flex-col border-r border-border">
-			<div className="w-full flex flex-row px-4 gap-2 items-center justify-between mb-2">
-				<div className="flex-row items-center flex">
+		<div className="sticky top-0 hidden h-screen w-64 flex-col border-r border-border py-2 md:flex">
+			<div className="mb-2 flex w-full flex-row items-center justify-between gap-2 px-4">
+				<div className="flex flex-row items-center">
 					<div className="hidden md:block">
 						<Link to="/">
 							<Button aria-label="Home" variant="ghost" size="icon">
@@ -88,21 +88,21 @@ export const SidebarView = () => {
 			</div>
 			<WorkspaceSelector />
 			{workspace && (
-				<Link to={makeThoughtUrl(workspace.slug, "new")} className="px-4 mt-4">
+				<Link to={makeThoughtUrl(workspace.slug, "new")} className="mt-4 px-4">
 					<Button variant="outline" className="w-full justify-start">
 						<FilePlusIcon className="size-4" />
 						<span>New note</span>
 					</Button>
 				</Link>
 			)}
-			<div className="px-4 mt-4 flex-1 overflow-y-auto no-scrollbar">
+			<div className="no-scrollbar mt-4 flex-1 overflow-y-auto px-4">
 				<LatestThoughts />
 				<div className="mt-6">
 					<Collections />
 				</div>
 				<div className="h-4" />
 			</div>
-			<div className="w-full flex flex-row items-center justify-between px-4 pb-2 pt-3 border-t border-border">
+			<div className="flex w-full flex-row items-center justify-between border-t border-border px-4 pb-2 pt-3">
 				{userRecord && (
 					<div className="flex flex-col">
 						<span className="text-sm font-medium text-secondary">Signed in as</span>

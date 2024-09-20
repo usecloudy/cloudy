@@ -34,7 +34,7 @@ export const PaymentSuccessDialog: React.FC = () => {
 		<Dialog open={showDialog} onOpenChange={handleClose}>
 			<DialogContent
 				insertBetween={
-					<div className="fixed top-0 left-0 w-full h-full z-50 flex items-center justify-center">
+					<div className="fixed left-0 top-0 z-50 flex h-full w-full items-center justify-center">
 						<ConfettiExplosion force={0.8} duration={8000} particleCount={175} width={1600} />
 					</div>
 				}>
@@ -45,7 +45,7 @@ export const PaymentSuccessDialog: React.FC = () => {
 						Your subscription is now active. We're excited to have you on board!
 					</p>
 					<Button onClick={handleClose} className="mt-4">
-						<RocketIcon className="w-4 h-4" />
+						<RocketIcon className="h-4 w-4" />
 						<span>Get Started</span>
 					</Button>
 				</div>

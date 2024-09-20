@@ -251,8 +251,8 @@ export const WorkspaceSettingsView = () => {
 
 	return (
 		<SimpleLayout className="flex flex-col items-center justify-center">
-			<div className="flex flex-col gap-4 border border-border p-6 rounded-md w-full max-w-md">
-				<h1 className="text-2xl font-bold font-display">Workspace settings</h1>
+			<div className="flex w-full max-w-md flex-col gap-4 rounded-md border border-border p-6">
+				<h1 className="font-display text-2xl font-bold">Workspace settings</h1>
 				<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
 					<div className="flex flex-col gap-1">
 						<label htmlFor="name">Workspace name</label>
@@ -262,12 +262,12 @@ export const WorkspaceSettingsView = () => {
 							error={!!errors.name}
 							disabled={!isOwner}
 						/>
-						{errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+						{errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
 					</div>
 					<div className="flex flex-col gap-1">
 						<label htmlFor="slug">Workspace slug</label>
 						<div className="flex items-center">
-							<span className="text-secondary mr-2 text-sm">app.usecloudy.com/workspaces/</span>
+							<span className="mr-2 text-sm text-secondary">app.usecloudy.com/workspaces/</span>
 							<Input
 								{...register("slug", {
 									required: "Slug is required",
@@ -282,7 +282,7 @@ export const WorkspaceSettingsView = () => {
 								disabled={!isOwner}
 							/>
 						</div>
-						{errors.slug && <p className="text-red-500 text-sm mt-1">{errors.slug.message}</p>}
+						{errors.slug && <p className="mt-1 text-sm text-red-500">{errors.slug.message}</p>}
 					</div>
 					{isOwner && (
 						<Button type="submit" disabled={isPending || !watchSlug || !watchName}>
@@ -291,18 +291,18 @@ export const WorkspaceSettingsView = () => {
 					)}
 				</form>
 				<div className="flex flex-col gap-2">
-					<h2 className="text-lg font-bold font-display">Members</h2>
+					<h2 className="font-display text-lg font-bold">Members</h2>
 					<div className="flex flex-col gap-4">
 						{members?.map(member => {
 							const isCurrentUser = member.user.id === currentUser.id;
 							return (
-								<div key={member.user.id} className="flex flex-row gap-2 items-center justify-between">
+								<div key={member.user.id} className="flex flex-row items-center justify-between gap-2">
 									<div className="flex flex-col">
 										<span className="text-sm">{member.user.name || "-"}</span>
-										<span className="text-secondary text-sm">{member.user.email}</span>
+										<span className="text-sm text-secondary">{member.user.email}</span>
 									</div>
 
-									<div className="flex flex-row gap-2 items-center">
+									<div className="flex flex-row items-center gap-2">
 										<SelectDropdown
 											options={roleOptions}
 											value={member.role}
@@ -324,12 +324,12 @@ export const WorkspaceSettingsView = () => {
 							);
 						})}
 						{pendingInvites?.map(invite => (
-							<div key={invite.id} className="flex flex-row gap-2 items-center justify-between">
+							<div key={invite.id} className="flex flex-row items-center justify-between gap-2">
 								<div className="flex flex-col gap-1 text-sm text-secondary">
 									<span>{invite.user!.email}</span>
 								</div>
-								<div className="flex flex-row gap-2 items-center">
-									<span className="text-xs text-secondary font-medium">Pending</span>
+								<div className="flex flex-row items-center gap-2">
+									<span className="text-xs font-medium text-secondary">Pending</span>
 									{isOwner && (
 										<Button variant="outline" size="icon-sm" onClick={() => deletePendingInvite(invite.id)}>
 											<XIcon className="size-4" />
@@ -342,7 +342,7 @@ export const WorkspaceSettingsView = () => {
 					{isOwner && (
 						<div className="flex flex-col gap-2">
 							<span className="text-sm font-medium">Add a Member</span>
-							<div className="flex flex-row gap-2 items-center">
+							<div className="flex flex-row items-center gap-2">
 								<Input
 									placeholder="anyone@email.com"
 									value={newMemberEmail}
@@ -361,8 +361,8 @@ export const WorkspaceSettingsView = () => {
 					)}
 				</div>
 				<div className="flex flex-col gap-2">
-					<div className="flex flex-row gap-1 items-center">
-						<h2 className="text-lg font-bold font-display">Subscription Plan</h2>
+					<div className="flex flex-row items-center gap-1">
+						<h2 className="font-display text-lg font-bold">Subscription Plan</h2>
 						<Tag>
 							{customerStatus?.customerStatus?.isActive ? (
 								customerStatus.customerStatus.isTrialing ? (

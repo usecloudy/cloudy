@@ -12,8 +12,7 @@ module.exports = {
 	importOrderSeparation: true,
 	importOrderSortSpecifiers: true,
 	importOrderParserPlugins: ["typescript", "jsx", "decorators"],
-	plugins: [
-		"prettier-plugin-tailwindcss",
-		"@trivago/prettier-plugin-sort-imports",
-	],
+	plugins: ["@trivago/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
+	tailwindConfig: "./tailwind.config.js",
+	tailwindFunctions: ["clsx", "cn"],
 };

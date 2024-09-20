@@ -46,7 +46,7 @@ export const Navbar: FC = () => {
 	};
 
 	return (
-		<nav className="md:hidden relative bg-background flex w-full flex-row items-center justify-between px-4 py-4 md:py-3 border-b border-border z-20 md:justify-end">
+		<nav className="relative z-20 flex w-full flex-row items-center justify-between border-b border-border bg-background px-4 py-4 md:hidden md:justify-end md:py-3">
 			<ul className="flex flex-row items-center gap-2 md:hidden">
 				<li>
 					<Link to="/">
@@ -67,9 +67,9 @@ export const Navbar: FC = () => {
 					</Button>
 				</li>
 			</ul>
-			<div className="block md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+			<div className="absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2 md:hidden">
 				<img src="/logo.png" className="w-10" alt="Logo" />
-				<div className="absolute top-1/2 -translate-y-1/2 -right-10 scale-75">
+				<div className="absolute -right-10 top-1/2 -translate-y-1/2 scale-75">
 					<Tag className="text-accent/80">beta</Tag>
 				</div>
 			</div>
@@ -78,7 +78,7 @@ export const Navbar: FC = () => {
 					{customerStatus?.isTrialing && (
 						<Dropdown
 							trigger={
-								<div className="bg-card px-2 py-1 rounded flex flex-row items-center gap-1 text-secondary cursor-pointer hover:bg-accent/20">
+								<div className="flex cursor-pointer flex-row items-center gap-1 rounded bg-card px-2 py-1 text-secondary hover:bg-accent/20">
 									<TimerIcon className="h-3.5 w-3.5" />
 									<span className="text-xs">
 										{`${pluralize(customerStatus.remainingDaysInTrial ?? 0, "day")} remaining in trial`}

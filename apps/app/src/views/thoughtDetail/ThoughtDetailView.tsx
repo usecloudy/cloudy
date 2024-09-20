@@ -47,7 +47,7 @@ export const ThoughtDetailView = () => {
 
 	return (
 		<EditorErrorBoundary>
-			<MainLayout className="md:overflow-hidden items-center px-0 md:px-0 lg:px-0">
+			<MainLayout className="items-center px-0 md:overflow-hidden md:px-0 lg:px-0">
 				<Helmet>
 					<title>{headTitle}</title>
 				</Helmet>
@@ -170,7 +170,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				hideControlColumn,
 				setHideControlColumn,
 			}}>
-			<div className="relative flex w-full flex-col lg:flex-row h-full xl:max-w-screen-2xl">
+			<div className="relative flex h-full w-full flex-col lg:flex-row xl:max-w-screen-2xl">
 				<EditorView
 					thoughtId={thoughtId!}
 					remoteTitle={thought?.title ?? undefined}
@@ -241,18 +241,18 @@ const EditorView = ({
 	};
 
 	return (
-		<div className="relative flex flex-col lg:flex-1 overflow-y-scroll h-full no-scrollbar">
-			<nav className="sticky top-0 py-2 z-30 bg-background -mr-2 md:ml-8 md:mr-4">
+		<div className="no-scrollbar relative flex h-full flex-col overflow-y-scroll lg:flex-1">
+			<nav className="sticky top-0 z-30 -mr-2 bg-background py-2 md:ml-8 md:mr-4">
 				<ControlRow thoughtId={thoughtId} editor={editor} />
 			</nav>
 			<div
 				className={cn(
-					"flex flex-col lg:flex-1 box-border -ml-8 px-6 md:pl-16 pt-16",
+					"-ml-8 box-border flex flex-col px-6 pt-16 md:pl-16 lg:flex-1",
 					hideControlColumn ? "md:pr-16" : "md:pr-4",
 				)}>
-				<div className="flex flex-col gap-3 pb-4 ml-8">
+				<div className="ml-8 flex flex-col gap-3 pb-4">
 					<TextareaAutosize
-						className="w-full resize-none appearance-none border-none bg-transparent text-2xl leading-8 md:text-3xl font-bold md:leading-10 outline-none no-scrollbar"
+						className="no-scrollbar w-full resize-none appearance-none border-none bg-transparent text-2xl font-bold leading-8 outline-none md:text-3xl md:leading-10"
 						contentEditable={true}
 						placeholder="Untitled"
 						value={title ?? ""}
@@ -272,7 +272,7 @@ const EditorView = ({
 					{editor && thoughtId && (
 						<div>
 							<DragHandle editor={editor} tippyOptions={{ offset: [-4, 4], zIndex: 10 }}>
-								<div className="hidden md:flex flex-row items-center hover:bg-card border border-transparent hover:border-border rounded py-1 px-0.5 active:bg-accent/20 cursor-grab active:cursor-grabbing">
+								<div className="hidden cursor-grab flex-row items-center rounded border border-transparent px-0.5 py-1 hover:border-border hover:bg-card active:cursor-grabbing active:bg-accent/20 md:flex">
 									<GripVertical className="h-5 w-5 text-tertiary" />
 								</div>
 							</DragHandle>
@@ -284,7 +284,7 @@ const EditorView = ({
 							className={cn("w-full", isAiWriting && "pointer-events-none opacity-70")}
 						/>
 					) : (
-						<div className="w-full h-full flex items-center justify-center">
+						<div className="flex h-full w-full items-center justify-center">
 							<LoadingSpinner size="sm" />
 						</div>
 					)}

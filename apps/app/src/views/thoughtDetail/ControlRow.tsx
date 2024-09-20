@@ -20,7 +20,7 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId?: string; editor?:
 	const { hideControlColumn, setHideControlColumn } = useContext(ThoughtContext);
 
 	return (
-		<div className="flex flex-row justify-between items-center">
+		<div className="flex flex-row items-center justify-between">
 			<div className="text-xs text-tertiary">
 				{thought && <span>Last edited {makeHumanizedTime(thought.updated_at)}</span>}
 			</div>
@@ -84,7 +84,7 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId?: string; editor?:
 							<MoreHorizontalIcon className="size-5" />
 						</Button>
 					}>
-					<div className="flex flex-col w-36">
+					<div className="flex w-36 flex-col">
 						{thoughtId && <ExportDialog thoughtId={thoughtId} />}
 						{thoughtId && <DeleteDialog thoughtId={thoughtId} />}
 					</div>

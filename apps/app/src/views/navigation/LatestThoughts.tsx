@@ -49,9 +49,9 @@ export const LatestThoughts = () => {
 	}
 
 	return (
-		<div className="flex flex-col gap-2 w-full">
+		<div className="flex w-full flex-col gap-2">
 			<div className="flex flex-row items-center gap-1">
-				<h3 className="text-secondary font-semibold whitespace-nowrap text-sm">Latest Notes</h3>
+				<h3 className="whitespace-nowrap text-sm font-semibold text-secondary">Latest Notes</h3>
 			</div>
 			<ul className="flex flex-col gap-1">
 				{latestThoughts.map(thought => (
@@ -59,7 +59,7 @@ export const LatestThoughts = () => {
 						<Link
 							to={makeThoughtUrl(workspace.slug, thought.id)}
 							className={cn(
-								"py-1 px-2 gap-1 rounded hover:bg-card flex flex-row items-center",
+								"flex flex-row items-center gap-1 rounded px-2 py-1 hover:bg-card",
 								thought.id === thoughtId && "bg-accent/10",
 							)}>
 							{thought.hasCollection ? (
@@ -67,7 +67,7 @@ export const LatestThoughts = () => {
 							) : (
 								<FileIcon className="size-4 shrink-0" />
 							)}
-							<span className={cn("text-sm truncate", thought.title && "font-medium")}>
+							<span className={cn("truncate text-sm", thought.title && "font-medium")}>
 								{makeThoughtLabel(thought)}
 							</span>
 						</Link>

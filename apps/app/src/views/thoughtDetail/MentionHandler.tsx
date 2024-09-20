@@ -186,26 +186,26 @@ export const MentionHandler = forwardRef(({ query, command }: SuggestionProps, r
 			<>
 				<div
 					className={cn(
-						"flex items-center gap-2 text-sm px-2 py-1 rounded-sm cursor-pointer w-full hover:bg-card",
+						"flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1 text-sm hover:bg-card",
 						selectedIndex === 0 && "bg-accent/10",
 					)}
 					onClick={() => setCurrentView("latest_notes")}>
 					<ArrowRightIcon className="size-4 flex-shrink-0 text-secondary" />
 					<span className="flex-1">View latest notes</span>
-					<div className="flex items-center text-xs text-secondary gap-1 flex-shrink-0">
+					<div className="flex flex-shrink-0 items-center gap-1 text-xs text-secondary">
 						<Hotkey keys={["enter"]} />
 						<span>Open</span>
 					</div>
 				</div>
 				<div
 					className={cn(
-						"flex items-center gap-2 text-sm px-2 py-1 rounded-sm cursor-pointer w-full hover:bg-card",
+						"flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1 text-sm hover:bg-card",
 						selectedIndex === 1 && "bg-accent/10",
 					)}
 					onClick={() => {}}>
 					<PlusIcon className="size-4 flex-shrink-0 text-secondary" />
 					<span className="flex-1">New note</span>
-					<div className="flex items-center text-xs text-secondary gap-1 flex-shrink-0">
+					<div className="flex flex-shrink-0 items-center gap-1 text-xs text-secondary">
 						<Hotkey keys={["enter"]} />
 						<span>Create new note</span>
 					</div>
@@ -231,8 +231,8 @@ export const MentionHandler = forwardRef(({ query, command }: SuggestionProps, r
 	};
 
 	return (
-		<div className="bg-background border border-border rounded-md p-2 shadow-md w-full md:w-[28rem]">
-			<div className="text-sm text-secondary mb-2 ml-1">{title}</div>
+		<div className="w-full rounded-md border border-border bg-background p-2 shadow-md md:w-[28rem]">
+			<div className="mb-2 ml-1 text-sm text-secondary">{title}</div>
 			{viewMap[currentView]}
 		</div>
 	);
@@ -260,7 +260,7 @@ const ResultsView = ({
 	}
 
 	if (displayingData.length === 0) {
-		return <div className="text-sm text-center text-secondary p-2">No results found.</div>;
+		return <div className="p-2 text-center text-sm text-secondary">No results found.</div>;
 	}
 
 	return (
@@ -269,18 +269,18 @@ const ResultsView = ({
 				<div
 					key={thought.id}
 					className={cn(
-						"flex items-center gap-2 px-2 py-1 rounded-sm cursor-pointer w-full hover:bg-card",
+						"flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1 hover:bg-card",
 						selectedIndex === index ? "bg-accent/10" : "",
 					)}
 					onClick={() => apply(index)}>
 					<NotebookTextIcon className="size-4 flex-shrink-0 text-secondary" />
-					<div className="flex flex-col flex-1 min-w-0">
+					<div className="flex min-w-0 flex-1 flex-col">
 						<span className="text-xs text-secondary">{makeHumanizedTime(thought.updated_at)}</span>
-						<span className={cn("text-sm truncate", thought.title ? "font-medium" : "text-primary/80")}>
+						<span className={cn("truncate text-sm", thought.title ? "font-medium" : "text-primary/80")}>
 							{thought.title || thought.content_plaintext || thought.content_md}
 						</span>
 					</div>
-					<div className="flex items-center text-xs text-secondary gap-1 flex-shrink-0">
+					<div className="flex flex-shrink-0 items-center gap-1 text-xs text-secondary">
 						<Hotkey keys={["enter"]} />
 						<span>Link</span>
 					</div>

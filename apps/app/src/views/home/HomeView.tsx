@@ -86,18 +86,18 @@ export const HomeView = () => {
 			<Helmet>
 				<title>{makeHeadTitle("Home")}</title>
 			</Helmet>
-			<div className="flex flex-col-reverse md:flex-row gap-4 py-4 md:py-8 w-full ">
+			<div className="flex w-full flex-col-reverse gap-4 py-4 md:flex-row md:py-8">
 				<div className="h-8 md:hidden" />
-				<div className="flex-1 flex-col flex gap-4 mt-6">
+				<div className="mt-6 flex flex-1 flex-col gap-4">
 					<div className="flex flex-col gap-2">
 						<div className="flex flex-row items-center gap-1">
 							<FileIcon className="size-4 text-secondary" />
-							<h3 className="text-secondary font-semibold whitespace-nowrap">Notes</h3>
+							<h3 className="whitespace-nowrap font-semibold text-secondary">Notes</h3>
 						</div>
 						<SearchBar />
 					</div>
 					{!customerStatus?.customerStatus?.isActive && (
-						<div className="flex flex-row gap-2 items-center w-full border border-red-400 rounded-md p-4 text-red-600">
+						<div className="flex w-full flex-row items-center gap-2 rounded-md border border-red-400 p-4 text-red-600">
 							<MessageCircleWarningIcon className="size-5" />
 							<p className="flex-1">
 								Your subscription plan is inactive, you will not be able to create new notes.

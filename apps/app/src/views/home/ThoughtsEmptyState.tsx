@@ -9,7 +9,7 @@ export const ThoughtsEmptyState = () => {
 	const wsSlug = useWorkspaceSlug();
 
 	return (
-		<div className="flex flex-col items-center justify-center w-full gap-4">
+		<div className="flex w-full flex-col items-center justify-center gap-4">
 			<span className="text-tertiary">Looks like you got no notes yet.</span>
 			<Link to={makeThoughtUrl(wsSlug, "new")}>
 				<Button>

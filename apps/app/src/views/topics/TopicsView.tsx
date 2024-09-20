@@ -127,8 +127,8 @@ const TopicCard = ({ topic }: { topic: Topic }) => {
 	};
 
 	return (
-		<div className="bg-card rounded-lg p-4 space-y-4">
-			<div className="flex justify-between items-center">
+		<div className="space-y-4 rounded-lg bg-card p-4">
+			<div className="flex items-center justify-between">
 				<div className="flex flex-col">
 					<div className="text-xs text-secondary">Topic</div>
 					<h2 className="text-xl font-semibold">{topic.query}</h2>
@@ -155,8 +155,8 @@ const TopicCard = ({ topic }: { topic: Topic }) => {
 			) : (
 				<div className="space-y-2">
 					{topicMessages?.map(topicMessage => (
-						<div key={topicMessage.id} className="bg-background p-2 rounded flex-row flex">
-							<div className="flex flex-col flex-1">
+						<div key={topicMessage.id} className="flex flex-row rounded bg-background p-2">
+							<div className="flex flex-1 flex-col">
 								<span className="text-xs text-secondary">
 									{makeHumanizedTime(topicMessage.message!.sent_at)}
 								</span>

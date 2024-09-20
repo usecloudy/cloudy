@@ -93,14 +93,14 @@ const CommentColumnInner = ({
 
 	return (
 		<div
-			className={cn("h-full w-14 md:w-16 relative -mr-6 md:mr-0", commentsWithOffset.length === 0 && "hidden md:block")}
+			className={cn("relative -mr-6 h-full w-14 md:mr-0 md:w-16", commentsWithOffset.length === 0 && "hidden md:block")}
 			ref={containerRef}>
 			{commentsWithOffset.map(({ offset, comments }) => {
 				const isSelected = commentFilter?.selectedGroupId === offset.toString();
 				const hasUnreadComments = comments.some(comment => !comment.is_seen); // Add this line
 
 				return (
-					<div key={offset} style={{ top: offset }} className="absolute left-0 w-12 -mt-1">
+					<div key={offset} style={{ top: offset }} className="absolute left-0 -mt-1 w-12">
 						<Button
 							variant="ghost"
 							size="sm"
@@ -114,11 +114,11 @@ const CommentColumnInner = ({
 									});
 								}
 							}}
-							className={cn("px-2 h-7 relative", isSelected && "bg-accent/80 text-background")}>
-							<MessageCircleIcon className="w-5 h-5" />
+							className={cn("relative h-7 px-2", isSelected && "bg-accent/80 text-background")}>
+							<MessageCircleIcon className="h-5 w-5" />
 							<span className="text-xs">{comments.length}</span>
 							{hasUnreadComments && (
-								<CircleIcon className="absolute top-1 right-0.5 w-2 h-2 text-accent fill-current" />
+								<CircleIcon className="absolute right-0.5 top-1 h-2 w-2 fill-current text-accent" />
 							)}
 						</Button>
 					</div>

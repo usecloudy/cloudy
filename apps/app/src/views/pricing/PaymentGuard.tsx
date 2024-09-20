@@ -98,9 +98,9 @@ export const SubscriptionModal = () => {
 			}}>
 			<DialogContent>
 				{allowClose && (
-					<div className="flex justify-end -mt-2 -mr-2">
+					<div className="-mr-2 -mt-2 flex justify-end">
 						<Button onClick={() => handleClose()} size="icon-xs-overflow" variant="ghost">
-							<XIcon className="w-4 h-4" />
+							<XIcon className="h-4 w-4" />
 						</Button>
 					</div>
 				)}
@@ -110,15 +110,15 @@ export const SubscriptionModal = () => {
 					</div>
 				) : missingCustomerStatus ? (
 					<div>
-						<h3 className="font-medium text-lg text-center">Something went wrong</h3>
-						<p className="text-secondary text-sm text-center">
+						<h3 className="text-center text-lg font-medium">Something went wrong</h3>
+						<p className="text-center text-sm text-secondary">
 							Woah this isn't supposed to happen. Please contact us at{" "}
 							<a href="mailto:founders@usecloudy.com" className="text-accent">
 								founders@usecloudy.com
 							</a>
 							.
 						</p>
-						<p className="text-secondary text-sm text-center">
+						<p className="text-center text-sm text-secondary">
 							For a faster response, shoot Jenn a dm on X:{" "}
 							<a href="https://x.com/jennmueng" className="text-accent">
 								@jennmueng
@@ -129,15 +129,15 @@ export const SubscriptionModal = () => {
 					<div>
 						{products?.map(product => (
 							<div key={product.id} className="flex flex-col items-center gap-4">
-								<div className="flex flex-col gap-2 items-center">
+								<div className="flex flex-col items-center gap-2">
 									<img src="/logo.png" className="w-8" alt="Cloudy Logo" />
 									<div className="flex flex-row items-center gap-2">
-										<h3 className="font-medium text-lg">{product.name}</h3>
+										<h3 className="text-lg font-medium">{product.name}</h3>
 										{"tag" in product.metadata ? <Tag>{product.metadata.tag}</Tag> : null}
 									</div>
-									<div className="text-sm text-secondary text-center -mb-2">Monthly</div>
+									<div className="-mb-2 text-center text-sm text-secondary">Monthly</div>
 									<Pricing price={product.defaultPrice} fullPrice={product.fullPrice} showDiscount={false} />
-									<div className="text-sm text-secondary text-center">{product.description}</div>
+									<div className="text-center text-sm text-secondary">{product.description}</div>
 								</div>
 								<Button
 									className="self-stretch"
@@ -145,24 +145,24 @@ export const SubscriptionModal = () => {
 									disabled={isCheckoutLoading}>
 									{isCheckoutLoading ? <LoadingSpinner size="xs" variant="background" /> : "Subscribe now"}
 								</Button>
-								<div className="flex flex-col items-start w-full bg-card rounded-md p-4">
-									<div className="text-sm text-secondary font-medium">Features include:</div>
-									<ul className="list-disc list-outside px-4">
+								<div className="flex w-full flex-col items-start rounded-md bg-card p-4">
+									<div className="text-sm font-medium text-secondary">Features include:</div>
+									<ul className="list-outside list-disc px-4">
 										{product.marketingFeatures.map(feature => (
-											<li key={feature.title} className="text-secondary text-xs my-1">
+											<li key={feature.title} className="my-1 text-xs text-secondary">
 												{feature.title}
 											</li>
 										))}
 									</ul>
 								</div>
-								<div className="text-xs text-secondary text-center">
+								<div className="text-center text-xs text-secondary">
 									Something wrong? Contact us at{" "}
 									<a href="mailto:founders@usecloudy.com" className="text-accent">
 										founders@usecloudy.com
 									</a>
 								</div>
 								<a
-									className="text-accent text-xs text-center hover:underline cursor-pointer font-medium active:text-accent/80"
+									className="cursor-pointer text-center text-xs font-medium text-accent hover:underline active:text-accent/80"
 									href="/signout">
 									Sign out
 								</a>

@@ -16,10 +16,10 @@ export const WorkspaceSelector = () => {
 	}
 
 	return (
-		<div className="flex items-center justify-between w-full gap-1 px-4">
+		<div className="flex w-full items-center justify-between gap-1 px-4">
 			<Dropdown
 				trigger={
-					<Button variant="outline" className="flex justify-between items-center flex-1">
+					<Button variant="outline" className="flex flex-1 items-center justify-between">
 						<div className="flex flex-row items-center gap-2">
 							<LayoutDashboardIcon className="size-4 text-secondary group-hover:text-accent" />
 							<span>{currentWorkspace.name}</span>
@@ -32,7 +32,7 @@ export const WorkspaceSelector = () => {
 						<Link to={`/workspaces/${workspace.slug}`} key={workspace.id}>
 							<DropdownItem className={cn(workspace.id === currentWorkspace.id ? "bg-card/50" : "")}>
 								{workspace.id === currentWorkspace.id ? (
-									<CheckIcon className="w-4 h-4" />
+									<CheckIcon className="h-4 w-4" />
 								) : (
 									<span className="w-4" />
 								)}

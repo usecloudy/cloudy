@@ -46,12 +46,12 @@ const ProtectedLayout: FC = () => {
 	}
 
 	return (
-		<div className="grid grid-flow-row w-screen">
+		<div className="grid w-screen grid-flow-row">
 			<div className="flex flex-row">
 				<SidebarView />
-				<div className="flex flex-col md:flex-1 md:w-auto w-screen h-screen">
+				<div className="flex h-screen w-screen flex-col md:w-auto md:flex-1">
 					<Navbar />
-					<main className="w-full flex-1 md:flex-none md:h-screen">
+					<main className="w-full flex-1 md:h-screen md:flex-none">
 						<Outlet />
 					</main>
 					<MobileTabBar />

@@ -61,11 +61,11 @@ export const ThoughtCard = ({
 	return (
 		<Link to={makeThoughtUrl(wsSlug, thought.id)}>
 			<div className={cn(thoughtCardVariants({ variant }))}>
-				<div className="flex flex-row items-center gap-2 flex-1">
+				<div className="flex flex-1 flex-row items-center gap-2">
 					{thought.collections.length > 0 ? (
-						<NotebookTextIcon className="text-tertiary size-5 flex-shrink-0" />
+						<NotebookTextIcon className="size-5 flex-shrink-0 text-tertiary" />
 					) : (
-						<FileIcon className="text-tertiary size-5 flex-shrink-0" />
+						<FileIcon className="size-5 flex-shrink-0 text-tertiary" />
 					)}
 					<div className="flex flex-col">
 						<span className="mt-1 text-xs text-secondary">

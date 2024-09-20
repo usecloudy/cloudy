@@ -54,7 +54,7 @@ export const PendingAccountSetupView = () => {
 			queryClient.invalidateQueries({ queryKey: [user?.id, "userRecord"] });
 			setError(null);
 			navigate("/");
-			toast.success("Account setup completed successfully", { icon: <CheckCircle2Icon className="w-4 h-4" /> });
+			toast.success("Account setup completed successfully", { icon: <CheckCircle2Icon className="h-4 w-4" /> });
 		},
 		onError: error => {
 			setError(`Error setting up account: ${error.message}`);
@@ -83,19 +83,19 @@ export const PendingAccountSetupView = () => {
 
 	return (
 		<SimpleLayout>
-			<SimpleLayoutView className="flex flex-col items-center justify-center h-dvh">
-				<div className="flex flex-col gap-4 items-start w-full md:w-[24rem]">
+			<SimpleLayoutView className="flex h-dvh flex-col items-center justify-center">
+				<div className="flex w-full flex-col items-start gap-4 md:w-[24rem]">
 					<div className="flex flex-col gap-1">
-						<h1 className="font-bold font-display tracking-wide text-lg">Complete Setup</h1>
-						<div className="text-secondary text-sm">Setting up account for {user?.email}</div>
+						<h1 className="font-display text-lg font-bold tracking-wide">Complete Setup</h1>
+						<div className="text-sm text-secondary">Setting up account for {user?.email}</div>
 					</div>
-					<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full">
+					<form onSubmit={handleSubmit(onSubmit)} className="flex w-full flex-col gap-4">
 						<Input
 							{...register("displayName", { required: "Display name is required" })}
 							placeholder="Display Name"
 							inputMode="text"
 						/>
-						{errors.displayName && <div className="text-red-600 text-xs">{errors.displayName.message}</div>}
+						{errors.displayName && <div className="text-xs text-red-600">{errors.displayName.message}</div>}
 						{!hasGoogleProvider && (
 							<div className="relative">
 								<Input
@@ -103,18 +103,18 @@ export const PendingAccountSetupView = () => {
 									type={showPassword ? "text" : "password"}
 									placeholder="Password"
 								/>
-								{errors.password && <div className="text-red-600 text-xs">{errors.password.message}</div>}
+								{errors.password && <div className="text-xs text-red-600">{errors.password.message}</div>}
 								<Button
 									type="button"
 									variant="ghost"
 									size="icon-sm"
 									onClick={() => setShowPassword(!showPassword)}
-									className="absolute right-1 top-1/2 transform -translate-y-1/2">
+									className="absolute right-1 top-1/2 -translate-y-1/2 transform">
 									{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
 								</Button>
 							</div>
 						)}
-						{error && <div className="text-red-600 text-xs">{error}</div>}
+						{error && <div className="text-xs text-red-600">{error}</div>}
 						<Button type="submit" disabled={setupAccountMutation.isPending || !isValid}>
 							{setupAccountMutation.isPending ? (
 								<LoadingSpinner size="xs" variant="background" />
@@ -123,7 +123,7 @@ export const PendingAccountSetupView = () => {
 							)}
 						</Button>
 					</form>
-					<div className="flex items-center w-full">
+					<div className="flex w-full items-center">
 						<div className="flex-grow border-t border-gray-300"></div>
 						<span className="px-3 text-sm text-gray-500">Or</span>
 						<div className="flex-grow border-t border-gray-300"></div>

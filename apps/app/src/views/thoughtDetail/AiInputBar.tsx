@@ -27,7 +27,7 @@ export const AiInputBar = () => {
 		<div className="relative w-full">
 			<TextareaAutosize
 				placeholder={feedMode === "thread" ? "Respond to Cloudy" : "Ask Cloudy something"}
-				className="w-full rounded-md bg-white/20 border-border border min-h-10 resize-none text-sm font-sans pl-3 pr-12 py-2 outline-none hover:outline-none focus:outline-none"
+				className="min-h-10 w-full resize-none rounded-md border border-border bg-white/20 py-2 pl-3 pr-12 font-sans text-sm outline-none hover:outline-none focus:outline-none"
 				value={textInput}
 				onChange={e => setTextInput(e.target.value)}
 				onKeyDown={e => {
@@ -40,10 +40,10 @@ export const AiInputBar = () => {
 			<div className="absolute right-1 top-1">
 				<Button
 					size="icon-sm"
-					className="rounded animate-in zoom-in ease-out fade-in"
+					className="rounded ease-out animate-in fade-in zoom-in"
 					onClick={handleSubmit}
 					disabled={!canSubmit}>
-					<SendHorizonalIcon className="w-4 h-4" />
+					<SendHorizonalIcon className="h-4 w-4" />
 				</Button>
 			</div>
 		</div>

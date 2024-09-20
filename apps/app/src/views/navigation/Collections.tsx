@@ -44,9 +44,9 @@ export const Collections = () => {
 	const hasMore = collections.length > 6;
 
 	return (
-		<div className="flex flex-col gap-2 w-full">
+		<div className="flex w-full flex-col gap-2">
 			<div className="flex flex-row items-center gap-1">
-				<h3 className="text-secondary font-semibold whitespace-nowrap text-sm">Collections</h3>
+				<h3 className="whitespace-nowrap text-sm font-semibold text-secondary">Collections</h3>
 			</div>
 			{workspace && (
 				<ul className="flex flex-col gap-1">
@@ -54,16 +54,16 @@ export const Collections = () => {
 						<li key={collection.id}>
 							<Link
 								to={makeCollectionUrl(workspace.slug, collection.id)}
-								className="py-1 px-2 gap-1 rounded hover:bg-card flex flex-row items-center">
+								className="flex flex-row items-center gap-1 rounded px-2 py-1 hover:bg-card">
 								<NotebookIcon className="size-4 shrink-0" />
-								<span className="text-sm truncate font-medium">{collection.title}</span>
+								<span className="truncate text-sm font-medium">{collection.title}</span>
 							</Link>
 						</li>
 					))}
 				</ul>
 			)}
 			{hasMore && (
-				<Button variant="ghost" size="sm" className="text-secondary justify-start" onClick={() => setShowAll(!showAll)}>
+				<Button variant="ghost" size="sm" className="justify-start text-secondary" onClick={() => setShowAll(!showAll)}>
 					{showAll ? (
 						<>
 							<ChevronUpIcon className="size-4" />

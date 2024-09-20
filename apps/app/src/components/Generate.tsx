@@ -37,7 +37,7 @@ export const Generate = () => {
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger>
 				<Button>
-					<SparklesIcon className="w-4 h-4" />
+					<SparklesIcon className="h-4 w-4" />
 					<span>Generate</span>
 				</Button>
 			</DialogTrigger>
@@ -48,7 +48,7 @@ export const Generate = () => {
 				</DialogHeader>
 				<TextareaAutosize
 					placeholder="Enter a prompt"
-					className="w-full rounded bg-white/20 border-border border resize-none text-base font-sans px-4 py-3 min-h-24 outline-none hover:outline-none focus:outline-none"
+					className="min-h-24 w-full resize-none rounded border border-border bg-white/20 px-4 py-3 font-sans text-base outline-none hover:outline-none focus:outline-none"
 					value={prompt}
 					onChange={e => setPrompt(e.target.value)}
 				/>
@@ -58,7 +58,7 @@ export const Generate = () => {
 							generateDocument(prompt);
 							setOpen(false);
 						}}>
-						<SparklesIcon className="w-4 h-4" />
+						<SparklesIcon className="h-4 w-4" />
 						<span>Generate</span>
 					</Button>
 				</DialogFooter>

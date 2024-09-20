@@ -258,15 +258,15 @@ export const AiEditorMenu = ({
 			<div
 				ref={refs.setFloating}
 				style={floatingStyles}
-				className="z-50 flex flex-col bg-background rounded-md border border-border px-2 py-2 gap-0.5">
-				<div className="flex flex-row items-center gap-1 pl-2 pb-1 pt-1">
+				className="z-50 flex flex-col gap-0.5 rounded-md border border-border bg-background px-2 py-2">
+				<div className="flex flex-row items-center gap-1 pb-1 pl-2 pt-1">
 					<SparklesIcon className="h-4 w-4 text-accent" />
 					<span className="text-sm font-medium">Let Cloudy write for you</span>
 				</div>
 				<div className="flex flex-row items-end gap-1">
 					<TextareaAutosize
 						ref={textAreaRef}
-						className="py-1.5 px-2 w-72 resize-none appearance-none border-none bg-transparent text-sm outline-none no-scrollbar"
+						className="no-scrollbar w-72 resize-none appearance-none border-none bg-transparent px-2 py-1.5 text-sm outline-none"
 						contentEditable={true}
 						placeholder="How should I edit this?"
 						value={editingText}

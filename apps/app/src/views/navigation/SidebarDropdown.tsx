@@ -45,11 +45,11 @@ export const SidebarDropdown = () => {
 						<span className="text-sm">{userRecord.email}</span>
 					</div>
 				)}
-				<div className="border-b border-border my-2" />
+				<div className="my-2 border-b border-border" />
 				<WorkspaceList />
 				{customerStatus?.isTrialing && (
 					<>
-						<div className="border-b border-border my-2" />
+						<div className="my-2 border-b border-border" />
 						<div className="flex flex-col gap-1 px-2">
 							<span className="text-sm font-medium text-secondary">Trial Status</span>
 							<span className="text-sm">
@@ -58,7 +58,7 @@ export const SidebarDropdown = () => {
 						</div>
 					</>
 				)}
-				<div className="border-b border-border my-2" />
+				<div className="my-2 border-b border-border" />
 			</div>
 			<a href="https://usecloudy.com/support">
 				<DropdownItem>
@@ -78,7 +78,7 @@ export const SidebarDropdown = () => {
 					<span>Terms of Service</span>
 				</DropdownItem>
 			</a>
-			<div className="border-b border-border my-2" />
+			<div className="my-2 border-b border-border" />
 			<DropdownItem onSelect={handleSignOut} className="text-red-600">
 				<LogOutIcon className="size-4" />
 				<span>Sign out</span>
@@ -93,7 +93,7 @@ const WorkspaceList = () => {
 
 	return (
 		<div className="flex flex-col">
-			<span className="text-sm font-medium text-secondary px-2">Workspace</span>
+			<span className="px-2 text-sm font-medium text-secondary">Workspace</span>
 			{allUserWorkspaces?.map(workspace => (
 				<Link to={`/workspaces/${workspace.slug}`} key={workspace.id}>
 					<DropdownItem className={cn(workspace.id === currentWorkspace.id ? "bg-card/50" : "")}>
@@ -102,7 +102,7 @@ const WorkspaceList = () => {
 						) : (
 							<span className="w-4" />
 						)}
-						<span className={cn("text-sm flex flex-1", workspace.id === currentWorkspace.id ? "font-medium" : "")}>
+						<span className={cn("flex flex-1 text-sm", workspace.id === currentWorkspace.id ? "font-medium" : "")}>
 							{workspace.name}
 						</span>
 						<Link to={`/workspaces/${workspace.slug}/settings`}>

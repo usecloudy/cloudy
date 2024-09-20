@@ -120,9 +120,9 @@ export const NewWorkspaceView = () => {
 
 	return (
 		<SimpleLayout className="flex flex-col items-center justify-center">
-			<div className="flex flex-col gap-4 border border-border p-6 rounded-md w-full max-w-md">
+			<div className="flex w-full max-w-md flex-col gap-4 rounded-md border border-border p-6">
 				<h1 className="text-2xl font-bold tracking-tight">Create a workspace</h1>
-				<p className="text-secondary text-sm">
+				<p className="text-sm text-secondary">
 					A workspace can be a space for your team to collaborate or it can just be for you. Don't worry, you can
 					change the name or slug anytime.
 				</p>
@@ -136,14 +136,14 @@ export const NewWorkspaceView = () => {
 							placeholder="Brain Fog Inc."
 							error={!!errors.name}
 						/>
-						{errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+						{errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
 					</div>
 					<div className="flex flex-col gap-1">
 						<label htmlFor="slug" className="font-medium">
 							Slug
 						</label>
 						<div className="flex items-center">
-							<span className="text-secondary mr-2 text-sm">app.usecloudy.com/workspaces/</span>
+							<span className="mr-2 text-sm text-secondary">app.usecloudy.com/workspaces/</span>
 							<Input
 								{...register("slug", {
 									required: "Slug is required",
@@ -159,9 +159,9 @@ export const NewWorkspaceView = () => {
 								onChange={handleSlugChange}
 							/>
 						</div>
-						{errors.slug && <p className="text-red-500 text-sm mt-1">{errors.slug.message}</p>}
-						{isSlugAvailable === true && <p className="text-green-600 text-xs mt-1">This slug is available</p>}
-						{isSlugAvailable === false && <p className="text-red-600 text-xs mt-1">This slug is already taken</p>}
+						{errors.slug && <p className="mt-1 text-sm text-red-500">{errors.slug.message}</p>}
+						{isSlugAvailable === true && <p className="mt-1 text-xs text-green-600">This slug is available</p>}
+						{isSlugAvailable === false && <p className="mt-1 text-xs text-red-600">This slug is already taken</p>}
 					</div>
 					<Button
 						type="submit"

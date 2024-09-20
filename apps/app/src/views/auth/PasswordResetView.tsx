@@ -28,7 +28,7 @@ export const PasswordResetView: React.FC = () => {
 			setNewPassword("");
 			setError(null);
 			navigate("/");
-			toast.success("Password updated successfully", { icon: <CheckCircle2Icon className="w-4 h-4" /> });
+			toast.success("Password updated successfully", { icon: <CheckCircle2Icon className="h-4 w-4" /> });
 		},
 		onError: error => {
 			setError(`Error updating password: ${error.message}`);
@@ -42,13 +42,13 @@ export const PasswordResetView: React.FC = () => {
 
 	return (
 		<SimpleLayout>
-			<SimpleLayoutView className="flex flex-col items-center justify-center h-dvh">
-				<div className="flex flex-col gap-4 items-start w-full md:w-[24rem]">
+			<SimpleLayoutView className="flex h-dvh flex-col items-center justify-center">
+				<div className="flex w-full flex-col items-start gap-4 md:w-[24rem]">
 					<div className="flex flex-col gap-1">
 						<h1 className="font-medium text-secondary">Reset Password</h1>
-						<div className="text-secondary text-sm">Resetting password for {user?.email}</div>
+						<div className="text-sm text-secondary">Resetting password for {user?.email}</div>
 					</div>
-					<form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
+					<form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
 						<div className="relative">
 							<Input
 								type={showPassword ? "text" : "password"}
@@ -62,11 +62,11 @@ export const PasswordResetView: React.FC = () => {
 								variant="ghost"
 								size="icon-sm"
 								onClick={() => setShowPassword(!showPassword)}
-								className="absolute right-1 top-1/2 transform -translate-y-1/2">
+								className="absolute right-1 top-1/2 -translate-y-1/2 transform">
 								{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
 							</Button>
 						</div>
-						{error && <div className="text-red-600 text-xs">{error}</div>}
+						{error && <div className="text-xs text-red-600">{error}</div>}
 						<Button type="submit" disabled={resetPasswordMutation.isPending || !newPassword}>
 							{resetPasswordMutation.isPending ? (
 								<LoadingSpinner size="xs" variant="background" />

@@ -75,7 +75,7 @@ export const EditorBubbleMenu = () => {
 			<BubbleMenu editor={editor} tippyOptions={{ duration: 100, maxWidth: "1024px" }}>
 				<div
 					ref={bubbleMenuRef}
-					className="flex flex-row items-center bg-background rounded-md border border-border px-2 py-2 gap-0.5">
+					className="flex flex-row items-center gap-0.5 rounded-md border border-border bg-background px-2 py-2">
 					<div className="pr-2">
 						<Button
 							variant="secondary"

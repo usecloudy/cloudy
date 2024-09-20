@@ -61,8 +61,8 @@ export const GoalDropdown = ({ thoughtId, onClose }: { thoughtId?: string; onClo
 	}, [isLoading]);
 
 	return (
-		<div className="flex flex-col gap-2 p-4 w-80">
-			<div className="flex flex-row justify-between items-center">
+		<div className="flex w-80 flex-col gap-2 p-4">
+			<div className="flex flex-row items-center justify-between">
 				<div className="flex items-center gap-1">
 					<GoalIcon className="h-4 w-4 text-secondary" />
 					<h5 className="text-sm font-medium text-secondary">Set a goal</h5>
@@ -70,7 +70,7 @@ export const GoalDropdown = ({ thoughtId, onClose }: { thoughtId?: string; onClo
 			</div>
 			<TextareaAutosize
 				placeholder="Setting a goal for your note will help Cloudy give better suggestions."
-				className="w-full rounded bg-white/20 border-border border resize-none font-sans px-4 py-3 min-h-10 outline-none hover:outline-none focus:outline-none text-sm"
+				className="min-h-10 w-full resize-none rounded border border-border bg-white/20 px-4 py-3 font-sans text-sm outline-none hover:outline-none focus:outline-none"
 				value={intent}
 				onChange={e => setIntent(e.target.value)}
 			/>

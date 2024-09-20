@@ -57,7 +57,7 @@ export const SignIn = () => {
 					placeholder="founders@usecloudy.com"
 					{...register("email", { required: "Email is required" })}
 				/>
-				{errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+				{errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
 			</div>
 			<div className="flex flex-col gap-2">
 				<label htmlFor="password" className="font-medium text-secondary">
@@ -70,23 +70,23 @@ export const SignIn = () => {
 						placeholder="•••••••"
 						{...register("password", { required: "Password is required" })}
 					/>
-					<div className="absolute right-1 top-0 h-full flex items-center">
+					<div className="absolute right-1 top-0 flex h-full items-center">
 						<Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowPassword(!showPassword)}>
 							{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
 						</Button>
 					</div>
 				</div>
-				{errors.password && <p className="text-red-600 text-sm">{errors.password.message}</p>}
+				{errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
 			</div>
-			{loginError && <p className="text-red-600 text-sm mb-2">{loginError}</p>}
+			{loginError && <p className="mb-2 text-sm text-red-600">{loginError}</p>}
 			<Button type="submit" className="self-stretch" disabled={signInMutation.isPending}>
 				{signInMutation.isPending ? <LoadingSpinner size="xs" variant="background" /> : "Sign In"}
 			</Button>
-			<div className="text-sm text-muted-foreground mt-4 flex flex-row gap-2 items-center justify-between">
-				<Link to="/auth/signup" className="text-accent text-left hover:text-accent/70 hover:underline">
+			<div className="text-muted-foreground mt-4 flex flex-row items-center justify-between gap-2 text-sm">
+				<Link to="/auth/signup" className="text-left text-accent hover:text-accent/70 hover:underline">
 					Don't have an account?
 				</Link>
-				<Link to="/auth/forgot-password" className="text-accent text-right hover:text-accent/70 hover:underline">
+				<Link to="/auth/forgot-password" className="text-right text-accent hover:text-accent/70 hover:underline">
 					Forgot your password?
 				</Link>
 			</div>

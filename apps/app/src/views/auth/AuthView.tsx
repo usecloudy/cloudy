@@ -41,13 +41,13 @@ export const AuthView = () => {
 	return (
 		<SimpleLayout className="p-2 md:p-8">
 			<HeroBackground />
-			<div className="flex w-full h-dvh flex-col items-center justify-center p-0 md:p-8 overflow-y-scroll">
-				<div className="absolute top-4 w-full flex justify-center">
+			<div className="flex h-dvh w-full flex-col items-center justify-center overflow-y-scroll p-0 md:p-8">
+				<div className="absolute top-4 flex w-full justify-center">
 					<img src="/logo.png" className="w-12" alt="Cloudy" />
 				</div>
-				<div className="relative w-full md:w-[28rem] border border-border rounded-lg p-6 md:p-8 bg-background/90">
+				<div className="relative w-full rounded-lg border border-border bg-background/90 p-6 md:w-[28rem] md:p-8">
 					<div className="flex flex-col items-center justify-center gap-4">
-						<div className="text-2xl font-bold font-display text-center">
+						<div className="text-center font-display text-2xl font-bold">
 							{location.pathname === "/auth/signup" ? "Sign up to Cloudy" : "Sign in to Cloudy"}
 						</div>
 					</div>
@@ -55,8 +55,8 @@ export const AuthView = () => {
 						<SocialAuth supabaseClient={supabase} providers={["google"]} appearance={appearance} />
 						<Outlet />
 					</div>
-					<div className="absolute left-0 -bottom-12 md:-bottom-8 w-full flex justify-center">
-						<p className="text-xs text-tertiary text-center mx-8">
+					<div className="absolute -bottom-12 left-0 flex w-full justify-center md:-bottom-8">
+						<p className="mx-8 text-center text-xs text-tertiary">
 							By signing up, you agree to our{" "}
 							<Link to="https://usecloudy.com/tos" className="text-accent hover:text-accent/70 hover:underline">
 								Terms of Service
