@@ -4,15 +4,17 @@ import { Helmet } from "react-helmet";
 import { useParams } from "react-router-dom";
 
 import { queryClient } from "src/api/queryClient";
+import { collectionQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { ThoughtList } from "src/components/ThoughtList";
+import { useWorkspace } from "src/stores/workspace";
 import { ellipsizeText, makeHeadTitle, pluralize } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
 
 export const useCollection = (collectionId: string) => {
 	return useQuery({
-		queryKey: ["collection", collectionId],
+		queryKey: collectionQueryKeys.collectionDetail(collectionId),
 		queryFn: async () => {
 			if (!collectionId) {
 				return null;
@@ -32,7 +34,7 @@ export const useCollection = (collectionId: string) => {
 
 export const useCollectionThoughts = (collectionId: string) => {
 	return useQuery({
-		queryKey: ["collectionThoughts", collectionId],
+		queryKey: collectionQueryKeys.collectionDetailThoughts(collectionId),
 		queryFn: async () => {
 			if (!collectionId) {
 				return [];
@@ -82,6 +84,8 @@ export const useCollectionThoughts = (collectionId: string) => {
 };
 
 const useEditCollection = (collectionId: string) => {
+	const workspace = useWorkspace();
+
 	return useMutation({
 		mutationFn: async (payload: { title: string }) => {
 			if (!collectionId) {
@@ -100,7 +104,10 @@ const useEditCollection = (collectionId: string) => {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: ["collection", collectionId],
+				queryKey: collectionQueryKeys.collectionDetail(collectionId),
+			});
+			queryClient.invalidateQueries({
+				queryKey: collectionQueryKeys.workspaceCollections(workspace.id),
 			});
 		},
 	});

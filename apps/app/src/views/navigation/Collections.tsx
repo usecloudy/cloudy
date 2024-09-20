@@ -3,16 +3,16 @@ import { ChevronDownIcon, ChevronUpIcon, NotebookIcon } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
+import { collectionQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
-import { useWorkspace, useWorkspaceSlug, useWorkspaceStore } from "src/stores/workspace";
-import { cn } from "src/utils";
+import { useWorkspaceStore } from "src/stores/workspace";
 import { makeCollectionUrl } from "src/utils/collection";
 
 const useCollections = () => {
 	const workspace = useWorkspaceStore(s => s.workspace);
 	return useQuery({
-		queryKey: [workspace?.slug, "collections"],
+		queryKey: collectionQueryKeys.workspaceCollections(workspace?.id),
 		queryFn: async () => {
 			if (!workspace) {
 				return [];
@@ -23,6 +23,7 @@ const useCollections = () => {
 				.select("*, collection_thoughts(id)")
 				.eq("workspace_id", workspace.id)
 				.order("updated_at", { ascending: false });
+
 			return data?.map(collection => ({
 				...collection,
 				thoughtsCount: collection.collection_thoughts.length,

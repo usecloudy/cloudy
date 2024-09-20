@@ -90,7 +90,7 @@ const useNewCollection = () => {
 
 const useAddToCollection = () => {
 	const { mutateAsync: editThought } = useEditThought();
-	const wsSlug = useWorkspaceSlug();
+	const workspace = useWorkspace();
 
 	const navigate = useNavigate();
 
@@ -100,7 +100,7 @@ const useAddToCollection = () => {
 				const thought = await editThought();
 				payload.thoughtId = thought?.id;
 				if (thought?.id) {
-					navigate(makeThoughtUrl(wsSlug, thought.id), { replace: true, preventScrollReset: true });
+					navigate(makeThoughtUrl(workspace.slug, thought.id), { replace: true, preventScrollReset: true });
 				}
 			}
 			if (!payload.thoughtId) {
@@ -110,6 +110,7 @@ const useAddToCollection = () => {
 			const { error } = await supabase.from("collection_thoughts").insert({
 				collection_id: payload.collectionId,
 				thought_id: payload.thoughtId,
+				workspace_id: workspace.id,
 			});
 
 			if (error) {

@@ -12,7 +12,7 @@ export const MainLayout = ({
 	className?: string;
 }) => {
 	return (
-		<div className={cn("h-full w-full px-6 md:pl-16 md:pr-4 lg:pl-20 lg:pr-4", className)}>
+		<div className={cn("h-full w-full px-6 md:px-16", className)}>
 			{isLoading ? (
 				<div className="flex h-full flex-col items-center justify-center">
 					<LoadingSpinner />

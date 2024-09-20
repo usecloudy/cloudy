@@ -21,7 +21,7 @@ export const SidebarView = () => {
 
 	if (isSidebarCollapsed) {
 		return (
-			<div className="sticky top-0 hidden h-screen w-16 flex-col items-center justify-between gap-2 border-r border-border py-4 md:flex">
+			<div className="sticky top-0 hidden h-screen w-16 flex-col items-center justify-between gap-2 border-r border-border py-2 md:flex">
 				<div className="flex w-full flex-col items-center gap-2">
 					<Button
 						onClick={() => setIsSidebarCollapsed(false)}
@@ -80,7 +80,7 @@ export const SidebarView = () => {
 							variant="ghost"
 							size="icon"
 							aria-label="Collapse sidebar">
-							<ChevronsLeftIcon className="size-5" />
+							<ChevronsLeftIcon className="size-6" />
 						</Button>
 					</TooltipTrigger>
 					<TooltipContent>Collapse sidebar</TooltipContent>

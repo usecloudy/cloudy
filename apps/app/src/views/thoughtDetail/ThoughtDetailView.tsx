@@ -26,6 +26,7 @@ import { ControlColumn } from "./ControlColumn";
 import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
+import { FooterRow } from "./FooterRow";
 import { ThoughtEditPayload, useEditThought, useThought, useThoughtChannelListeners } from "./hooks";
 import { updateMentionNodeNames } from "./mention";
 import { ThoughtContext } from "./thoughtContext";
@@ -47,7 +48,7 @@ export const ThoughtDetailView = () => {
 
 	return (
 		<EditorErrorBoundary>
-			<MainLayout className="items-center px-0 md:overflow-hidden md:px-0 lg:px-0">
+			<MainLayout className="no-scrollbar h-full w-screen items-center overflow-y-scroll px-0 md:w-full md:overflow-hidden md:px-0 lg:px-0">
 				<Helmet>
 					<title>{headTitle}</title>
 				</Helmet>
@@ -177,6 +178,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 					latestRemoteTitleTs={thought?.title_ts ?? undefined}
 					onChange={onChange}
 				/>
+				<FooterRow />
 				<ControlColumn thoughtId={thoughtId} />
 			</div>
 		</ThoughtContext.Provider>
@@ -241,14 +243,14 @@ const EditorView = ({
 	};
 
 	return (
-		<div className="no-scrollbar relative flex h-full flex-col overflow-y-scroll lg:flex-1">
-			<nav className="sticky top-0 z-30 -mr-2 bg-background py-2 md:ml-8 md:mr-4">
+		<div className="no-scrollbar relative box-border flex flex-col md:flex-1 md:overflow-scroll">
+			<nav className="sticky top-[-1px] z-30 -mr-2 w-full bg-background px-6 py-2 md:top-0 md:py-3">
 				<ControlRow thoughtId={thoughtId} editor={editor} />
 			</nav>
 			<div
 				className={cn(
 					"-ml-8 box-border flex flex-col px-6 pt-16 md:pl-16 lg:flex-1",
-					hideControlColumn ? "md:pr-16" : "md:pr-4",
+					hideControlColumn ? "lg:pr-16" : "lg:pr-4",
 				)}>
 				<div className="ml-8 flex flex-col gap-3 pb-4">
 					<TextareaAutosize

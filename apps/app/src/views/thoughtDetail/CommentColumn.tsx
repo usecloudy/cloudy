@@ -1,12 +1,13 @@
 import { Editor } from "@tiptap/react";
 import { CircleIcon, MessageCircleIcon } from "lucide-react";
-import { RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { RefObject, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { Button } from "src/components/Button";
 import { cn } from "src/utils";
 import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
 import { useComments } from "./hooks";
+import { ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
 
 type Comment = ReturnType<typeof useComments>["data"][number];
@@ -26,6 +27,7 @@ const CommentColumnInner = ({
 	editor: Editor;
 	disableUpdatesRef: RefObject<boolean>;
 }) => {
+	const { setHideControlColumn } = useContext(ThoughtContext);
 	const { data: comments } = useComments(thoughtId);
 	const { commentFilter, setCommentFilter } = useThoughtStore();
 
@@ -105,6 +107,7 @@ const CommentColumnInner = ({
 							variant="ghost"
 							size="sm"
 							onClick={() => {
+								setHideControlColumn(false);
 								if (isSelected) {
 									setCommentFilter(null);
 								} else {

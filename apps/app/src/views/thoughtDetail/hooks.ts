@@ -4,6 +4,7 @@ import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
 import { useContext, useEffect } from "react";
 
+import { thoughtQueryKeys } from "src/api/queryKeys";
 import { useWorkspace, useWorkspaceSlug } from "src/stores/workspace";
 
 import { apiClient } from "../../api/client";
@@ -125,6 +126,9 @@ export const useEditThought = (thoughtId?: string) => {
 					queryKey: ["thoughtEmbeddings"],
 				});
 			}, 2500);
+			queryClient.invalidateQueries({
+				queryKey: thoughtQueryKeys.workspaceSidebarLatestThoughts(workspace.id),
+			});
 		},
 	});
 };

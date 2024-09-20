@@ -51,7 +51,7 @@ const ProtectedLayout: FC = () => {
 				<SidebarView />
 				<div className="flex h-screen w-screen flex-col md:w-auto md:flex-1">
 					<Navbar />
-					<main className="w-full flex-1 md:h-screen md:flex-none">
+					<main className="w-full flex-1 overflow-hidden md:h-screen md:flex-none md:overflow-hidden">
 						<Outlet />
 					</main>
 					<MobileTabBar />
