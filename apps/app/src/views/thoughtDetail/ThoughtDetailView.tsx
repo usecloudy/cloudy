@@ -9,9 +9,10 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
-import { useMount, useUnmount, useUpdateEffect } from "react-use";
+import { useLocalStorage, useMount, useUnmount, useUpdateEffect } from "react-use";
 
 import LoadingSpinner from "src/components/LoadingSpinner";
+import { MainLayout } from "src/components/MainLayout";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { useUserRecord } from "src/stores/user";
 import { cn } from "src/utils";
@@ -46,12 +47,12 @@ export const ThoughtDetailView = () => {
 
 	return (
 		<EditorErrorBoundary>
-			<SimpleLayout className="lg:overflow-hidden items-center px-0">
+			<MainLayout className="md:overflow-hidden items-center px-0 md:px-0 lg:px-0">
 				<Helmet>
 					<title>{headTitle}</title>
 				</Helmet>
 				{thought && <ThoughtContent key={thoughtId} thoughtId={thoughtId!} thought={thought} />}
-			</SimpleLayout>
+			</MainLayout>
 		</EditorErrorBoundary>
 	);
 };
@@ -61,6 +62,8 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const userRecord = useUserRecord();
 
 	const { mutateAsync: editThought } = useEditThought(thoughtId);
+
+	const [hideControlColumn, setHideControlColumn] = useLocalStorage("hideControlColumn", false);
 
 	const [isEditingDisabled, setIsEditingDisabled] = useState(false);
 	const [previewingKey, setPreviewingKey] = useState<string | null>(null);
@@ -164,8 +167,10 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				storeContentIfNeeded,
 				restoreFromLastContent,
 				clearStoredContent,
+				hideControlColumn,
+				setHideControlColumn,
 			}}>
-			<div className="flex w-full flex-col lg:flex-row lg:h-full xl:max-w-screen-2xl">
+			<div className="relative flex w-full flex-col lg:flex-row h-full xl:max-w-screen-2xl">
 				<EditorView
 					thoughtId={thoughtId!}
 					remoteTitle={thought?.title ?? undefined}
@@ -189,7 +194,7 @@ const EditorView = ({
 	latestRemoteTitleTs?: string;
 	onChange: (payload: ThoughtEditPayload) => void;
 }) => {
-	const { editor, disableUpdatesRef, isConnected } = useContext(ThoughtContext);
+	const { editor, disableUpdatesRef, isConnected, hideControlColumn } = useContext(ThoughtContext);
 	const {
 		isAiWriting,
 		lastLocalThoughtTitleTs,
@@ -236,46 +241,55 @@ const EditorView = ({
 	};
 
 	return (
-		<div className="flex flex-col lg:flex-1 pt-8 lg:py-8 box-border lg:overflow-y-scroll no-scrollbar -ml-8 px-6 md:px-0">
-			<div className="sticky lg:relative top-[-1px] z-30 py-1 bg-background ml-8 -mr-2 md:mr-4 md:mt-3">
+		<div className="relative flex flex-col lg:flex-1 overflow-y-scroll h-full no-scrollbar">
+			<nav className="sticky top-0 py-2 z-30 bg-background -mr-2 md:ml-8 md:mr-4">
 				<ControlRow thoughtId={thoughtId} editor={editor} />
-			</div>
-			<div className="flex flex-col gap-3 pb-4 ml-8">
-				<TextareaAutosize
-					className="w-full resize-none appearance-none border-none bg-transparent text-2xl leading-8 md:text-3xl font-bold md:leading-10 outline-none no-scrollbar"
-					contentEditable={true}
-					placeholder="Untitled"
-					value={title ?? ""}
-					onChange={e => {
-						handleChangeTitle(e.target.value);
-					}}
-					suppressContentEditableWarning
-				/>
-				<div className="pr-4">
-					<CollectionCarousel />
-				</div>
-			</div>
+			</nav>
 			<div
-				// On larger screens, we need left padding to avoid some characters being cut off
-				className="flex flex-row md:pl-[2px]">
-				{editor && thoughtId && <EditorBubbleMenu />}
-				{editor && thoughtId && (
-					<div>
-						<DragHandle editor={editor} tippyOptions={{ offset: [-4, 4], zIndex: 10 }}>
-							<div className="hidden md:flex flex-row items-center hover:bg-card border border-transparent hover:border-border rounded py-1 px-0.5 active:bg-accent/20 cursor-grab active:cursor-grabbing">
-								<GripVertical className="h-5 w-5 text-tertiary" />
-							</div>
-						</DragHandle>
+				className={cn(
+					"flex flex-col lg:flex-1 box-border -ml-8 px-6 md:pl-16 pt-16",
+					hideControlColumn ? "md:pr-16" : "md:pr-4",
+				)}>
+				<div className="flex flex-col gap-3 pb-4 ml-8">
+					<TextareaAutosize
+						className="w-full resize-none appearance-none border-none bg-transparent text-2xl leading-8 md:text-3xl font-bold md:leading-10 outline-none no-scrollbar"
+						contentEditable={true}
+						placeholder="Untitled"
+						value={title ?? ""}
+						onChange={e => {
+							handleChangeTitle(e.target.value);
+						}}
+						suppressContentEditableWarning
+					/>
+					<div className="pr-4">
+						<CollectionCarousel />
 					</div>
-				)}
-				{isConnected ? (
-					<EditorContent editor={editor} className={cn("w-full", isAiWriting && "pointer-events-none opacity-70")} />
-				) : (
-					<div className="w-full h-full flex items-center justify-center">
-						<LoadingSpinner size="sm" />
-					</div>
-				)}
-				<CommentColumn editor={editor} thoughtId={thoughtId} disableUpdatesRef={disableUpdatesRef} />
+				</div>
+				<div
+					// On larger screens, we need left padding to avoid some characters being cut off
+					className="flex flex-row md:pl-[2px]">
+					{editor && thoughtId && <EditorBubbleMenu />}
+					{editor && thoughtId && (
+						<div>
+							<DragHandle editor={editor} tippyOptions={{ offset: [-4, 4], zIndex: 10 }}>
+								<div className="hidden md:flex flex-row items-center hover:bg-card border border-transparent hover:border-border rounded py-1 px-0.5 active:bg-accent/20 cursor-grab active:cursor-grabbing">
+									<GripVertical className="h-5 w-5 text-tertiary" />
+								</div>
+							</DragHandle>
+						</div>
+					)}
+					{isConnected ? (
+						<EditorContent
+							editor={editor}
+							className={cn("w-full", isAiWriting && "pointer-events-none opacity-70")}
+						/>
+					) : (
+						<div className="w-full h-full flex items-center justify-center">
+							<LoadingSpinner size="sm" />
+						</div>
+					)}
+					<CommentColumn editor={editor} thoughtId={thoughtId} disableUpdatesRef={disableUpdatesRef} />
+				</div>
 			</div>
 		</div>
 	);

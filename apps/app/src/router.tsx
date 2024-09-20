@@ -2,8 +2,6 @@ import { FC } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import { useChannelListeners } from "./channelListeners";
-import { MobileTabBar } from "./components/MobileTabBar";
-import { Navbar } from "./components/Navbar";
 import { useUserGuard, useUserHandler } from "./stores/user";
 import { AuthView } from "./views/auth/AuthView";
 import { ForgotPassword } from "./views/auth/ForgotPassword";
@@ -17,6 +15,9 @@ import { CollectionDetailView } from "./views/collectionDetail/CollectionDetailV
 import { HomeView } from "./views/home/HomeView";
 import { RedirectToDefaultOrg } from "./views/home/RedirectToDefaultOrg";
 import { LoadingView } from "./views/loading/LoadingView";
+import { MobileTabBar } from "./views/navigation/MobileTabBar";
+import { Navbar } from "./views/navigation/Navbar";
+import { SidebarView } from "./views/navigation/SidebarView";
 import { NotFoundView } from "./views/notFound/NotFoundView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { NewThoughtView } from "./views/thoughtDetail/NewThoughtView";
@@ -45,10 +46,17 @@ const ProtectedLayout: FC = () => {
 	}
 
 	return (
-		<div className="h-dvh w-screen flex flex-col">
-			<Navbar />
-			<Outlet />
-			<MobileTabBar />
+		<div className="grid grid-flow-row w-screen">
+			<div className="flex flex-row">
+				<SidebarView />
+				<div className="flex flex-col md:flex-1 md:w-auto w-screen h-screen">
+					<Navbar />
+					<main className="w-full flex-1 md:flex-none md:h-screen">
+						<Outlet />
+					</main>
+					<MobileTabBar />
+				</div>
+			</div>
 			<PaymentSuccessDialog />
 		</div>
 	);

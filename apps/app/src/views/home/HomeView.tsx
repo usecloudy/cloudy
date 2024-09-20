@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { queryClient } from "src/api/queryClient";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
+import { MainLayout } from "src/components/MainLayout";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { ThoughtList } from "src/components/ThoughtList";
 import { useUser } from "src/stores/user";
@@ -81,7 +82,7 @@ export const HomeView = () => {
 	const { isLoading: isCustomerStatusLoading, data: customerStatus } = useCustomerStatus();
 
 	return (
-		<SimpleLayout isLoading={isLoading || isCustomerStatusLoading}>
+		<MainLayout isLoading={isLoading || isCustomerStatusLoading}>
 			<Helmet>
 				<title>{makeHeadTitle("Home")}</title>
 			</Helmet>
@@ -111,8 +112,7 @@ export const HomeView = () => {
 					)}
 					{thoughts && thoughts.length > 0 ? <ThoughtList thoughts={thoughts} /> : <ThoughtsEmptyState />}
 				</div>
-				<CollectionsColumn />
 			</div>
-		</SimpleLayout>
+		</MainLayout>
 	);
 };
