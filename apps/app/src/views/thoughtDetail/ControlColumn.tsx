@@ -19,7 +19,7 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 					? "h-0 max-h-0 min-h-0 w-0 opacity-0"
 					: "h-auto max-h-screen min-h-[40vh] opacity-100 lg:w-[24rem] xl:w-[28rem]",
 			)}>
-			<div className="relative top-0 flex h-[40vh] w-full flex-col gap-4 px-4 pt-4 lg:w-[24rem] xl:w-[28rem]">
+			<div className="absolute top-0 flex w-screen flex-col gap-4 px-4 pt-4 lg:w-[24rem] xl:w-[28rem]">
 				<div className="hidden justify-center md:justify-end lg:flex lg:justify-start">
 					<Button variant="outline" className="text-secondary" size="sm" onClick={() => setHideControlColumn(true)}>
 						<ChevronsRightIcon className="hidden size-5 lg:block" />
