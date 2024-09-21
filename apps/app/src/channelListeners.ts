@@ -46,11 +46,16 @@ export const useChannelListeners = () => {
 					queryClient.invalidateQueries({
 						queryKey: thoughtQueryKeys.workspaceSidebarLatestThoughts(workspace.id),
 					});
+					queryClient.invalidateQueries({
+						queryKey: thoughtQueryKeys.workspaceHomeThoughts(workspace.id),
+					});
+					queryClient.invalidateQueries({
+						queryKey: collectionQueryKeys.collectionDetailThoughts(),
+					});
 				},
 			)
 			.subscribe();
 
-		console.log("workspace", workspace.id);
 		const workspaceCollectionThoughtsChannel = supabase
 			.channel("workspace_collection_thoughts")
 			.on(
@@ -68,6 +73,9 @@ export const useChannelListeners = () => {
 					});
 					queryClient.invalidateQueries({
 						queryKey: thoughtQueryKeys.workspaceSidebarLatestThoughts(workspace.id),
+					});
+					queryClient.invalidateQueries({
+						queryKey: collectionQueryKeys.collectionDetailThoughts(),
 					});
 				},
 			)

@@ -24,12 +24,15 @@ export const useCreateThought = () => {
 	const navigate = useNavigate();
 
 	return useMutation({
-		mutationFn: async () => {
+		mutationFn: async (payload: { collectionId?: string }) => {
 			if (!workspace) {
 				throw new Error("Workspace not found");
 			}
 
-			const newThought = await editThoughtMutation.mutateAsync();
+			const newThought = await editThoughtMutation.mutateAsync({
+				collectionId: payload.collectionId,
+				ts: new Date(),
+			});
 			if (newThought) {
 				navigate(makeThoughtUrl(workspace.slug, newThought.id));
 			}
