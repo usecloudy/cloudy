@@ -134,11 +134,11 @@ export const SidebarView = () => {
 						</div>
 					</>
 				)}
-				<div className="hidden w-full flex-col items-stretch px-4 md:flex">
-					<FeedbackDropdown />
-				</div>
-				{customerStatus?.isTrialing && (
-					<div className="px-4 py-2">
+				<div className="flex w-full flex-col gap-2 px-4 py-2">
+					<div className="hidden w-full flex-col items-stretch md:flex">
+						<FeedbackDropdown />
+					</div>
+					{customerStatus?.isTrialing && (
 						<div className="flex flex-row items-center justify-between rounded bg-card px-3 py-2">
 							<div className="flex flex-col">
 								<span className="text-sm font-medium text-secondary">Trial Status</span>
@@ -157,8 +157,8 @@ export const SidebarView = () => {
 								<TooltipContent>Upgrade plan</TooltipContent>
 							</Tooltip>
 						</div>
-					</div>
-				)}
+					)}
+				</div>
 				<div className="flex w-full flex-row items-center justify-between border-t border-border px-4 pb-2 pt-3">
 					{userRecord && (
 						<div className="flex flex-col">
