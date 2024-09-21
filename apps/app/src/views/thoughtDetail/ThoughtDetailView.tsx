@@ -176,14 +176,13 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				hideControlColumn,
 				setHideControlColumn,
 			}}>
-			<div className="no-scrollbar relative flex w-full flex-grow flex-col overflow-hidden lg:flex-row xl:max-w-screen-2xl">
+			<div className="no-scrollbar relative flex w-full flex-grow flex-col overflow-hidden lg:flex-row">
 				<EditorView
 					thoughtId={thoughtId!}
 					remoteTitle={thought?.title ?? undefined}
 					latestRemoteTitleTs={thought?.title_ts ?? undefined}
 					onChange={onChange}
 				/>
-
 				<ControlColumn thoughtId={thoughtId} />
 			</div>
 		</ThoughtContext.Provider>
@@ -250,7 +249,7 @@ const EditorView = ({
 	return (
 		<div
 			className={cn(
-				"no-scrollbar relative box-border flex flex-grow flex-col overflow-y-scroll",
+				"no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-y-scroll",
 				hideControlColumn ? "row-span-2" : "row-span-1",
 			)}>
 			<nav className="sticky top-[-1px] z-30 -mr-2 w-full bg-background px-6 py-2 md:top-0 md:py-3">
@@ -258,7 +257,7 @@ const EditorView = ({
 			</nav>
 			<div
 				className={cn(
-					"-ml-8 box-border flex grow flex-col px-6 md:pl-16 md:pt-16 lg:flex-1",
+					"-ml-8 box-border flex max-w-screen-lg grow flex-col px-6 md:pl-16 md:pt-16 lg:flex-1",
 					hideControlColumn ? "lg:pr-16" : "lg:pr-4",
 				)}>
 				<div className="ml-8 flex flex-col gap-3 pb-4">
