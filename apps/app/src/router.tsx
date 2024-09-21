@@ -46,7 +46,7 @@ const ProtectedLayout: FC = () => {
 	}
 
 	return (
-		<div className="flex h-screen w-screen flex-col">
+		<div className="flex h-dvh w-screen flex-col">
 			<Navbar />
 			<div className="flex flex-1 flex-row overflow-hidden">
 				<SidebarView />

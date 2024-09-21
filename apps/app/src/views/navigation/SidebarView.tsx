@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip"
 import { useUserRecord } from "src/stores/user";
 import { useWorkspaceStore } from "src/stores/workspace";
 import { pluralize } from "src/utils/strings";
+import { useBreakpoint } from "src/utils/tailwind";
 import { makeThoughtUrl } from "src/utils/thought";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
@@ -29,6 +30,9 @@ import { WorkspaceSelector } from "./WorkspaceSelector";
 const minimalSidebarRoutePaths = ["/workspaces/new/setup", "/auth/invite-accept", "/auth/complete-account-setup"];
 
 export const SidebarView = () => {
+	const isMdBreakpoint = useBreakpoint("md");
+	const isMobile = !isMdBreakpoint;
+
 	const userRecord = useUserRecord();
 	const workspace = useWorkspaceStore(s => s.workspace);
 
@@ -38,7 +42,11 @@ export const SidebarView = () => {
 	const location = useLocation();
 	const isMinimalSidebar = minimalSidebarRoutePaths.includes(location.pathname);
 
-	const { isSidebarCollapsed, setIsSidebarCollapsed } = useSidebarContext();
+	const { isSidebarCollapsed, setIsSidebarCollapsed, isMobileSidebarOpen } = useSidebarContext();
+
+	if (isMobile && !isMobileSidebarOpen) {
+		return null;
+	}
 
 	if (isSidebarCollapsed) {
 		return (

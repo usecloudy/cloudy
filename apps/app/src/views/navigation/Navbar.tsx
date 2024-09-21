@@ -19,7 +19,7 @@ export const Navbar: FC = () => {
 
 	const customerStatus = data?.customerStatus;
 
-	const { isSidebarCollapsed, setIsSidebarCollapsed } = useSidebarContext();
+	const { isMobileSidebarOpen, setIsMobileSidebarOpen } = useSidebarContext();
 
 	return (
 		<nav className="relative z-20 flex w-full flex-row items-center justify-between border-b border-border bg-background px-4 py-4 md:hidden md:justify-end md:py-3">
@@ -63,12 +63,12 @@ export const Navbar: FC = () => {
 					)}
 				</div>
 				<FeedbackDropdown />
-				{isSidebarCollapsed ? (
-					<Button aria-label="Menu" variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed(false)}>
+				{!isMobileSidebarOpen ? (
+					<Button aria-label="Menu" variant="ghost" size="icon" onClick={() => setIsMobileSidebarOpen(true)}>
 						<MenuIcon className="size-6" />
 					</Button>
 				) : (
-					<Button aria-label="Menu" variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed(true)}>
+					<Button aria-label="Menu" variant="ghost" size="icon" onClick={() => setIsMobileSidebarOpen(false)}>
 						<XIcon className="size-6" />
 					</Button>
 				)}
