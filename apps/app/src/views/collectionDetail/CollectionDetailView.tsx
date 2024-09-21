@@ -13,9 +13,11 @@ import { useWorkspace } from "src/stores/workspace";
 import { ellipsizeText, makeHeadTitle, pluralize } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
 
-export const useCollection = (collectionId: string) => {
+import { NewNote } from "../navigation/NewNote";
+
+export const useCollection = (collectionId?: string) => {
 	return useQuery({
-		queryKey: collectionQueryKeys.collectionDetail(collectionId),
+		queryKey: collectionQueryKeys.collectionDetail(collectionId ?? ""),
 		queryFn: async () => {
 			if (!collectionId) {
 				return null;
@@ -146,7 +148,7 @@ export const CollectionDetailView = () => {
 				<title>{makeHeadTitle(collection?.title ? ellipsizeText(collection.title, 16) : "Untitled Collection")}</title>
 			</Helmet>
 			{collection && (
-				<div className="py-8">
+				<div className="flex flex-col py-8">
 					<div className="text-sm text-secondary">Collection • {pluralize(thoughts?.length ?? 0, "note")}</div>
 					<input
 						className="mb-4 w-full appearance-none border-none bg-transparent text-3xl font-bold leading-5 outline-none"
@@ -155,6 +157,9 @@ export const CollectionDetailView = () => {
 						value={title ?? ""}
 						onChange={e => handleTitleChange(e.target.value)}
 					/>
+					<div className="mb-4 self-start">
+						<NewNote collectionId={collectionId} />
+					</div>
 					<ThoughtList thoughts={thoughts ?? []} />
 				</div>
 			)}

@@ -4,7 +4,7 @@ import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
 import { useContext, useEffect } from "react";
 
-import { thoughtQueryKeys } from "src/api/queryKeys";
+import { collectionQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
 import { useWorkspace, useWorkspaceSlug } from "src/stores/workspace";
 
 import { apiClient } from "../../api/client";
@@ -55,6 +55,7 @@ export interface ThoughtEditPayload {
 	content?: string;
 	contentMd?: string;
 	contentPlainText?: string;
+	collectionId?: string;
 	ts: Date;
 }
 
@@ -110,6 +111,14 @@ export const useEditThought = (thoughtId?: string) => {
 				newThought.content_md ?? "",
 				newThought.last_suggestion_content_md,
 			);
+
+			if (payload?.collectionId) {
+				await supabase.from("collection_thoughts").insert({
+					collection_id: payload.collectionId,
+					thought_id: newThought.id,
+					workspace_id: workspace.id,
+				});
+			}
 
 			posthog.capture("edit_thought", {
 				thoughtId,
@@ -254,6 +263,9 @@ export const useDeleteThought = () => {
 			});
 			queryClient.invalidateQueries({
 				queryKey: thoughtQueryKeys.workspaceSidebarLatestThoughts(workspace.id),
+			});
+			queryClient.invalidateQueries({
+				queryKey: collectionQueryKeys.collectionDetailThoughts(),
 			});
 		},
 	});

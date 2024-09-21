@@ -5,49 +5,23 @@ import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 
 import { queryClient } from "src/api/queryClient";
+import { thoughtQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { MainLayout } from "src/components/MainLayout";
-import { SimpleLayout } from "src/components/SimpleLayout";
 import { ThoughtList } from "src/components/ThoughtList";
-import { useUser } from "src/stores/user";
 import { useWorkspace, useWorkspaceSlug } from "src/stores/workspace";
 import { makeHeadTitle } from "src/utils/strings";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
-import { CollectionsColumn } from "./CollectionsColumn";
 import { SearchBar } from "./SearchBar";
 import { ThoughtsEmptyState } from "./ThoughtsEmptyState";
 
 const useThoughts = () => {
 	const workspace = useWorkspace();
 
-	useEffect(() => {
-		const channel = supabase
-			.channel("thoughts")
-			.on(
-				"postgres_changes",
-				{
-					event: "*",
-					schema: "public",
-					table: "thoughts",
-					filter: `workspace_id.eq.${workspace.id}`,
-				},
-				() => {
-					queryClient.invalidateQueries({
-						queryKey: ["thoughts"],
-					});
-				},
-			)
-			.subscribe();
-
-		return () => {
-			channel.unsubscribe();
-		};
-	}, [workspace.id]);
-
 	return useQuery({
-		queryKey: [workspace.slug, "thoughts"],
+		queryKey: thoughtQueryKeys.workspaceHomeThoughts(workspace.id),
 		queryFn: async () => {
 			const { data, error } = await supabase
 				.from("thoughts")

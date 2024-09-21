@@ -23,6 +23,7 @@ import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
 import { Collections } from "./Collections";
 import { LatestThoughts } from "./LatestThoughts";
+import { NewNote } from "./NewNote";
 import { SidebarDropdown } from "./SidebarDropdown";
 import { useSidebarContext } from "./SidebarProvider";
 import { WorkspaceSelector } from "./WorkspaceSelector";
@@ -128,12 +129,9 @@ export const SidebarView = () => {
 						</div>
 						<WorkspaceSelector />
 						{workspace && (
-							<Link to={makeThoughtUrl(workspace.slug, "new")} className="mt-4 px-4">
-								<Button variant="outline" className="w-full justify-start">
-									<FilePlusIcon className="size-4" />
-									<span>New note</span>
-								</Button>
-							</Link>
+							<div className="mt-4 px-4">
+								<NewNote />
+							</div>
 						)}
 						<div className="no-scrollbar mt-4 flex-1 gap-6 overflow-y-auto px-4">
 							<LatestThoughts />

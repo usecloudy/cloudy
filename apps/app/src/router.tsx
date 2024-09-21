@@ -20,7 +20,6 @@ import { Navbar } from "./views/navigation/Navbar";
 import { SidebarView } from "./views/navigation/SidebarView";
 import { NotFoundView } from "./views/notFound/NotFoundView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
-import { NewThoughtView } from "./views/thoughtDetail/NewThoughtView";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
 import { WorkspacelessThoughtRedirectView } from "./views/thoughtDetail/WorkspacelessThoughtRedirectView";
 import { TopicsView } from "./views/topics/TopicsView";
@@ -79,7 +78,6 @@ export const Router: FC = () => {
 					<Route path="/workspaces/:wsSlug" element={<WorkspaceLayout />}>
 						<Route path="/workspaces/:wsSlug" element={<HomeView />} />
 						<Route path="/workspaces/:wsSlug/settings" element={<WorkspaceSettingsView />} />
-						<Route path="/workspaces/:wsSlug/thoughts/new" element={<NewThoughtView />} />
 						<Route path="/workspaces/:wsSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
 						<Route path="/workspaces/:wsSlug/collections/:collectionId" element={<CollectionDetailView />} />
 						<Route path="/workspaces/:wsSlug/topics" element={<TopicsView />} />
