@@ -9,7 +9,7 @@ export const MobileTabBar = () => {
 	const { workspace } = useWorkspaceStore();
 
 	return (
-		<nav className="md:hidden relative bg-background flex w-full flex-row items-center justify-between py-3 z-50 border-t border-border">
+		<nav className="relative z-50 flex w-screen flex-row items-center justify-between border-t border-border bg-background py-3 md:hidden">
 			<Tab icon={<HomeIcon className="size-5" />} label="Home" href="/" />
 			{/* <Tab icon={<LightbulbIcon className="size-5" />} label="Quick note" onClick={() => {}} /> */}
 			{workspace && (
@@ -26,7 +26,7 @@ const Tab = ({ icon, label, onClick, href }: { icon: React.ReactNode; label: str
 	const inner = (
 		<button
 			onClick={onClick}
-			className={cn("flex flex-col items-center justify-center gap-1 flex-1", isActive && "text-accent")}>
+			className={cn("flex flex-1 flex-col items-center justify-center gap-1", isActive && "text-accent")}>
 			{icon}
 			<span className="text-xs">{label}</span>
 		</button>

@@ -66,7 +66,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof AlertDialogPrimit
 				{children}
 				{onClose && (
 					<AlertDialogPrimitive.Cancel
-						className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+						className="focus:ring-ring data-[state=open]:text-muted-foreground absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent"
 						onClick={onClose}>
 						<XIcon className="h-4 w-4" />
 						<span className="sr-only">Close</span>
@@ -115,7 +115,7 @@ const DialogCancel = React.forwardRef<
 	<AlertDialogPrimitive.Cancel
 		ref={ref}
 		className={cn(
-			"mt-2 inline-flex h-10 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-semibold ring-offset-background transition-colors hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 sm:mt-0",
+			"focus:ring-ring mt-2 inline-flex h-10 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-semibold ring-offset-background transition-colors hover:bg-card focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 sm:mt-0",
 			className,
 		)}
 		{...props}
@@ -131,7 +131,7 @@ const DialogAction = React.forwardRef<
 		<Button
 			variant={destructive ? "destructive" : "default"}
 			className={cn(
-				"inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-sm font-semibold ring-offset-background transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+				"focus:ring-ring inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-sm font-semibold ring-offset-background transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
 				className,
 			)}>
 			{props.children}

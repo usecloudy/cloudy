@@ -133,13 +133,13 @@ export const SearchBar = () => {
 						})}>
 						<div
 							className={cn(
-								"flex items-center gap-2 px-3 py-1 hover:bg-card cursor-pointer rounded",
+								"flex cursor-pointer items-center gap-2 rounded px-3 py-1 hover:bg-card",
 								activeIndex === index && "bg-accent/10",
 							)}>
 							<NotebookTextIcon className="h-4 w-4 flex-shrink-0 text-secondary" />
-							<div className="flex flex-col flex-1 min-w-0">
+							<div className="flex min-w-0 flex-1 flex-col">
 								<span className="text-xs text-secondary">{makeHumanizedTime(thought.updated_at)}</span>
-								<span className={cn("text-sm truncate", thought.title ? "font-medium" : "text-primary/80")}>
+								<span className={cn("truncate text-sm", thought.title ? "font-medium" : "text-primary/80")}>
 									{thought.title || thought.content_plaintext || thought.content_md}
 								</span>
 							</div>
@@ -151,11 +151,11 @@ export const SearchBar = () => {
 	};
 
 	return (
-		<div className="relative w-full flex items-center">
-			<div className="relative flex items-center w-full">
+		<div className="relative flex w-full items-center">
+			<div className="relative flex w-full items-center">
 				<SearchIcon className="absolute left-3 top-3 size-4 text-secondary" />
 				<TextareaAutosize
-					className="w-full rounded-md bg-white/20 border-border border min-h-10 resize-none text-sm font-sans pl-9 pr-9 py-2 outline-none hover:outline-none focus:outline-none"
+					className="min-h-10 w-full resize-none rounded-md border border-border bg-white/20 py-2 pl-9 pr-9 font-sans text-sm outline-none hover:outline-none focus:outline-none"
 					placeholder="Search for notes..."
 					value={query}
 					ref={refs.setReference}
@@ -165,7 +165,7 @@ export const SearchBar = () => {
 					})}
 				/>
 				{isFetching && (
-					<div className="absolute right-3 top-3 animate-in fade-in duration-200">
+					<div className="absolute right-3 top-3 duration-200 animate-in fade-in">
 						<LoadingSpinner size="xs" />
 					</div>
 				)}
@@ -176,7 +176,7 @@ export const SearchBar = () => {
 						ref={refs.setFloating}
 						style={floatingStyles}
 						{...getFloatingProps()}
-						className="z-10 w-full bg-background border border-border rounded-md shadow-md p-2 animate-in fade-in duration-200 overflow-y-auto no-scrollbar">
+						className="no-scrollbar z-10 w-full overflow-y-auto rounded-md border border-border bg-background p-2 shadow-md duration-200 animate-in fade-in">
 						{renderSearchResults()}
 						<div className="h-2" />
 					</div>

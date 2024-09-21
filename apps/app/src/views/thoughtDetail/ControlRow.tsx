@@ -1,6 +1,8 @@
 import { Hotkey } from "@cloudy/ui";
 import { Editor } from "@tiptap/react";
-import { GoalIcon, MoreHorizontalIcon, RedoIcon, UndoIcon } from "lucide-react";
+import { ChevronsLeftIcon, GoalIcon, MoreHorizontalIcon, RedoIcon, UndoIcon } from "lucide-react";
+import { useContext } from "react";
+import { useLocalStorage } from "react-use";
 
 import { Button } from "src/components/Button";
 import { Dropdown } from "src/components/Dropdown";
@@ -11,11 +13,14 @@ import { DeleteDialog } from "./DeleteDialog";
 import { ExportDialog } from "./ExportDialog";
 import { GoalDropdown } from "./GoalDropdown";
 import { useThought } from "./hooks";
+import { ThoughtContext } from "./thoughtContext";
 
 export const ControlRow = ({ thoughtId, editor }: { thoughtId?: string; editor?: Editor | null }) => {
 	const { data: thought } = useThought(thoughtId);
+	const { hideControlColumn, setHideControlColumn } = useContext(ThoughtContext);
+
 	return (
-		<div className="flex flex-row justify-between items-center">
+		<div className="flex w-full flex-row items-center justify-between">
 			<div className="text-xs text-tertiary">
 				{thought && <span>Last edited {makeHumanizedTime(thought.updated_at)}</span>}
 			</div>
@@ -79,11 +84,17 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId?: string; editor?:
 							<MoreHorizontalIcon className="size-5" />
 						</Button>
 					}>
-					<div className="flex flex-col w-36">
+					<div className="flex w-36 flex-col">
 						{thoughtId && <ExportDialog thoughtId={thoughtId} />}
 						{thoughtId && <DeleteDialog thoughtId={thoughtId} />}
 					</div>
 				</Dropdown>
+				{hideControlColumn && (
+					<Button className="hidden lg:flex" variant="outline" size="sm" onClick={() => setHideControlColumn(false)}>
+						<ChevronsLeftIcon className="size-5" />
+						<span>Show panel</span>
+					</Button>
+				)}
 			</div>
 		</div>
 	);

@@ -2,6 +2,8 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { type VariantProps, cva } from "class-variance-authority";
 import React, { useState } from "react";
 
+import { Button, ButtonProps } from "src/components/Button";
+
 import { cn } from "../utils";
 
 interface DropdownProps {
@@ -77,6 +79,13 @@ export const DropdownItem = React.forwardRef<HTMLDivElement, DropdownItemProps>(
 ));
 
 DropdownItem.displayName = "DropdownItem";
+
+export const DropdownItemButton = React.forwardRef<HTMLButtonElement, ButtonProps>(({ className, ...props }, ref) => (
+	<DropdownMenu.Item asChild>
+		<Button ref={ref} className={cn("w-full justify-start", className)} {...props} />
+	</DropdownMenu.Item>
+));
+DropdownItemButton.displayName = "DropdownItemButton";
 
 export const DropdownSeparator = React.forwardRef<HTMLDivElement, DropdownMenu.DropdownMenuSeparatorProps>(
 	({ className, ...props }, ref) => (

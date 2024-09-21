@@ -39,7 +39,7 @@ export const createNonConflictingSlug = async (
             const match = workspace.slug.match(
                 new RegExp(`^${slugBase}-(\\d+)$`)
             );
-            return match ? parseInt(match[1], 10) : 0;
+            return match && match[1] ? parseInt(match[1], 10) : 0;
         })
         .sort((a, b) => a - b);
 

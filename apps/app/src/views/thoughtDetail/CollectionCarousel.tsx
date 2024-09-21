@@ -90,7 +90,7 @@ const useNewCollection = () => {
 
 const useAddToCollection = () => {
 	const { mutateAsync: editThought } = useEditThought();
-	const wsSlug = useWorkspaceSlug();
+	const workspace = useWorkspace();
 
 	const navigate = useNavigate();
 
@@ -100,7 +100,7 @@ const useAddToCollection = () => {
 				const thought = await editThought();
 				payload.thoughtId = thought?.id;
 				if (thought?.id) {
-					navigate(makeThoughtUrl(wsSlug, thought.id), { replace: true, preventScrollReset: true });
+					navigate(makeThoughtUrl(workspace.slug, thought.id), { replace: true, preventScrollReset: true });
 				}
 			}
 			if (!payload.thoughtId) {
@@ -110,6 +110,7 @@ const useAddToCollection = () => {
 			const { error } = await supabase.from("collection_thoughts").insert({
 				collection_id: payload.collectionId,
 				thought_id: payload.thoughtId,
+				workspace_id: workspace.id,
 			});
 
 			if (error) {
@@ -205,7 +206,7 @@ export const CollectionCarousel = () => {
 	}, [thought?.collection_suggestions, allCollections]);
 
 	return (
-		<div className="w-screen -ml-6 pl-6 md:ml-0 md:pl-0 md:w-full overflow-x-auto no-scrollbar">
+		<div className="no-scrollbar -ml-6 w-screen overflow-x-auto pl-6 md:ml-0 md:w-full md:pl-0">
 			<div className="flex flex-nowrap gap-2 pb-2">
 				{thoughtId &&
 					thought?.collections?.map(collection => (
@@ -291,7 +292,7 @@ export const CollectionCarousel = () => {
 				<CollectionDropdown
 					trigger={
 						<Chip size="sm" variant="secondary">
-							<PlusIcon className="h-4 w-4 stroke-2 flex-shrink-0" />
+							<PlusIcon className="h-4 w-4 flex-shrink-0 stroke-2" />
 							<span>Add to collection</span>
 						</Chip>
 					}

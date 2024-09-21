@@ -31,7 +31,7 @@ export const CollectionsColumn = () => {
 	const { data } = useLatestCollections();
 	return (
 		<div>
-			<div className="flex md:w-[18rem] lg:w-[28rem] flex-col gap-4 rounded-lg border border-border py-6">
+			<div className="flex flex-col gap-4 rounded-lg border border-border py-6 md:w-[18rem] lg:w-[28rem]">
 				<div className="flex items-center gap-1 px-6">
 					<NotebookIcon className="size-4 text-secondary" />
 					<h2 className="font-semibold text-secondary">Collections</h2>
@@ -40,7 +40,7 @@ export const CollectionsColumn = () => {
 					{data && data.length > 0 ? (
 						data.map(collection => (
 							<Link key={collection.id} to={makeCollectionUrl(wsSlug, collection.id)}>
-								<div className="flex flex-col hover:bg-card rounded py-2 px-3 cursor-pointer">
+								<div className="flex cursor-pointer flex-col rounded px-3 py-2 hover:bg-card">
 									<div className="text-xs text-secondary">
 										{`${makeHumanizedTime(collection.updated_at ?? collection.created_at)} • ${pluralize(collection.thoughtsCount, "note")}`}
 									</div>
@@ -50,7 +50,7 @@ export const CollectionsColumn = () => {
 						))
 					) : (
 						<div className="flex px-3">
-							<span className="text-tertiary text-sm">
+							<span className="text-sm text-tertiary">
 								You have no collections yet. Create one on the thoughts screen.
 							</span>
 						</div>

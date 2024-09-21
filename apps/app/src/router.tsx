@@ -2,8 +2,6 @@ import { FC } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import { useChannelListeners } from "./channelListeners";
-import { MobileTabBar } from "./components/MobileTabBar";
-import { Navbar } from "./components/Navbar";
 import { useUserGuard, useUserHandler } from "./stores/user";
 import { AuthView } from "./views/auth/AuthView";
 import { ForgotPassword } from "./views/auth/ForgotPassword";
@@ -17,6 +15,9 @@ import { CollectionDetailView } from "./views/collectionDetail/CollectionDetailV
 import { HomeView } from "./views/home/HomeView";
 import { RedirectToDefaultOrg } from "./views/home/RedirectToDefaultOrg";
 import { LoadingView } from "./views/loading/LoadingView";
+import { MobileTabBar } from "./views/navigation/MobileTabBar";
+import { Navbar } from "./views/navigation/Navbar";
+import { SidebarView } from "./views/navigation/SidebarView";
 import { NotFoundView } from "./views/notFound/NotFoundView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { NewThoughtView } from "./views/thoughtDetail/NewThoughtView";
@@ -45,9 +46,14 @@ const ProtectedLayout: FC = () => {
 	}
 
 	return (
-		<div className="h-dvh w-screen flex flex-col">
+		<div className="flex h-dvh w-screen flex-col">
 			<Navbar />
-			<Outlet />
+			<div className="flex flex-1 flex-row overflow-hidden">
+				<SidebarView />
+				<main className="flex h-full w-full flex-col overflow-hidden md:h-screen md:w-auto md:flex-1 md:overflow-hidden">
+					<Outlet />
+				</main>
+			</div>
 			<MobileTabBar />
 			<PaymentSuccessDialog />
 		</div>
@@ -68,6 +74,7 @@ export const Router: FC = () => {
 					<Route path="/" element={<RedirectToDefaultOrg />} />
 					<Route path="/404" element={<NotFoundView />} />
 					<Route path="/workspaces/new" element={<NewWorkspaceView />} />
+					<Route path="/workspaces/new/setup" element={<NewWorkspaceView setup />} />
 					<Route path="/thoughts/:thoughtId" element={<WorkspacelessThoughtRedirectView />} />
 					<Route path="/workspaces/:wsSlug" element={<WorkspaceLayout />}>
 						<Route path="/workspaces/:wsSlug" element={<HomeView />} />

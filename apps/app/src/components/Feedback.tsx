@@ -33,10 +33,10 @@ export const FeedbackDropdown = () => {
 		<Dropdown
 			trigger={
 				<div>
-					<Button variant="ghost" size="icon" className="flex lg:hidden">
+					<Button variant="ghost" size="icon" className="flex md:hidden">
 						<MessageCircleHeartIcon className="size-6" />
 					</Button>
-					<Button variant="secondary" size="sm" className="hidden lg:flex">
+					<Button variant="outline" size="sm" className="hidden w-full md:flex">
 						<MessageCircleHeartIcon className="size-4" />
 						<span>Give feedback</span>
 					</Button>
@@ -45,23 +45,23 @@ export const FeedbackDropdown = () => {
 			className="w-screen md:max-w-[28rem]"
 			onClose={() => setDidSubmit(false)}>
 			{didSubmit ? (
-				<div className="p-4 gap-2 flex flex-col">
+				<div className="flex flex-col gap-2 p-4">
 					<h3 className="font-semibold">Thank you for your feedback!</h3>
-					<p className="text-sm text-secondary mb-2">We'll use this to improve Cloudy.</p>
+					<p className="mb-2 text-sm text-secondary">We'll use this to improve Cloudy.</p>
 				</div>
 			) : (
-				<form onSubmit={handleSubmit(onSubmit)} className="p-4 gap-2 flex flex-col">
+				<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2 p-4">
 					<h3 className="font-semibold">What can we do to improve Cloudy?</h3>
-					<p className="text-sm text-secondary mb-2">
+					<p className="mb-2 text-sm text-secondary">
 						Got a feature request? Did something go wrong? Got any great ideas? We'd love to hear them.
 					</p>
 					<TextareaAutosize
 						{...register("feedback", { required: true })}
-						className="py-2 px-3 min-h-36 bg-white/10 resize-none appearance-none border-border border rounded w-full text-sm outline-none no-scrollbar"
+						className="no-scrollbar min-h-36 w-full resize-none appearance-none rounded border border-border bg-white/10 px-3 py-2 text-sm outline-none"
 						placeholder="Share your thoughts..."
 						rows={4}
 					/>
-					<Button type="submit" className="w-full mt-2">
+					<Button type="submit" className="mt-2 w-full">
 						<SendHorizonalIcon className="size-4" />
 						<span>Submit feedback</span>
 					</Button>

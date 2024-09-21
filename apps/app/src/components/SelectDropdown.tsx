@@ -43,12 +43,12 @@ export const SelectDropdown = ({
 			trigger={
 				<Button
 					variant="outline"
-					className={cn("inline-flex justify-between items-center", className)}
+					className={cn("inline-flex items-center justify-between", className)}
 					size={size}
 					onClick={() => setIsOpen(!isOpen)}
 					disabled={disabled}>
 					{selectedOption ? selectedOption.label : placeholder}
-					<ChevronDown className={cn("h-4 w-4 transition-transform shrink-0 ml-2", isOpen && "rotate-180")} />
+					<ChevronDown className={cn("ml-2 h-4 w-4 shrink-0 transition-transform", isOpen && "rotate-180")} />
 				</Button>
 			}
 			align="start"

@@ -55,7 +55,7 @@ export const ExportDialog = ({ thoughtId }: { thoughtId: string }) => {
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger>
-				<Button variant="ghost" className="justify-start w-full" size="sm">
+				<Button variant="ghost" className="w-full justify-start" size="sm">
 					<ShareIcon className="size-4" />
 					<span>Export Note</span>
 				</Button>
@@ -86,10 +86,10 @@ const ExportDialogInner = ({ thoughtId, onClose }: { thoughtId: string; onClose:
 			<DialogHeader>
 				<DialogTitle>Export Note to PDF</DialogTitle>
 			</DialogHeader>
-			<div className="w-full h-64 overflow-hidden bg-card flex items-center justify-center p-0 rounded-sm border border-border">
-				{pdf && !isLoading ? <iframe title="pdf" className="w-full h-full" src={pdf} /> : <LoadingSpinner size="sm" />}
+			<div className="flex h-64 w-full items-center justify-center overflow-hidden rounded-sm border border-border bg-card p-0">
+				{pdf && !isLoading ? <iframe title="pdf" className="h-full w-full" src={pdf} /> : <LoadingSpinner size="sm" />}
 			</div>
-			<form className="space-y-4 mt-4 mb-4">
+			<form className="mb-4 mt-4 space-y-4">
 				<FormItem label="Color Scheme" htmlFor="colorScheme">
 					<div className="flex space-x-2">
 						<ColorSwatch
@@ -105,7 +105,7 @@ const ExportDialogInner = ({ thoughtId, onClose }: { thoughtId: string; onClose:
 					</div>
 				</FormItem>
 				<FormItem label="Font Size" htmlFor="fontSizePt">
-					<div className="pl-12 w-full">
+					<div className="w-full pl-12">
 						<Controller
 							render={({ field }) => (
 								<Slider
@@ -172,7 +172,7 @@ const ExportDialogInner = ({ thoughtId, onClose }: { thoughtId: string; onClose:
 
 const FormItem = ({ label, htmlFor, children }: { label: string; htmlFor: string; children: React.ReactNode }) => {
 	return (
-		<div className="flex items-center space-x-2 justify-between h-8">
+		<div className="flex h-8 items-center justify-between space-x-2">
 			<label htmlFor={htmlFor} className="whitespace-nowrap">
 				{label}
 			</label>
@@ -195,6 +195,6 @@ const ColorSwatch = ({ scheme, isSelected, onClick }: ColorSwatchProps) => {
 		<button
 			type="button"
 			onClick={onClick}
-			className={`w-8 h-8 rounded-full border-4 ${bgColor} ${borderColor} flex items-center justify-center overflow-hidden`}></button>
+			className={`h-8 w-8 rounded-full border-4 ${bgColor} ${borderColor} flex items-center justify-center overflow-hidden`}></button>
 	);
 };

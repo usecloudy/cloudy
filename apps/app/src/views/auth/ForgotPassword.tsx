@@ -48,19 +48,19 @@ export const ForgotPassword = () => {
 			</label>
 			<Input
 				type="email"
-				className="bg-white/30 mb-2"
+				className="mb-2 bg-white/30"
 				placeholder="iforgot@usecloudy.com"
 				{...register("email", { required: "Email is required" })}
 			/>
-			{errors.email && <p className="text-red-600 text-sm">{errors.email.message}</p>}
-			{resetError && <p className="text-red-600 text-sm mb-2">{resetError}</p>}
-			{resetSuccess && <p className="text-green-600 text-sm mb-2">Password reset email sent. Please check your inbox.</p>}
+			{errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
+			{resetError && <p className="mb-2 text-sm text-red-600">{resetError}</p>}
+			{resetSuccess && <p className="mb-2 text-sm text-green-600">Password reset email sent. Please check your inbox.</p>}
 			{!resetSuccess && (
 				<Button type="submit" className="self-stretch" disabled={resetPasswordMutation.isPending}>
 					{resetPasswordMutation.isPending ? <LoadingSpinner size="xs" variant="background" /> : "Reset Password"}
 				</Button>
 			)}
-			<div className="text-sm text-muted-foreground text-center mt-4">
+			<div className="text-muted-foreground mt-4 text-center text-sm">
 				Suddenly remember your password?{" "}
 				<Link to="/auth" className="text-accent hover:text-accent/70 hover:underline">
 					Sign in

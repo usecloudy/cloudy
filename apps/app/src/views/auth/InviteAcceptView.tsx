@@ -43,7 +43,7 @@ export const InviteAcceptView = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["workspaces"] });
 			navigate("/");
-			toast.success("Account setup completed successfully", { icon: <CheckCircle2Icon className="w-4 h-4" /> });
+			toast.success("Account setup completed successfully", { icon: <CheckCircle2Icon className="h-4 w-4" /> });
 		},
 	});
 
@@ -54,7 +54,7 @@ export const InviteAcceptView = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["workspaces"] });
 			navigate("/");
-			toast.success("Invite declined", { icon: <XIcon className="w-4 h-4" /> });
+			toast.success("Invite declined", { icon: <XIcon className="h-4 w-4" /> });
 		},
 	});
 
@@ -76,24 +76,24 @@ export const InviteAcceptView = () => {
 
 	return (
 		<SimpleLayout>
-			<SimpleLayoutView className="flex flex-col items-center justify-center h-dvh">
-				<div className="flex flex-col gap-4 items-start w-full md:w-[24rem] border border-border rounded-md p-4">
+			<SimpleLayoutView className="flex h-dvh flex-col items-center justify-center">
+				<div className="flex w-full flex-col items-start gap-4 rounded-md border border-border p-4 md:w-[24rem]">
 					<div className="flex flex-col gap-1">
-						<h1 className="font-bold font-display tracking-wide text-lg">Accept Invite</h1>
+						<h1 className="font-display text-lg font-bold tracking-wide">Accept Invite</h1>
 						{inviteData && (
-							<div className="text-secondary text-sm">
+							<div className="text-sm text-secondary">
 								You've been invited to join{" "}
 								<span className="font-medium text-primary">{inviteData.workspaces?.name}</span>
 							</div>
 						)}
 					</div>
-					<div className="flex flex-col gap-1 w-full">
+					<div className="flex w-full flex-col gap-1">
 						<Button onClick={onAccept} className="w-full">
-							<CheckCircle2Icon className="w-4 h-4" />
+							<CheckCircle2Icon className="h-4 w-4" />
 							<span>Accept invite</span>
 						</Button>
 						<Button onClick={onDecline} className="w-full text-red-600 hover:bg-red-600" variant="ghost">
-							<XIcon className="w-4 h-4" />
+							<XIcon className="h-4 w-4" />
 							<span>Decline invite</span>
 						</Button>
 					</div>

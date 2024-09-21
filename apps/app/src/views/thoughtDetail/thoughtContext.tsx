@@ -8,12 +8,14 @@ export interface ThoughtContextType {
 	previewingKey: string | null;
 	editor: Editor | null;
 	disableUpdatesRef: React.MutableRefObject<boolean>;
+	hideControlColumn?: boolean;
 	onUpdate: (isUserUpdate: boolean) => void;
 	setPreviewingKey: (previewingKey: string | null) => void;
 	setIsEditingDisabled: (isEditingDisabled: boolean) => void;
 	storeContentIfNeeded: () => void;
 	restoreFromLastContent: () => void;
 	clearStoredContent: () => void;
+	setHideControlColumn: (hideControlColumn: boolean) => void;
 }
 
 export const ThoughtContext = createContext<ThoughtContextType>({
@@ -23,10 +25,12 @@ export const ThoughtContext = createContext<ThoughtContextType>({
 	isEditingDisabled: false,
 	previewingKey: null,
 	disableUpdatesRef: { current: false },
+	hideControlColumn: false,
 	onUpdate: () => {},
 	setIsEditingDisabled: () => {},
 	setPreviewingKey: () => {},
 	storeContentIfNeeded: () => {},
 	restoreFromLastContent: () => {},
 	clearStoredContent: () => {},
+	setHideControlColumn: () => {},
 });

@@ -203,7 +203,7 @@ export const RelatedNotes = ({ thoughtId }: { thoughtId?: string }) => {
 	const automaticallyLinked = useMemo(() => relatedThoughts?.filter(t => !t.isLinkedManually) || [], [relatedThoughts]);
 
 	return (
-		<div className="border-border flex flex-col w-full gap-2 rounded-md border p-4">
+		<div className="flex w-full flex-col gap-2 rounded-md border border-border p-4">
 			{isLoading ? (
 				<div className="flex w-full justify-center py-4">
 					<LoadingSpinner size="sm" />
@@ -213,13 +213,13 @@ export const RelatedNotes = ({ thoughtId }: { thoughtId?: string }) => {
 					<RelatedNotesSection
 						title="Linked Notes"
 						thoughts={manuallyLinked}
-						icon={<LinkIcon className="text-secondary size-4 mr-1" />}
+						icon={<LinkIcon className="mr-1 size-4 text-secondary" />}
 						emptyMessage="No linked notes"
 					/>
 					<RelatedNotesSection
 						title="Related Notes"
 						thoughts={automaticallyLinked}
-						icon={<SparklesIcon className="text-secondary size-4 mr-1" />}
+						icon={<SparklesIcon className="mr-1 size-4 text-secondary" />}
 						emptyMessage="No related notes (yet, keep typing!)"
 						isLoading={isAiEmbeddingLoading}
 					/>
@@ -243,7 +243,7 @@ const RelatedNotesSection = ({
 	isLoading?: boolean;
 }) => (
 	<div className="mb-4">
-		<h5 className="text-sm font-medium text-secondary mb-2 flex items-center">
+		<h5 className="mb-2 flex items-center text-sm font-medium text-secondary">
 			{icon}
 			{title}
 			{isLoading && <LoadingSpinner size="xs" className="ml-2" />}
@@ -253,7 +253,7 @@ const RelatedNotesSection = ({
 				<ThoughtCard key={thought.id} thought={thought} variant="compact" hoursOnlyForUpdatedAt={false} />
 			))
 		) : (
-			<div className="text-tertiary text-sm">{emptyMessage}</div>
+			<div className="text-sm text-tertiary">{emptyMessage}</div>
 		)}
 	</div>
 );

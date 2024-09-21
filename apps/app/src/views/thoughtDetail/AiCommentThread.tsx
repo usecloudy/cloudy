@@ -149,7 +149,7 @@ const AiCommentThreadInner = ({ commentId }: { commentId: string }) => {
 	}, [comment?.thought_chat_threads]);
 
 	return (
-		<div ref={threadRef} className="flex flex-col gap-2 overflow-y-auto max-h-[60vh] no-scrollbar">
+		<div ref={threadRef} className="no-scrollbar flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
 			{comment ? (
 				<>
 					<ThreadComment
@@ -175,13 +175,13 @@ const AiCommentThreadInner = ({ commentId }: { commentId: string }) => {
 						/>
 					))}
 					{isAnyLoading && (
-						<div className="bg-background rounded flex justify-center items-center size-12 p-3">
+						<div className="flex size-12 items-center justify-center rounded bg-background p-3">
 							<LoadingSpinner size="xs" />
 						</div>
 					)}
 				</>
 			) : isLoading ? (
-				<div className="flex justify-center items-center w-full p-4">
+				<div className="flex w-full items-center justify-center p-4">
 					<LoadingSpinner size="sm" />
 				</div>
 			) : null}
@@ -291,9 +291,9 @@ const ThreadComment = ({
 			<div className="flex flex-row items-center justify-between gap-1">
 				<div className="flex flex-row items-center gap-1">
 					{role === "user" ? (
-						<UserIcon className="w-4 h-4 text-secondary" />
+						<UserIcon className="h-4 w-4 text-secondary" />
 					) : (
-						<SparklesIcon className="w-4 h-4 text-accent" />
+						<SparklesIcon className="h-4 w-4 text-accent" />
 					)}
 					<span className="text-xs font-medium text-secondary">{role === "user" ? "You" : "Cloudy"}</span>
 				</div>
@@ -303,38 +303,38 @@ const ThreadComment = ({
 				<Markdown>{content}</Markdown>
 			</div>
 			{isLoadingSuggestion && (
-				<div className="flex flex-row gap-1 items-center">
+				<div className="flex flex-row items-center gap-1">
 					<LoadingSpinner size="sm" />
 				</div>
 			)}
 			{currentIsPreviewing ? (
-				<div className="flex flex-row gap-1 items-center">
+				<div className="flex flex-row items-center gap-1">
 					<Button size="sm" className="bg-green-600 hover:bg-green-600/60" onClick={applyPreviewContent}>
-						<CheckCircle2Icon className="w-4 h-4" />
+						<CheckCircle2Icon className="h-4 w-4" />
 						<span>Apply changes</span>
 					</Button>
 					<Button size="sm" variant="destructive" onClick={removePreviewContent}>
-						<XIcon className="w-4 h-4" />
+						<XIcon className="h-4 w-4" />
 						<span>Cancel</span>
 					</Button>
 				</div>
 			) : (
 				suggestion && (
-					<div className="flex flex-row gap-1 items-center">
+					<div className="flex flex-row items-center gap-1">
 						<Button
 							size="sm"
 							variant={isApplied ? "outline" : "secondary"}
 							onClick={() => {
 								showPreviewContent();
 							}}
-							className={cn({ "text-accent border-accent": isApplied })}
+							className={cn({ "border-accent text-accent": isApplied })}
 							disabled={isApplied}>
-							{isApplied ? <CheckCircle2Icon className="w-4 h-4" /> : <ChevronsLeftIcon className="w-4 h-4" />}
+							{isApplied ? <CheckCircle2Icon className="h-4 w-4" /> : <ChevronsLeftIcon className="h-4 w-4" />}
 							<span>{isApplied ? "Applied" : "Preview changes"}</span>
 						</Button>
 						{isLast && (
 							<Button size="icon-sm" variant="secondary" onClick={regenerate}>
-								<RefreshCwIcon className="w-4 h-4" />
+								<RefreshCwIcon className="h-4 w-4" />
 							</Button>
 						)}
 					</div>

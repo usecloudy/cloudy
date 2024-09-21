@@ -24,8 +24,8 @@ const buttonVariants = cva(
 				icon: "size-10 text-xs",
 				"icon-sm": "size-8 text-xs",
 				"icon-sm-overflow": "size-8 -m-2 text-xs",
-				"icon-xs": "size-6 text-xs",
-				"icon-xs-overflow": "size-6 -m-1 text-xs",
+				"icon-xs": "size-6 rounded text-xs",
+				"icon-xs-overflow": "size-6 rounded -m-1 text-xs",
 			},
 		},
 		defaultVariants: {

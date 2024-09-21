@@ -20,9 +20,9 @@ export const ToastContainer = () => {
 			transition={Bounce}
 			icon={false}
 			closeButton={({ closeToast }) => (
-				<div className="absolute top-0 right-2 h-full flex items-center">
+				<div className="absolute right-2 top-0 flex h-full items-center">
 					<Button variant="ghost" size="icon-xs" className="text-secondary" onClick={closeToast}>
-						<XIcon className="w-4 h-4" />
+						<XIcon className="h-4 w-4" />
 					</Button>
 				</div>
 			)}
@@ -30,13 +30,13 @@ export const ToastContainer = () => {
 			toastClassName={props =>
 				cn(
 					// props?.defaultClassName,
-					"relative flex p-1 min-h-10 rounded-md justify-between overflow-hidden cursor-pointer bg-background border border-border shadow-sm",
+					"relative flex min-h-10 cursor-pointer justify-between overflow-hidden rounded-md border border-border bg-background p-1 shadow-sm",
 				)
 			}
 			bodyClassName={props =>
-				cn(props?.defaultClassName, "text-sm text-primary font-sans block p-3 flex flex-row items-center")
+				cn(props?.defaultClassName, "block flex flex-row items-center p-3 font-sans text-sm text-primary")
 			}
-			progressClassName={props => cn(props?.defaultClassName, "bg-accent/40 h-[2px]")}
+			progressClassName={props => cn(props?.defaultClassName, "h-[2px] bg-accent/40")}
 		/>
 	);
 };

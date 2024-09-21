@@ -273,16 +273,16 @@ const useIsAiSuggestionLoading = (thoughtId: string) => {
 // Helper functions
 const IconForType = ({ type, role }: { type: string; role: "user" | "assistant" }) => {
 	if (role === "user") {
-		return <UserIcon className="text-tertiary h-3.5 w-3.5" />;
+		return <UserIcon className="h-3.5 w-3.5 text-tertiary" />;
 	}
 
 	const iconMap: { [key: string]: JSX.Element } = {
-		suggestion: <LightbulbIcon className="text-tertiary ml-[-0.15rem] h-3.5 w-3.5" />,
-		comment: <MessageCircleIcon className="text-tertiary h-3.5 w-3.5" />,
-		question: <MessageCircleQuestionIcon className="text-tertiary h-3.5 w-3.5" />,
-		title_suggestion: <PencilIcon className="text-tertiary h-3 w-3" />,
+		suggestion: <LightbulbIcon className="ml-[-0.15rem] h-3.5 w-3.5 text-tertiary" />,
+		comment: <MessageCircleIcon className="h-3.5 w-3.5 text-tertiary" />,
+		question: <MessageCircleQuestionIcon className="h-3.5 w-3.5 text-tertiary" />,
+		title_suggestion: <PencilIcon className="h-3 w-3 text-tertiary" />,
 	};
-	return iconMap[type] || <MessageCircleIcon className="text-tertiary h-3.5 w-3.5" />;
+	return iconMap[type] || <MessageCircleIcon className="h-3.5 w-3.5 text-tertiary" />;
 };
 
 const titleForType = (type: string, role: string) => {
@@ -346,7 +346,7 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 	return (
 		<div
 			className={cn(
-				"flex flex-col gap-4 rounded-md border border-border bg-card p-4 w-full md:w-2/3 lg:w-full thought-feed-view",
+				"thought-feed-view flex w-full flex-col gap-4 rounded-md border border-border bg-card p-3 md:w-2/3 lg:w-full",
 				feedMode === "selectedComments" && "ring-2 ring-accent/40 ring-offset-2 ring-offset-background",
 			)}>
 			{feedMode === "archive" ? (
@@ -361,7 +361,7 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 						</Button>
 						<h4 className="text-sm font-medium text-secondary">Archived Suggestions</h4>
 					</div>
-					<div className="flex flex-row items-center gap-1 relative">
+					<div className="relative flex flex-row items-center gap-1">
 						<Dropdown
 							trigger={
 								<Button size="icon-xs" variant="ghost" className="text-secondary">
@@ -394,7 +394,7 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 						</div>
 					</div>
 					<div className="flex flex-row items-center gap-2">
-						<div className="flex flex-row items-center gap-1 relative">
+						<div className="relative flex flex-row items-center gap-1">
 							<Dropdown
 								trigger={
 									<Button size="icon-xs" variant="ghost" className="text-secondary">
@@ -439,7 +439,7 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 							)}
 							{isSuggestionPaused && (
 								<span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent-secondary text-[10px]">
-									<PauseIcon className="h-2.5 w-2.5 stroke-none fill-white " />
+									<PauseIcon className="h-2.5 w-2.5 fill-white stroke-none" />
 								</span>
 							)}
 							{isAiSuggestionLoading && <LoadingSpinner size="xs" />}
@@ -453,7 +453,7 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 							onClick={() => setFeedMode("archive")}>
 							<ArchiveIcon className="h-4 w-4" />
 						</Button>
-						<div className="flex flex-row items-center gap-1 relative">
+						<div className="relative flex flex-row items-center gap-1">
 							<Dropdown
 								trigger={
 									<Button size="icon-xs" variant="ghost" className="text-secondary">
@@ -534,7 +534,7 @@ const IdeaSuggestionList = ({ thoughtId, suggestions }: { thoughtId: string; sug
 					<IdeaSuggestion thoughtId={thoughtId} suggestion={suggestion} index={index} />
 				))
 			) : (
-				<div className="text-tertiary text-sm">{emptyStateMessage}</div>
+				<div className="text-sm text-tertiary">{emptyStateMessage}</div>
 			)}
 		</div>
 	);
@@ -675,9 +675,9 @@ const IdeaSuggestion = ({
 					{titleForType(suggestion.type, suggestion.role)}
 				</div>
 				<div className="flex flex-row items-center gap-1">
-					{suggestion.is_pinned && <PinIcon className="h-3 w-3 text-accent fill-accent" />}
+					{suggestion.is_pinned && <PinIcon className="h-3 w-3 fill-accent text-accent" />}
 					<span>{makeHumanizedTime(suggestion.created_at)}</span>
-					{!suggestion.is_seen && <CircleDotIcon className="h-2 w-2 text-accent fill-accent" />}
+					{!suggestion.is_seen && <CircleDotIcon className="h-2 w-2 fill-accent text-accent" />}
 				</div>
 			</div>
 			<div
@@ -740,7 +740,7 @@ const IdeaSuggestion = ({
 
 const EmptyState = () => {
 	return (
-		<div className="flex flex-col gap-4 rounded-md border border-border bg-card p-4 w-full md:w-2/3 lg:w-full">
+		<div className="flex w-full flex-col gap-4 rounded-md border border-border bg-card p-4 md:w-2/3 lg:w-full">
 			<div className="flex flex-row items-center justify-between gap-1">
 				<div className="flex flex-row items-center gap-1">
 					<SparklesIcon className="h-4 w-4 text-accent" />
@@ -748,7 +748,7 @@ const EmptyState = () => {
 				</div>
 			</div>
 			<div className="no-scrollbar flex max-h-[28rem] flex-col gap-2 overflow-y-auto scroll-smooth p-1">
-				<div className="text-tertiary text-sm">{emptyStateMessage}</div>
+				<div className="text-sm text-tertiary">{emptyStateMessage}</div>
 			</div>
 		</div>
 	);

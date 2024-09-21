@@ -28,8 +28,8 @@ export class EditorErrorBoundary extends Component<EditorErrorBoundaryProps, Edi
 	render() {
 		if (this.state.hasError) {
 			return (
-				<div className="flex flex-col items-center justify-center h-full gap-4">
-					<img src="/cringe-cat.jpg" className="w-96 h-48" alt="Oh no! Cringe" />
+				<div className="flex h-full flex-col items-center justify-center gap-4">
+					<img src="/cringe-cat.jpg" className="h-48 w-96" alt="Oh no! Cringe" />
 					<div className="flex flex-col items-center gap-2">
 						<p className="text-center">Oh no. Something went wrong here.</p>
 						<p className="text-center text-sm text-secondary">
@@ -49,7 +49,7 @@ export class EditorErrorBoundary extends Component<EditorErrorBoundaryProps, Edi
 							this.setState({ hasError: false });
 							window.location.reload();
 						}}>
-						<RefreshCwIcon className="w-4 h-4" />
+						<RefreshCwIcon className="h-4 w-4" />
 						<span>Refresh page</span>
 					</Button>
 				</div>

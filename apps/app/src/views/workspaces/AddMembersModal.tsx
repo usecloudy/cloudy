@@ -66,12 +66,12 @@ export const AddMembersModal = () => {
 				<div className="flex flex-col gap-4 py-4">
 					<TextareaAutosize
 						placeholder="Enter email addresses (separated by commas or new lines)"
-						className="w-full rounded bg-white/20 border-border border resize-none font-sans px-4 py-3 min-h-24 outline-none hover:outline-none focus:outline-none text-sm"
+						className="min-h-24 w-full resize-none rounded border border-border bg-white/20 px-4 py-3 font-sans text-sm outline-none hover:outline-none focus:outline-none"
 						value={emails}
 						onChange={e => setEmails(e.target.value)}
 					/>
 					<Button onClick={handleAddMembers} disabled={isPending || !emails.trim()}>
-						<SendIcon className="size-4 mr-2" />
+						<SendIcon className="mr-2 size-4" />
 						<span>{isPending ? "Adding..." : "Add Members"}</span>
 					</Button>
 				</div>

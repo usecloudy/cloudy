@@ -66,7 +66,7 @@ export const SignUp = () => {
 				placeholder="John Doe"
 				{...register("fullName", { required: "Full name is required" })}
 			/>
-			{errors.fullName && <p className="text-red-500 text-sm">{errors.fullName.message}</p>}
+			{errors.fullName && <p className="text-sm text-red-500">{errors.fullName.message}</p>}
 			<label htmlFor="email" className="font-medium text-secondary">
 				Email
 			</label>
@@ -76,7 +76,7 @@ export const SignUp = () => {
 				placeholder="founders@usecloudy.com"
 				{...register("email", { required: "Email is required" })}
 			/>
-			{errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+			{errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
 			<label htmlFor="password" className="font-medium text-secondary">
 				Password
 			</label>
@@ -90,13 +90,13 @@ export const SignUp = () => {
 						minLength: { value: 6, message: "Password must be at least 6 characters" },
 					})}
 				/>
-				<div className="absolute right-1 top-0 h-full flex items-center">
+				<div className="absolute right-1 top-0 flex h-full items-center">
 					<Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowPassword(!showPassword)}>
 						{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
 					</Button>
 				</div>
 			</div>
-			{errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+			{errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
 
 			<label htmlFor="confirmPassword" className="font-medium text-secondary">
 				Confirm Password
@@ -115,7 +115,7 @@ export const SignUp = () => {
 						},
 					})}
 				/>
-				<div className="absolute right-1 top-0 h-full flex items-center">
+				<div className="absolute right-1 top-0 flex h-full items-center">
 					<Button
 						type="button"
 						variant="ghost"
@@ -125,13 +125,13 @@ export const SignUp = () => {
 					</Button>
 				</div>
 			</div>
-			{errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>}
+			{errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>}
 
-			{signUpError && <p className="text-red-600 text-sm mb-2">{signUpError}</p>}
-			<Button type="submit" className="self-stretch mt-4" disabled={signUpMutation.isPending}>
+			{signUpError && <p className="mb-2 text-sm text-red-600">{signUpError}</p>}
+			<Button type="submit" className="mt-4 self-stretch" disabled={signUpMutation.isPending}>
 				{signUpMutation.isPending ? <LoadingSpinner size="xs" variant="background" /> : "Sign Up"}
 			</Button>
-			<div className="text-sm text-muted-foreground text-center mt-4">
+			<div className="text-muted-foreground mt-4 text-center text-sm">
 				Already have an account?{" "}
 				<Link to="/auth" className="text-accent hover:text-accent/70 hover:underline">
 					Sign in
