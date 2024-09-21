@@ -1,13 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRightIcon, FileIcon, NotebookTextIcon } from "lucide-react";
+import { ArrowRightIcon, EllipsisIcon, FileIcon, NotebookTextIcon, TrashIcon } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 import { thoughtQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
+import { Dropdown, DropdownItem } from "src/components/Dropdown";
 import { useWorkspace, useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { makeThoughtLabel, makeThoughtUrl } from "src/utils/thought";
+
+import { useDeleteThought } from "../thoughtDetail/hooks";
 
 const useLatestThoughts = () => {
 	const workspace = useWorkspaceStore(s => s.workspace);
@@ -43,10 +46,12 @@ export const LatestThoughts = () => {
 	const workspace = useWorkspace();
 	const { data: latestThoughts, isLoading } = useLatestThoughts();
 
+	const deleteThoughtMutation = useDeleteThought();
+
 	const location = useLocation();
 	const thoughtId = location.pathname.split("/").pop();
 
-	if (isLoading || !latestThoughts) {
+	if (isLoading || !latestThoughts || latestThoughts.length === 0) {
 		return null;
 	}
 
@@ -58,13 +63,15 @@ export const LatestThoughts = () => {
 				</div>
 				<ul className="flex flex-col gap-1">
 					{latestThoughts.map(thought => (
-						<li key={thought.id}>
+						<li
+							key={thought.id}
+							className={cn(
+								"group/thought flex flex-row items-center justify-between gap-1 rounded pr-0.5 hover:bg-card",
+								thought.id === thoughtId && "bg-accent/10",
+							)}>
 							<Link
 								to={makeThoughtUrl(workspace.slug, thought.id)}
-								className={cn(
-									"flex flex-row items-center gap-1 rounded px-2 py-1 hover:bg-card",
-									thought.id === thoughtId && "bg-accent/10",
-								)}>
+								className={cn("flex flex-1 flex-row items-center gap-1 overflow-hidden px-2 py-1")}>
 								{thought.hasCollection ? (
 									<NotebookTextIcon className="size-4 shrink-0" />
 								) : (
@@ -74,6 +81,28 @@ export const LatestThoughts = () => {
 									{makeThoughtLabel(thought)}
 								</span>
 							</Link>
+							<Dropdown
+								trigger={
+									<Button
+										variant="ghost"
+										size="icon-xs"
+										className="text-secondary opacity-0 group-hover/thought:opacity-100">
+										<EllipsisIcon className="size-4" />
+									</Button>
+								}
+								className="w-48"
+								align="end">
+								<DropdownItem
+									onSelect={e => {
+										e.stopPropagation();
+										e.preventDefault();
+										deleteThoughtMutation.mutate(thought.id);
+									}}
+									className="text-red-600">
+									<TrashIcon className="size-4" />
+									<span>Delete note</span>
+								</DropdownItem>
+							</Dropdown>
 						</li>
 					))}
 				</ul>

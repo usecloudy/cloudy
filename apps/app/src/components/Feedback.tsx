@@ -33,10 +33,10 @@ export const FeedbackDropdown = () => {
 		<Dropdown
 			trigger={
 				<div>
-					<Button variant="ghost" size="icon" className="flex lg:hidden">
+					<Button variant="ghost" size="icon" className="flex md:hidden">
 						<MessageCircleHeartIcon className="size-6" />
 					</Button>
-					<Button variant="secondary" size="sm" className="hidden lg:flex">
+					<Button variant="outline" size="sm" className="hidden w-full md:flex">
 						<MessageCircleHeartIcon className="size-4" />
 						<span>Give feedback</span>
 					</Button>

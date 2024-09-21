@@ -204,7 +204,7 @@ export const useThoughtChannelListeners = (thoughtId: string) => {
 
 export const useThought = (thoughtId?: string) => {
 	return useQuery({
-		queryKey: ["thought", thoughtId ?? "new"],
+		queryKey: thoughtQueryKeys.thoughtDetail(thoughtId),
 		queryFn: async () => {
 			if (!thoughtId) {
 				return null;
@@ -224,28 +224,36 @@ export const useThought = (thoughtId?: string) => {
 					)`,
 					)
 					.eq("id", thoughtId)
-					.single(),
+					.maybeSingle(),
 			);
 
-			return {
-				...thought,
-				collections: thought.collections.flatMap(collection => (collection.collection ? [collection.collection] : [])),
-			};
+			return thought
+				? {
+						...thought,
+						collections:
+							thought.collections.flatMap(collection => (collection.collection ? [collection.collection] : [])) ??
+							[],
+					}
+				: null;
 		},
 		enabled: !!thoughtId,
 	});
 };
 
 export const useDeleteThought = () => {
-	const wsSlug = useWorkspaceSlug();
+	const workspace = useWorkspace();
 
 	return useMutation({
 		mutationFn: async (thoughtId: string) => {
-			return supabase.from("thoughts").delete().eq("id", thoughtId);
+			await supabase.from("thoughts").delete().eq("id", thoughtId);
+			return thoughtId;
 		},
-		onSuccess: () => {
+		onSuccess: (thoughtId: string) => {
 			queryClient.invalidateQueries({
-				queryKey: [wsSlug, "thoughts"],
+				queryKey: thoughtQueryKeys.thoughtDetail(thoughtId),
+			});
+			queryClient.invalidateQueries({
+				queryKey: thoughtQueryKeys.workspaceSidebarLatestThoughts(workspace.id),
 			});
 		},
 	});

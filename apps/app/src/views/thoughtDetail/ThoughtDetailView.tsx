@@ -7,9 +7,9 @@ import { Editor, EditorContent, useEditor } from "@tiptap/react";
 import { GripVertical } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
-import { useLocalStorage, useMount, useUnmount, useUpdateEffect } from "react-use";
+import { useLocalStorage, useMount, usePrevious, useUnmount, useUpdateEffect } from "react-use";
 
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { MainLayout } from "src/components/MainLayout";
@@ -35,20 +35,25 @@ import { tiptapExtensions } from "./tiptap";
 import { useYProvider } from "./yProvider";
 
 type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
-type Collection = NonNullable<Thought["collections"]>[0];
 
 export const ThoughtDetailView = () => {
 	const { thoughtId } = useParams<{ thoughtId: string }>();
 
-	const { data: thought } = useThought(thoughtId);
+	const { data: thought, isLoading } = useThought(thoughtId);
+
+	const previousThought = usePrevious(thought);
 
 	const title = useTitleStore(s => s.title);
 
 	const headTitle = title ? makeHeadTitle(ellipsizeText(title, 16)) : makeHeadTitle("New Thought");
 
+	if ((!thought && previousThought) || (!isLoading && !thought)) {
+		return <Navigate to="/" />;
+	}
+
 	return (
 		<EditorErrorBoundary>
-			<MainLayout className="no-scrollbar h-full w-screen items-center overflow-y-scroll px-0 md:w-full md:overflow-hidden md:px-0 lg:px-0">
+			<MainLayout className="no-scrollbar relative flex h-full w-screen flex-col overflow-hidden px-0 md:w-full md:px-0 lg:px-0">
 				<Helmet>
 					<title>{headTitle}</title>
 				</Helmet>
@@ -171,14 +176,14 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				hideControlColumn,
 				setHideControlColumn,
 			}}>
-			<div className="relative flex h-full w-full flex-col lg:flex-row xl:max-w-screen-2xl">
+			<div className="no-scrollbar relative flex w-full flex-grow flex-col overflow-hidden lg:flex-row xl:max-w-screen-2xl">
 				<EditorView
 					thoughtId={thoughtId!}
 					remoteTitle={thought?.title ?? undefined}
 					latestRemoteTitleTs={thought?.title_ts ?? undefined}
 					onChange={onChange}
 				/>
-				<FooterRow />
+
 				<ControlColumn thoughtId={thoughtId} />
 			</div>
 		</ThoughtContext.Provider>
@@ -243,13 +248,17 @@ const EditorView = ({
 	};
 
 	return (
-		<div className="no-scrollbar relative box-border flex flex-col md:flex-1 md:overflow-scroll">
+		<div
+			className={cn(
+				"no-scrollbar relative box-border flex flex-grow flex-col overflow-y-scroll",
+				hideControlColumn ? "row-span-2" : "row-span-1",
+			)}>
 			<nav className="sticky top-[-1px] z-30 -mr-2 w-full bg-background px-6 py-2 md:top-0 md:py-3">
 				<ControlRow thoughtId={thoughtId} editor={editor} />
 			</nav>
 			<div
 				className={cn(
-					"-ml-8 box-border flex flex-col px-6 pt-16 md:pl-16 lg:flex-1",
+					"-ml-8 box-border flex flex-col px-6 md:pl-16 md:pt-16 lg:flex-1",
 					hideControlColumn ? "lg:pr-16" : "lg:pr-4",
 				)}>
 				<div className="ml-8 flex flex-col gap-3 pb-4">
@@ -293,6 +302,7 @@ const EditorView = ({
 					<CommentColumn editor={editor} thoughtId={thoughtId} disableUpdatesRef={disableUpdatesRef} />
 				</div>
 			</div>
+			<FooterRow />
 		</div>
 	);
 };

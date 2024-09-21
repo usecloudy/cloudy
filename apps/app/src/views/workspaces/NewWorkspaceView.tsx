@@ -17,6 +17,7 @@ import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Input } from "src/components/Input";
 import LoadingSpinner from "src/components/LoadingSpinner";
+import { MainLayout } from "src/components/MainLayout";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { useUserRecord } from "src/stores/user";
 
@@ -54,12 +55,10 @@ const useCheckSlugAvailability = () => {
 	});
 };
 
-export const NewWorkspaceView = () => {
+export const NewWorkspaceView = ({ setup }: { setup?: boolean }) => {
 	const userRecord = useUserRecord();
 
-	const [searchParams] = useSearchParams();
-
-	const shouldSetDefaults = searchParams.get("setup") === "true";
+	const shouldSetDefaults = setup;
 
 	const [isSlugAvailable, setIsSlugAvailable] = useState<boolean | null>(null);
 
@@ -119,7 +118,7 @@ export const NewWorkspaceView = () => {
 	};
 
 	return (
-		<SimpleLayout className="flex flex-col items-center justify-center">
+		<MainLayout className="flex h-screen flex-col items-center justify-center">
 			<div className="flex w-full max-w-md flex-col gap-4 rounded-md border border-border p-6">
 				<h1 className="text-2xl font-bold tracking-tight">Create a workspace</h1>
 				<p className="text-sm text-secondary">
@@ -174,6 +173,6 @@ export const NewWorkspaceView = () => {
 					</Button>
 				</form>
 			</div>
-		</SimpleLayout>
+		</MainLayout>
 	);
 };

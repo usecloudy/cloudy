@@ -15,6 +15,7 @@ import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Input } from "src/components/Input";
 import LoadingSpinner from "src/components/LoadingSpinner";
+import { MainLayout } from "src/components/MainLayout";
 import { SelectDropdown, SelectOption } from "src/components/SelectDropdown";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { useUser } from "src/stores/user";
@@ -250,8 +251,8 @@ export const WorkspaceSettingsView = () => {
 	const isOwner = role === WorkspaceRole.OWNER;
 
 	return (
-		<SimpleLayout className="flex flex-col items-center justify-center">
-			<div className="flex w-full max-w-md flex-col gap-4 rounded-md border border-border p-6">
+		<MainLayout className="flex h-screen flex-col overflow-y-scroll">
+			<div className="flex h-[2000px] w-full flex-col gap-4 p-6 pt-12">
 				<h1 className="font-display text-2xl font-bold">Workspace settings</h1>
 				<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
 					<div className="flex flex-col gap-1">
@@ -285,7 +286,7 @@ export const WorkspaceSettingsView = () => {
 						{errors.slug && <p className="mt-1 text-sm text-red-500">{errors.slug.message}</p>}
 					</div>
 					{isOwner && (
-						<Button type="submit" disabled={isPending || !watchSlug || !watchName}>
+						<Button className="self-end" type="submit" disabled={isPending || !watchSlug || !watchName}>
 							{isPending ? <LoadingSpinner size="xs" variant="background" /> : "Save Changes"}
 						</Button>
 					)}
@@ -398,6 +399,6 @@ export const WorkspaceSettingsView = () => {
 					) : null}
 				</div>
 			</div>
-		</SimpleLayout>
+		</MainLayout>
 	);
 };

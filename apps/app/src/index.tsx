@@ -13,6 +13,7 @@ import { Router } from "./router";
 import "./styles/index.css";
 import "./styles/tailwind.css";
 import "./styles/titlebar.css";
+import { SidebarProvider } from "./views/navigation/SidebarProvider";
 
 Sentry.init({
 	dsn: "https://a5a720025849f8ad5b65e97d39672568@o4507776484179968.ingest.us.sentry.io/4507776487391232",
@@ -45,7 +46,9 @@ root.render(
 	<React.StrictMode>
 		<QueryClientProvider client={queryClient}>
 			<TooltipProvider>
-				<Router />
+				<SidebarProvider>
+					<Router />
+				</SidebarProvider>
 			</TooltipProvider>
 			<ToastContainer />
 		</QueryClientProvider>

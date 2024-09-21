@@ -51,7 +51,7 @@ export const RedirectToDefaultOrg = () => {
 	}
 
 	if (!wsSlug) {
-		return <Navigate to={`/workspaces/new?setup=true`} />;
+		return <Navigate to={`/workspaces/new/setup`} />;
 	}
 
 	return <Navigate to={`/workspaces/${wsSlug}`} />;

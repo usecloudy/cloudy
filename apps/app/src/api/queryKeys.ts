@@ -5,5 +5,6 @@ export const collectionQueryKeys = {
 };
 
 export const thoughtQueryKeys = {
+	thoughtDetail: (thoughtId?: string) => ["thought", thoughtId ?? "new"] as const,
 	workspaceSidebarLatestThoughts: (workspaceId?: string) => [workspaceId, "latestThoughts"] as const,
 };

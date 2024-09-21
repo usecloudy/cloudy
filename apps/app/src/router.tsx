@@ -46,17 +46,15 @@ const ProtectedLayout: FC = () => {
 	}
 
 	return (
-		<div className="grid w-screen grid-flow-row">
-			<div className="flex flex-row">
+		<div className="flex h-screen w-screen flex-col">
+			<Navbar />
+			<div className="flex flex-1 flex-row overflow-hidden">
 				<SidebarView />
-				<div className="flex h-screen w-screen flex-col md:w-auto md:flex-1">
-					<Navbar />
-					<main className="w-full flex-1 overflow-hidden md:h-screen md:flex-none md:overflow-hidden">
-						<Outlet />
-					</main>
-					<MobileTabBar />
-				</div>
+				<main className="flex h-full w-full flex-col overflow-hidden md:h-screen md:w-auto md:flex-1 md:overflow-hidden">
+					<Outlet />
+				</main>
 			</div>
+			<MobileTabBar />
 			<PaymentSuccessDialog />
 		</div>
 	);
@@ -76,6 +74,7 @@ export const Router: FC = () => {
 					<Route path="/" element={<RedirectToDefaultOrg />} />
 					<Route path="/404" element={<NotFoundView />} />
 					<Route path="/workspaces/new" element={<NewWorkspaceView />} />
+					<Route path="/workspaces/new/setup" element={<NewWorkspaceView setup />} />
 					<Route path="/thoughts/:thoughtId" element={<WorkspacelessThoughtRedirectView />} />
 					<Route path="/workspaces/:wsSlug" element={<WorkspaceLayout />}>
 						<Route path="/workspaces/:wsSlug" element={<HomeView />} />

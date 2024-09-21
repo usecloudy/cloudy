@@ -82,7 +82,7 @@ export const HomeView = () => {
 	const { isLoading: isCustomerStatusLoading, data: customerStatus } = useCustomerStatus();
 
 	return (
-		<MainLayout isLoading={isLoading || isCustomerStatusLoading}>
+		<MainLayout isLoading={isLoading || isCustomerStatusLoading} className="no-scrollbar flex-1 overflow-y-scroll">
 			<Helmet>
 				<title>{makeHeadTitle("Home")}</title>
 			</Helmet>

@@ -38,28 +38,6 @@ export const SidebarDropdown = () => {
 				</Button>
 			}
 			className="w-64 pt-2">
-			<div className="flex flex-col md:hidden">
-				{userRecord && (
-					<div className="flex flex-col gap-1 px-2">
-						<span className="text-sm font-medium text-secondary">Signed in as</span>
-						<span className="text-sm">{userRecord.email}</span>
-					</div>
-				)}
-				<div className="my-2 border-b border-border" />
-				<WorkspaceList />
-				{customerStatus?.isTrialing && (
-					<>
-						<div className="my-2 border-b border-border" />
-						<div className="flex flex-col gap-1 px-2">
-							<span className="text-sm font-medium text-secondary">Trial Status</span>
-							<span className="text-sm">
-								{`${pluralize(customerStatus.remainingDaysInTrial ?? 0, "day")} remaining`}
-							</span>
-						</div>
-					</>
-				)}
-				<div className="my-2 border-b border-border" />
-			</div>
 			<a href="https://usecloudy.com/support">
 				<DropdownItem>
 					<CircleHelpIcon className="size-4" />

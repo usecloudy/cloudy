@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import { queryClient } from "src/api/queryClient";
 import { collectionQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
+import { MainLayout } from "src/components/MainLayout";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { ThoughtList } from "src/components/ThoughtList";
 import { useWorkspace } from "src/stores/workspace";
@@ -140,7 +141,7 @@ export const CollectionDetailView = () => {
 	};
 
 	return (
-		<SimpleLayout isLoading={isCollectionLoading || areThoughtsLoading}>
+		<MainLayout isLoading={isCollectionLoading || areThoughtsLoading} className="h-screen overflow-y-scroll">
 			<Helmet>
 				<title>{makeHeadTitle(collection?.title ? ellipsizeText(collection.title, 16) : "Untitled Collection")}</title>
 			</Helmet>
@@ -157,6 +158,6 @@ export const CollectionDetailView = () => {
 					<ThoughtList thoughts={thoughts ?? []} />
 				</div>
 			)}
-		</SimpleLayout>
+		</MainLayout>
 	);
 };
