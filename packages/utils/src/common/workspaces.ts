@@ -43,8 +43,9 @@ export const createNonConflictingSlug = async (
         })
         .sort((a, b) => a - b);
 
-    const nextNumber = slugNumbers.length
-        ? slugNumbers[slugNumbers.length - 1] + 1
-        : 1;
+    const nextNumber =
+        slugNumbers.length > 0
+            ? (slugNumbers[slugNumbers.length - 1] ?? 0) + 1
+            : 1;
     return `${slugBase}-${nextNumber}`;
 };
