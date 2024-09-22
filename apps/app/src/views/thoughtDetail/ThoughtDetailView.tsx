@@ -247,11 +247,7 @@ const EditorView = ({
 	};
 
 	return (
-		<div
-			className={cn(
-				"no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-y-scroll",
-				hideControlColumn ? "row-span-2" : "row-span-1",
-			)}>
+		<div className="no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-x-hidden overflow-y-scroll">
 			<nav className="sticky top-[-1px] z-30 -mr-2 w-full bg-background px-6 py-2 md:top-0 md:py-3">
 				<ControlRow thoughtId={thoughtId} editor={editor} />
 			</nav>
