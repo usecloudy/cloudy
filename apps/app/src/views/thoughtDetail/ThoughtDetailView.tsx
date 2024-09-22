@@ -257,7 +257,7 @@ const EditorView = ({
 			</nav>
 			<div
 				className={cn(
-					"-ml-8 box-border flex max-w-screen-lg grow flex-col px-6 md:pl-16 md:pt-16 lg:flex-1",
+					"-ml-8 box-border flex w-full max-w-screen-lg grow flex-col px-6 md:pl-16 md:pt-16 lg:flex-1",
 					hideControlColumn ? "lg:pr-16" : "lg:pr-4",
 				)}>
 				<div className="ml-8 flex flex-col gap-3 pb-4">
