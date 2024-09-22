@@ -6,6 +6,7 @@ import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Dropdown, DropdownItem } from "src/components/Dropdown";
 import LoadingSpinner from "src/components/LoadingSpinner";
+import { MainLayout } from "src/components/MainLayout";
 import { SimpleLayout } from "src/components/SimpleLayout";
 import { useUser } from "src/stores/user";
 import { makeHumanizedTime } from "src/utils/strings";
@@ -103,13 +104,13 @@ export const TopicsView = () => {
 	}
 
 	return (
-		<SimpleLayout>
+		<MainLayout>
 			<div className="space-y-8 pt-8">
 				<h1 className="text-2xl font-bold">Topics</h1>
 				<NewTopicSearch />
 				{topics?.map(topic => <TopicCard key={topic.id} topic={topic} />)}
 			</div>
-		</SimpleLayout>
+		</MainLayout>
 	);
 };
 

@@ -134,6 +134,15 @@ export const SidebarView = () => {
 							</div>
 						)}
 						<div className="no-scrollbar mt-4 flex-1 gap-6 overflow-y-auto px-4">
+							<Link to={`/workspaces/${workspace?.slug}/topics`}>
+								<Button
+									variant="ghost"
+									size="sm"
+									className="w-full justify-between text-sm font-medium text-secondary">
+									<span>Topic analysis</span>
+									<ArrowRightIcon className="size-4" />
+								</Button>
+							</Link>
 							<LatestThoughts />
 							<Collections />
 							<div className="h-4" />
