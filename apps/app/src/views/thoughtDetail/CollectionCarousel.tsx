@@ -81,6 +81,7 @@ const useNewCollection = () => {
 			await supabase.from("collection_thoughts").insert({
 				collection_id: newCollection.id,
 				thought_id: thoughtIdToUse,
+				workspace_id: workspace.id,
 			});
 
 			return newCollection;
