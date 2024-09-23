@@ -4,7 +4,6 @@ import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 
 import { apiClient } from "src/api/client";
-import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Input } from "src/components/Input";
 import { useWorkspace } from "src/stores/workspace";
@@ -15,7 +14,9 @@ const useCreateTopic = () => {
 
 	return useMutation({
 		mutationFn: async (query: string) => {
-			await apiClient.post("/api/topics/new", { query, workspaceId: workspace.id } satisfies TopicsNewPostRequestBody);
+			await apiClient.post("/api/topics/new", { query, workspaceId: workspace.id } satisfies TopicsNewPostRequestBody, {
+				timeout: 90000,
+			});
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["topics"] });

@@ -74,14 +74,6 @@ alter table "public"."thought_chunks" add constraint "thought_chunks_thought_id_
 
 alter table "public"."thought_chunks" validate constraint "thought_chunks_thought_id_fkey";
 
-alter table "public"."topic_message_matches" add constraint "topic_message_matches_message_id_fkey" FOREIGN KEY (message_id) REFERENCES integration_messages(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
-
-alter table "public"."topic_message_matches" validate constraint "topic_message_matches_message_id_fkey";
-
-alter table "public"."topic_message_matches" add constraint "topic_message_matches_topic_id_fkey" FOREIGN KEY (topic_id) REFERENCES topics(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
-
-alter table "public"."topic_message_matches" validate constraint "topic_message_matches_topic_id_fkey";
-
 alter table "public"."topic_thought_chunk_matches" add constraint "topic_thought_chunk_matches_chunk_id_fkey" FOREIGN KEY (chunk_id) REFERENCES thought_chunks(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
 
 alter table "public"."topic_thought_chunk_matches" validate constraint "topic_thought_chunk_matches_chunk_id_fkey";
