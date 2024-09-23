@@ -70,7 +70,6 @@ export const useChannelListeners = () => {
 					filter: `workspace_id=eq.${workspace.id}`,
 				},
 				() => {
-					console.log("OH UH");
 					queryClient.invalidateQueries({
 						queryKey: collectionQueryKeys.workspaceCollections(workspace.id),
 					});
