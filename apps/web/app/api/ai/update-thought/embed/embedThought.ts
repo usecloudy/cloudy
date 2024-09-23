@@ -5,7 +5,7 @@ import { generateText } from "ai";
 
 import { createJinaEmbeddings } from "app/api/utils/embeddings";
 import { heliconeAnthropic } from "app/api/utils/helicone";
-import { chunkAndHashMarkdown } from "app/api/utils/relatedChunks";
+import { chunkAndHashMarkdownV2 } from "app/api/utils/relatedChunks";
 
 export const embedThought = async (thoughtId: string, supabase: SupabaseClient<Database>) => {
 	const thought = handleSupabaseError(await supabase.from("thoughts").select("*").eq("id", thoughtId).single());
@@ -19,7 +19,7 @@ export const embedThought = async (thoughtId: string, supabase: SupabaseClient<D
 
 	const existingChunks = handleSupabaseError(await supabase.from("thought_chunks").select("*").eq("thought_id", thoughtId));
 
-	const { chunks, version } = chunkAndHashMarkdown(contentMd);
+	const { chunks, version } = chunkAndHashMarkdownV2(contentMd);
 
 	const existingChunkHashes = new Set(existingChunks.map(c => c.hash));
 	const newChunkHashes = new Set(chunks.map(c => c.hash));
@@ -116,12 +116,13 @@ ${chunk.chunk}
 		);
 	}
 
-	await supabase
-		.from("thoughts")
-		.update({
-			embeddings_version: version,
-		})
-		.eq("id", thoughtId);
+	// TODO: Set this when we fully switch to v2
+	// await supabase
+	// 	.from("thoughts")
+	// 	.update({
+	// 		embeddings_version: version,
+	// 	})
+	// 	.eq("id", thoughtId);
 
 	console.log(
 		`Refreshed multi embeddings for thought ${thoughtId}, deleted ${chunksToDelete.length} chunks and added ${chunksWithEmbeddings.length} new chunks`,

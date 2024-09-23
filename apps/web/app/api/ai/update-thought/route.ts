@@ -6,7 +6,7 @@ import { embedMany } from "ai";
 import { distance } from "fastest-levenshtein";
 import { NextRequest, NextResponse } from "next/server";
 
-import { chunkAndHashMarkdown } from "app/api/utils/relatedChunks";
+import { chunkAndHashMarkdownV1 } from "app/api/utils/relatedChunks";
 import { getSupabase } from "app/api/utils/supabase";
 import { addSignal, checkForSignal, removeSignal } from "app/api/utils/thoughts";
 
@@ -89,7 +89,7 @@ const generateEmbeddings = async (thoughtRecord: ThoughtRecord, supabase: Supaba
 			throw new Error("No content_md");
 		}
 
-		const chunks = await chunkAndHashMarkdown(contentMd);
+		const { chunks } = chunkAndHashMarkdownV1(contentMd);
 
 		console.log(`Generated ${chunks.length} chunks for thought ${thoughtRecord.id}`);
 
