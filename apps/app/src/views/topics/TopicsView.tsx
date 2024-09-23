@@ -100,7 +100,13 @@ const useDevIndexWorkspace = () => {
 	const workspace = useWorkspace();
 	return useMutation({
 		mutationFn: async () => {
-			await apiClient.post("/api/thoughts/dev-index", { workspaceId: workspace.id });
+			await apiClient.post(
+				"/api/thoughts/dev-index",
+				{ workspaceId: workspace.id },
+				{
+					timeout: 90000,
+				},
+			);
 		},
 	});
 };

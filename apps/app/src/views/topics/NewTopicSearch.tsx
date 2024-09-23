@@ -14,9 +14,7 @@ const useCreateTopic = () => {
 
 	return useMutation({
 		mutationFn: async (query: string) => {
-			await apiClient.post("/api/topics/new", { query, workspaceId: workspace.id } satisfies TopicsNewPostRequestBody, {
-				timeout: 90000,
-			});
+			await apiClient.post("/api/topics/new", { query, workspaceId: workspace.id } satisfies TopicsNewPostRequestBody);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["topics"] });
