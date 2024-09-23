@@ -1,24 +1,10 @@
-import { openai } from "@ai-sdk/openai";
-import { embedMany } from "ai";
-
-export const generateEmbeddings = async (inputs: string[], model = "text-embedding-3-small") => {
-	console.log(`[generateEmbeddings] Will embed ${inputs.length} chunks.`);
-
-	const { embeddings } = await embedMany({
-		model: openai.embedding(model),
-		values: inputs,
-	});
-
-	return embeddings;
-};
-
 interface JinaEmbeddingsResponse {
 	data: {
 		embeddings: number[][];
 	}[];
 }
 
-export const createJinaEmbeddings = async (messageContents: string[]): Promise<number[][][]> => {
+export const createEmbeddings = async (messageContents: string[]): Promise<number[][][]> => {
 	const data = {
 		model: "jina-colbert-v2",
 		dimensions: 128,
@@ -41,7 +27,7 @@ export const createJinaEmbeddings = async (messageContents: string[]): Promise<n
 	return responseData.data.map(item => item.embeddings);
 };
 
-export const generateJinaQueryEmbedding = async (query: string) => {
+export const generateQueryEmbedding = async (query: string) => {
 	const data = {
 		model: "jina-colbert-v2",
 		dimensions: 128,

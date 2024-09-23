@@ -710,18 +710,21 @@ export type Database = {
           created_at: string
           id: string
           thought_id: string
+          workspace_id: string
         }
         Insert: {
           collection_id: string
           created_at?: string
           id?: string
           thought_id: string
+          workspace_id: string
         }
         Update: {
           collection_id?: string
           created_at?: string
           id?: string
           thought_id?: string
+          workspace_id?: string
         }
         Relationships: [
           {
@@ -736,6 +739,13 @@ export type Database = {
             columns: ["thought_id"]
             isOneToOne: false
             referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_collection_thoughts_workspace"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -1020,6 +1030,70 @@ export type Database = {
           },
         ]
       }
+      thought_chunk_multi_embeddings: {
+        Row: {
+          chunk_id: string
+          created_at: string
+          embedding: string
+          id: string
+          token_index: number
+        }
+        Insert: {
+          chunk_id: string
+          created_at?: string
+          embedding: string
+          id?: string
+          token_index: number
+        }
+        Update: {
+          chunk_id?: string
+          created_at?: string
+          embedding?: string
+          id?: string
+          token_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thought_chunk_multi_embeddings_chunk_id_fkey"
+            columns: ["chunk_id"]
+            isOneToOne: false
+            referencedRelation: "thought_chunks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thought_chunks: {
+        Row: {
+          content: string
+          created_at: string
+          hash: string
+          id: string
+          thought_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          hash: string
+          id?: string
+          thought_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          hash?: string
+          id?: string
+          thought_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thought_chunks_thought_id_fkey"
+            columns: ["thought_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       thought_embedding_matches: {
         Row: {
           created_at: string
@@ -1270,29 +1344,78 @@ export type Database = {
           },
         ]
       }
+      topic_thought_chunk_matches: {
+        Row: {
+          chunk_id: string
+          created_at: string
+          id: string
+          topic_id: string
+        }
+        Insert: {
+          chunk_id: string
+          created_at?: string
+          id?: string
+          topic_id: string
+        }
+        Update: {
+          chunk_id?: string
+          created_at?: string
+          id?: string
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_thought_chunk_matches_chunk_id_fkey"
+            columns: ["chunk_id"]
+            isOneToOne: false
+            referencedRelation: "thought_chunks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topic_thought_chunk_matches_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       topics: {
         Row: {
           created_at: string
           id: string
-          organization: string
+          latest_update: string | null
           query: string
+          summary: string | null
+          workspace_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          organization: string
+          latest_update?: string | null
           query: string
+          summary?: string | null
+          workspace_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          organization?: string
+          latest_update?: string | null
           query?: string
+          summary?: string | null
+          workspace_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "topics_organization_fkey"
-            columns: ["organization"]
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topics_workspace_id_fkey"
+            columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
@@ -1627,6 +1750,32 @@ export type Database = {
           similarity_score: number
         }[]
       }
+      multi_embedding_thought_chunk_search:
+        | {
+            Args: {
+              query_embeddings: string[]
+              match_threshold: number
+              max_results: number
+            }
+            Returns: {
+              chunk_id: string
+              thought_id: string
+              similarity_score: number
+            }[]
+          }
+        | {
+            Args: {
+              query_embeddings: string[]
+              match_threshold: number
+              max_results: number
+              workspace_id: string
+            }
+            Returns: {
+              chunk_id: string
+              thought_id: string
+              similarity_score: number
+            }[]
+          }
       search_thoughts: {
         Args: {
           search_query: string

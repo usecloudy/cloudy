@@ -40,3 +40,12 @@ export interface WorkspacesNewPostResponse {
     wsId: string;
     wsSlug: string;
 }
+
+export interface TopicsRefreshPostRequestBody {
+    topicId: string;
+}
+
+export interface TopicsNewPostRequestBody {
+    query: string;
+    workspaceId: string;
+}

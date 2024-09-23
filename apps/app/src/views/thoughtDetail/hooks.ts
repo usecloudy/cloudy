@@ -97,6 +97,7 @@ export const useEditThought = (thoughtId?: string) => {
 					.upsert({
 						id: thoughtId,
 						workspace_id: workspace.id,
+						updated_at: payload?.ts.toISOString() ?? new Date().toISOString(),
 						...titleObj,
 						...contentObj,
 						...contentMdObj,

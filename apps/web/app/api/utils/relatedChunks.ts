@@ -10,42 +10,47 @@ export interface MarkdownChunk {
 	hash: string;
 }
 
-export const chunkMarkdown = (mdContent: string, maxChunkSize: number = 1000): string[] => {
-	const lines = mdContent.split("\n");
-	const chunks: string[] = [];
-	let currentChunk = "";
+export const chunkMarkdown = (mdContent: string, maxChunkSize: number = 1000) => {
+	// const lines = mdContent.split("\n");
+	// const chunks: string[] = [];
+	// let currentChunk = "";
 
-	const addToChunk = (line: string) => {
-		if (currentChunk.length + line.length > maxChunkSize && currentChunk.length > 0) {
-			chunks.push(currentChunk.trim());
-			currentChunk = "";
-		}
-		currentChunk += line + "\n";
+	// const addToChunk = (line: string) => {
+	// 	if (currentChunk.length + line.length > maxChunkSize && currentChunk.length > 0) {
+	// 		chunks.push(currentChunk.trim());
+	// 		currentChunk = "";
+	// 	}
+	// 	currentChunk += line + "\n";
+	// };
+
+	// let inCodeBlock = false;
+	// for (const line of lines) {
+	// 	if (line.trim().startsWith("```")) {
+	// 		inCodeBlock = !inCodeBlock;
+	// 		addToChunk(line);
+	// 	} else if (inCodeBlock) {
+	// 		addToChunk(line);
+	// 	} else if (line.startsWith("#")) {
+	// 		if (currentChunk.trim().length > 0) {
+	// 			chunks.push(currentChunk.trim());
+	// 			currentChunk = "";
+	// 		}
+	// 		addToChunk(line);
+	// 	} else {
+	// 		addToChunk(line);
+	// 	}
+	// }
+
+	// if (currentChunk.trim().length > 0) {
+	// 	chunks.push(currentChunk.trim());
+	// }
+
+	// return chunks;
+
+	return {
+		chunks: mdContent.split("\n\n").filter(c => c.trim().length > 0),
+		version: 2,
 	};
-
-	let inCodeBlock = false;
-	for (const line of lines) {
-		if (line.trim().startsWith("```")) {
-			inCodeBlock = !inCodeBlock;
-			addToChunk(line);
-		} else if (inCodeBlock) {
-			addToChunk(line);
-		} else if (line.startsWith("#")) {
-			if (currentChunk.trim().length > 0) {
-				chunks.push(currentChunk.trim());
-				currentChunk = "";
-			}
-			addToChunk(line);
-		} else {
-			addToChunk(line);
-		}
-	}
-
-	if (currentChunk.trim().length > 0) {
-		chunks.push(currentChunk.trim());
-	}
-
-	return chunks;
 };
 
 export const hashChunk = (chunk: string) => {
@@ -54,14 +59,17 @@ export const hashChunk = (chunk: string) => {
 	return hash.digest("hex");
 };
 
-export const chunkAndHashMarkdown = async (mdContent: string): Promise<MarkdownChunk[]> => {
-	const chunks = chunkMarkdown(mdContent);
+export const chunkAndHashMarkdown = (mdContent: string) => {
+	const { chunks, version } = chunkMarkdown(mdContent);
 	const chunkHashes = chunks.map(hashChunk);
 
-	return chunks.map((chunk, index) => ({
-		chunk,
-		hash: chunkHashes[index]!,
-	}));
+	return {
+		chunks: chunks.map((chunk, index) => ({
+			chunk,
+			hash: chunkHashes[index]!,
+		})),
+		version,
+	};
 };
 
 export const getRelatedThoughts = async (thoughtId: string, supabase: SupabaseClient<Database>) => {
