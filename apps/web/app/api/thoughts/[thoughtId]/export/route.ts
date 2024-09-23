@@ -92,9 +92,13 @@ export const GET = async (req: NextRequest, { params: { thoughtId } }: { params:
 
 	await browser.close();
 
+	const encodedFilename =
+		options.fileName ?? encodeURIComponent((thought.title?.replace(/[^a-zA-Z0-9-_]/g, "_") || "exported-note") + ".pdf");
+
 	return new Response(pdfBuffer, {
 		headers: {
 			"Content-Type": "application/pdf",
+			"Content-Disposition": `attachment; filename="${encodedFilename}"; filename*=UTF-8''${encodedFilename}`,
 		},
 	});
 };

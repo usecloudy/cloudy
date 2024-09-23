@@ -2,7 +2,6 @@ import { Hotkey } from "@cloudy/ui";
 import { Editor } from "@tiptap/react";
 import { ChevronsLeftIcon, GoalIcon, MoreHorizontalIcon, RedoIcon, UndoIcon } from "lucide-react";
 import { useContext } from "react";
-import { useLocalStorage } from "react-use";
 
 import { Button } from "src/components/Button";
 import { Dropdown } from "src/components/Dropdown";
@@ -85,7 +84,7 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId?: string; editor?:
 						</Button>
 					}>
 					<div className="flex w-36 flex-col">
-						{thoughtId && <ExportDialog thoughtId={thoughtId} />}
+						{thoughtId && <ExportDialog thoughtId={thoughtId} title={thought?.title ?? undefined} />}
 						{thoughtId && <DeleteDialog thoughtId={thoughtId} />}
 					</div>
 				</Dropdown>

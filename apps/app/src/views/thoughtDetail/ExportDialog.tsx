@@ -9,7 +9,7 @@ import { pdfjs } from "react-pdf";
 import { apiClient } from "src/api/client";
 import { Button } from "src/components/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "src/components/Dialog";
-import { DropdownItem } from "src/components/Dropdown";
+import { Input } from "src/components/Input";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { SelectDropdown } from "src/components/SelectDropdown";
 
@@ -35,7 +35,12 @@ export const useGeneratePDF = (thoughtId: string, options: ThoughtsExportGetRequ
 	});
 
 	const downloadPdf = () => {
-		window.open(data, "_blank");
+		const baseUrl = apiClient.defaults.baseURL;
+		if (baseUrl) {
+			const url = new URL(`/api/thoughts/${thoughtId}/export`, baseUrl);
+			url.searchParams.set("options", JSON.stringify(options));
+			window.location.href = url.toString();
+		}
 	};
 
 	return {
@@ -45,7 +50,7 @@ export const useGeneratePDF = (thoughtId: string, options: ThoughtsExportGetRequ
 	};
 };
 
-export const ExportDialog = ({ thoughtId }: { thoughtId: string }) => {
+export const ExportDialog = ({ thoughtId, title }: { thoughtId: string; title?: string }) => {
 	const [isOpen, setIsOpen] = useState(false);
 
 	const handleOnClose = () => {
@@ -60,19 +65,20 @@ export const ExportDialog = ({ thoughtId }: { thoughtId: string }) => {
 					<span>Export Note</span>
 				</Button>
 			</DialogTrigger>
-			{isOpen && <ExportDialogInner thoughtId={thoughtId} onClose={handleOnClose} />}
+			{isOpen && <ExportDialogInner thoughtId={thoughtId} title={title} onClose={handleOnClose} />}
 		</Dialog>
 	);
 };
 
-const ExportDialogInner = ({ thoughtId, onClose }: { thoughtId: string; onClose: () => void }) => {
+const ExportDialogInner = ({ thoughtId, title, onClose }: { thoughtId: string; title?: string; onClose: () => void }) => {
 	const { watch, control, setValue } = useForm<ThoughtsExportGetRequestBody>({
 		defaultValues: {
-			hideWatermark: false,
+			hideWatermark: true,
 			hideTitle: false,
-			colorScheme: "default",
+			colorScheme: "white",
 			fontSizePt: 11,
 			paperSize: "letter",
+			fileName: `${title?.replace(/[^a-zA-Z0-9-_]/g, "_") ?? "exported_note"}.pdf`,
 		},
 	});
 
@@ -136,11 +142,11 @@ const ExportDialogInner = ({ thoughtId, onClose }: { thoughtId: string; onClose:
 						className="w-32"
 					/>
 				</FormItem>
-				<FormItem label="Hide Watermark" htmlFor="hideWatermark">
+				<FormItem label="Hide Branding" htmlFor="hideWatermark">
 					<Controller
 						name="hideWatermark"
 						control={control}
-						render={({ field }) => <Switch defaultChecked={false} onCheckedChange={field.onChange} />}
+						render={({ field }) => <Switch defaultChecked={true} onCheckedChange={field.onChange} />}
 					/>
 				</FormItem>
 				<FormItem label="Hide Title" htmlFor="hideTitle">
@@ -148,6 +154,13 @@ const ExportDialogInner = ({ thoughtId, onClose }: { thoughtId: string; onClose:
 						name="hideTitle"
 						control={control}
 						render={({ field }) => <Switch defaultChecked={false} onCheckedChange={field.onChange} />}
+					/>
+				</FormItem>
+				<FormItem label="File Name" htmlFor="fileName">
+					<Controller
+						name="fileName"
+						control={control}
+						render={({ field }) => <Input {...field} className="w-full" placeholder="Enter file name" />}
 					/>
 				</FormItem>
 			</form>
@@ -172,7 +185,7 @@ const ExportDialogInner = ({ thoughtId, onClose }: { thoughtId: string; onClose:
 
 const FormItem = ({ label, htmlFor, children }: { label: string; htmlFor: string; children: React.ReactNode }) => {
 	return (
-		<div className="flex h-8 items-center justify-between space-x-2">
+		<div className="flex h-8 items-center justify-between gap-4">
 			<label htmlFor={htmlFor} className="whitespace-nowrap">
 				{label}
 			</label>

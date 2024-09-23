@@ -28,6 +28,7 @@ export interface ThoughtsExportGetRequestBody {
     colorScheme?: "default" | "white";
     fontSizePt?: number;
     paperSize?: "a4" | "letter" | "legal";
+    fileName?: string;
 }
 
 export interface WorkspacesNewPostRequestBody {
