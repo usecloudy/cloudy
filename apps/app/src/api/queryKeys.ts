@@ -10,3 +10,8 @@ export const thoughtQueryKeys = {
 	workspaceSidebarLatestThoughts: (workspaceId?: string) => [workspaceId, "latestThoughts"] as const,
 	workspaceHomeThoughts: (workspaceId?: string) => [workspaceId, "homeThoughts"] as const,
 };
+
+export const topicQueryKeys = {
+	topics: () => ["topics"] as const,
+	topicMatches: (topicId?: string) => ["topic", "matches", topicId] as const,
+};

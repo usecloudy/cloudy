@@ -10,7 +10,14 @@ export interface MarkdownChunk {
 	hash: string;
 }
 
-export const chunkMarkdown = (mdContent: string, maxChunkSize: number = 1000): string[] => {
+export const chunkMarkdown = (mdContent: string, maxChunkSize: number = 1000) => {
+	return {
+		chunks: mdContent.split("\n\n").filter(c => c.trim().length > 0),
+		version: 2,
+	};
+};
+
+export const chunkMarkdownV1 = (mdContent: string, maxChunkSize: number = 1000) => {
 	const lines = mdContent.split("\n");
 	const chunks: string[] = [];
 	let currentChunk = "";
@@ -45,7 +52,10 @@ export const chunkMarkdown = (mdContent: string, maxChunkSize: number = 1000): s
 		chunks.push(currentChunk.trim());
 	}
 
-	return chunks;
+	return {
+		chunks,
+		version: 1,
+	};
 };
 
 export const hashChunk = (chunk: string) => {
@@ -54,14 +64,30 @@ export const hashChunk = (chunk: string) => {
 	return hash.digest("hex");
 };
 
-export const chunkAndHashMarkdown = async (mdContent: string): Promise<MarkdownChunk[]> => {
-	const chunks = chunkMarkdown(mdContent);
+export const chunkAndHashMarkdownV2 = (mdContent: string) => {
+	const { chunks, version } = chunkMarkdown(mdContent);
 	const chunkHashes = chunks.map(hashChunk);
 
-	return chunks.map((chunk, index) => ({
-		chunk,
-		hash: chunkHashes[index]!,
-	}));
+	return {
+		chunks: chunks.map((chunk, index) => ({
+			chunk,
+			hash: chunkHashes[index]!,
+		})),
+		version,
+	};
+};
+
+export const chunkAndHashMarkdownV1 = (mdContent: string) => {
+	const { chunks, version } = chunkMarkdownV1(mdContent);
+	const chunkHashes = chunks.map(hashChunk);
+
+	return {
+		chunks: chunks.map((chunk, index) => ({
+			chunk,
+			hash: chunkHashes[index]!,
+		})),
+		version,
+	};
 };
 
 export const getRelatedThoughts = async (thoughtId: string, supabase: SupabaseClient<Database>) => {

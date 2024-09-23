@@ -8,6 +8,7 @@ import {
 	FilePlusIcon,
 	HomeIcon,
 } from "lucide-react";
+import { PostHogFeature } from "posthog-js/react";
 import { Link, useLocation } from "react-router-dom";
 import { useLocalStorage } from "react-use";
 
@@ -133,7 +134,18 @@ export const SidebarView = () => {
 								<NewNote />
 							</div>
 						)}
-						<div className="no-scrollbar mt-4 flex-1 gap-6 overflow-y-auto px-4">
+						<div className="no-scrollbar mt-4 flex flex-1 flex-col gap-4 overflow-y-auto px-4">
+							<PostHogFeature flag="topics" match={true}>
+								<Link to={`/workspaces/${workspace?.slug}/topics`}>
+									<Button
+										variant="ghost"
+										size="sm"
+										className="w-full justify-between text-sm font-medium text-secondary">
+										<span>Topic analysis</span>
+										<ArrowRightIcon className="size-4" />
+									</Button>
+								</Link>
+							</PostHogFeature>
 							<LatestThoughts />
 							<Collections />
 							<div className="h-4" />

@@ -1,3 +1,4 @@
+import { TopicsNewPostRequestBody } from "@cloudy/utils/common";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
@@ -6,13 +7,15 @@ import { apiClient } from "src/api/client";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Input } from "src/components/Input";
+import { useWorkspace } from "src/stores/workspace";
 
 const useCreateTopic = () => {
 	const queryClient = useQueryClient();
+	const workspace = useWorkspace();
 
 	return useMutation({
 		mutationFn: async (query: string) => {
-			await apiClient.post("/api/topics/new", { query, workspace: "745671ff-df59-42a1-9902-b1bc2674abd9" });
+			await apiClient.post("/api/topics/new", { query, workspaceId: workspace.id } satisfies TopicsNewPostRequestBody);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["topics"] });
@@ -33,7 +36,7 @@ export const NewTopicSearch = () => {
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="flex gap-2">
+		<form onSubmit={handleSubmit} className="flex flex-1 gap-2">
 			<Input
 				value={query}
 				onChange={e => setQuery(e.target.value)}
