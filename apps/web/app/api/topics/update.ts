@@ -5,8 +5,9 @@ import { generateObject } from "ai";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { generateQueryEmbedding } from "app/api/integrations/messages/embeddings";
 import { heliconeOpenAI } from "app/api/utils/helicone";
+
+import { generateJinaQueryEmbedding } from "../utils/embeddings";
 
 export const updateTopic = async (
 	query: string,
@@ -15,7 +16,7 @@ export const updateTopic = async (
 	existingTopicId?: string,
 ) => {
 	// Generate query embeddings
-	const queryEmbeddings = await generateQueryEmbedding(query);
+	const queryEmbeddings = await generateJinaQueryEmbedding(query);
 
 	if (!queryEmbeddings) {
 		return NextResponse.json({ error: "Failed to generate query embeddings" }, { status: 500 });
