@@ -19,7 +19,7 @@ import { useUserRecord } from "src/stores/user";
 import { useWorkspaceStore } from "src/stores/workspace";
 import { pluralize } from "src/utils/strings";
 import { useBreakpoint } from "src/utils/tailwind";
-import { makeThoughtUrl } from "src/utils/thought";
+import { makeThoughtUrl, useCreateThought } from "src/utils/thought";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
 import { Collections } from "./Collections";
@@ -40,6 +40,8 @@ export const SidebarView = () => {
 
 	const { data } = useCustomerStatus();
 	const customerStatus = data?.customerStatus;
+
+	const createThoughtMutation = useCreateThought();
 
 	const location = useLocation();
 	const isMinimalSidebar = minimalSidebarRoutePaths.includes(location.pathname);
@@ -72,11 +74,9 @@ export const SidebarView = () => {
 						{workspace && (
 							<Tooltip>
 								<TooltipTrigger>
-									<Link to={makeThoughtUrl(workspace.slug, "new")} className="mt-4 px-4">
-										<Button variant="ghost" size="icon">
-											<FilePlusIcon className="size-5" />
-										</Button>
-									</Link>
+									<Button onClick={() => createThoughtMutation.mutate({})} variant="ghost" size="icon">
+										<FilePlusIcon className="size-5" />
+									</Button>
 								</TooltipTrigger>
 								<TooltipContent>New note</TooltipContent>
 							</Tooltip>
