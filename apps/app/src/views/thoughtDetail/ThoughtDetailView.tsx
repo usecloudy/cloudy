@@ -2,8 +2,7 @@ import { ThoughtSignals } from "@cloudy/utils/common";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
-import { NodeType } from "@tiptap/pm/model";
-import { Editor, EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor } from "@tiptap/react";
 import { GripVertical } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
@@ -13,7 +12,6 @@ import { useLocalStorage, useMount, usePrevious, useUnmount, useUpdateEffect } f
 
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { MainLayout } from "src/components/MainLayout";
-import { SimpleLayout } from "src/components/SimpleLayout";
 import { useUserRecord } from "src/stores/user";
 import { cn } from "src/utils";
 import { ellipsizeText, makeHeadTitle } from "src/utils/strings";
@@ -39,6 +37,10 @@ type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
 export const ThoughtDetailView = () => {
 	const { thoughtId } = useParams<{ thoughtId: string }>();
 
+	return <ThoughtDetailInner key={thoughtId} thoughtId={thoughtId} />;
+};
+
+const ThoughtDetailInner = ({ thoughtId }: { thoughtId?: string }) => {
 	const { data: thought, isLoading } = useThought(thoughtId);
 
 	const previousThought = usePrevious(thought);
@@ -48,6 +50,7 @@ export const ThoughtDetailView = () => {
 	const headTitle = title ? makeHeadTitle(ellipsizeText(title, 16)) : makeHeadTitle("New Thought");
 
 	if ((!thought && previousThought) || (!isLoading && !thought)) {
+		console.log("im going back", thought, previousThought, isLoading, thought);
 		return <Navigate to="/" />;
 	}
 
