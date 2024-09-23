@@ -13,8 +13,6 @@ export const RedirectToDefaultOrg = () => {
 	const userOptions = useUserOptions();
 	const userRecord = useUserRecord();
 
-	const lastOpenedWorkspaceSlug = userOptions.get("last_opened_workspace") as string | null;
-
 	const { data, isLoading } = useQuery({
 		queryKey: ["workspaces"],
 		queryFn: async () => {
@@ -29,14 +27,17 @@ export const RedirectToDefaultOrg = () => {
 		staleTime: 0,
 	});
 
+	const lastOpenedWorkspaceSlug = userOptions.get("last_opened_workspace") as string | null;
 	const wsSlug = lastOpenedWorkspaceSlug ? lastOpenedWorkspaceSlug : data?.orgs?.at(0)?.workspaces?.slug;
 
 	useEffect(() => {
-		const validSlugs = new Set(data?.orgs.flatMap(org => (org.workspaces ? [org.workspaces.slug] : [])));
-		if (lastOpenedWorkspaceSlug && !validSlugs.has(lastOpenedWorkspaceSlug)) {
-			userOptions.set("last_opened_workspace", null);
+		if (!isLoading) {
+			const validSlugs = new Set(data?.orgs.flatMap(org => (org.workspaces ? [org.workspaces.slug] : [])));
+			if (lastOpenedWorkspaceSlug && !validSlugs.has(lastOpenedWorkspaceSlug)) {
+				userOptions.set("last_opened_workspace", null);
+			}
 		}
-	}, [lastOpenedWorkspaceSlug, data, userOptions]);
+	}, [lastOpenedWorkspaceSlug, data, userOptions, isLoading]);
 
 	if (userRecord.is_pending) {
 		return <Navigate to="/auth/complete-account-setup" />;

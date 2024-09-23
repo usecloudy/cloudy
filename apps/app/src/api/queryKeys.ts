@@ -15,3 +15,7 @@ export const topicQueryKeys = {
 	topics: () => ["topics"] as const,
 	topicMatches: (topicId?: string) => ["topic", "matches", topicId] as const,
 };
+
+export const userQueryKeys = {
+	userRecord: (userId?: string) => (userId ? (["userRecord", userId] as const) : (["userRecord"] as const)),
+};

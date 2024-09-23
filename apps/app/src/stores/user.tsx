@@ -10,6 +10,7 @@ import { create } from "zustand";
 
 import { apiClient, setupAuthHeader } from "src/api/client";
 import { queryClient } from "src/api/queryClient";
+import { userQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 
 import { getAllUserWorkspaces, useWorkspaceStore } from "./workspace";
@@ -46,8 +47,9 @@ export const createUserIfNotExists = async (user: User) => {
 
 const useQueryUserRecord = () => {
 	const user = useUserStore(s => s.user);
+
 	return useQuery({
-		queryKey: [user?.id, "userRecord"],
+		queryKey: userQueryKeys.userRecord(user?.id),
 		queryFn: async () =>
 			user ? handleSupabaseError(await supabase.from("users").select("*").eq("id", user.id).single()) : null,
 		enabled: !!user,
@@ -66,20 +68,16 @@ const startTrialIfEligible = async () => {
 
 export const useUserStore = create<{
 	user: User | null;
-	userRecord: UserRecord | null;
 	isReady: boolean;
 	isLoadingAuth: boolean;
 	setUser: (user: User | null) => void;
-	setUserRecord: (userRecord: UserRecord | null) => void;
 	setIsReady: (isReady: boolean) => void;
 	setIsLoadingAuth: (isLoadingAuth: boolean) => void;
 }>(set => ({
 	user: null,
-	userRecord: null,
 	isReady: false,
 	isLoadingAuth: true,
 	setUser: user => set({ user }),
-	setUserRecord: userRecord => set({ userRecord }),
 	setIsReady: isReady => set({ isReady }),
 	setIsLoadingAuth: isLoadingAuth => set({ isLoadingAuth }),
 }));
@@ -94,7 +92,8 @@ export const useUserGuard = () => {
 };
 
 export const useUserRecord = () => {
-	const userRecord = useUserStore(s => s.userRecord);
+	const { data: userRecord } = useQueryUserRecord();
+
 	return userRecord!;
 };
 
@@ -103,13 +102,13 @@ export const useUserOptions = () => {
 
 	const userMutation = useMutation({
 		mutationFn: async (option: { key: string; value: string | null }) => {
-			const options = handleSupabaseError(
+			const { options } = handleSupabaseError(
 				await supabase.from("users").select("options").eq("id", userRecord.id).single(),
 			);
 			handleSupabaseError(
 				await supabase
 					.from("users")
-					.update({ options: { ...options, [option.key]: option.value } })
+					.update({ options: { ...(options as Record<string, any>), [option.key]: option.value } })
 					.eq("id", userRecord.id),
 			);
 		},
@@ -132,7 +131,6 @@ export const useUserHandler = () => {
 
 	const handleClearUser = () => {
 		userStore.setUser(null);
-		userStore.setUserRecord(null);
 		userStore.setIsReady(false);
 		userStore.setIsLoadingAuth(false);
 
@@ -166,7 +164,6 @@ export const useUserHandler = () => {
 	};
 
 	useEffect(() => {
-		userStore.setUserRecord(userRecordQuery.data ?? null);
 		if (userRecordQuery.data) {
 			userStore.setIsReady(true);
 		}

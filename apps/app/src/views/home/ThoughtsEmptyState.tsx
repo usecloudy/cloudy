@@ -1,22 +1,19 @@
 import { PlusIcon } from "lucide-react";
-import { Link } from "react-router-dom";
 
 import { Button } from "src/components/Button";
-import { useWorkspaceSlug } from "src/stores/workspace";
-import { makeThoughtUrl } from "src/utils/thought";
+import { useCreateThought } from "src/utils/thought";
 
 export const ThoughtsEmptyState = () => {
-	const wsSlug = useWorkspaceSlug();
+	const createThoughtMutation = useCreateThought();
 
 	return (
 		<div className="flex w-full flex-col items-center justify-center gap-4">
-			<span className="text-tertiary">Looks like you got no notes yet.</span>
-			<Link to={makeThoughtUrl(wsSlug, "new")}>
-				<Button>
-					<PlusIcon className="size-4 stroke-[3px]" />
-					<span>Create your first note</span>
-				</Button>
-			</Link>
+			<span className="text-tertiary">Bummer. No notes here (yet!)</span>
+
+			<Button onClick={() => createThoughtMutation.mutate({})}>
+				<PlusIcon className="size-4 stroke-[3px]" />
+				<span>Create your first note</span>
+			</Button>
 		</div>
 	);
 };

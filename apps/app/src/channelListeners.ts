@@ -1,16 +1,19 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
-import { collectionQueryKeys, thoughtQueryKeys } from "./api/queryKeys";
+import { collectionQueryKeys, thoughtQueryKeys, userQueryKeys } from "./api/queryKeys";
 import { supabase } from "./clients/supabase";
+import { useUserStore } from "./stores/user";
 import { useWorkspaceStore } from "./stores/workspace";
 
 export const useChannelListeners = () => {
+	const user = useUserStore(s => s.user);
 	const { workspace } = useWorkspaceStore();
 	const queryClient = useQueryClient();
 
 	useEffect(() => {
 		if (!workspace) return;
+		if (!user) return;
 
 		const customerStatusChannel = supabase
 			.channel(`workspace_${workspace.id}_customer_status`)
@@ -81,10 +84,20 @@ export const useChannelListeners = () => {
 			)
 			.subscribe();
 
+		const userRecordChannel = supabase
+			.channel("user_record")
+			.on("postgres_changes", { event: "*", schema: "public", table: "users", filter: `id=eq.${user.id}` }, () => {
+				queryClient.invalidateQueries({
+					queryKey: userQueryKeys.userRecord(),
+				});
+			})
+			.subscribe();
+
 		return () => {
 			supabase.removeChannel(customerStatusChannel);
 			supabase.removeChannel(workspaceThoughtsChannel);
 			supabase.removeChannel(workspaceCollectionThoughtsChannel);
+			supabase.removeChannel(userRecordChannel);
 		};
-	}, [workspace, queryClient]);
+	}, [workspace, queryClient, user]);
 };

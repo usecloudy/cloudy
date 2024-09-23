@@ -47,7 +47,9 @@ export const WorkspaceLayout = () => {
 	const isReady = useWorkspaceSlug(wsSlug!);
 
 	useEffect(() => {
+		console.log('userOptions.get("last_opened_workspace")', userOptions.get("last_opened_workspace"));
 		if (wsSlug && wsSlug !== "undefined") {
+			console.log("setting last opened workspace", wsSlug);
 			userOptions.set("last_opened_workspace", wsSlug);
 		}
 	}, [wsSlug]);
