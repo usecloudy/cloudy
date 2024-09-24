@@ -50,3 +50,8 @@ export interface TopicsNewPostRequestBody {
     query: string;
     workspaceId: string;
 }
+
+export interface FileHandlerClientPayload {
+    Authorization: string;
+    thoughtId: string;
+}

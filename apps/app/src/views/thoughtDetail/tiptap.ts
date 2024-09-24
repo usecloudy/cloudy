@@ -1,5 +1,7 @@
+import FileHandler from "@tiptap-pro/extension-file-handler";
 import { Mark, mergeAttributes } from "@tiptap/core";
 import { Extension, Node } from "@tiptap/core";
+import Image from "@tiptap/extension-image";
 import ListKeymap from "@tiptap/extension-list-keymap";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskItem from "@tiptap/extension-task-item";
@@ -8,9 +10,15 @@ import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
 import { Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { type PutBlobResult } from "@vercel/blob";
+import { upload } from "@vercel/blob/client";
 import { Markdown } from "tiptap-markdown";
 
+import { apiClient } from "src/api/client";
+
+import { PendingAttachmentNode } from "./PendingAttachment";
 import { Mention, mention } from "./mention";
+import ResizableImageExtension from "./resizableImageExtension";
 
 export const IndentNode = Node.create({
 	name: "indent",
@@ -147,4 +155,6 @@ export const tiptapExtensions = [
 	Mention.configure({
 		suggestion: mention,
 	}),
+	ResizableImageExtension,
+	PendingAttachmentNode,
 ];

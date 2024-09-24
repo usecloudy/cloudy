@@ -25,6 +25,7 @@ import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { FooterRow } from "./FooterRow";
+import { createFileHandlerExtension } from "./fileHandlerExtension";
 import { ThoughtEditPayload, useEditThought, useThought, useThoughtChannelListeners } from "./hooks";
 import { updateMentionNodeNames } from "./mention";
 import { ThoughtContext } from "./thoughtContext";
@@ -89,6 +90,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const editor = useEditor({
 		extensions: [
 			...tiptapExtensions,
+			createFileHandlerExtension(thoughtId),
 			Collaboration.configure({
 				document: ydoc,
 			}),

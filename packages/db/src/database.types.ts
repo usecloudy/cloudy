@@ -930,6 +930,38 @@ export type Database = {
           },
         ]
       }
+      thought_attachments: {
+        Row: {
+          created_at: string
+          id: string
+          path: string
+          thought_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          path: string
+          thought_id?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          path?: string
+          thought_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thought_attachments_thought_id_fkey"
+            columns: ["thought_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       thought_chat_threads: {
         Row: {
           comment_id: string
@@ -1065,6 +1097,7 @@ export type Database = {
       thought_chunks: {
         Row: {
           content: string
+          context: string
           created_at: string
           hash: string
           id: string
@@ -1072,6 +1105,7 @@ export type Database = {
         }
         Insert: {
           content: string
+          context: string
           created_at?: string
           hash: string
           id?: string
@@ -1079,6 +1113,7 @@ export type Database = {
         }
         Update: {
           content?: string
+          context?: string
           created_at?: string
           hash?: string
           id?: string
