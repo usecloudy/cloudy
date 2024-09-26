@@ -19,3 +19,8 @@ export const topicQueryKeys = {
 export const userQueryKeys = {
 	userRecord: (userId?: string) => (userId ? (["userRecord", userId] as const) : (["userRecord"] as const)),
 };
+
+export const paymentsQueryKeys = {
+	customerStatus: (wsSlug?: string) =>
+		wsSlug ? (["payments", "customers", "status", wsSlug] as const) : (["payments", "customers", "status"] as const),
+};
