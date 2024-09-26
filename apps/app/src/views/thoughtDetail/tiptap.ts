@@ -1,7 +1,5 @@
-import FileHandler from "@tiptap-pro/extension-file-handler";
 import { Mark, mergeAttributes } from "@tiptap/core";
 import { Extension, Node } from "@tiptap/core";
-import Image from "@tiptap/extension-image";
 import ListKeymap from "@tiptap/extension-list-keymap";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskItem from "@tiptap/extension-task-item";
@@ -10,11 +8,7 @@ import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
 import { Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { type PutBlobResult } from "@vercel/blob";
-import { upload } from "@vercel/blob/client";
 import { Markdown } from "tiptap-markdown";
-
-import { apiClient } from "src/api/client";
 
 import { PendingAttachmentNode } from "./PendingAttachment";
 import { Mention, mention } from "./mention";
@@ -121,6 +115,23 @@ const EditHighlight = Mark.create({
 	},
 });
 
+export const wrapSelectionAroundWords = (editor: Editor) => {
+	const selection = editor.state.selection;
+
+	const nodeBeforeText = selection.$from.nodeBefore?.textContent || "";
+	const lastWordBefore = nodeBeforeText.split(" ").pop() || "";
+	const newFrom = selection.from - lastWordBefore.length;
+
+	const nodeAfterText = selection.$to.nodeAfter?.textContent || "";
+	const firstWordAfter = nodeAfterText.split(" ").shift() || "";
+	const newTo = selection.to + firstWordAfter.length;
+
+	return {
+		from: newFrom,
+		to: newTo,
+	};
+};
+
 export const tiptapExtensions = [
 	StarterKit.configure({
 		dropcursor: {
@@ -158,3 +169,24 @@ export const tiptapExtensions = [
 	ResizableImageExtension,
 	PendingAttachmentNode,
 ];
+
+export const clearAllEditMarks = (editor: Editor) => {
+	const currentSelection = editor.state.selection;
+
+	editor
+		.chain()
+		.setTextSelection({ from: 0, to: editor.state.doc.content.size })
+		.unsetMark("editHighlight")
+		.setTextSelection(currentSelection)
+		.run();
+};
+
+export const clearAllApplyMarks = (editor: Editor) => {
+	const currentSelection = editor.state.selection;
+	editor
+		.chain()
+		.setTextSelection({ from: 0, to: editor.state.doc.content.size })
+		.unsetMark("additionHighlight")
+		.setTextSelection(currentSelection)
+		.run();
+};

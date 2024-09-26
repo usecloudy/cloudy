@@ -1,3 +1,4 @@
+import { Hotkey } from "@cloudy/ui";
 import { BubbleMenu, Editor } from "@tiptap/react";
 import {
 	BoldIcon,
@@ -16,57 +17,12 @@ import { Button } from "src/components/Button";
 
 import { AiEditorMenu } from "./AiEditorMenu";
 import { ThoughtContext } from "./thoughtContext";
-
-const wrapSelectionAroundWords = (editor: Editor) => {
-	const selection = editor.state.selection;
-
-	const nodeBeforeText = selection.$from.nodeBefore?.textContent || "";
-	const lastWordBefore = nodeBeforeText.split(" ").pop() || "";
-	const newFrom = selection.from - lastWordBefore.length;
-
-	const nodeAfterText = selection.$to.nodeAfter?.textContent || "";
-	const firstWordAfter = nodeAfterText.split(" ").shift() || "";
-	const newTo = selection.to + firstWordAfter.length;
-
-	return {
-		from: newFrom,
-		to: newTo,
-	};
-};
+import { wrapSelectionAroundWords } from "./tiptap";
 
 export const EditorBubbleMenu = () => {
-	const { editor, thoughtId, disableUpdatesRef } = useContext(ThoughtContext);
-	const [isEditingSelection, setIsEditingSelection] = useState(false);
-
-	const [selectionToEdit, setSelectionToEdit] = useState<{ from: number; to: number } | null>(null);
+	const { editor, showAiEditor } = useContext(ThoughtContext);
 
 	const bubbleMenuRef = useRef<HTMLDivElement>(null);
-
-	const handleOnEdit = () => {
-		if (!editor) return;
-
-		disableUpdatesRef.current = true;
-
-		const selection = wrapSelectionAroundWords(editor);
-		setSelectionToEdit(selection);
-
-		editor.chain().focus().setTextSelection(selection).setMark("editHighlight").blur().run();
-		setIsEditingSelection(true);
-	};
-
-	const handleOnCancelEditMode = (isSelectionEvent?: boolean) => {
-		setIsEditingSelection(false);
-		if (selectionToEdit && !isSelectionEvent) {
-			editor?.chain().focus().setTextSelection(selectionToEdit).run();
-		}
-		setSelectionToEdit(null);
-	};
-
-	const handleOnCloseEditMode = () => {
-		setIsEditingSelection(false);
-		setSelectionToEdit(null);
-		disableUpdatesRef.current = false;
-	};
 
 	if (!editor) return null;
 
@@ -77,16 +33,10 @@ export const EditorBubbleMenu = () => {
 					ref={bubbleMenuRef}
 					className="flex flex-row items-center gap-0.5 rounded-md border border-border bg-background px-2 py-2">
 					<div className="pr-2">
-						<Button
-							variant="secondary"
-							size="sm"
-							className="text-accent"
-							onMouseDown={e => {
-								e.preventDefault();
-								handleOnEdit();
-							}}>
+						<Button variant="secondary" size="sm" className="text-accent" onClick={showAiEditor}>
+							<Hotkey keys={["Command", "K"]} />
+							<span>Ask Cloudy</span>
 							<SparklesIcon className="h-3.5 w-3.5" />
-							<span>Edit selection</span>
 						</Button>
 					</div>
 					<Button
@@ -147,15 +97,6 @@ export const EditorBubbleMenu = () => {
 					</Button>
 				</div>
 			</BubbleMenu>
-			{isEditingSelection && selectionToEdit && (
-				<AiEditorMenu
-					editor={editor}
-					thoughtId={thoughtId}
-					selectionToEdit={selectionToEdit}
-					onCancel={handleOnCancelEditMode}
-					onClose={handleOnCloseEditMode}
-				/>
-			)}
 		</div>
 	);
 };

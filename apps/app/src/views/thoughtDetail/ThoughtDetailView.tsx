@@ -2,7 +2,7 @@ import { ThoughtSignals } from "@cloudy/utils/common";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, Extension, useEditor } from "@tiptap/react";
 import { GripVertical } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
@@ -18,6 +18,7 @@ import { ellipsizeText, makeHeadTitle } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
+import { AiEditorMenu } from "./AiEditorMenu";
 import { CollectionCarousel } from "./CollectionCarousel";
 import { CommentColumn } from "./CommentColumn";
 import { ControlColumn } from "./ControlColumn";
@@ -30,7 +31,7 @@ import { ThoughtEditPayload, useEditThought, useThought, useThoughtChannelListen
 import { updateMentionNodeNames } from "./mention";
 import { ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
-import { tiptapExtensions } from "./tiptap";
+import { clearAllApplyMarks, clearAllEditMarks, tiptapExtensions, wrapSelectionAroundWords } from "./tiptap";
 import { useYProvider } from "./yProvider";
 
 type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
@@ -75,8 +76,10 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 
 	const [hideControlColumn, setHideControlColumn] = useLocalStorage("hideControlColumn", false);
 
+	const [isAiWriting, setIsAiWriting] = useState(false);
 	const [isEditingDisabled, setIsEditingDisabled] = useState(false);
 	const [previewingKey, setPreviewingKey] = useState<string | null>(null);
+	const [isShowingAiEditorMenu, setShowAiEditorMenu] = useState(false);
 
 	const { onChange } = useSave(editThought, { debounceDurationMs: thoughtId ? 500 : 0 });
 
@@ -99,6 +102,21 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				user: {
 					name: userRecord.name ?? userRecord.email,
 					color: "#b694ff",
+				},
+			}),
+			Extension.create({
+				name: "hotkeys",
+				addKeyboardShortcuts() {
+					return {
+						"Mod-k": () => {
+							showAiEditor();
+							return true;
+						},
+						Escape: () => {
+							hideAiEditor();
+							return true;
+						},
+					};
 				},
 			}),
 		],
@@ -154,6 +172,48 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		storedContentRef.current = null;
 	}, []);
 
+	const showAiEditor = useCallback(() => {
+		if (!editor) return;
+		disableUpdatesRef.current = true;
+		const selection = wrapSelectionAroundWords(editor);
+		editor.chain().setTextSelection(selection).setMark("editHighlight").blur().run();
+		setShowAiEditorMenu(true);
+	}, [editor]);
+
+	const onStartAiEdits = useCallback(() => {
+		if (!editor) return;
+		setIsAiWriting(true);
+	}, [editor, setIsAiWriting]);
+
+	const onFinishAiEdits = useCallback(() => {
+		if (!editor) return;
+		setIsAiWriting(false);
+	}, [editor, setIsAiWriting]);
+
+	const applySuggestedChanges = useCallback(() => {
+		if (!editor) {
+			return;
+		}
+
+		clearAllApplyMarks(editor);
+		setPreviewingKey(null);
+		setIsEditingDisabled(false);
+		clearStoredContent();
+		onFinishAiEdits();
+		disableUpdatesRef.current = false;
+	}, [editor, clearStoredContent, onFinishAiEdits]);
+
+	const hideAiEditor = useCallback(() => {
+		if (!editor) return;
+
+		setShowAiEditorMenu(false);
+		restoreFromLastContent();
+		clearStoredContent();
+		clearAllEditMarks(editor);
+		onFinishAiEdits();
+		disableUpdatesRef.current = false;
+	}, [editor, restoreFromLastContent, clearStoredContent, onFinishAiEdits]);
+
 	useEffect(() => {
 		const signals = (thought?.signals as string[] | null) ?? [];
 		if (signals.includes(ThoughtSignals.AI_SUGGESTIONS)) {
@@ -180,6 +240,15 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				clearStoredContent,
 				hideControlColumn,
 				setHideControlColumn,
+				setShowAiEditorMenu,
+				isShowingAiEditorMenu,
+				showAiEditor,
+				hideAiEditor,
+				applySuggestedChanges,
+				isAiWriting,
+				setIsAiWriting,
+				onStartAiEdits,
+				onFinishAiEdits,
 			}}>
 			<div className="no-scrollbar relative flex w-full flex-grow flex-col overflow-hidden lg:flex-row">
 				<EditorView
@@ -205,14 +274,9 @@ const EditorView = ({
 	latestRemoteTitleTs?: string;
 	onChange: (payload: ThoughtEditPayload) => void;
 }) => {
-	const { editor, disableUpdatesRef, isConnected, hideControlColumn } = useContext(ThoughtContext);
-	const {
-		isAiWriting,
-		lastLocalThoughtTitleTs,
-		setCurrentContent,
-		setLastLocalThoughtContentTs,
-		setLastLocalThoughtTitleTs,
-	} = useThoughtStore();
+	const { editor, disableUpdatesRef, isConnected, hideControlColumn, isAiWriting } = useContext(ThoughtContext);
+	const { lastLocalThoughtTitleTs, setCurrentContent, setLastLocalThoughtContentTs, setLastLocalThoughtTitleTs } =
+		useThoughtStore();
 	const { title, setTitle, saveTitleKey } = useTitleStore();
 
 	useMount(() => {
@@ -301,8 +365,10 @@ const EditorView = ({
 					)}
 					<CommentColumn editor={editor} thoughtId={thoughtId} disableUpdatesRef={disableUpdatesRef} />
 				</div>
+				<div className="h-[75dvh]" />
 			</div>
 			<FooterRow />
+			{editor && <AiEditorMenu />}
 		</div>
 	);
 };

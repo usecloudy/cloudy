@@ -384,3 +384,80 @@ export const useRespond = (commentId?: string | null) => {
 		},
 	});
 };
+
+export const useCommentThread = (commentId?: string | null) => {
+	useEffect(() => {
+		if (!commentId) {
+			return;
+		}
+
+		const channel = supabase
+			.channel("commentThread")
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "thought_chat_threads",
+					filter: `comment_id=eq.${commentId}`,
+				},
+				() => {
+					queryClient.invalidateQueries({
+						queryKey: ["aiCommentThread", commentId],
+					});
+				},
+			)
+			.subscribe();
+
+		return () => {
+			channel.unsubscribe();
+		};
+	}, [commentId]);
+
+	useEffect(() => {
+		if (!commentId) {
+			return;
+		}
+
+		const channel = supabase
+			.channel("comment")
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "thought_chats",
+					filter: `id=eq.${commentId}`,
+				},
+				() => {
+					queryClient.invalidateQueries({
+						queryKey: ["aiCommentThread", commentId],
+					});
+				},
+			)
+			.subscribe();
+
+		return () => {
+			channel.unsubscribe();
+		};
+	}, [commentId]);
+
+	return useQuery({
+		queryKey: ["aiCommentThread", commentId],
+		queryFn: async () => {
+			if (!commentId) {
+				return null;
+			}
+
+			const { data } = await supabase
+				.from("thought_chats")
+				.select("*, thought_chat_threads(*, created_at)")
+				.eq("id", commentId)
+				.order("created_at", { referencedTable: "thought_chat_threads", ascending: true })
+				.single();
+
+			return data;
+		},
+		enabled: !!commentId,
+	});
+};

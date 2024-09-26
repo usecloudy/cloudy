@@ -55,3 +55,13 @@ export interface FileHandlerClientPayload {
     Authorization: string;
     thoughtId: string;
 }
+
+export interface SelectionRespondPostRequestBody {
+    thoughtId: string;
+    commentId: string;
+}
+
+export interface ApplyChangePostRequestBody {
+    thoughtId: string;
+    suggestionContent: string;
+}

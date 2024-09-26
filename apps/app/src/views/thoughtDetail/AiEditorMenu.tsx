@@ -1,40 +1,76 @@
-import { FloatingFocusManager, offset, shift, useFloating } from "@floating-ui/react";
+import { Hotkey } from "@cloudy/ui";
+import { handleSupabaseError } from "@cloudy/utils/common";
+import { flip, offset, shift, useFloating } from "@floating-ui/react";
 import { useMutation } from "@tanstack/react-query";
 import { Editor } from "@tiptap/react";
-import { ChevronsLeftIcon, SendHorizonalIcon, SparklesIcon, XIcon } from "lucide-react";
-import { useContext, useEffect, useRef, useState } from "react";
+import { CheckCircle2Icon, ChevronsLeftIcon, PenIcon, SendHorizonalIcon, SparklesIcon, XCircleIcon, XIcon } from "lucide-react";
+import { handleDelete } from "node_modules/@tiptap/extension-list-keymap/dist/packages/extension-list-keymap/src/listHelpers";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import TextareaAutosize from "react-textarea-autosize";
-import { useMount } from "react-use";
 
 import { apiClient } from "src/api/client";
+import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
+import { AiCommentThreadInner } from "./AiCommentThread";
+import { useCommentThread } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";
+import { clearAllApplyMarks, clearAllEditMarks } from "./tiptap";
 
-// const selectEditNode = (editor: Editor) => {
-// 	let nodePosition = -1;
-// 	let nodeLength = 0;
-// 	editor.view.state.doc.nodesBetween(0, editor.view.state.doc.content.size, (node, pos) => {
-// 		if (node.type.name === "text" && node.marks.length > 0 && node.marks.some(mark => mark.type.name === "editHighlight")) {
-// 			nodePosition = pos;
-// 			nodeLength = node.textContent?.length ?? 0;
-// 		}
-// 	});
+const useSelectionRespond = (commentId?: string | null) => {
+	const { thoughtId } = useContext(ThoughtContext);
 
-// 	if (nodePosition !== -1) {
-// 		editor
-// 			.chain()
-// 			.setTextSelection({ from: nodePosition, to: nodePosition + nodeLength })
-// 			.focus()
-// 			.run();
-// 	}
-// };
+	return useMutation({
+		mutationFn: async ({ message, content }: { message: string; content: string }) => {
+			const firstEditStart = content.indexOf("<edit>");
+			const lastEditEnd = content.lastIndexOf("</edit>") + 7; // 7 is the length of '</edit>'
 
-const useEditSelection = (editor: Editor, thoughtId: string) => {
+			const selection = content.substring(firstEditStart, lastEditEnd).replace(/<\/?edit>/g, "");
+
+			let commentIdToSend = commentId;
+			if (!commentIdToSend) {
+				commentIdToSend = handleSupabaseError(
+					await supabase
+						.from("thought_chats")
+						.insert({
+							thought_id: thoughtId,
+							content: message,
+							related_chunks: [selection],
+							role: "user",
+						})
+						.select("id")
+						.single(),
+				).id;
+			} else {
+				await supabase.from("thought_chat_threads").insert({
+					comment_id: commentIdToSend,
+					content: message,
+					role: "user",
+				});
+			}
+
+			apiClient.post("/api/ai/selection-respond", {
+				commentId: commentIdToSend,
+				thoughtId,
+			});
+
+			return commentIdToSend;
+		},
+	});
+};
+
+const useEditSelection = () => {
+	const { editor, thoughtId } = useContext(ThoughtContext);
+
 	return useMutation({
 		mutationFn: async ({ instruction, content }: { instruction: string; content: string }) => {
+			if (!editor) {
+				throw new Error("Editor is not initialized");
+			}
+
 			const firstEditStart = content.indexOf("<edit>");
 			const lastEditEnd = content.lastIndexOf("</edit>") + 7; // 7 is the length of '</edit>'
 
@@ -100,7 +136,7 @@ const useEditSelection = (editor: Editor, thoughtId: string) => {
 							from: openingTokens[0].from,
 							to: closingTokens[0].to,
 						})
-						.setMark("editHighlight")
+						.setMark("additionHighlight")
 						.deleteRange(closingTokens[0])
 						.deleteRange(openingTokens[0])
 						.run();
@@ -132,183 +168,168 @@ const useEditSelection = (editor: Editor, thoughtId: string) => {
 	});
 };
 
-export const AiEditorMenu = ({
-	thoughtId,
-	editor,
-	selectionToEdit,
-	onCancel,
-	onClose,
-}: {
-	thoughtId: string;
-	editor: Editor;
-	selectionToEdit: { from: number; to: number };
-	onCancel: (isSelectionEvent?: boolean) => void;
-	onClose: () => void;
-}) => {
-	const { disableUpdatesRef, setIsEditingDisabled } = useContext(ThoughtContext);
-	const { onUpdate } = useContext(ThoughtContext);
-
-	const { refs, floatingStyles, context } = useFloating({
-		open: true,
-		placement: "top",
-		middleware: [offset(10), shift()],
-	});
-
-	useMount(() => {
-		refs.setPositionReference({
-			// @ts-ignore
-			getBoundingClientRect() {
-				return document.querySelector("edit")?.getBoundingClientRect();
-			},
-		});
-	});
-
-	const [isApplyMode, setIsApplyMode] = useState(false);
-	const [editingText, setEditingText] = useState("");
-	const { mutateAsync: editSelection, isPending } = useEditSelection(editor, thoughtId);
-
-	const contentHtmlBeforeEdit = useRef<string | null>(null);
-	const contentHtmlAfterEdit = useRef<string | null>(null);
-	const textAreaRef = useRef<HTMLTextAreaElement>(null);
-
-	const handleOnCancel = (isSelectionEvent?: boolean) => {
-		disableUpdatesRef.current = true;
-
-		if (selectionToEdit) {
-			if (contentHtmlBeforeEdit.current) {
-				editor.commands.setContent(contentHtmlBeforeEdit.current);
-			}
-
-			const selection = editor.state.selection;
-			editor
-				.chain()
-				.setTextSelection(selectionToEdit)
-				.focus()
-				.unsetMark("editHighlight")
-				.setTextSelection(selection)
-				.run();
-		}
-
-		disableUpdatesRef.current = false;
-		setIsApplyMode(false);
-		contentHtmlBeforeEdit.current = null;
-		contentHtmlAfterEdit.current = null;
-		onCancel(isSelectionEvent);
-	};
-
-	const handleApply = () => {
-		const selection = editor.state.selection;
-		editor.chain().selectAll().unsetMark("editHighlight").setTextSelection(selection).run();
-		setIsApplyMode(false);
-		setEditingText("");
-		contentHtmlBeforeEdit.current = null;
-		contentHtmlAfterEdit.current = null;
-		onClose();
-		disableUpdatesRef.current = false;
-		onUpdate(false);
-	};
-
-	const handleSubmit = async () => {
-		if (selectionToEdit) {
-			const contentHtmlWithSelectionMarked = editor.getHTML();
-			contentHtmlBeforeEdit.current = contentHtmlWithSelectionMarked;
-			setIsApplyMode(true);
-			setIsEditingDisabled(true);
-			await editSelection({
-				instruction: editingText,
-				content: contentHtmlWithSelectionMarked,
-			});
-			contentHtmlAfterEdit.current = editor.getHTML();
-			setIsEditingDisabled(false);
-		}
-	};
-
-	const handleRevertHover = () => {
-		if (contentHtmlAfterEdit.current) {
-			disableUpdatesRef.current = true;
-			editor.commands.blur();
-			editor.commands.setContent(contentHtmlBeforeEdit.current);
-		}
-	};
-
-	const undoRevertHover = () => {
-		if (contentHtmlBeforeEdit.current) {
-			editor.commands.blur();
-			editor.commands.setContent(contentHtmlAfterEdit.current);
-			disableUpdatesRef.current = false;
-		}
-	};
-
-	useEffect(() => {
-		const onSelectionUpdate = () => {
-			if (!isApplyMode) {
-				handleOnCancel();
-			}
-		};
-
-		editor.on("selectionUpdate", onSelectionUpdate);
-
-		return () => {
-			editor.off("selectionUpdate", onSelectionUpdate);
-		};
-	}, [editor, selectionToEdit, isApplyMode]);
+export const AiEditorMenu = () => {
+	const { isShowingAiEditorMenu } = useContext(ThoughtContext);
 
 	return (
-		<FloatingFocusManager context={context} initialFocus={textAreaRef}>
-			<div
-				ref={refs.setFloating}
-				style={floatingStyles}
-				className="z-50 flex flex-col gap-0.5 rounded-md border border-border bg-background px-2 py-2">
+		<div className="sticky bottom-0 w-full">
+			<div className="absolute bottom-4 left-0 flex w-full justify-center">
+				{isShowingAiEditorMenu && <AiEditorMenuContent />}
+			</div>
+		</div>
+	);
+};
+
+const AiEditorMenuContent = () => {
+	const { editor, disableUpdatesRef, storeContentIfNeeded, hideAiEditor, applySuggestedChanges, onStartAiEdits } =
+		useContext(ThoughtContext);
+
+	const [commentId, setCommentId] = useState<string | null>(null);
+	const [editingText, setEditingText] = useState("");
+	const [readyToApply, setReadyToApply] = useState(false);
+
+	const editSelectionMutation = useEditSelection();
+	const selectionRespondMutation = useSelectionRespond(commentId);
+
+	const commentThreadQuery = useCommentThread(commentId);
+
+	const textAreaRef = useRef<HTMLTextAreaElement>(null);
+
+	const handleOnCancel = () => {
+		hideAiEditor();
+	};
+
+	const handleEditSelection = async () => {
+		if (!editor) {
+			throw new Error("Editor is not initialized");
+		}
+
+		const content = editor.getHTML();
+		setEditingText("");
+		disableUpdatesRef.current = true;
+		storeContentIfNeeded();
+		onStartAiEdits();
+		await editSelectionMutation.mutateAsync({ instruction: editingText, content });
+
+		setReadyToApply(true);
+	};
+
+	const handleSubmitQuestion = () => {
+		if (!editor) {
+			throw new Error("Editor is not initialized");
+		}
+
+		setEditingText("");
+		selectionRespondMutation.mutateAsync({ message: editingText, content: editor.getHTML() }).then(commentId => {
+			setCommentId(commentId!);
+		});
+	};
+
+	const handleConfirmChanges = () => {
+		applySuggestedChanges();
+		hideAiEditor();
+	};
+
+	useHotkeys("esc", () => handleOnCancel());
+
+	useEffect(() => {
+		// For some reason, autofocus doesn't work and we have to manually focus the text area
+		textAreaRef.current?.focus();
+	}, []);
+
+	return (
+		<div className="relative bottom-0 flex w-full flex-col gap-0.5 rounded-md border border-border bg-background duration-100 ease-out animate-in zoom-in-95 slide-in-from-bottom-20 md:w-[32rem]">
+			<div className="flex flex-row items-center justify-between gap-4 border-b border-border px-2 pb-1.5 pt-2">
 				<div className="flex flex-row items-center gap-1 pb-1 pl-2 pt-1">
 					<SparklesIcon className="h-4 w-4 text-accent" />
-					<span className="text-sm font-medium">Let Cloudy write for you</span>
+					<span className="text-sm font-medium">Let Cloudy help you out</span>
 				</div>
-				<div className="flex flex-row items-end gap-1">
-					<TextareaAutosize
-						ref={textAreaRef}
-						className="no-scrollbar w-72 resize-none appearance-none border-none bg-transparent px-2 py-1.5 text-sm outline-none"
-						contentEditable={true}
-						placeholder="How should I edit this?"
-						value={editingText}
-						onChange={e => {
-							setEditingText(e.target.value);
-						}}
-						onKeyDown={e => {
-							if (e.key === "Enter" && !e.shiftKey) {
-								e.preventDefault();
-								handleSubmit();
-							}
-						}}
-						suppressContentEditableWarning
-						autoFocus
-					/>
-					<div className="flex flex-row items-center gap-1">
-						{editingText.length > 0 &&
-							(isPending ? (
-								<div className="pr-2">
-									<LoadingSpinner size="xs" />
-								</div>
-							) : isApplyMode ? (
-								<Button size="sm" onClick={handleApply}>
-									<ChevronsLeftIcon className="h-4 w-4" />
-									<span>Apply</span>
-								</Button>
-							) : (
-								<Button size="sm" onClick={handleSubmit}>
-									<SendHorizonalIcon className="h-4 w-4" />
-								</Button>
-							))}
+				<Button variant="secondary" size="icon-xs" onClick={() => handleOnCancel()}>
+					<XIcon className="h-4 w-4" />
+				</Button>
+			</div>
+			{editSelectionMutation.isPending ? (
+				<div className="flex items-center justify-center p-4">
+					<LoadingSpinner size="sm" />
+				</div>
+			) : readyToApply ? (
+				<>
+					<div className="flex flex-col gap-1 px-4 py-2">
+						<p className="text-sm">Here are the changes you requested!</p>
+					</div>
+					<div className="flex flex-row items-center justify-end gap-1 px-4 pb-4">
 						<Button
-							variant="secondary"
 							size="sm"
-							onClick={() => handleOnCancel()}
-							onMouseEnter={handleRevertHover}
-							onMouseLeave={undoRevertHover}>
-							<XIcon className="h-4 w-4" />
+							variant="default"
+							className="bg-green-600 hover:bg-green-600/80"
+							onClick={handleConfirmChanges}>
+							<CheckCircle2Icon className="size-4" />
+							<span>Accept</span>
+						</Button>
+						<Button size="sm" variant="destructive" onClick={() => handleOnCancel()}>
+							<XCircleIcon className="size-4" />
+							<span>Reject</span>
 						</Button>
 					</div>
-				</div>
-			</div>
-		</FloatingFocusManager>
+				</>
+			) : (
+				<>
+					{commentThreadQuery.data && (
+						<div className="flex max-h-[40dvh] flex-1 border-b border-border px-4">
+							<AiCommentThreadInner
+								commentId={commentId!}
+								comment={commentThreadQuery.data}
+								isLoading={commentThreadQuery.isLoading}
+							/>
+						</div>
+					)}
+					<div className="w-full px-4 pb-4">
+						<TextareaAutosize
+							ref={textAreaRef}
+							className="no-scrollbar w-full resize-none appearance-none border-none bg-transparent px-2 py-3 text-sm outline-none"
+							contentEditable={true}
+							placeholder="Ask a question or describe the change you want to make"
+							value={editingText}
+							onChange={e => {
+								setEditingText(e.target.value);
+							}}
+							onKeyDown={e => {
+								if (e.key === "Enter" && !e.shiftKey && !e.metaKey) {
+									e.preventDefault();
+									handleSubmitQuestion();
+								} else if (e.key === "Enter" && e.metaKey) {
+									e.preventDefault();
+									handleEditSelection();
+								} else if (e.key === "Escape") {
+									handleOnCancel();
+								}
+							}}
+							suppressContentEditableWarning
+							autoFocus
+						/>
+
+						{commentId ? (
+							<div className="flex flex-row items-center justify-end gap-1">
+								<Button size="sm" variant="default" onClick={handleSubmitQuestion}>
+									<Hotkey keys={["Enter"]} />
+									<span>Ask follow up</span>
+								</Button>
+							</div>
+						) : (
+							<div className="flex flex-row items-center justify-end gap-1">
+								<Button size="sm" variant="ghost" onClick={handleEditSelection}>
+									<Hotkey keys={["Command", "Enter"]} />
+									<span>Edit</span>
+								</Button>
+								<Button size="sm" variant="default" onClick={handleSubmitQuestion}>
+									<Hotkey keys={["Enter"]} />
+									<span>Ask question</span>
+								</Button>
+							</div>
+						)}
+					</div>
+				</>
+			)}
+		</div>
 	);
 };
