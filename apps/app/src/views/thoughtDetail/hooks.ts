@@ -333,7 +333,8 @@ export const useRespond = (commentId?: string | null) => {
 	const { setActiveThreadCommentId } = useThoughtStore();
 
 	return useMutation({
-		mutationFn: async (content: string) => {
+		mutationFn: async (message: string) => {
+			let commentIdToSend = commentId;
 			if (!commentId) {
 				const comment = handleSupabaseError(
 					await supabase
@@ -342,7 +343,7 @@ export const useRespond = (commentId?: string | null) => {
 							thought_id: thoughtId,
 							role: "user",
 							type: "comment",
-							content,
+							content: message,
 						})
 						.select()
 						.single(),
@@ -350,9 +351,7 @@ export const useRespond = (commentId?: string | null) => {
 
 				if (comment) {
 					setActiveThreadCommentId(comment.id);
-					await apiClient.post("/api/ai/comment-respond", {
-						threadId: comment.id,
-					});
+					commentIdToSend = comment.id;
 				}
 			} else {
 				await supabase
@@ -360,7 +359,7 @@ export const useRespond = (commentId?: string | null) => {
 					.insert({
 						comment_id: commentId,
 						role: "user",
-						content,
+						content: message,
 					})
 					.single();
 
@@ -371,6 +370,11 @@ export const useRespond = (commentId?: string | null) => {
 					})
 					.eq("id", commentId);
 			}
+
+			apiClient.post("/api/ai/thread-respond", {
+				commentId: commentIdToSend,
+				thoughtId,
+			});
 		},
 		onMutate: () => {
 			queryClient.setQueryData(["aiCommentThread", commentId], (data: any) => {

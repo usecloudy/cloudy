@@ -1,4 +1,4 @@
-import { ApplyChangePostRequestBody, SelectionRespondPostRequestBody, handleSupabaseError } from "@cloudy/utils/common";
+import { ApplyChangePostRequestBody, ThreadRespondPostRequestBody, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CoreMessage, streamText } from "ai";
@@ -32,11 +32,13 @@ const makeApplyChangePrompts = ({
 \`\`\`
 ${contentHtml}
 \`\`\`
-Here is the change they want to include in the note:
+
+Below is the change they want to include in the note:
 \`\`\`
 ${suggestionContent}
 \`\`\`
-Return ONLY the entire contents of the note, with the change included.`,
+
+Return ONLY the entire contents of the note, with the change included where it should go. Do NOT make any extraneous changes other than the one(s) requested.`,
 	},
 ];
 

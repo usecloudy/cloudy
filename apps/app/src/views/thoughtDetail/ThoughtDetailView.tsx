@@ -176,7 +176,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		if (!editor) return;
 		disableUpdatesRef.current = true;
 		const selection = wrapSelectionAroundWords(editor);
-		editor.chain().setTextSelection(selection).setMark("editHighlight").blur().run();
+		editor.chain().setTextSelection(selection).setMark("editHighlight").run();
 		setShowAiEditorMenu(true);
 	}, [editor]);
 
@@ -201,7 +201,8 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		clearStoredContent();
 		onFinishAiEdits();
 		disableUpdatesRef.current = false;
-	}, [editor, clearStoredContent, onFinishAiEdits]);
+		onUpdate(false);
+	}, [editor, clearStoredContent, onFinishAiEdits, onUpdate]);
 
 	const hideAiEditor = useCallback(() => {
 		if (!editor) return;

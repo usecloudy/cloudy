@@ -11,13 +11,11 @@ import {
 	TextQuoteIcon,
 	UnderlineIcon,
 } from "lucide-react";
-import { useContext, useRef, useState } from "react";
+import { useContext, useRef } from "react";
 
 import { Button } from "src/components/Button";
 
-import { AiEditorMenu } from "./AiEditorMenu";
 import { ThoughtContext } from "./thoughtContext";
-import { wrapSelectionAroundWords } from "./tiptap";
 
 export const EditorBubbleMenu = () => {
 	const { editor, showAiEditor } = useContext(ThoughtContext);

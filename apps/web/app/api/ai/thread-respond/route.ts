@@ -1,4 +1,4 @@
-import { SelectionRespondPostRequestBody, handleSupabaseError } from "@cloudy/utils/common";
+import { ThreadRespondPostRequestBody, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CoreMessage, streamText } from "ai";
@@ -12,18 +12,20 @@ import { getContextForThought } from "app/api/utils/thoughts";
 export const POST = async (req: Request) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
-	const payload = (await req.json()) as SelectionRespondPostRequestBody;
+	const payload = (await req.json()) as ThreadRespondPostRequestBody;
 
 	return respond(payload, supabase);
 };
 
 const makeSelectionRespondPrompts = ({
 	contextText,
-	contentWithSelection,
+	content,
+	hasSelection,
 	title,
 }: {
 	contextText: string;
-	contentWithSelection: string;
+	content: string;
+	hasSelection?: boolean;
 	title?: string | null;
 }): CoreMessage[] => [
 	{
@@ -33,15 +35,19 @@ const makeSelectionRespondPrompts = ({
 You must answer in a friendly, helpful, and short & concise manner.
 
 ${contextText}
-The user is in the process of writing the below note and has also selected a specific part of the text to talk to you about, the selection is marked with the [[[ and ]]] tags, for example, in the following text: "Hi [[[user]]] I'm doing well", the selection is "user".
+The user is in the process of writing the below note${
+			hasSelection
+				? `  and has also selected a specific part of the text to talk to you about, the selection is marked with the [[[ and ]]] tags, for example, in the following text: "Hi [[[user]]] I'm doing well", the selection is "user".`
+				: ""
+		}
 You are able to suggest edits to the note as needed, to suggest an edit, you MUST wrap your suggestion in \`\`\` backticks, for example:
 \`\`\`
 This is the edit I want to make
 \`\`\`
 
-Below is the note the user is writing, and the selection they have made:
+Below is the note the user is writing${hasSelection ? `, and the selection they have made:` : ":"}
 ${title ? `Title: ${title}` : ""}
-${contentWithSelection}`,
+${content}`,
 	},
 ];
 
@@ -52,7 +58,7 @@ interface Comment {
 	role: "user" | "assistant";
 }
 
-const respond = async (payload: SelectionRespondPostRequestBody, supabase: SupabaseClient<Database>) => {
+const respond = async (payload: ThreadRespondPostRequestBody, supabase: SupabaseClient<Database>) => {
 	const { title, content_md: contentMd } = handleSupabaseError(
 		await supabase.from("thoughts").select("title, content_md").eq("id", payload.thoughtId).single(),
 	);
@@ -69,8 +75,8 @@ const respond = async (payload: SelectionRespondPostRequestBody, supabase: Supab
 
 	const heliconeHeaders = {
 		"Helicone-User-Id": userId,
-		"Helicone-Session-Name": "Respond to Selection",
-		"Helicone-Session-Id": `respond-to-selection/${randomUUID()}`,
+		"Helicone-Session-Name": "Respond to Thread",
+		"Helicone-Session-Id": `respond-to-thread/${randomUUID()}`,
 	};
 
 	const comment = handleSupabaseError(await supabase.from("thought_chats").select("*").eq("id", payload.commentId).single());
@@ -100,18 +106,24 @@ const respond = async (payload: SelectionRespondPostRequestBody, supabase: Supab
 		...threadCommentHistory,
 	];
 
-	const selectionStart = contentMd.indexOf(comment.related_chunks![0]!);
-	const selectionEnd = selectionStart + comment.related_chunks![0]!.length;
+	const hasSelection = (comment.related_chunks && comment.related_chunks.length > 0) ?? false;
 
-	const contentWithSelection =
-		contentMd.slice(0, selectionStart) + `[[[${comment.related_chunks![0]!}]]]` + contentMd.slice(selectionEnd);
+	let contentToSend = contentMd;
+
+	if (hasSelection) {
+		const selectionStart = contentMd.indexOf(comment.related_chunks![0]!);
+		const selectionEnd = selectionStart + comment.related_chunks![0]!.length;
+
+		contentToSend =
+			contentMd.slice(0, selectionStart) + `[[[${comment.related_chunks![0]!}]]]` + contentMd.slice(selectionEnd);
+	}
 
 	const contextText = await getContextForThought(payload.thoughtId, supabase, {
 		...heliconeHeaders,
 		"Helicone-Session-Path": "respond-to-selection/context",
 	});
 
-	const messages = makeSelectionRespondPrompts({ contextText, contentWithSelection, title });
+	const messages = makeSelectionRespondPrompts({ contextText, content: contentToSend, hasSelection, title });
 	threadCommentHistory.forEach(comment => {
 		messages.push({
 			role: comment.role,
@@ -132,6 +144,13 @@ const respond = async (payload: SelectionRespondPostRequestBody, supabase: Supab
 		},
 	});
 
+	await supabase
+		.from("thought_chats")
+		.update({
+			is_thread_loading: false,
+		})
+		.eq("id", comment.id);
+
 	let fullText = "";
 	const threadReplyId = randomUUID();
 	for await (const textPart of textStream) {
@@ -151,9 +170,6 @@ const respond = async (payload: SelectionRespondPostRequestBody, supabase: Supab
 			status: "success",
 		})
 		.eq("id", threadReplyId);
-
-	// Extract each ``` edit blocks
-	// send them to the apply tool
 
 	return NextResponse.json({
 		success: true,

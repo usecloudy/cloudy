@@ -1,11 +1,8 @@
 import { Hotkey } from "@cloudy/ui";
 import { handleSupabaseError } from "@cloudy/utils/common";
-import { flip, offset, shift, useFloating } from "@floating-ui/react";
 import { useMutation } from "@tanstack/react-query";
-import { Editor } from "@tiptap/react";
-import { CheckCircle2Icon, ChevronsLeftIcon, PenIcon, SendHorizonalIcon, SparklesIcon, XCircleIcon, XIcon } from "lucide-react";
-import { handleDelete } from "node_modules/@tiptap/extension-list-keymap/dist/packages/extension-list-keymap/src/listHelpers";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { CheckCircle2Icon, SparklesIcon, XCircleIcon, XIcon } from "lucide-react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import TextareaAutosize from "react-textarea-autosize";
 
@@ -13,12 +10,12 @@ import { apiClient } from "src/api/client";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
+import { cn } from "src/utils";
 import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
 import { AiCommentThreadInner } from "./AiCommentThread";
 import { useCommentThread } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";
-import { clearAllApplyMarks, clearAllEditMarks } from "./tiptap";
 
 const useSelectionRespond = (commentId?: string | null) => {
 	const { thoughtId } = useContext(ThoughtContext);
@@ -40,6 +37,7 @@ const useSelectionRespond = (commentId?: string | null) => {
 							content: message,
 							related_chunks: [selection],
 							role: "user",
+							is_seen: true,
 						})
 						.select("id")
 						.single(),
@@ -52,7 +50,7 @@ const useSelectionRespond = (commentId?: string | null) => {
 				});
 			}
 
-			apiClient.post("/api/ai/selection-respond", {
+			apiClient.post("/api/ai/thread-respond", {
 				commentId: commentIdToSend,
 				thoughtId,
 			});
@@ -187,6 +185,7 @@ const AiEditorMenuContent = () => {
 	const [commentId, setCommentId] = useState<string | null>(null);
 	const [editingText, setEditingText] = useState("");
 	const [readyToApply, setReadyToApply] = useState(false);
+	const [showOutline, setShowOutline] = useState(true);
 
 	const editSelectionMutation = useEditSelection();
 	const selectionRespondMutation = useSelectionRespond(commentId);
@@ -235,10 +234,21 @@ const AiEditorMenuContent = () => {
 	useEffect(() => {
 		// For some reason, autofocus doesn't work and we have to manually focus the text area
 		textAreaRef.current?.focus();
+		console.log("focus");
+	}, []);
+
+	useEffect(() => {
+		setTimeout(() => {
+			setShowOutline(false);
+		}, 500);
 	}, []);
 
 	return (
-		<div className="relative bottom-0 flex w-full flex-col gap-0.5 rounded-md border border-border bg-background duration-100 ease-out animate-in zoom-in-95 slide-in-from-bottom-20 md:w-[32rem]">
+		<div
+			className={cn(
+				"relative bottom-0 flex w-full flex-col gap-0.5 rounded-md border border-border bg-background outline outline-8 outline-accent/0 transition-all duration-100 ease-out animate-in zoom-in-95 slide-in-from-bottom-20 md:w-[32rem]",
+				showOutline && "outline outline-2 outline-offset-2 outline-accent/80",
+			)}>
 			<div className="flex flex-row items-center justify-between gap-4 border-b border-border px-2 pb-1.5 pt-2">
 				<div className="flex flex-row items-center gap-1 pb-1 pl-2 pt-1">
 					<SparklesIcon className="h-4 w-4 text-accent" />
@@ -276,11 +286,7 @@ const AiEditorMenuContent = () => {
 				<>
 					{commentThreadQuery.data && (
 						<div className="flex max-h-[40dvh] flex-1 border-b border-border px-4">
-							<AiCommentThreadInner
-								commentId={commentId!}
-								comment={commentThreadQuery.data}
-								isLoading={commentThreadQuery.isLoading}
-							/>
+							<AiCommentThreadInner comment={commentThreadQuery.data} isLoading={commentThreadQuery.isLoading} />
 						</div>
 					)}
 					<div className="w-full px-4 pb-4">

@@ -56,7 +56,7 @@ export interface FileHandlerClientPayload {
     thoughtId: string;
 }
 
-export interface SelectionRespondPostRequestBody {
+export interface ThreadRespondPostRequestBody {
     thoughtId: string;
     commentId: string;
 }

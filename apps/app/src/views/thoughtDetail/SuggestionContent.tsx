@@ -160,6 +160,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 					});
 				}
 			});
+			onFinishAiEdits();
 		}
 	};
 
