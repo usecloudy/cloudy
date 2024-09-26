@@ -964,6 +964,7 @@ export type Database = {
       }
       thought_chat_threads: {
         Row: {
+          applied_suggestion_hashes: string[]
           comment_id: string
           content: string
           created_at: string
@@ -971,9 +972,11 @@ export type Database = {
           is_applied: boolean
           is_loading_suggestion: boolean | null
           role: string
+          status: string
           suggestion: string | null
         }
         Insert: {
+          applied_suggestion_hashes?: string[]
           comment_id: string
           content: string
           created_at?: string
@@ -981,9 +984,11 @@ export type Database = {
           is_applied?: boolean
           is_loading_suggestion?: boolean | null
           role?: string
+          status?: string
           suggestion?: string | null
         }
         Update: {
+          applied_suggestion_hashes?: string[]
           comment_id?: string
           content?: string
           created_at?: string
@@ -991,6 +996,7 @@ export type Database = {
           is_applied?: boolean
           is_loading_suggestion?: boolean | null
           role?: string
+          status?: string
           suggestion?: string | null
         }
         Relationships: [

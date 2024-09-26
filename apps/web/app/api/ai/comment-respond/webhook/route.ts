@@ -36,15 +36,18 @@ export const POST = async (req: Request) => {
 
 	const payload = (await req.json()) as Payload;
 
-	if (payload.type !== "INSERT") {
-		throw new Error("Need to be an insert");
-	}
+	// if (payload.type !== "INSERT") {
+	// 	throw new Error("Need to be an insert");
+	// }
 
-	if (payload.record.role !== "user") {
-		return NextResponse.json({
-			success: true,
-		});
-	}
+	// if (payload.record.role !== "user") {
+	// 	return NextResponse.json({
+	// 		success: true,
+	// 	});
+	// }
 
-	return respondToComment(payload.record.comment_id, supabase);
+	// return respondToComment(payload.record.comment_id, supabase);
+	return NextResponse.json({
+		success: true,
+	});
 };

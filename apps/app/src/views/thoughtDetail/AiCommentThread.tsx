@@ -1,123 +1,13 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { diffLines } from "diff";
-import { CheckCircle2Icon, ChevronsLeftIcon, RefreshCwIcon, SparklesIcon, UserIcon, XIcon } from "lucide-react";
-import { useContext, useEffect, useRef } from "react";
+import { SparklesIcon, UserIcon } from "lucide-react";
+import { createContext, useEffect, useRef } from "react";
 import Markdown from "react-markdown";
-import { useUnmount } from "react-use";
 
-import { queryClient } from "src/api/queryClient";
-import { supabase } from "src/clients/supabase";
-import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
-import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
-import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
-import { useRespond } from "./hooks";
-import { ThoughtContext } from "./thoughtContext";
+import { SuggestionContent } from "./SuggestionContent";
+import { useCommentThread } from "./hooks";
 import { useThoughtStore } from "./thoughtStore";
-
-const useAiCommentThread = (commentId: string) => {
-	useEffect(() => {
-		const channel = supabase
-			.channel("commentThread")
-			.on(
-				"postgres_changes",
-				{
-					event: "*",
-					schema: "public",
-					table: "thought_chat_threads",
-					filter: `comment_id=eq.${commentId}`,
-				},
-				() => {
-					queryClient.invalidateQueries({
-						queryKey: ["aiCommentThread", commentId],
-					});
-				},
-			)
-			.subscribe();
-
-		return () => {
-			channel.unsubscribe();
-		};
-	}, [commentId]);
-
-	useEffect(() => {
-		const channel = supabase
-			.channel("comment")
-			.on(
-				"postgres_changes",
-				{
-					event: "*",
-					schema: "public",
-					table: "thought_chats",
-					filter: `id=eq.${commentId}`,
-				},
-				() => {
-					queryClient.invalidateQueries({
-						queryKey: ["aiCommentThread", commentId],
-					});
-				},
-			)
-			.subscribe();
-
-		return () => {
-			channel.unsubscribe();
-		};
-	}, [commentId]);
-
-	return useQuery({
-		queryKey: ["aiCommentThread", commentId],
-		queryFn: async () => {
-			const { data } = await supabase
-				.from("thought_chats")
-				.select("*, thought_chat_threads(*, created_at)")
-				.eq("id", commentId)
-				.order("created_at", { referencedTable: "thought_chat_threads", ascending: true })
-				.single();
-
-			return data;
-		},
-	});
-};
-
-const useRegenerate = (commentId: string) => {
-	const mutationData = useRespond(commentId);
-	return {
-		...mutationData,
-		mutate: () => {
-			mutationData.mutate("Can you try again?");
-		},
-	};
-};
-
-const useMarkAsApplied = (commentId: string) => {
-	return useMutation({
-		mutationFn: async (threadId: string) => {
-			await supabase
-				.from("thought_chat_threads")
-				.update({
-					is_applied: true,
-				})
-				.eq("id", threadId);
-		},
-		onMutate: threadId => {
-			queryClient.setQueryData(["aiCommentThread", commentId], (data: any) => {
-				if (data) {
-					return {
-						...data,
-						thought_chat_threads: data.thought_chat_threads.map((thread: any) => {
-							if (thread.id === threadId) {
-								return { ...thread, is_applied: true };
-							}
-							return thread;
-						}),
-					};
-				}
-			});
-		},
-	});
-};
 
 export const AiCommentThread = () => {
 	const { activeThreadCommentId } = useThoughtStore();
@@ -126,14 +16,22 @@ export const AiCommentThread = () => {
 		return null;
 	}
 
-	return <AiCommentThreadInner commentId={activeThreadCommentId} />;
+	return <CommentThread commentId={activeThreadCommentId} />;
 };
 
-const AiCommentThreadInner = ({ commentId }: { commentId: string }) => {
-	const { data: comment, isLoading } = useAiCommentThread(commentId);
+type CommentThreadType = ReturnType<typeof useCommentThread>["data"];
 
-	const { mutate: regenerate } = useRegenerate(commentId);
+const CommentThread = ({ commentId }: { commentId: string }) => {
+	const { data: comment, isLoading } = useCommentThread(commentId);
 
+	return (
+		<div className="flex max-h-[60dvh] w-full flex-col overflow-hidden">
+			<AiCommentThreadInner comment={comment} isLoading={isLoading} />
+		</div>
+	);
+};
+
+export const AiCommentThreadInner = ({ comment, isLoading }: { comment: CommentThreadType; isLoading: boolean }) => {
 	const threadRef = useRef<HTMLDivElement>(null);
 
 	const isAnyLoading = isLoading || comment?.is_thread_loading;
@@ -149,7 +47,7 @@ const AiCommentThreadInner = ({ commentId }: { commentId: string }) => {
 	}, [comment?.thought_chat_threads]);
 
 	return (
-		<div ref={threadRef} className="no-scrollbar flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
+		<div ref={threadRef} className="no-scrollbar flex w-full flex-col gap-2 overflow-y-auto">
 			{comment ? (
 				<>
 					<ThreadComment
@@ -157,6 +55,8 @@ const AiCommentThreadInner = ({ commentId }: { commentId: string }) => {
 						role={comment.role as "user" | "assistant"}
 						content={comment.content!}
 						createdAt={comment.created_at}
+						appliedSuggestionHashes={[]}
+						status="done"
 					/>
 					{comment.thought_chat_threads.map((threadComment, i, arr) => (
 						<ThreadComment
@@ -165,13 +65,8 @@ const AiCommentThreadInner = ({ commentId }: { commentId: string }) => {
 							role={threadComment.role as "user" | "assistant"}
 							content={threadComment.content!}
 							createdAt={threadComment.created_at}
-							suggestion={threadComment.suggestion}
-							isLoadingSuggestion={Boolean(threadComment.is_loading_suggestion)}
-							isApplied={threadComment.is_applied}
-							regenerate={() => {
-								regenerate();
-							}}
-							isLast={i === arr.length - 1}
+							appliedSuggestionHashes={threadComment.applied_suggestion_hashes}
+							status={threadComment.status as "pending" | "done"}
 						/>
 					))}
 					{isAnyLoading && (
@@ -194,98 +89,16 @@ const ThreadComment = ({
 	role,
 	content,
 	createdAt,
-	suggestion,
-	isLoadingSuggestion,
-	isApplied,
-	regenerate,
-	isLast,
+	appliedSuggestionHashes,
+	status,
 }: {
 	threadCommentId: string;
 	role: "user" | "assistant";
 	content: string;
+	appliedSuggestionHashes: string[];
 	createdAt: string;
-	suggestion?: string | null;
-	isLoadingSuggestion?: boolean;
-	isApplied?: boolean;
-	regenerate?: () => void;
-	isLast?: boolean;
+	status: "pending" | "done";
 }) => {
-	const {
-		editor,
-		disableUpdatesRef,
-		setIsEditingDisabled,
-		previewingKey,
-		setPreviewingKey,
-		storeContentIfNeeded,
-		restoreFromLastContent,
-		clearStoredContent,
-	} = useContext(ThoughtContext);
-
-	const markAsAppliedMutation = useMarkAsApplied(threadCommentId);
-
-	const currentIsPreviewing = previewingKey === threadCommentId;
-
-	const showPreviewContent = () => {
-		if (!suggestion) {
-			return;
-		}
-
-		storeContentIfNeeded();
-		disableUpdatesRef.current = true;
-		setIsEditingDisabled(true);
-		setPreviewingKey(threadCommentId);
-
-		const existingContentText = editor?.getText() ?? "";
-
-		editor?.commands.setContent(suggestion);
-
-		const newContentText = editor?.getText() ?? "";
-		const diff = diffLines(existingContentText, newContentText);
-
-		const addedLines = diff.filter(part => part.added);
-		addedLines.forEach(part => {
-			if (editor) {
-				const lines = part.value.split("\n").filter(line => line.trim().length > 0);
-				lines.forEach(line => {
-					const results = processSearches(editor.state.doc, line);
-
-					const firstResult = results?.at(0);
-
-					if (firstResult) {
-						editor.commands.setTextSelection(firstResult);
-						editor.commands.setMark("additionHighlight");
-					}
-				});
-			}
-		});
-	};
-
-	const applyPreviewContent = () => {
-		if (!suggestion || !currentIsPreviewing) {
-			return;
-		}
-
-		disableUpdatesRef.current = false;
-		editor?.commands.setContent(suggestion);
-		clearStoredContent();
-		setIsEditingDisabled(false);
-		setPreviewingKey(null);
-		markAsAppliedMutation.mutate(threadCommentId);
-	};
-
-	const removePreviewContent = () => {
-		if (currentIsPreviewing) {
-			restoreFromLastContent();
-			disableUpdatesRef.current = false;
-			setIsEditingDisabled(false);
-			setPreviewingKey(null);
-		}
-	};
-
-	useUnmount(() => {
-		removePreviewContent();
-	});
-
 	return (
 		<div className="flex flex-col gap-2 rounded bg-background p-3 text-sm outline-offset-2 animate-in fade-in slide-in-from-top-4 fill-mode-forwards hover:outline-accent/40">
 			<div className="flex flex-row items-center justify-between gap-1">
@@ -300,46 +113,25 @@ const ThreadComment = ({
 				<div className="text-xs text-secondary">{makeHumanizedTime(createdAt)}</div>
 			</div>
 			<div>
-				<Markdown>{content}</Markdown>
+				<ThreadCommentContext.Provider value={{ status, appliedSuggestionHashes, threadCommentId }}>
+					<Markdown
+						components={{
+							pre: SuggestionContent,
+						}}>
+						{content}
+					</Markdown>
+				</ThreadCommentContext.Provider>
 			</div>
-			{isLoadingSuggestion && (
-				<div className="flex flex-row items-center gap-1">
-					<LoadingSpinner size="sm" />
-				</div>
-			)}
-			{currentIsPreviewing ? (
-				<div className="flex flex-row items-center gap-1">
-					<Button size="sm" className="bg-green-600 hover:bg-green-600/60" onClick={applyPreviewContent}>
-						<CheckCircle2Icon className="h-4 w-4" />
-						<span>Apply changes</span>
-					</Button>
-					<Button size="sm" variant="destructive" onClick={removePreviewContent}>
-						<XIcon className="h-4 w-4" />
-						<span>Cancel</span>
-					</Button>
-				</div>
-			) : (
-				suggestion && (
-					<div className="flex flex-row items-center gap-1">
-						<Button
-							size="sm"
-							variant={isApplied ? "outline" : "secondary"}
-							onClick={() => {
-								showPreviewContent();
-							}}
-							className={cn({ "border-accent text-accent": isApplied })}
-							disabled={isApplied}>
-							{isApplied ? <CheckCircle2Icon className="h-4 w-4" /> : <ChevronsLeftIcon className="h-4 w-4" />}
-							<span>{isApplied ? "Applied" : "Preview changes"}</span>
-						</Button>
-						{isLast && (
-							<Button size="icon-sm" variant="secondary" onClick={regenerate}>
-								<RefreshCwIcon className="h-4 w-4" />
-							</Button>
-						)}
-					</div>
-				)
-			)}
 		</div>
 	);
 };
+
+export const ThreadCommentContext = createContext<{
+	status: "pending" | "done";
+	threadCommentId: string;
+	appliedSuggestionHashes: string[];
+}>({
+	threadCommentId: "",
+	appliedSuggestionHashes: [],
+	status: "pending",
+});

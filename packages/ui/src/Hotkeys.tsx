@@ -32,21 +32,21 @@ interface HotkeyProps {
 
 export const Hotkey: React.FC<HotkeyProps> = ({ keys, className }) => {
     return (
-        <div className={cn("flex items-center space-x-1", className)}>
+        <div className={cn("flex items-center gap-0.5", className)}>
             {keys.map((key, index) => {
                 const IconComponent = iconMap[key.toLowerCase()];
                 return (
                     <React.Fragment key={index}>
-                        <kbd className="flex items-center justify-center min-w-[1.5em] h-6 px-1 text-xs font-sans font-medium text-secondary bg-background border border-border rounded">
+                        <kbd className="flex items-center justify-center size-5 text-xs font-sans font-medium text-secondary bg-background border border-border rounded">
                             {IconComponent ? (
-                                <IconComponent className="w-3 h-3" />
+                                <IconComponent className="size-3" />
                             ) : (
                                 key
                             )}
                         </kbd>
-                        {index < keys.length - 1 && (
+                        {/* {index < keys.length - 1 && (
                             <span className="text-secondary text-xs">+</span>
-                        )}
+                        )} */}
                     </React.Fragment>
                 );
             })}
