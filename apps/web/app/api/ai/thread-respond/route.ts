@@ -140,36 +140,42 @@ const respond = async (payload: ThreadRespondPostRequestBody, supabase: Supabase
 		},
 		headers: {
 			...heliconeHeaders,
-			"Helicone-Session-Path": "edit-selection",
+			"Helicone-Session-Path": "respond-to-selection",
 		},
 	});
 
-	await supabase
-		.from("thought_chats")
-		.update({
-			is_thread_loading: false,
-		})
-		.eq("id", comment.id);
+	handleSupabaseError(
+		await supabase
+			.from("thought_chats")
+			.update({
+				is_thread_loading: false,
+			})
+			.eq("id", comment.id),
+	);
 
 	let fullText = "";
 	const threadReplyId = randomUUID();
 	for await (const textPart of textStream) {
 		fullText += textPart;
-		await supabase.from("thought_chat_threads").upsert({
-			id: threadReplyId,
-			comment_id: payload.commentId,
-			content: fullText,
-			role: "assistant",
-			status: "pending",
-		});
+		handleSupabaseError(
+			await supabase.from("thought_chat_threads").upsert({
+				id: threadReplyId,
+				comment_id: payload.commentId,
+				content: fullText,
+				role: "assistant",
+				status: "pending",
+			}),
+		);
 	}
 
-	await supabase
-		.from("thought_chat_threads")
-		.update({
-			status: "success",
-		})
-		.eq("id", threadReplyId);
+	handleSupabaseError(
+		await supabase
+			.from("thought_chat_threads")
+			.update({
+				status: "success",
+			})
+			.eq("id", threadReplyId),
+	);
 
 	return NextResponse.json({
 		success: true,
