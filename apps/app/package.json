@@ -109,7 +109,6 @@
 		"tiptap-markdown": "^0.8.10",
 		"use-debounce": "^10.0.1",
 		"uuid": "^10.0.0",
-		"xxhash-wasm": "^1.0.2",
 		"y-prosemirror": "^1.2.12",
 		"y-protocols": "^1.0.6",
 		"y-webrtc": "^10.3.0",
