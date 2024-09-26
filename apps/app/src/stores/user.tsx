@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/react";
 import { Session, User } from "@supabase/supabase-js";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import posthog from "posthog-js";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useMount } from "react-use";
 import { create } from "zustand";
 
@@ -112,16 +112,22 @@ export const useUserOptions = () => {
 					.eq("id", userRecord.id),
 			);
 		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: userQueryKeys.userRecord(userRecord.id) });
+		},
 	});
 
-	return {
-		get: (key: string, defaultValue: any = null) => {
-			return (userRecord.options as Record<string, any> | null)?.[key] ?? defaultValue;
-		},
-		set: async (key: string, value: string | null) => {
-			await userMutation.mutateAsync({ key, value });
-		},
-	};
+	return useMemo(
+		() => ({
+			get: (key: string, defaultValue: any = null) => {
+				return (userRecord.options as Record<string, any> | null)?.[key] ?? defaultValue;
+			},
+			set: async (key: string, value: string | null) => {
+				await userMutation.mutateAsync({ key, value });
+			},
+		}),
+		[userRecord, userMutation],
+	);
 };
 
 export const useUserHandler = () => {
