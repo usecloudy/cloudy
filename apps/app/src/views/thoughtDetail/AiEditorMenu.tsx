@@ -181,8 +181,8 @@ export const AiEditorMenu = () => {
 	const { isShowingAiEditorMenu } = useContext(ThoughtContext);
 
 	return (
-		<div className="sticky bottom-0 w-full">
-			<div className="absolute bottom-4 left-0 flex w-full justify-center">
+		<div className="sticky bottom-0 z-30 w-full">
+			<div className="absolute bottom-4 left-0 flex w-full justify-center px-2 md:px-0">
 				{isShowingAiEditorMenu && <AiEditorMenuContent />}
 			</div>
 		</div>
@@ -296,11 +296,15 @@ const AiEditorMenuContent = () => {
 			) : (
 				<>
 					{commentThreadQuery.data && (
-						<div className="flex max-h-[40dvh] flex-1 border-b border-border px-4">
+						<div className="flex max-h-[30dvh] flex-1 border-b border-border px-4 md:max-h-[40dvh]">
 							<AiCommentThreadInner comment={commentThreadQuery.data} isLoading={commentThreadQuery.isLoading} />
 						</div>
 					)}
-					<div className="w-full px-4 pb-4">
+					<div
+						className={cn(
+							"w-full px-4 pb-4",
+							commentThreadQuery.data?.is_thread_loading && "pointer-events-none opacity-70",
+						)}>
 						<TextareaAutosize
 							ref={textAreaRef}
 							className="no-scrollbar w-full resize-none appearance-none border-none bg-transparent px-2 py-3 text-sm outline-none"
@@ -324,7 +328,6 @@ const AiEditorMenuContent = () => {
 							suppressContentEditableWarning
 							autoFocus
 						/>
-
 						{commentId ? (
 							<div className="flex flex-row items-center justify-end gap-1">
 								<Button size="sm" variant="default" onClick={handleSubmitQuestion}>
