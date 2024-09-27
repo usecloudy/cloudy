@@ -463,5 +463,6 @@ export const useCommentThread = (commentId?: string | null) => {
 			return data;
 		},
 		enabled: !!commentId,
+		refetchInterval: q => (q.state.data?.is_thread_loading ? 500 : false),
 	});
 };

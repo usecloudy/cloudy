@@ -38,16 +38,27 @@ const useSelectionRespond = (commentId?: string | null) => {
 							related_chunks: [selection],
 							role: "user",
 							is_seen: true,
+							is_thread_loading: true,
 						})
 						.select("id")
 						.single(),
 				).id;
 			} else {
-				await supabase.from("thought_chat_threads").insert({
-					comment_id: commentIdToSend,
-					content: message,
-					role: "user",
-				});
+				handleSupabaseError(
+					await supabase.from("thought_chat_threads").insert({
+						comment_id: commentIdToSend,
+						content: message,
+						role: "user",
+					}),
+				);
+				handleSupabaseError(
+					await supabase
+						.from("thought_chats")
+						.update({
+							is_thread_loading: true,
+						})
+						.eq("id", commentIdToSend),
+				);
 			}
 
 			apiClient.post("/api/ai/thread-respond", {
