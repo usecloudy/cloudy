@@ -7,6 +7,8 @@ import { useHotkeys } from "react-hotkeys-hook";
 import TextareaAutosize from "react-textarea-autosize";
 
 import { apiClient } from "src/api/client";
+import { queryClient } from "src/api/queryClient";
+import { commentThreadQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
@@ -14,7 +16,8 @@ import { cn } from "src/utils";
 import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
 import { AiCommentThreadInner } from "./AiCommentThread";
-import { useCommentThread } from "./hooks";
+import { handleSubmitChat } from "./chat";
+import { useComment, useTemporaryComment, useThreadComments } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";
 
 const useSelectionRespond = (commentId?: string | null) => {
@@ -61,10 +64,7 @@ const useSelectionRespond = (commentId?: string | null) => {
 				);
 			}
 
-			apiClient.post("/api/ai/thread-respond", {
-				commentId: commentIdToSend,
-				thoughtId,
-			});
+			handleSubmitChat(commentIdToSend, thoughtId);
 
 			return commentIdToSend;
 		},
@@ -201,7 +201,9 @@ const AiEditorMenuContent = () => {
 	const editSelectionMutation = useEditSelection();
 	const selectionRespondMutation = useSelectionRespond(commentId);
 
-	const commentThreadQuery = useCommentThread(commentId);
+	const commentQuery = useComment(commentId);
+	const threadCommentsQuery = useThreadComments(commentId);
+	const temporaryCommentQuery = useTemporaryComment(commentId);
 
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -295,15 +297,20 @@ const AiEditorMenuContent = () => {
 				</>
 			) : (
 				<>
-					{commentThreadQuery.data && (
+					{commentQuery.data && (
 						<div className="flex max-h-[30dvh] flex-1 border-b border-border px-4 md:max-h-[40dvh]">
-							<AiCommentThreadInner comment={commentThreadQuery.data} isLoading={commentThreadQuery.isLoading} />
+							<AiCommentThreadInner
+								comment={commentQuery.data}
+								threadComments={threadCommentsQuery.data}
+								temporaryComment={temporaryCommentQuery.data}
+								isLoading={commentQuery.isLoading || threadCommentsQuery.isLoading}
+							/>
 						</div>
 					)}
 					<div
 						className={cn(
 							"w-full px-4 pb-4",
-							commentThreadQuery.data?.is_thread_loading && "pointer-events-none opacity-70",
+							commentQuery.data?.is_thread_loading && "pointer-events-none opacity-70",
 						)}>
 						<TextareaAutosize
 							ref={textAreaRef}

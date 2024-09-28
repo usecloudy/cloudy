@@ -131,7 +131,7 @@ const respond = async (payload: ThreadRespondPostRequestBody, supabase: Supabase
 		});
 	});
 
-	const { textStream } = await streamText({
+	const stream = await streamText({
 		model: heliconeOpenAI.languageModel("gpt-4o-mini"),
 		messages,
 		temperature: 0.0,
@@ -153,31 +153,33 @@ const respond = async (payload: ThreadRespondPostRequestBody, supabase: Supabase
 			.eq("id", comment.id),
 	);
 
-	let fullText = "";
-	const threadReplyId = randomUUID();
-	for await (const textPart of textStream) {
-		fullText += textPart;
-		handleSupabaseError(
-			await supabase.from("thought_chat_threads").upsert({
-				id: threadReplyId,
-				comment_id: payload.commentId,
-				content: fullText,
-				role: "assistant",
-				status: "pending",
-			}),
-		);
-	}
+	return stream.toTextStreamResponse();
 
-	handleSupabaseError(
-		await supabase
-			.from("thought_chat_threads")
-			.update({
-				status: "success",
-			})
-			.eq("id", threadReplyId),
-	);
+	// let fullText = "";
+	// const threadReplyId = randomUUID();
+	// for await (const textPart of textStream) {
+	// 	fullText += textPart;
+	// 	handleSupabaseError(
+	// 		await supabase.from("thought_chat_threads").upsert({
+	// 			id: threadReplyId,
+	// 			comment_id: payload.commentId,
+	// 			content: fullText,
+	// 			role: "assistant",
+	// 			status: "pending",
+	// 		}),
+	// 	);
+	// }
 
-	return NextResponse.json({
-		success: true,
-	});
+	// handleSupabaseError(
+	// 	await supabase
+	// 		.from("thought_chat_threads")
+	// 		.update({
+	// 			status: "success",
+	// 		})
+	// 		.eq("id", threadReplyId),
+	// );
+
+	// return NextResponse.json({
+	// 	success: true,
+	// });
 };

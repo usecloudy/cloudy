@@ -24,3 +24,9 @@ export const paymentsQueryKeys = {
 	customerStatus: (wsSlug?: string) =>
 		wsSlug ? (["payments", "customers", "status", wsSlug] as const) : (["payments", "customers", "status"] as const),
 };
+
+export const commentThreadQueryKeys = {
+	comment: (commentId?: string | null) => ["comment", commentId, "comment"] as const,
+	threadComments: (commentId?: string | null) => ["comment", commentId, "threadComments"] as const,
+	temporaryComment: (commentId?: string | null) => ["comment", commentId, "temporaryComment"] as const,
+};

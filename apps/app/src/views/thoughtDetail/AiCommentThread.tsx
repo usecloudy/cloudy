@@ -6,7 +6,7 @@ import LoadingSpinner from "src/components/LoadingSpinner";
 import { makeHumanizedTime } from "src/utils/strings";
 
 import { SuggestionContent } from "./SuggestionContent";
-import { useCommentThread } from "./hooks";
+import { useComment, useTemporaryComment, useThreadComments } from "./hooks";
 import { useThoughtStore } from "./thoughtStore";
 
 export const AiCommentThread = () => {
@@ -19,19 +19,41 @@ export const AiCommentThread = () => {
 	return <CommentThread commentId={activeThreadCommentId} />;
 };
 
-type CommentThreadType = ReturnType<typeof useCommentThread>["data"];
+type CommentThreadType = ReturnType<typeof useComment>["data"];
+type ThreadCommentType = NonNullable<ReturnType<typeof useThreadComments>["data"]>[number];
+type TemporaryCommentType = {
+	content: string;
+	role: string;
+};
 
 const CommentThread = ({ commentId }: { commentId: string }) => {
-	const { data: comment, isLoading } = useCommentThread(commentId);
+	const { data: comment, isLoading } = useComment(commentId);
+	const { data: threadComments, isLoading: isThreadCommentsLoading } = useThreadComments(commentId);
+	const { data: temporaryComment, isLoading: isTemporaryCommentLoading } = useTemporaryComment(commentId);
 
 	return (
 		<div className="flex max-h-[60dvh] w-full flex-col overflow-hidden">
-			<AiCommentThreadInner comment={comment} isLoading={isLoading} />
+			<AiCommentThreadInner
+				comment={comment}
+				threadComments={threadComments}
+				temporaryComment={temporaryComment}
+				isLoading={isLoading || isThreadCommentsLoading || isTemporaryCommentLoading}
+			/>
 		</div>
 	);
 };
 
-export const AiCommentThreadInner = ({ comment, isLoading }: { comment: CommentThreadType; isLoading: boolean }) => {
+export const AiCommentThreadInner = ({
+	comment,
+	threadComments,
+	temporaryComment,
+	isLoading,
+}: {
+	comment: CommentThreadType;
+	threadComments?: ThreadCommentType[];
+	temporaryComment?: TemporaryCommentType | null;
+	isLoading: boolean;
+}) => {
 	const threadRef = useRef<HTMLDivElement>(null);
 
 	const isAnyLoading = isLoading || comment?.is_thread_loading;
@@ -44,7 +66,7 @@ export const AiCommentThreadInner = ({ comment, isLoading }: { comment: CommentT
 				behavior: "smooth",
 			});
 		}
-	}, [comment?.thought_chat_threads]);
+	}, [threadComments, temporaryComment, isAnyLoading]);
 
 	return (
 		<div ref={threadRef} className="no-scrollbar flex w-full flex-col gap-2 overflow-y-auto">
@@ -58,7 +80,7 @@ export const AiCommentThreadInner = ({ comment, isLoading }: { comment: CommentT
 						appliedSuggestionHashes={[]}
 						status="done"
 					/>
-					{comment.thought_chat_threads.map((threadComment, i, arr) => (
+					{threadComments?.map((threadComment, i, arr) => (
 						<ThreadComment
 							key={threadComment.id}
 							threadCommentId={threadComment.id}
@@ -69,6 +91,16 @@ export const AiCommentThreadInner = ({ comment, isLoading }: { comment: CommentT
 							status={threadComment.status as "pending" | "done"}
 						/>
 					))}
+					{temporaryComment && (
+						<ThreadComment
+							threadCommentId="temp"
+							role={temporaryComment.role as "user" | "assistant"}
+							content={temporaryComment.content}
+							createdAt={new Date().toISOString()}
+							appliedSuggestionHashes={[]}
+							status="pending"
+						/>
+					)}
 					{isAnyLoading && (
 						<div className="flex size-12 items-center justify-center rounded bg-background p-3">
 							<LoadingSpinner size="xs" />

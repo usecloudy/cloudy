@@ -15,7 +15,6 @@ import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
 import { ThreadCommentContext } from "./AiCommentThread";
 import { ThoughtContext } from "./thoughtContext";
-import { clearAllApplyMarks } from "./tiptap";
 
 const useApplySuggestion = () => {
 	const { thoughtId, editor } = useContext(ThoughtContext);
@@ -92,8 +91,8 @@ const useMarkAsApplied = () => {
 	});
 };
 
-const makeSuggestionHash = (suggestionContent: string) => {
-	return suggestionContent.length > 0 ? simpleHash(suggestionContent) : "";
+const makeSuggestionHash = (suggestionContent?: string) => {
+	return suggestionContent && suggestionContent.length > 0 ? simpleHash(suggestionContent) : "";
 };
 
 export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) => {
