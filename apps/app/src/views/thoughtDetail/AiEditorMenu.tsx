@@ -303,7 +303,11 @@ const AiEditorMenuContent = () => {
 								comment={commentQuery.data}
 								threadComments={threadCommentsQuery.data}
 								temporaryComment={temporaryCommentQuery.data}
-								isAnyLoading={commentQuery.isLoading || threadCommentsQuery.isLoading}
+								isAnyLoading={
+									commentQuery.isLoading ||
+									threadCommentsQuery.isLoading ||
+									commentQuery.data?.is_thread_loading
+								}
 							/>
 						</div>
 					)}
