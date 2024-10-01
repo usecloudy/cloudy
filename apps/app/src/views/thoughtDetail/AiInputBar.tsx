@@ -7,21 +7,21 @@ import { Button } from "src/components/Button";
 import { useRespond } from "./hooks";
 import { useThoughtStore } from "./thoughtStore";
 
-export const AiInputBar = () => {
+export const AiInputBar = ({ disabled }: { disabled?: boolean }) => {
 	const { feedMode, activeThreadCommentId } = useThoughtStore();
 	const [textInput, setTextInput] = useState("");
 	const { mutate: respond } = useRespond(activeThreadCommentId);
 
+	const canSubmit = textInput.length > 0 && !disabled;
+
 	const handleSubmit = () => {
-		if (textInput.length === 0) {
+		if (!canSubmit) {
 			return;
 		}
 
 		respond(textInput);
 		setTextInput("");
 	};
-
-	const canSubmit = textInput.length > 0;
 
 	return (
 		<div className="relative w-full">

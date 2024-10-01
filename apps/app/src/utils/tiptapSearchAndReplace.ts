@@ -27,6 +27,29 @@ type RangeWithPos = Range & {
 	pos: number;
 };
 
+export const fuzzyMatch = (text: string, pattern: string, threshold: number = 0.9) => {
+	if (pattern.length <= 6) {
+		// For very short search terms, use exact matching
+		return text.toLowerCase().includes(pattern.toLowerCase());
+	}
+
+	const words = pattern.toLowerCase().split(/\s+/);
+	const textLower = text.toLowerCase();
+	let matchCount = 0;
+	let lastIndex = -1;
+
+	for (const word of words) {
+		const index = textLower.indexOf(word, lastIndex + 1);
+		if (index > -1) {
+			matchCount++;
+			lastIndex = index;
+		}
+	}
+
+	const matchRatio = matchCount / words.length;
+	return matchRatio >= threshold;
+};
+
 export const processSearches = (doc: PMNode, searchTerm: string, threshold: number = 0.9) => {
 	const results: RangeWithPos[] = [];
 
@@ -57,29 +80,6 @@ export const processSearches = (doc: PMNode, searchTerm: string, threshold: numb
 
 	textNodesWithPosition = textNodesWithPosition.filter(Boolean);
 
-	const fuzzyMatch = (text: string, pattern: string) => {
-		if (pattern.length <= 6) {
-			// For very short search terms, use exact matching
-			return text.toLowerCase().includes(pattern.toLowerCase());
-		}
-
-		const words = pattern.toLowerCase().split(/\s+/);
-		const textLower = text.toLowerCase();
-		let matchCount = 0;
-		let lastIndex = -1;
-
-		for (const word of words) {
-			const index = textLower.indexOf(word, lastIndex + 1);
-			if (index > -1) {
-				matchCount++;
-				lastIndex = index;
-			}
-		}
-
-		const matchRatio = matchCount / words.length;
-		return matchRatio >= threshold;
-	};
-
 	for (const element of textNodesWithPosition) {
 		const { text, pos } = element;
 		const chunkSize = Math.max(searchTerm.length, 100); // Adjust chunk size based on search term length
@@ -99,7 +99,7 @@ export const processSearches = (doc: PMNode, searchTerm: string, threshold: numb
 			// For longer search terms, use the chunking approach
 			for (let i = 0; i < text.length; i += Math.floor(chunkSize / 2)) {
 				const chunk = text.slice(i, i + chunkSize);
-				if (fuzzyMatch(chunk, searchTerm)) {
+				if (fuzzyMatch(chunk, searchTerm, threshold)) {
 					results.push({
 						pos,
 						from: pos + i,

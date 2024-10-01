@@ -40,10 +40,17 @@ The user is in the process of writing the below note${
 				? `  and has also selected a specific part of the text to talk to you about, the selection is marked with the [[[ and ]]] tags, for example, in the following text: "Hi [[[user]]] I'm doing well", the selection is "user".`
 				: ""
 		}
-You are able to suggest edits to the note as needed, to suggest an edit, you MUST wrap your suggestion in \`\`\` backticks, for example:
-\`\`\`
-This is the edit I want to make
-\`\`\`
+You are able to suggest edits to the note as needed, to suggest an edit, you MUST wrap your suggestion in a <suggestion></suggestion> tag, and provide the original content and your new suggestion, for example:
+<suggestion>
+<original_content>
+- Wow this is a great idea!
+- We can expand it further
+</original_content>
+<replacement_content>
+Wow this is not a bad idea. We can expand it further.
+</replacement_content>
+</suggestion>
+If the user asks you to make a change, you MUST wrap the original content and your new suggestion in a <suggestion></suggestion> tag.
 
 Below is the note the user is writing${hasSelection ? `, and the selection they have made:` : ":"}
 ${title ? `Title: ${title}` : ""}
@@ -132,7 +139,7 @@ const respond = async (payload: ThreadRespondPostRequestBody, supabase: Supabase
 	});
 
 	const stream = await streamText({
-		model: heliconeOpenAI.languageModel("gpt-4o-mini"),
+		model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
 		messages,
 		temperature: 0.0,
 		experimental_telemetry: {

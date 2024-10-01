@@ -494,7 +494,7 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 			) : (
 				<IdeaSuggestionList thoughtId={thoughtId} suggestions={suggestions} />
 			)}
-			{(feedMode === "default" || feedMode === "thread") && <AiInputBar />}
+			{(feedMode === "default") && <AiInputBar />}
 		</div>
 	);
 };

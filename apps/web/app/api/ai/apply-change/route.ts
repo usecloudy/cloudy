@@ -1,8 +1,10 @@
-import { ApplyChangePostRequestBody, ThreadRespondPostRequestBody, handleSupabaseError } from "@cloudy/utils/common";
+import { ApplyChangePostRequestBody, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { CoreMessage, streamText } from "ai";
+import { CoreMessage, generateObject } from "ai";
 import { randomUUID } from "crypto";
+import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { heliconeOpenAI } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
@@ -15,7 +17,7 @@ export const POST = async (req: Request) => {
 	return applyChange(payload, supabase);
 };
 
-const makeApplyChangePrompts = ({
+const makeApplyOriginalSnippetPrompts = ({
 	contentHtml,
 	suggestionContent,
 }: {
@@ -28,7 +30,7 @@ const makeApplyChangePrompts = ({
 	},
 	{
 		role: "user",
-		content: `Here is the note the user is writing:
+		content: `Here is the note the user is writing, in html format:
 \`\`\`
 ${contentHtml}
 \`\`\`
@@ -38,7 +40,7 @@ Below is the change they want to include in the note:
 ${suggestionContent}
 \`\`\`
 
-Return ONLY the entire contents of the note, with the change included where it should go. Do NOT make any extraneous changes other than the one(s) requested.`,
+Return the original snippet and replacement snippet for the html.`,
 	},
 ];
 
@@ -64,18 +66,24 @@ const applyChange = async (payload: ApplyChangePostRequestBody, supabase: Supaba
 		"Helicone-Session-Id": `apply-change/${randomUUID()}`,
 	};
 
-	const stream = await streamText({
-		model: heliconeOpenAI.languageModel("gpt-4o-mini"),
-		messages: makeApplyChangePrompts({ contentHtml, suggestionContent }),
+	const { object } = await generateObject({
+		model: heliconeOpenAI.languageModel("gpt-4o-mini", {
+			structuredOutputs: true,
+		}),
+		messages: makeApplyOriginalSnippetPrompts({ contentHtml, suggestionContent }),
 		temperature: 0.0,
 		experimental_telemetry: {
 			isEnabled: true,
 		},
+		schema: z.object({
+			originalSnippet: z.string(),
+			replacementSnippet: z.string(),
+		}),
 		headers: {
 			...heliconeHeaders,
-			"Helicone-Session-Path": "edit-selection",
+			"Helicone-Session-Path": "apply-change",
 		},
 	});
 
-	return stream.toTextStreamResponse();
+	return NextResponse.json(object);
 };

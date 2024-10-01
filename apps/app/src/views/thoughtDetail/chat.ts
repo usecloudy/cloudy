@@ -30,17 +30,39 @@ export const handleSubmitChat = async (commentId: string, thoughtId: string) => 
 
 	const newThreadCommentId = uuidv4();
 	let fullText = "";
+	let mdContent = "";
 	while (true) {
 		const { done, value } = await reader.read();
 		if (done) break;
 		const chunk = new TextDecoder().decode(value);
 		fullText += chunk;
+		mdContent += chunk;
+
+		// Extract suggestion content and replace with code block, supporting incomplete streaming
+		const openTagIndex = fullText.lastIndexOf("<suggestion>");
+		const closeTagIndex = fullText.lastIndexOf("</suggestion>");
+		if (openTagIndex !== -1) {
+			let suggestionContent = fullText.slice(openTagIndex + "<suggestion>".length);
+
+			if (closeTagIndex !== -1 && closeTagIndex > openTagIndex) {
+				suggestionContent = fullText.slice(openTagIndex + "<suggestion>".length, closeTagIndex);
+				mdContent =
+					mdContent.slice(0, openTagIndex) +
+					"```\n" +
+					suggestionContent +
+					"\n```" +
+					mdContent.slice(closeTagIndex + "</suggestion>".length);
+			} else {
+				// If closing tag is not found, replace only the opening tag
+				mdContent = mdContent.slice(0, openTagIndex) + "```\n" + suggestionContent;
+			}
+		}
 
 		// eslint-disable-next-line no-loop-func
 		queryClient.setQueryData(commentThreadQueryKeys.threadComments(commentId), (data: ThreadCommentsReturnType) => {
 			const newThreadComment = {
 				id: newThreadCommentId,
-				content: fullText,
+				content: mdContent,
 				comment_id: commentId,
 				role: "assistant",
 				created_at: new Date().toISOString(),
@@ -62,7 +84,7 @@ export const handleSubmitChat = async (commentId: string, thoughtId: string) => 
 		.from("thought_chat_threads")
 		.insert({
 			id: newThreadCommentId,
-			content: fullText,
+			content: mdContent,
 			comment_id: commentId,
 			role: "assistant",
 		})

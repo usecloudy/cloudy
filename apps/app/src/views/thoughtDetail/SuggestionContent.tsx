@@ -1,15 +1,15 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
-import { diffLines } from "diff";
+import { diffLines, diffWords } from "diff";
 import { CheckCircle2Icon, ChevronsLeftIcon, ClipboardCheckIcon, CopyIcon, XCircleIcon } from "lucide-react";
 import React, { useContext, useMemo, useState } from "react";
-import Markdown from "react-markdown";
 import { toast } from "react-toastify";
 
 import { apiClient } from "src/api/client";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
+import { cn } from "src/utils";
 import { simpleHash } from "src/utils/hash";
 import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
@@ -21,51 +21,26 @@ const useApplySuggestion = () => {
 
 	return useMutation({
 		mutationFn: async ({ suggestionContent }: { suggestionContent: string }) => {
-			const response = await fetch(apiClient.getUri({ url: "/api/ai/apply-change" }), {
-				method: "POST",
-				// @ts-ignore
-				headers: {
-					...apiClient.defaults.headers.common,
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ thoughtId, suggestionContent }),
+			const {
+				data: { originalSnippet, replacementSnippet },
+			} = await apiClient.post<{ originalSnippet: string; replacementSnippet: string }>("/api/ai/apply-change", {
+				thoughtId,
+				suggestionContent,
 			});
 
-			if (!response.ok) {
-				throw new Error("Failed to apply suggestion");
+			const currentHtml = editor?.getHTML();
+			if (!currentHtml) {
+				throw new Error("No current HTML");
+			}
+			const currentHtmlWithoutEditTags = currentHtml.replace(/<\/?edit>/g, "");
+
+			if (!currentHtmlWithoutEditTags.includes(originalSnippet)) {
+				throw new Error("Original snippet not found");
 			}
 
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
+			const newHtml = currentHtmlWithoutEditTags.replace(originalSnippet, replacementSnippet);
 
-			const reader = response.body?.getReader();
-			if (!reader) {
-				throw new Error("Failed to get reader from response");
-			}
-
-			let content = "";
-			while (true) {
-				const { done, value } = await reader.read();
-				if (done) break;
-				const chunk = new TextDecoder().decode(value);
-				content += chunk;
-
-				const currentLines = content.split("\n");
-				const firstLine = currentLines[0];
-				if (firstLine.startsWith("```")) {
-					content = currentLines.slice(1).join("\n");
-				}
-				const lastLine = currentLines.at(-1);
-				console.log("lastLine", lastLine);
-				if (lastLine?.startsWith("```")) {
-					content = currentLines.slice(0, -1).join("\n");
-				}
-
-				editor?.commands.setContent(content);
-			}
-
-			editor?.commands.setContent(content);
+			editor?.commands.setContent(newHtml ?? currentHtml ?? "");
 		},
 	});
 };
@@ -139,7 +114,11 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 
 			const existingContentText = editor.getText() ?? "";
 
-			await applySuggestionMutation.mutateAsync({ suggestionContent });
+			try {
+				await applySuggestionMutation.mutateAsync({ suggestionContent });
+			} catch (error) {
+				toast.error("Failed to apply suggestion");
+			}
 
 			const newContentText = editor?.getText() ?? "";
 			const diff = diffLines(existingContentText, newContentText);
@@ -179,12 +158,30 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 
 	const [isCopied, setIsCopied] = useState(false);
 
+	// Parse the suggestionContent for original and replacement content
+	const parseSuggestionContent = (content: string) => {
+		const originalMatch = content.match(/<original_content>([\s\S]*?)<\/original_content>/);
+		const replacementMatch = content.match(/<replacement_content>([\s\S]*?)<\/replacement_content>/);
+		return {
+			original: originalMatch ? originalMatch[1] : "",
+			replacement: replacementMatch ? replacementMatch[1] : "",
+		};
+	};
+
+	const { original, replacement } = useMemo(() => parseSuggestionContent(suggestionContent || ""), [suggestionContent]);
+
+	// Compute the word-level diff
+	const diff = useMemo(() => diffWords(original, replacement), [original, replacement]);
+
+	// Add state for active tab
+	const [activeTab, setActiveTab] = useState<"diff" | "replacement">("diff");
+
 	const handleCopy = () => {
-		if (!suggestionContent) {
+		if (!replacement) {
 			return;
 		}
 
-		navigator.clipboard.writeText(suggestionContent);
+		navigator.clipboard.writeText(replacement);
 		toast.success("Copied to clipboard");
 		setIsCopied(true);
 
@@ -195,9 +192,38 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 
 	return (
 		<pre className="my-1 rounded bg-card px-3 py-2 font-sans">
-			<p className="text-wrap break-words">
-				<Markdown>{suggestionContent}</Markdown>
-			</p>
+			{/* Tab Bar */}
+			<div className="flex border-b">
+				<button
+					className={`px-4 py-2 ${activeTab === "diff" ? "border-b-2 border-accent text-accent" : "text-gray-500"}`}
+					onClick={() => setActiveTab("diff")}>
+					Diff
+				</button>
+				<button
+					className={`px-4 py-2 ${
+						activeTab === "replacement" ? "border-b-2 border-accent text-accent" : "text-gray-500"
+					}`}
+					onClick={() => setActiveTab("replacement")}>
+					Result
+				</button>
+			</div>
+
+			{/* Conditional Rendering based on activeTab */}
+			{activeTab === "diff" ? (
+				<p className="text-wrap break-words">
+					{diff.map((part, index) => (
+						<span
+							key={index}
+							className={cn(part.added ? "bg-green-200" : part.removed ? "bg-red-200 line-through" : "")}>
+							{part.value}
+						</span>
+					))}
+				</p>
+			) : (
+				<p className="text-wrap break-words">{replacement}</p>
+			)}
+
+			{/* ... existing UI elements ... */}
 			<div className="mt-2 flex w-full flex-row items-center gap-1.5">
 				{applySuggestionMutation.isPending || status === "pending" ? (
 					<LoadingSpinner size="xs" />
@@ -245,7 +271,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 							) : (
 								<>
 									<CopyIcon className="size-4" />
-									<span>Copy</span>
+									<span>Copy result</span>
 								</>
 							)}
 						</Button>

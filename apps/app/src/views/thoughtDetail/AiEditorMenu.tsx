@@ -7,8 +7,6 @@ import { useHotkeys } from "react-hotkeys-hook";
 import TextareaAutosize from "react-textarea-autosize";
 
 import { apiClient } from "src/api/client";
-import { queryClient } from "src/api/queryClient";
-import { commentThreadQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
@@ -232,9 +230,11 @@ const AiEditorMenuContent = () => {
 		}
 
 		setEditingText("");
-		selectionRespondMutation.mutateAsync({ message: editingText, content: editor.getHTML() }).then(commentId => {
-			setCommentId(commentId!);
-		});
+		selectionRespondMutation
+			.mutateAsync({ message: editingText, content: editor.storage.markdown.getMarkdown() })
+			.then(commentId => {
+				setCommentId(commentId!);
+			});
 	};
 
 	const handleConfirmChanges = () => {
@@ -303,7 +303,7 @@ const AiEditorMenuContent = () => {
 								comment={commentQuery.data}
 								threadComments={threadCommentsQuery.data}
 								temporaryComment={temporaryCommentQuery.data}
-								isLoading={commentQuery.isLoading || threadCommentsQuery.isLoading}
+								isAnyLoading={commentQuery.isLoading || threadCommentsQuery.isLoading}
 							/>
 						</div>
 					)}

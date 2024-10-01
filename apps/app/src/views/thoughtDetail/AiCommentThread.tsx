@@ -5,6 +5,7 @@ import Markdown from "react-markdown";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { makeHumanizedTime } from "src/utils/strings";
 
+import { AiInputBar } from "./AiInputBar";
 import { SuggestionContent } from "./SuggestionContent";
 import { useComment, useTemporaryComment, useThreadComments } from "./hooks";
 import { useThoughtStore } from "./thoughtStore";
@@ -31,15 +32,20 @@ const CommentThread = ({ commentId }: { commentId: string }) => {
 	const { data: threadComments, isLoading: isThreadCommentsLoading } = useThreadComments(commentId);
 	const { data: temporaryComment, isLoading: isTemporaryCommentLoading } = useTemporaryComment(commentId);
 
+	const isAnyLoading = isLoading || isThreadCommentsLoading || isTemporaryCommentLoading || comment?.is_thread_loading;
+
 	return (
-		<div className="flex max-h-[60dvh] w-full flex-col overflow-hidden">
-			<AiCommentThreadInner
-				comment={comment}
-				threadComments={threadComments}
-				temporaryComment={temporaryComment}
-				isLoading={isLoading || isThreadCommentsLoading || isTemporaryCommentLoading}
-			/>
-		</div>
+		<>
+			<div className="flex max-h-[60dvh] w-full flex-col overflow-hidden">
+				<AiCommentThreadInner
+					comment={comment}
+					threadComments={threadComments}
+					temporaryComment={temporaryComment}
+					isAnyLoading={isAnyLoading}
+				/>
+			</div>
+			<AiInputBar disabled={isAnyLoading} />
+		</>
 	);
 };
 
@@ -47,16 +53,14 @@ export const AiCommentThreadInner = ({
 	comment,
 	threadComments,
 	temporaryComment,
-	isLoading,
+	isAnyLoading,
 }: {
 	comment: CommentThreadType;
 	threadComments?: ThreadCommentType[];
 	temporaryComment?: TemporaryCommentType | null;
-	isLoading: boolean;
+	isAnyLoading?: boolean;
 }) => {
 	const threadRef = useRef<HTMLDivElement>(null);
-
-	const isAnyLoading = isLoading || comment?.is_thread_loading;
 
 	// Add this useEffect to scroll to bottom when comments change
 	useEffect(() => {
@@ -107,7 +111,7 @@ export const AiCommentThreadInner = ({
 						</div>
 					)}
 				</>
-			) : isLoading ? (
+			) : isAnyLoading ? (
 				<div className="flex w-full items-center justify-center p-4">
 					<LoadingSpinner size="sm" />
 				</div>
