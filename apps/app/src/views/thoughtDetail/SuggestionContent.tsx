@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { apiClient } from "src/api/client";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
+import { CopyButton } from "src/components/CopyButton";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { cn } from "src/utils";
 import { simpleHash } from "src/utils/hash";
@@ -156,8 +157,6 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 		disableUpdatesRef.current = false;
 	};
 
-	const [isCopied, setIsCopied] = useState(false);
-
 	// Parse the suggestionContent for original and replacement content
 	const parseSuggestionContent = (content: string) => {
 		const originalMatch = content.match(/<original_content>([\s\S]*?)<\/original_content>/);
@@ -175,20 +174,6 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 
 	// Add state for active tab
 	const [activeTab, setActiveTab] = useState<"diff" | "replacement">("diff");
-
-	const handleCopy = () => {
-		if (!replacement) {
-			return;
-		}
-
-		navigator.clipboard.writeText(replacement);
-		toast.success("Copied to clipboard");
-		setIsCopied(true);
-
-		setTimeout(() => {
-			setIsCopied(false);
-		}, 2000);
-	};
 
 	return (
 		<pre className="my-1 rounded bg-card px-3 py-2 font-sans">
@@ -262,19 +247,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 								</>
 							)}
 						</Button>
-						<Button size="sm" variant="outline" className="bg-background" onClick={handleCopy}>
-							{isCopied ? (
-								<>
-									<ClipboardCheckIcon className="size-4" />
-									<span>Copied</span>
-								</>
-							) : (
-								<>
-									<CopyIcon className="size-4" />
-									<span>Copy result</span>
-								</>
-							)}
-						</Button>
+						<CopyButton textToCopy={replacement} size="sm" variant="outline" className="bg-background" />
 					</>
 				)}
 			</div>

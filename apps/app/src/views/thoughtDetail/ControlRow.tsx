@@ -11,15 +11,16 @@ import { makeHumanizedTime } from "src/utils/strings";
 import { DeleteDialog } from "./DeleteDialog";
 import { ExportDialog } from "./ExportDialog";
 import { GoalDropdown } from "./GoalDropdown";
+import { ShareDialog } from "./ShareDialog";
 import { useThought } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";
 
-export const ControlRow = ({ thoughtId, editor }: { thoughtId?: string; editor?: Editor | null }) => {
+export const ControlRow = ({ thoughtId, editor }: { thoughtId: string; editor?: Editor | null }) => {
 	const { data: thought } = useThought(thoughtId);
 	const { hideControlColumn, setHideControlColumn } = useContext(ThoughtContext);
 
 	return (
-		<div className="flex w-full flex-row items-center justify-between">
+		<div className="flex w-full flex-row items-center justify-between gap-2">
 			<div className="text-xs text-tertiary">
 				{thought && <span>Last edited {makeHumanizedTime(thought.updated_at)}</span>}
 			</div>
@@ -77,6 +78,7 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId?: string; editor?:
 					}>
 					{({ open, close }) => (open ? <GoalDropdown thoughtId={thoughtId} onClose={close} /> : null)}
 				</Dropdown>
+				<ShareDialog />
 				<Dropdown
 					trigger={
 						<Button variant="ghost" size="icon-sm" disabled={!thoughtId}>
@@ -84,8 +86,8 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId?: string; editor?:
 						</Button>
 					}>
 					<div className="flex w-36 flex-col">
-						{thoughtId && <ExportDialog thoughtId={thoughtId} title={thought?.title ?? undefined} />}
-						{thoughtId && <DeleteDialog thoughtId={thoughtId} />}
+						<ExportDialog thoughtId={thoughtId} title={thought?.title ?? undefined} />
+						<DeleteDialog thoughtId={thoughtId} />
 					</div>
 				</Dropdown>
 				{hideControlColumn && (
