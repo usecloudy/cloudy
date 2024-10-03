@@ -1,10 +1,10 @@
 import * as amplitude from "@amplitude/analytics-browser";
-import { PaymentsCustomersStatusGetResponse, UserRecord, handleSupabaseError } from "@cloudy/utils/common";
+import { PaymentsCustomersStatusGetResponse, handleSupabaseError } from "@cloudy/utils/common";
 import * as Sentry from "@sentry/react";
 import { Session, User } from "@supabase/supabase-js";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import posthog from "posthog-js";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useMount } from "react-use";
 import { create } from "zustand";
 
@@ -130,10 +130,36 @@ export const useUserOptions = () => {
 	);
 };
 
+const useRefreshSession = () => {
+	const handleAutoRefresh = useCallback(() => {
+		if (document.visibilityState === "visible") {
+			supabase.auth.startAutoRefresh();
+		} else {
+			supabase.auth.stopAutoRefresh();
+		}
+	}, []);
+
+	useEffect(() => {
+		// Initial call to set the correct state
+		handleAutoRefresh();
+
+		// Add event listener for visibility change
+		document.addEventListener("visibilitychange", handleAutoRefresh);
+
+		// Cleanup
+		return () => {
+			document.removeEventListener("visibilitychange", handleAutoRefresh);
+			supabase.auth.stopAutoRefresh();
+		};
+	}, [handleAutoRefresh]);
+};
+
 export const useUserHandler = () => {
 	const userStore = useUserStore();
 	const workspaceStore = useWorkspaceStore();
 	const userRecordQuery = useQueryUserRecord();
+
+	useRefreshSession();
 
 	const handleClearUser = () => {
 		userStore.setUser(null);
