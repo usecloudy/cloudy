@@ -16,24 +16,36 @@ const baseConfig = {
 	},
 	experimental: { instrumentationHook: true, serverComponentsExternalPackages: ["puppeteer-core", "@sparticuz/chromium"] },
 	rewrites() {
-		return [
-			{ source: "/healthz", destination: "/api/health" },
-			{ source: "/api/healthz", destination: "/api/health" },
-			{ source: "/health", destination: "/api/health" },
-			{ source: "/ping", destination: "/api/health" },
-			{
-				source: "/ingest/static/:path*",
-				destination: "https://us-assets.i.posthog.com/static/:path*",
-			},
-			{
-				source: "/ingest/:path*",
-				destination: "https://us.i.posthog.com/:path*",
-			},
-			{
-				source: "/ingest/decide",
-				destination: "https://us.i.posthog.com/decide",
-			},
-		];
+		return {
+			beforeFiles: [
+				{ source: "/healthz", destination: "/api/health" },
+				{ source: "/api/healthz", destination: "/api/health" },
+				{ source: "/health", destination: "/api/health" },
+				{ source: "/ping", destination: "/api/health" },
+				{
+					source: "/ingest/static/:path*",
+					destination: "https://us-assets.i.posthog.com/static/:path*",
+				},
+				{
+					source: "/ingest/:path*",
+					destination: "https://us.i.posthog.com/:path*",
+				},
+				{
+					source: "/ingest/decide",
+					destination: "https://us.i.posthog.com/decide",
+				},
+				{
+					source: "/static/:path*",
+					destination: "http://localhost:3000/static/:path*",
+				},
+			],
+			fallback: [
+				{
+					source: "/:path*",
+					destination: "https://cloudy-landing-page.webflow.io/:path*",
+				},
+			],
+		};
 	},
 
 	// This is required to support PostHog trailing slash API requests

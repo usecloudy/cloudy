@@ -75,7 +75,7 @@ const SidebarLayout: FC = () => {
 export const Router: FC = () => {
 	useUserHandler();
 	return (
-		<BrowserRouter>
+		<BrowserRouter basename="/app">
 			<Routes>
 				<Route path="/auth" element={<AuthView />}>
 					<Route path="/auth/" element={<SignIn />} />

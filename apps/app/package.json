@@ -121,7 +121,6 @@
 	"overrides": {
 		"fork-ts-checker-webpack-plugin": "^6.5.3"
 	},
-	"homepage": "./",
 	"main": "public/electron.js",
 	"scripts": {
 		"build": "craco build && npm run sentry:sourcemaps",
