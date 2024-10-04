@@ -1,6 +1,6 @@
 import { CollectionSummary, makeHumanizedTime } from "@cloudy/utils/common";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDownIcon, ChevronUpIcon, LightbulbIcon, RefreshCwIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, Lightbulb, LightbulbIcon, RefreshCwIcon } from "lucide-react";
 import React, { useState } from "react";
 
 import { apiClient } from "src/api/client";
@@ -66,6 +66,12 @@ export const CollectionSummaryCard: React.FC<CollectionSummaryCardProps> = ({
 			)}>
 			<div className="flex items-start justify-between">
 				<div className="flex flex-1 flex-col">
+					{summary.headline && (
+						<div className="mb-2 mt-1 flex flex-row items-center gap-1">
+							<LightbulbIcon className="size-4 text-secondary" />
+							<p>{summary.headline}</p>
+						</div>
+					)}
 					<h3 className="font-medium text-secondary">Latest Update</h3>
 					<p>{summary.latestUpdate}</p>
 				</div>

@@ -1,4 +1,4 @@
-import { handleSupabaseError } from "@cloudy/utils/common";
+import { handleSupabaseError, makeHumanizedTime } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { generateText } from "ai";
@@ -38,8 +38,8 @@ export const removeSignal = async (signal: string, thoughtId: string, supabase: 
 	await supabase.from("thoughts").update({ signals: thought.signals }).eq("id", thoughtId);
 };
 
-export const thoughtToPrompt = (thought: { title?: string | null; contentMd: string | null }) => {
-	return `<note${thought.title ? ` title="${thought.title}"` : ""}>
+export const thoughtToPrompt = (thought: { title?: string | null; contentMd: string | null; updatedAt?: string | null }) => {
+	return `<note${thought.title ? ` title="${thought.title}"` : ""}${thought.updatedAt ? ` updated_at="${makeHumanizedTime(thought.updatedAt)}"` : ""}>
 ${thought.contentMd ?? ""}
 </note>`;
 };

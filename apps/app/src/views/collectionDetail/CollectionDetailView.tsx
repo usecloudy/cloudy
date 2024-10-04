@@ -1,5 +1,7 @@
+import { Switch } from "@cloudy/ui";
 import { CollectionSummary } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { PlusIcon, SparklesIcon } from "lucide-react";
 import { PostHogFeature } from "posthog-js/react";
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
@@ -8,6 +10,7 @@ import { useParams } from "react-router-dom";
 import { queryClient } from "src/api/queryClient";
 import { collectionQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
+import { Button } from "src/components/Button";
 import { MainLayout } from "src/components/MainLayout";
 import { ThoughtList } from "src/components/ThoughtList";
 import { useWorkspace } from "src/stores/workspace";
@@ -167,8 +170,19 @@ export const CollectionDetailView = () => {
 							summaryUpdatedAt={collection.summary_updated_at}
 						/>
 					</PostHogFeature>
-					<div className="my-4 self-start">
-						<NewNote collectionId={collectionId} />
+					<div className="my-4 flex flex-row items-center gap-2">
+						<Button variant="outline">
+							<PlusIcon className="size-4" />
+							New sub-collection
+						</Button>
+						<div>
+							<NewNote collectionId={collectionId} />
+						</div>
+						<div className="flex flex-row items-center gap-1 rounded border border-border px-2 py-1.5">
+							<SparklesIcon className="size-4 text-accent" />
+							<span className="text-sm text-secondary">Automatically add notes to this collection</span>
+							<Switch checked onChange={() => {}} />
+						</div>
 					</div>
 					<ThoughtList thoughts={thoughts ?? []} />
 				</div>

@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { heliconeOpenAI } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
+import { thoughtToPrompt } from "app/api/utils/thoughts";
 
 export const POST = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "service", bypassAuth: true });
@@ -44,6 +45,9 @@ export const POST = async (req: NextRequest) => {
 - Provide a structured summary in paragraph form.
 - Keep it concise, ideally within 1-2 paragraphs.
 - Use bullet points for clarity if necessary; each point should represent a key takeaway.
+- Don't include meta words like "The notes in this folder are about..." or "These notes are about...", just get to the point. No yapping.
+- The notes are sorted by the date they were last updated, so the most recent note is at the bottom.
+- Also provide a concise single sentence "headline" that captures the main idea of the summary.
 
 # Examples
 
@@ -57,8 +61,6 @@ export const POST = async (req: NextRequest) => {
 The development of Project X is on a tight timeline with several upcoming deadlines. Key challenges include resource allocation and technical hurdles that need addressing.
 
 (**Note**: Real folders may have more detailed notes, requiring longer summaries with more comprehensive insights.)
-- Don't include meta words like "The notes in this folder are about..." or "These notes are about...", just get to the point. No yapping.
-- The notes are sorted by the date they were last updated, so the most recent note is at the bottom.
 
 # Notes
 
@@ -69,13 +71,24 @@ The development of Project X is on a tight timeline with several upcoming deadli
 				role: "user",
 				content: `The collection of notes titled "${collectionTitle}" are as follows:
 
-${notes.map(note => `Title: ${note.title}\nLast updated at: ${makeHumanizedTime(note.updated_at)}\n${note.content_md}`).join("\n\n")}`,
+${notes
+	.map(note =>
+		thoughtToPrompt({
+			title: note.title,
+			contentMd: note.content_md,
+			updatedAt: note.updated_at,
+		}),
+	)
+	.join("\n\n")}`,
 			},
 		],
 		schema: z.object({
 			keyTakeaways: z.array(z.string()).describe("Key takeaways from the collection"),
 			summary: z.string().describe("A concise summary of the collection"),
 			latestUpdate: z.string().describe("An executive summary of the latest update in the topic."),
+			headline: z
+				.string()
+				.describe("A concise single sentence headline that captures the main idea of the summary and latest update."),
 		}),
 	});
 
