@@ -130,28 +130,38 @@ export const useUserOptions = () => {
 	);
 };
 
-const useRefreshSession = () => {
-	const handleAutoRefresh = useCallback(() => {
-		if (document.visibilityState === "visible") {
-			supabase.auth.startAutoRefresh();
-		} else {
-			supabase.auth.stopAutoRefresh();
-		}
-	}, []);
+// const useRefreshSession = () => {
+// 	const handleAutoRefresh = useCallback(() => {
+// 		if (document.visibilityState === "visible") {
+// 			supabase.auth.startAutoRefresh();
+// 		} else {
+// 			supabase.auth.stopAutoRefresh();
+// 		}
+// 	}, []);
 
+// 	useEffect(() => {
+// 		// Initial call to set the correct state
+// 		handleAutoRefresh();
+
+// 		// Add event listener for visibility change
+// 		document.addEventListener("visibilitychange", handleAutoRefresh);
+
+// 		// Cleanup
+// 		return () => {
+// 			document.removeEventListener("visibilitychange", handleAutoRefresh);
+// 			supabase.auth.stopAutoRefresh();
+// 		};
+// 	}, [handleAutoRefresh]);
+// };
+
+const useRefreshSessionHeader = () => {
 	useEffect(() => {
-		// Initial call to set the correct state
-		handleAutoRefresh();
+		const interval = setInterval(() => {
+			setupAuthHeader();
+		}, 15000);
 
-		// Add event listener for visibility change
-		document.addEventListener("visibilitychange", handleAutoRefresh);
-
-		// Cleanup
-		return () => {
-			document.removeEventListener("visibilitychange", handleAutoRefresh);
-			supabase.auth.stopAutoRefresh();
-		};
-	}, [handleAutoRefresh]);
+		return () => clearInterval(interval);
+	}, []);
 };
 
 export const useUserHandler = () => {
@@ -159,7 +169,7 @@ export const useUserHandler = () => {
 	const workspaceStore = useWorkspaceStore();
 	const userRecordQuery = useQueryUserRecord();
 
-	useRefreshSession();
+	useRefreshSessionHeader();
 
 	const handleClearUser = () => {
 		userStore.setUser(null);

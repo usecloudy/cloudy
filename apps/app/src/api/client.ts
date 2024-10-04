@@ -12,11 +12,19 @@ const setHeader = (key: string, value: string) => {
 	apiClient.defaults.headers.common[key] = value;
 };
 
+const clearHeader = (key: string) => {
+	if (apiClient.defaults.headers.common[key]) {
+		delete apiClient.defaults.headers.common[key];
+	}
+};
+
 export const setupAuthHeader = async () => {
 	const { data } = await supabase.auth.getSession();
 
 	if (data.session?.access_token) {
 		setHeader("Authorization", `Bearer ${data.session.access_token}`);
+	} else {
+		clearHeader("Authorization");
 	}
 };
 
