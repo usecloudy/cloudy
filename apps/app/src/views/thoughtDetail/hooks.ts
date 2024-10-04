@@ -329,12 +329,12 @@ export const useComments = (thoughtId: string) => {
 	return useQueryResult;
 };
 
-export const useRespond = (commentId?: string | null) => {
+export const useRespond = () => {
 	const { thoughtId } = useContext(ThoughtContext);
 	const { setActiveThreadCommentId } = useThoughtStore();
 
 	return useMutation({
-		mutationFn: async (message: string) => {
+		mutationFn: async ({ message, commentId }: { message: string; commentId?: string | null }) => {
 			let commentIdToSend = commentId;
 			if (!commentId) {
 				const comment = handleSupabaseError(
@@ -379,7 +379,7 @@ export const useRespond = (commentId?: string | null) => {
 
 			handleSubmitChat(commentIdToSend, thoughtId);
 		},
-		onMutate: () => {
+		onMutate: ({ commentId }) => {
 			queryClient.setQueryData(["aiCommentThread", commentId], (data: any) => {
 				if (data) {
 					return {

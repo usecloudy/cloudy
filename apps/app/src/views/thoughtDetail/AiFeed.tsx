@@ -38,7 +38,7 @@ import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
 import { AiCommentThread } from "./AiCommentThread";
 import { AiInputBar } from "./AiInputBar";
-import { useComments, useForceAiUpdate, useThought } from "./hooks";
+import { useComments, useForceAiUpdate, useRespond, useThought } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";
 import { CommentFilter, useThoughtStore } from "./thoughtStore";
 import { useTitleStore } from "./titleStore";
@@ -215,25 +215,14 @@ const useDeleteAllArchived = (thoughtId: string) => {
 };
 
 const useGenerateSuggestion = () => {
+	const respondMutation = useRespond();
+
 	return useMutation({
 		mutationFn: async (commentId: string) => {
-			const { data } = await supabase
-				.from("thought_chat_threads")
-				.insert({
-					comment_id: commentId,
-					role: "user",
-					content: "Can you show me?",
-				})
-				.single();
-
-			await supabase
-				.from("thought_chats")
-				.update({
-					is_thread_loading: true,
-				})
-				.eq("id", commentId);
-
-			return { commentId };
+			return respondMutation.mutateAsync({
+				message: "Can you show me?",
+				commentId,
+			});
 		},
 		onMutate: commentId => {
 			queryClient.setQueryData(["aiCommentThread", commentId], (data: any) => {
@@ -494,7 +483,7 @@ export const AiFeedInner = ({ thoughtId }: { thoughtId: string }) => {
 			) : (
 				<IdeaSuggestionList thoughtId={thoughtId} suggestions={suggestions} />
 			)}
-			{(feedMode === "default") && <AiInputBar />}
+			{feedMode === "default" && <AiInputBar />}
 		</div>
 	);
 };

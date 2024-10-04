@@ -10,7 +10,7 @@ import { useThoughtStore } from "./thoughtStore";
 export const AiInputBar = ({ disabled }: { disabled?: boolean }) => {
 	const { feedMode, activeThreadCommentId } = useThoughtStore();
 	const [textInput, setTextInput] = useState("");
-	const { mutate: respond } = useRespond(activeThreadCommentId);
+	const { mutate: respond } = useRespond();
 
 	const canSubmit = textInput.length > 0 && !disabled;
 
@@ -19,7 +19,7 @@ export const AiInputBar = ({ disabled }: { disabled?: boolean }) => {
 			return;
 		}
 
-		respond(textInput);
+		respond({ message: textInput, commentId: activeThreadCommentId });
 		setTextInput("");
 	};
 
