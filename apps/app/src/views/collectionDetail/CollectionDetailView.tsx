@@ -171,18 +171,18 @@ export const CollectionDetailView = () => {
 						/>
 					</PostHogFeature>
 					<div className="my-4 flex flex-row items-center gap-2">
-						<Button variant="outline">
+						{/* <Button variant="outline">
 							<PlusIcon className="size-4" />
 							New sub-collection
-						</Button>
+						</Button> */}
 						<div>
 							<NewNote collectionId={collectionId} />
 						</div>
-						<div className="flex flex-row items-center gap-1 rounded border border-border px-2 py-1.5">
+						{/* <div className="flex flex-row items-center gap-1 rounded border border-border px-2 py-1.5">
 							<SparklesIcon className="size-4 text-accent" />
 							<span className="text-sm text-secondary">Automatically add notes to this collection</span>
 							<Switch checked onChange={() => {}} />
-						</div>
+						</div> */}
 					</div>
 					<ThoughtList thoughts={thoughts ?? []} />
 				</div>
