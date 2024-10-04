@@ -8,7 +8,7 @@ import { getSupabase } from "app/api/utils/supabase";
 
 export const POST = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "service", bypassAuth: true });
-	const { collectionId } = await req.json();
+	const { collectionId } = (await req.json()) as { collectionId: string };
 
 	// Fetch collection title
 	const { title: collectionTitle } = handleSupabaseError(
