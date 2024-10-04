@@ -755,6 +755,9 @@ export type Database = {
           author_id: string | null
           created_at: string
           id: string
+          is_auto: boolean
+          summary: Json | null
+          summary_updated_at: string | null
           title: string | null
           updated_at: string | null
           workspace_id: string | null
@@ -763,6 +766,9 @@ export type Database = {
           author_id?: string | null
           created_at?: string
           id?: string
+          is_auto?: boolean
+          summary?: Json | null
+          summary_updated_at?: string | null
           title?: string | null
           updated_at?: string | null
           workspace_id?: string | null
@@ -771,6 +777,9 @@ export type Database = {
           author_id?: string | null
           created_at?: string
           id?: string
+          is_auto?: boolean
+          summary?: Json | null
+          summary_updated_at?: string | null
           title?: string | null
           updated_at?: string | null
           workspace_id?: string | null

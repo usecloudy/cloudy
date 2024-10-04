@@ -1,5 +1,7 @@
+import { CollectionSummary } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import React, { useEffect, useState } from "react";
+import { PostHogFeature } from "posthog-js/react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router-dom";
 
@@ -7,13 +9,13 @@ import { queryClient } from "src/api/queryClient";
 import { collectionQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { MainLayout } from "src/components/MainLayout";
-import { SimpleLayout } from "src/components/SimpleLayout";
 import { ThoughtList } from "src/components/ThoughtList";
 import { useWorkspace } from "src/stores/workspace";
 import { ellipsizeText, makeHeadTitle, pluralize } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
 
 import { NewNote } from "../navigation/NewNote";
+import { CollectionSummaryCard } from "./CollectionSummaryCard";
 
 export const useCollection = (collectionId?: string) => {
 	return useQuery({
@@ -157,7 +159,15 @@ export const CollectionDetailView = () => {
 						value={title ?? ""}
 						onChange={e => handleTitleChange(e.target.value)}
 					/>
-					<div className="mb-4 self-start">
+					<PostHogFeature flag="collection-summary" match>
+						<CollectionSummaryCard
+							summary={collection.summary as CollectionSummary | null}
+							collectionId={collectionId}
+							canGenerateSummary={Boolean(thoughts && thoughts.length > 0)}
+							summaryUpdatedAt={collection.summary_updated_at}
+						/>
+					</PostHogFeature>
+					<div className="my-4 self-start">
 						<NewNote collectionId={collectionId} />
 					</div>
 					<ThoughtList thoughts={thoughts ?? []} />
