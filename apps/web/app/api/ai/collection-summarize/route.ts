@@ -83,6 +83,11 @@ ${notes
 			},
 		],
 		schema: z.object({
+			thoughtProcess: z.object({
+				reviewNotes: z.string(),
+				identifyKeyPoints: z.string(),
+				synthesizeInformation: z.string(),
+			}),
 			keyTakeaways: z.array(z.string()).describe("Key takeaways from the collection"),
 			summary: z.string().describe("A concise summary of the collection"),
 			latestUpdate: z.string().describe("An executive summary of the latest update in the topic."),
