@@ -65,15 +65,17 @@ export const CollectionSummaryCard: React.FC<CollectionSummaryCardProps> = ({
 				isPending && "animate-pulse",
 			)}>
 			<div className="flex items-start justify-between">
-				<div className="flex flex-1 flex-col">
+				<div className="flex flex-1 flex-col gap-2">
 					{summary.headline && (
-						<div className="mb-2 mt-1 flex flex-row items-center gap-1">
-							<LightbulbIcon className="size-4 text-secondary" />
+						<div>
+							<h3 className="font-medium text-secondary">Summary</h3>
 							<p>{summary.headline}</p>
 						</div>
 					)}
-					<h3 className="font-medium text-secondary">Latest Update</h3>
-					<p>{summary.latestUpdate}</p>
+					<div>
+						<h3 className="font-medium text-secondary">Latest Update</h3>
+						<p>{summary.latestUpdate}</p>
+					</div>
 				</div>
 				<Button variant="ghost" size="icon-sm" onClick={handleRefresh} disabled={isPending}>
 					<RefreshCwIcon className={cn("h-4 w-4", isPending && "animate-spin")} />
@@ -93,9 +95,9 @@ export const CollectionSummaryCard: React.FC<CollectionSummaryCardProps> = ({
 					</ul>
 				</div>
 			</div>
-			<div className="flex items-center justify-between">
+			<div className="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
 				<Button
-					variant="ghost"
+					variant="outline"
 					size="sm"
 					className="self-start text-secondary"
 					onClick={() => setIsExpanded(!isExpanded)}>
