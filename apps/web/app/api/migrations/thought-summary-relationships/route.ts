@@ -1,4 +1,5 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 
 import { mapRelationshipsForThought } from "app/api/ai/update-thought/embed/embedThought";
@@ -39,6 +40,7 @@ export const POST = async (req: NextRequest) => {
 				success++;
 			} catch (e) {
 				console.log("Error generating relationships for thought", t.id, e);
+				Sentry.captureException(e);
 				errored++;
 			}
 		}),

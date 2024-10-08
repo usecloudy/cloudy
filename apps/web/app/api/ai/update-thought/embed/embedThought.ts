@@ -178,6 +178,10 @@ export const mapRelationshipsForThought = async (thoughtRecord: ThoughtRecord, s
 		}),
 	);
 
+	if (similarThoughts.length === 0) {
+		return;
+	}
+
 	const thoughts = handleSupabaseError(
 		await supabase
 			.from("thoughts")
