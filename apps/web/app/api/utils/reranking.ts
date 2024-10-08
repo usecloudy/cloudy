@@ -1,3 +1,5 @@
+import { backOff } from "exponential-backoff";
+
 interface JinaRerankingResponse {
 	model: string;
 	usage: {
@@ -30,7 +32,23 @@ export const jinaReranking = async (query: string, documentContents: string[], t
 		body: JSON.stringify(data),
 	});
 
+	if (response.status === 429) {
+		throw new Error("Rate limit");
+	}
+
 	const responseData = (await response.json()) as JinaRerankingResponse;
 
 	return responseData.results;
+};
+
+export const jinaRerankingWithExponentialBackoff = async (query: string, documentContents: string[], topN: number) => {
+	return backOff(async () => jinaReranking(query, documentContents, topN), {
+		numOfAttempts: 10,
+		startingDelay: 5000,
+		timeMultiple: 2,
+		retry: (e, attemptNumber) => {
+			console.log(`Retry attempt ${attemptNumber} for Jina reranking`);
+			return e instanceof Error && e.message === "Rate limit";
+		},
+	});
 };

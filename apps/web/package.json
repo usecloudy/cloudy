@@ -63,6 +63,7 @@
 		"class-variance-authority": "^0.7.0",
 		"date-fns": "^3.6.0",
 		"diff": "^6.0.0-beta",
+		"exponential-backoff": "^3.1.1",
 		"fastest-levenshtein": "^1.0.16",
 		"install": "^0.13.0",
 		"jsdom": "^25.0.0",

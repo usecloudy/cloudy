@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { generateEmbeddings } from "app/api/utils/embeddings";
 import { heliconeOpenAI } from "app/api/utils/helicone";
-import { jinaReranking } from "app/api/utils/reranking";
+import { jinaRerankingWithExponentialBackoff } from "app/api/utils/reranking";
 import { addSignal, removeSignal } from "app/api/utils/thoughts";
 
 import { ThoughtRecord } from "../utils";
@@ -195,11 +195,12 @@ export const mapRelationshipsForThought = async (thoughtRecord: ThoughtRecord, s
 		t => t.id !== thoughtRecord.id && t.generated_intent && t.generated_summary && t.content_md,
 	);
 
-	const rerankedSimilarThoughts = await jinaReranking(
+	const rerankedSimilarThoughts = await jinaRerankingWithExponentialBackoff(
 		makeRerankerInput(intent, summary, contentMd.slice(0, 4096)),
 		filteredThoughts.map(t => makeRerankerInput(t.generated_intent!, t.generated_summary!, t.content_md!.slice(0, 4096))),
 		36,
 	);
+
 	const filteredThoughtsWithScore = rerankedSimilarThoughts
 		.map(t => ({
 			...filteredThoughts[t.index]!,

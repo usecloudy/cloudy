@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { mapRelationshipsForThought } from "app/api/ai/update-thought/embed/embedThought";
 import { getSupabase } from "app/api/utils/supabase";
 
-export const maxDuration = 90;
+export const maxDuration = 300;
 
 export const POST = async (req: NextRequest) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "service" });
