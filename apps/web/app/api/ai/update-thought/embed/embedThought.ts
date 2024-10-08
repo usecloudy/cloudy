@@ -209,7 +209,7 @@ export const mapRelationshipsForThought = async (thoughtRecord: ThoughtRecord, s
 			...filteredThoughts[t.index]!,
 			similarity_score: t.relevance_score,
 		}))
-		.filter(t => t.similarity_score > 0.15)
+		.filter(t => t.similarity_score > 0.2)
 		.sort((a, b) => b.similarity_score - a.similarity_score);
 
 	handleSupabaseError(await supabase.from("thought_relations").delete().eq("matched_by", thoughtRecord.id));
@@ -244,7 +244,11 @@ export const mapRelationshipsForThought = async (thoughtRecord: ThoughtRecord, s
 	}));
 
 	const collectionIdsToSuggest = meanCollectionScores
-		.filter(score => score.meanScore > 0.2)
+		.filter(
+			score =>
+				score.meanScore > 0.3 &&
+				!(thoughtRecord.ignored_collection_suggestions as string[] | null)?.includes(score.collectionId),
+		)
 		.sort((a, b) => b.meanScore - a.meanScore)
 		.map(score => score.collectionId);
 
