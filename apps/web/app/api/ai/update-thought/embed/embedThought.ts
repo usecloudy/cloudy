@@ -168,8 +168,6 @@ export const mapRelationshipsForThought = async (thoughtRecord: ThoughtRecord, s
 		await supabase.from("thought_summary_embeddings").select("embedding").eq("thought_id", thoughtRecord.id).single(),
 	);
 
-	console.log("thoughtRecord.workspace_id", thoughtRecord.workspace_id);
-
 	const similarThoughts = handleSupabaseError(
 		await supabase.rpc("embedding_thought_summary_search", {
 			query_embedding: embedding,
@@ -186,8 +184,6 @@ export const mapRelationshipsForThought = async (thoughtRecord: ThoughtRecord, s
 		return;
 	}
 
-	console.log("similarThoughts", similarThoughts);
-
 	const thoughts = handleSupabaseError(
 		await supabase
 			.from("thoughts")
@@ -197,8 +193,6 @@ export const mapRelationshipsForThought = async (thoughtRecord: ThoughtRecord, s
 				similarThoughts.map(t => t.thought_id),
 			),
 	);
-
-	console.log("returned workspace_ids", new Set(thoughts.map(t => t.workspace_id)));
 
 	const filteredThoughts = thoughts.filter(
 		t => t.id !== thoughtRecord.id && t.generated_intent && t.generated_summary && t.content_md,
