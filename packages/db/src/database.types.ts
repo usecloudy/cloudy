@@ -801,115 +801,6 @@ export type Database = {
           },
         ]
       }
-      integration_access_scopes: {
-        Row: {
-          created_at: string
-          id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-        }
-        Relationships: []
-      }
-      integration_message_embeddings: {
-        Row: {
-          created_at: string
-          embedding: string
-          embedding_ver: string
-          id: string
-          index: number
-          message_id: string
-        }
-        Insert: {
-          created_at?: string
-          embedding: string
-          embedding_ver: string
-          id?: string
-          index: number
-          message_id: string
-        }
-        Update: {
-          created_at?: string
-          embedding?: string
-          embedding_ver?: string
-          id?: string
-          index?: number
-          message_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "integration_message_embeddings_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "integration_messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      integration_messages: {
-        Row: {
-          content: string | null
-          created_at: string
-          external_id: string
-          id: string
-          link_url: string | null
-          organization: string
-          sent_at: string
-        }
-        Insert: {
-          content?: string | null
-          created_at?: string
-          external_id: string
-          id?: string
-          link_url?: string | null
-          organization: string
-          sent_at: string
-        }
-        Update: {
-          content?: string | null
-          created_at?: string
-          external_id?: string
-          id?: string
-          link_url?: string | null
-          organization?: string
-          sent_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "integration_messages_organization_fkey"
-            columns: ["organization"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      integration_setups: {
-        Row: {
-          created_at: string
-          id: string
-          last_synced_at: string | null
-          type: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          last_synced_at?: string | null
-          type: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          last_synced_at?: string | null
-          type?: string
-        }
-        Relationships: []
-      }
       note_contents: {
         Row: {
           content: string | null
@@ -1132,70 +1023,6 @@ export type Database = {
             columns: ["thought_id"]
             isOneToOne: false
             referencedRelation: "thoughts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      thought_chunk_multi_embeddings: {
-        Row: {
-          chunk_id: string
-          created_at: string
-          embedding: string
-          id: string
-          token_index: number
-        }
-        Insert: {
-          chunk_id: string
-          created_at?: string
-          embedding: string
-          id?: string
-          token_index: number
-        }
-        Update: {
-          chunk_id?: string
-          created_at?: string
-          embedding?: string
-          id?: string
-          token_index?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "thought_chunk_multi_embeddings_chunk_id_fkey"
-            columns: ["chunk_id"]
-            isOneToOne: false
-            referencedRelation: "thought_chunks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      thought_chunk_multi_query_embeddings: {
-        Row: {
-          chunk_id: string
-          created_at: string
-          id: string
-          query_embedding: string
-          token_index: number
-        }
-        Insert: {
-          chunk_id: string
-          created_at?: string
-          id?: string
-          query_embedding: string
-          token_index: number
-        }
-        Update: {
-          chunk_id?: string
-          created_at?: string
-          id?: string
-          query_embedding?: string
-          token_index?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "thought_chunk_multi_query_embeddings_chunk_id_fkey"
-            columns: ["chunk_id"]
-            isOneToOne: false
-            referencedRelation: "thought_chunks"
             referencedColumns: ["id"]
           },
         ]
@@ -1427,35 +1254,6 @@ export type Database = {
           },
         ]
       }
-      thought_summary_multi_embeddings: {
-        Row: {
-          embedding: string
-          id: string
-          index: number
-          thought_id: string
-        }
-        Insert: {
-          embedding: string
-          id?: string
-          index: number
-          thought_id: string
-        }
-        Update: {
-          embedding?: string
-          id?: string
-          index?: number
-          thought_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "thought_summary_multi_embeddings_thought_id_fkey"
-            columns: ["thought_id"]
-            isOneToOne: false
-            referencedRelation: "thoughts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       thoughts: {
         Row: {
           author_id: string
@@ -1542,42 +1340,6 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      topic_message_matches: {
-        Row: {
-          created_at: string
-          id: string
-          message_id: string | null
-          topic_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          message_id?: string | null
-          topic_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          message_id?: string | null
-          topic_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "topic_message_matches_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "integration_messages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "topic_message_matches_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topics"
             referencedColumns: ["id"]
           },
         ]
@@ -1820,7 +1582,7 @@ export type Database = {
           query_embedding: string
           match_threshold: number
           max_results: number
-          workspace_id: string
+          p_workspace_id: string
           ignore_thought_ids?: string[]
         }
         Returns: {

@@ -168,29 +168,38 @@ export const mapRelationshipsForThought = async (thoughtRecord: ThoughtRecord, s
 		await supabase.from("thought_summary_embeddings").select("embedding").eq("thought_id", thoughtRecord.id).single(),
 	);
 
+	console.log("thoughtRecord.workspace_id", thoughtRecord.workspace_id);
+
 	const similarThoughts = handleSupabaseError(
 		await supabase.rpc("embedding_thought_summary_search", {
 			query_embedding: embedding,
 			match_threshold: 0.35,
 			max_results: 36,
-			workspace_id: thoughtRecord.workspace_id!,
+			p_workspace_id: thoughtRecord.workspace_id!,
 			ignore_thought_ids: [thoughtRecord.id],
 		}),
 	);
 
 	if (similarThoughts.length === 0) {
+		handleSupabaseError(await supabase.from("thought_relations").delete().eq("matched_by", thoughtRecord.id));
+		handleSupabaseError(await supabase.from("thought_relations").delete().eq("matches", thoughtRecord.id));
 		return;
 	}
+
+	console.log("similarThoughts", similarThoughts);
 
 	const thoughts = handleSupabaseError(
 		await supabase
 			.from("thoughts")
-			.select("id,title,content_md,generated_intent,generated_summary,collection_thoughts(collections(id))")
+			.select("id,title,content_md,generated_intent,generated_summary,collection_thoughts(collections(id)), workspace_id")
 			.in(
 				"id",
 				similarThoughts.map(t => t.thought_id),
 			),
 	);
+
+	console.log("returned workspace_ids", new Set(thoughts.map(t => t.workspace_id)));
+
 	const filteredThoughts = thoughts.filter(
 		t => t.id !== thoughtRecord.id && t.generated_intent && t.generated_summary && t.content_md,
 	);
