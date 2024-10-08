@@ -1,5 +1,3 @@
-import { backOff } from "exponential-backoff";
-
 interface JinaRerankingResponse {
 	model: string;
 	usage: {
@@ -41,12 +39,27 @@ export const jinaReranking = async (query: string, documentContents: string[], t
 	return responseData.results;
 };
 
+// Implement a custom exponential backoff function
+const customExponentialBackoff = async <T>(fn: () => Promise<T>, maxRetries = 5, delay = 500): Promise<T> => {
+	let attempt = 0;
+	while (attempt <= maxRetries) {
+		try {
+			return await fn();
+		} catch (e) {
+			if (e instanceof Error && e.message === "Rate limit") {
+				const backoffDelay = delay * 2 ** attempt;
+				console.log(`Retry attempt ${attempt + 1} for Jina reranking, will wait for ${backoffDelay}ms`);
+				await new Promise(resolve => setTimeout(resolve, backoffDelay));
+				attempt++;
+			} else {
+				throw e;
+			}
+		}
+	}
+	throw new Error("Max retries exceeded");
+};
+
+// Update jinaRerankingWithExponentialBackoff to use the custom backoff function
 export const jinaRerankingWithExponentialBackoff = async (query: string, documentContents: string[], topN: number) => {
-	return backOff(async () => jinaReranking(query, documentContents, topN), {
-		startingDelay: 1000,
-		retry: (e, attemptNumber) => {
-			console.log(`Retry attempt ${attemptNumber} for Jina reranking, will wait for ${2 ** attemptNumber * 1000}ms`);
-			return e instanceof Error && e.message === "Rate limit";
-		},
-	});
+	return customExponentialBackoff(() => jinaReranking(query, documentContents, topN), 8);
 };
