@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDownIcon, ChevronUpIcon, EllipsisIcon, NotebookIcon, PlusIcon, TrashIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, EllipsisIcon, NotebookIcon, PlusIcon, SparklesIcon, TrashIcon } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -105,7 +105,11 @@ export const Collections = () => {
 							<Link
 								to={makeCollectionUrl(workspace.slug, collection.id)}
 								className="flex flex-1 flex-row items-center gap-1 overflow-hidden px-2 py-1">
-								<NotebookIcon className="size-4 shrink-0" />
+								{collection.is_auto ? (
+									<SparklesIcon className="size-4 shrink-0" />
+								) : (
+									<NotebookIcon className="size-4 shrink-0" />
+								)}
 								<span className="truncate text-sm font-medium">{collection.title}</span>
 							</Link>
 							<Dropdown

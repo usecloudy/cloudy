@@ -1,21 +1,18 @@
-import { openai } from "@ai-sdk/openai";
 import { ThoughtSignals, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { embedMany } from "ai";
 import { distance } from "fastest-levenshtein";
 import { NextRequest, NextResponse } from "next/server";
 
-import { chunkAndHashMarkdownV1 } from "app/api/utils/relatedChunks";
 import { getSupabase } from "app/api/utils/supabase";
 import { addSignal, checkForSignal, removeSignal } from "app/api/utils/thoughts";
 
+import { intentSummaryEmbeddingPipeline } from "./embed/embedThought";
 import { ideateThought } from "./ideate";
 import { suggestTitle } from "./suggest-title";
-import { ThoughtRecord, generateMatchPairs } from "./utils";
 
 const MINIMUM_CONTENT_LENGTH = 3;
-const MINIMUM_EDIT_DISTANCE = 64;
+const MINIMUM_EDIT_DISTANCE = 80;
 
 export const maxDuration = 90;
 
@@ -68,8 +65,8 @@ const processThought = async (thoughtId: string, supabase: SupabaseClient<Databa
 	try {
 		await Promise.all([
 			ideateThought(thoughtRecord, supabase, options),
-			generateEmbeddings(thoughtRecord, supabase),
 			suggestTitle(thoughtRecord, supabase),
+			intentSummaryEmbeddingPipeline(thoughtRecord, supabase),
 		]);
 
 		await supabase.from("thoughts").update({ last_suggestion_content_md: contentMd }).eq("id", thoughtRecord.id);
@@ -78,101 +75,4 @@ const processThought = async (thoughtId: string, supabase: SupabaseClient<Databa
 	}
 
 	return NextResponse.json({ message: "Success" });
-};
-
-const generateEmbeddings = async (thoughtRecord: ThoughtRecord, supabase: SupabaseClient<Database>) => {
-	await addSignal(ThoughtSignals.EMBEDDING_UPDATE, thoughtRecord.id, supabase);
-	try {
-		const { content_md: contentMd } = thoughtRecord;
-
-		if (!contentMd) {
-			throw new Error("No content_md");
-		}
-
-		const { chunks } = chunkAndHashMarkdownV1(contentMd);
-
-		console.log(`Generated ${chunks.length} chunks for thought ${thoughtRecord.id}`);
-
-		const existingEmbeddings = handleSupabaseError(
-			await supabase.from("thought_embeddings").select("*").eq("thought_id", thoughtRecord.id).order("index", {
-				ascending: true,
-			}),
-		);
-
-		console.log(`Found ${existingEmbeddings?.length} existing embeddings for thought ${thoughtRecord.id}`);
-
-		// We find the first chunk that has a different hash than the existing embedding
-		// This is the index of the first chunk that we need to re-embed
-		let reEmbedFromIndex = 0;
-		if (existingEmbeddings) {
-			for (const existingEmbedding of existingEmbeddings) {
-				const index = existingEmbedding.index;
-				const existingHash = existingEmbedding.hash;
-
-				if (index >= chunks.length) {
-					break;
-				}
-
-				if (chunks[index]?.hash !== existingHash) {
-					break;
-				}
-
-				reEmbedFromIndex++;
-			}
-		}
-
-		const chunksToEmbed = chunks.slice(reEmbedFromIndex);
-
-		const totalEmbeddingsToDelete = existingEmbeddings?.length ? existingEmbeddings.length - reEmbedFromIndex : 0;
-
-		if (chunksToEmbed.length > 0) {
-			const { embeddings } = await embedMany({
-				model: openai.embedding("text-embedding-3-small"),
-				values: chunksToEmbed.map(chunk => chunk.chunk),
-				experimental_telemetry: {
-					isEnabled: true,
-				},
-			});
-
-			console.log(
-				`Deleting ${totalEmbeddingsToDelete} existing embeddings for thought ${thoughtRecord.id} from index ${reEmbedFromIndex}`,
-			);
-
-			await supabase
-				.from("thought_embeddings")
-				.delete()
-				.eq("thought_id", thoughtRecord.id)
-				.gte("index", reEmbedFromIndex);
-
-			await supabase.from("thought_embeddings").insert(
-				embeddings.map((embedding, index) => {
-					const chunkHash = chunksToEmbed[index]!.hash;
-
-					return {
-						thought_id: thoughtRecord.id,
-						embedding: JSON.stringify(embedding),
-						index: index + reEmbedFromIndex,
-						hash: chunkHash,
-					};
-				}),
-			);
-		} else {
-			console.log(`No chunks to embed for thought ${thoughtRecord.id}`);
-			if (existingEmbeddings) {
-				console.log(`Deleting ${existingEmbeddings.length} existing embeddings for thought ${thoughtRecord.id}`);
-
-				await supabase
-					.from("thought_embeddings")
-					.delete()
-					.eq("thought_id", thoughtRecord.id)
-					.gte("index", reEmbedFromIndex);
-			}
-		}
-
-		console.log(`Successfully embedded ${chunksToEmbed.length} chunks for thought ${thoughtRecord.id}`);
-
-		await generateMatchPairs(thoughtRecord, supabase);
-	} finally {
-		await removeSignal(ThoughtSignals.EMBEDDING_UPDATE, thoughtRecord.id, supabase);
-	}
 };

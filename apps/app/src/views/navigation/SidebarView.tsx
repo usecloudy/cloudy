@@ -4,22 +4,20 @@ import {
 	ChevronsLeftIcon,
 	ChevronsRightIcon,
 	CircleFadingArrowUp,
-	CreditCardIcon,
 	FilePlusIcon,
-	HomeIcon,
+	HomeIcon
 } from "lucide-react";
-import { PostHogFeature } from "posthog-js/react";
 import { Link, useLocation } from "react-router-dom";
-import { useLocalStorage } from "react-use";
 
 import { Button } from "src/components/Button";
 import { FeedbackDropdown } from "src/components/Feedback";
 import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip";
 import { useUserRecord } from "src/stores/user";
 import { useWorkspaceStore } from "src/stores/workspace";
+import { useDebug } from "src/utils/debug";
 import { pluralize } from "src/utils/strings";
 import { useBreakpoint } from "src/utils/tailwind";
-import { makeThoughtUrl, useCreateThought } from "src/utils/thought";
+import { useCreateThought } from "src/utils/thought";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
 import { Collections } from "./Collections";
@@ -32,6 +30,7 @@ import { WorkspaceSelector } from "./WorkspaceSelector";
 const minimalSidebarRoutePaths = ["/workspaces/new/setup", "/auth/invite-accept", "/auth/complete-account-setup"];
 
 export const SidebarView = () => {
+	const debug = useDebug();
 	const isMdBreakpoint = useBreakpoint("md");
 	const isMobile = !isMdBreakpoint;
 
@@ -135,23 +134,19 @@ export const SidebarView = () => {
 							</div>
 						)}
 						<div className="no-scrollbar mt-4 flex flex-1 flex-col gap-4 overflow-y-auto px-4">
-							<PostHogFeature flag="topics" match={true}>
-								<Link to={`/workspaces/${workspace?.slug}/topics`}>
-									<Button
-										variant="ghost"
-										size="sm"
-										className="w-full justify-between text-sm font-medium text-secondary">
-										<span>Topic analysis</span>
-										<ArrowRightIcon className="size-4" />
-									</Button>
-								</Link>
-							</PostHogFeature>
+							{/* <Button
+								variant="secondary"
+								className="w-full justify-start border border-border text-sm font-medium text-secondary hover:bg-card/50 hover:text-secondary">
+								<SearchIcon className="size-4" />
+								<span>Search or ask</span>
+							</Button> */}
 							<LatestThoughts />
 							<Collections />
 							<div className="h-4" />
 						</div>
 					</>
 				)}
+				{debug && <div className="mb-4 px-4 text-xs text-secondary">Debug is enabled</div>}
 				<div className="flex w-full flex-col gap-2 px-4 py-2">
 					<div className="hidden w-full flex-col items-stretch md:flex">
 						<FeedbackDropdown />

@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom
 
 import { useChannelListeners } from "./channelListeners";
 import { useUserGuard, useUserHandler } from "./stores/user";
+import { useDebugQuery } from "./utils/debug";
 import { AuthView } from "./views/auth/AuthView";
 import { ForgotPassword } from "./views/auth/ForgotPassword";
 import { InviteAcceptView } from "./views/auth/InviteAcceptView";
@@ -22,12 +23,12 @@ import { NotFoundView } from "./views/notFound/NotFoundView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
 import { WorkspacelessThoughtRedirectView } from "./views/thoughtDetail/WorkspacelessThoughtRedirectView";
-import { TopicsView } from "./views/topics/TopicsView";
 import { NewWorkspaceView } from "./views/workspaces/NewWorkspaceView";
 import { WorkspaceLayout } from "./views/workspaces/WorkspaceLayout";
 import { WorkspaceSettingsView } from "./views/workspaces/WorkspaceSettingsView";
 
 const ProtectedLayout: FC = () => {
+	useDebugQuery();
 	const { user, isLoadingAuth, isReady } = useUserGuard();
 
 	useChannelListeners();
@@ -80,7 +81,6 @@ export const Router: FC = () => {
 						<Route path="/workspaces/:wsSlug/settings" element={<WorkspaceSettingsView />} />
 						<Route path="/workspaces/:wsSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
 						<Route path="/workspaces/:wsSlug/collections/:collectionId" element={<CollectionDetailView />} />
-						<Route path="/workspaces/:wsSlug/topics" element={<TopicsView />} />
 					</Route>
 					<Route path="/auth/password-reset" element={<PasswordResetView />} />
 					<Route path="/auth/invite-accept" element={<InviteAcceptView />} />
