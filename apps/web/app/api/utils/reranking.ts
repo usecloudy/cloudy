@@ -44,7 +44,7 @@ export const jinaReranking = async (query: string, documentContents: string[], t
 export const jinaRerankingWithExponentialBackoff = async (query: string, documentContents: string[], topN: number) => {
 	return backOff(async () => jinaReranking(query, documentContents, topN), {
 		numOfAttempts: 10,
-		startingDelay: 5000,
+		startingDelay: 1000,
 		timeMultiple: 2,
 		retry: (e, attemptNumber) => {
 			console.log(`Retry attempt ${attemptNumber} for Jina reranking`);

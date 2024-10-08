@@ -13,9 +13,12 @@ export const POST = async (req: NextRequest) => {
 	const allThoughts = handleSupabaseError(
 		await supabase
 			.from("thoughts")
-			.select("id, thought_summary_embeddings(created_at), content_md, generated_summary, generated_intent", {
-				count: "exact",
-			}),
+			.select(
+				"id, thought_summary_embeddings(created_at), content_md, generated_summary, generated_intent, thought_relations(created_at)",
+				{
+					count: "exact",
+				},
+			),
 	);
 
 	const thoughtIds = allThoughts
@@ -25,7 +28,8 @@ export const POST = async (req: NextRequest) => {
 				t.content_md &&
 				t.generated_summary &&
 				t.generated_intent &&
-				t.content_md.length > 36,
+				t.content_md.length > 36 &&
+				t.thought_relations.length === 0,
 		)
 		.map(t => t.id);
 	const thoughtRecords = handleSupabaseError(await supabase.from("thoughts").select("*").in("id", thoughtIds));
