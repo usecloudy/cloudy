@@ -3,4 +3,5 @@ export interface CollectionSummary {
     keyTakeaways: string[];
     summary: string;
     headline?: string;
+    intent?: string;
 }

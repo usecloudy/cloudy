@@ -94,6 +94,7 @@ ${notes
 			headline: z
 				.string()
 				.describe("A concise single sentence headline that captures the main idea of the summary and latest update."),
+			intent: z.string().describe("The intent of this collection of notes"),
 		}),
 	});
 

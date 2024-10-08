@@ -1077,6 +1077,65 @@ export type Database = {
           },
         ]
       }
+      thought_chunk_matches: {
+        Row: {
+          created_at: string
+          id: string
+          matched_by: string
+          matches: string
+          matches_thought_id: string
+          similarity: number
+          thought_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          matched_by: string
+          matches: string
+          matches_thought_id: string
+          similarity: number
+          thought_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          matched_by?: string
+          matches?: string
+          matches_thought_id?: string
+          similarity?: number
+          thought_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thought_chunk_matches_matched_by_fkey"
+            columns: ["matched_by"]
+            isOneToOne: false
+            referencedRelation: "thought_chunks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thought_chunk_matches_matches_fkey"
+            columns: ["matches"]
+            isOneToOne: false
+            referencedRelation: "thought_chunks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thought_chunk_matches_matches_thought_id_fkey"
+            columns: ["matches_thought_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thought_chunk_matches_thought_id_fkey"
+            columns: ["thought_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       thought_chunk_multi_embeddings: {
         Row: {
           chunk_id: string
@@ -1102,6 +1161,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "thought_chunk_multi_embeddings_chunk_id_fkey"
+            columns: ["chunk_id"]
+            isOneToOne: false
+            referencedRelation: "thought_chunks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thought_chunk_multi_query_embeddings: {
+        Row: {
+          chunk_id: string
+          created_at: string
+          id: string
+          query_embedding: string
+          token_index: number
+        }
+        Insert: {
+          chunk_id: string
+          created_at?: string
+          id?: string
+          query_embedding: string
+          token_index: number
+        }
+        Update: {
+          chunk_id?: string
+          created_at?: string
+          id?: string
+          query_embedding?: string
+          token_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thought_chunk_multi_query_embeddings_chunk_id_fkey"
             columns: ["chunk_id"]
             isOneToOne: false
             referencedRelation: "thought_chunks"
@@ -1274,6 +1365,97 @@ export type Database = {
           },
         ]
       }
+      thought_relations: {
+        Row: {
+          created_at: string
+          matched_by: string
+          matches: string
+          similarity_score: number
+        }
+        Insert: {
+          created_at?: string
+          matched_by: string
+          matches: string
+          similarity_score: number
+        }
+        Update: {
+          created_at?: string
+          matched_by?: string
+          matches?: string
+          similarity_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thought_summary_matches_matched_by_fkey"
+            columns: ["matched_by"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thought_summary_matches_matches_fkey"
+            columns: ["matches"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thought_summary_embeddings: {
+        Row: {
+          created_at: string
+          embedding: string
+          thought_id: string
+        }
+        Insert: {
+          created_at?: string
+          embedding: string
+          thought_id?: string
+        }
+        Update: {
+          created_at?: string
+          embedding?: string
+          thought_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thought_summary_embeddings_thought_id_fkey"
+            columns: ["thought_id"]
+            isOneToOne: true
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thought_summary_multi_embeddings: {
+        Row: {
+          embedding: string
+          id: string
+          index: number
+          thought_id: string
+        }
+        Insert: {
+          embedding: string
+          id?: string
+          index: number
+          thought_id: string
+        }
+        Update: {
+          embedding?: string
+          id?: string
+          index?: number
+          thought_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thought_summary_multi_embeddings_thought_id_fkey"
+            columns: ["thought_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       thoughts: {
         Row: {
           author_id: string
@@ -1284,6 +1466,8 @@ export type Database = {
           content_ts: string
           created_at: string
           embeddings_version: number
+          generated_intent: string | null
+          generated_summary: string | null
           id: string
           ignored_collection_suggestions: Json | null
           is_suggestion_paused: boolean
@@ -1306,6 +1490,8 @@ export type Database = {
           content_ts?: string
           created_at?: string
           embeddings_version?: number
+          generated_intent?: string | null
+          generated_summary?: string | null
           id?: string
           ignored_collection_suggestions?: Json | null
           is_suggestion_paused?: boolean
@@ -1328,6 +1514,8 @@ export type Database = {
           content_ts?: string
           created_at?: string
           embeddings_version?: number
+          generated_intent?: string | null
+          generated_summary?: string | null
           id?: string
           ignored_collection_suggestions?: Json | null
           is_suggestion_paused?: boolean
@@ -1627,6 +1815,19 @@ export type Database = {
             }
             Returns: unknown
           }
+      embedding_thought_summary_search: {
+        Args: {
+          query_embedding: string
+          match_threshold: number
+          max_results: number
+          workspace_id: string
+          ignore_thought_ids?: string[]
+        }
+        Returns: {
+          thought_id: string
+          similarity_score: number
+        }[]
+      }
       halfvec_avg: {
         Args: {
           "": number[]
@@ -1674,6 +1875,21 @@ export type Database = {
           "": unknown
         }
         Returns: unknown
+      }
+      insert_thought_chunk_matches: {
+        Args: {
+          p_thought_id: string
+          p_match_pairs: Json
+        }
+        Returns: {
+          created_at: string
+          id: string
+          matched_by: string
+          matches: string
+          matches_thought_id: string
+          similarity: number
+          thought_id: string
+        }[]
       }
       ivfflat_bit_support: {
         Args: {
@@ -1806,6 +2022,7 @@ export type Database = {
               query_embeddings: string[]
               match_threshold: number
               max_results: number
+              workspace_id: string
             }
             Returns: {
               chunk_id: string
@@ -1819,9 +2036,36 @@ export type Database = {
               match_threshold: number
               max_results: number
               workspace_id: string
+              ignore_thought_ids?: string[]
             }
             Returns: {
               chunk_id: string
+              thought_id: string
+              similarity_score: number
+            }[]
+          }
+      multi_embedding_thought_summary_search:
+        | {
+            Args: {
+              query_embeddings: string[]
+              match_threshold: number
+              max_results: number
+              workspace_id: string
+              ignore_thought_ids?: string[]
+            }
+            Returns: {
+              thought_id: string
+              similarity_score: number
+            }[]
+          }
+        | {
+            Args: {
+              query_embeddings: string[]
+              max_results: number
+              workspace_id: string
+              ignore_thought_ids?: string[]
+            }
+            Returns: {
               thought_id: string
               similarity_score: number
             }[]
