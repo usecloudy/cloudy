@@ -24,7 +24,7 @@ export const POST = async (req: NextRequest) => {
 	await Promise.all(
 		thoughtRecords.map(async t => {
 			try {
-				await generateIntentSummaryAndEmbedding(t, supabase);
+				await generateIntentSummaryAndEmbedding(t, 0, supabase);
 				success++;
 			} catch (e) {
 				console.log("Error generating embedding for thought", t.id, e);

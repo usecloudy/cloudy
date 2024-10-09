@@ -755,6 +755,7 @@ export type Database = {
           author_id: string | null
           created_at: string
           id: string
+          intent_embedding: string | null
           is_auto: boolean
           summary: Json | null
           summary_updated_at: string | null
@@ -766,6 +767,7 @@ export type Database = {
           author_id?: string | null
           created_at?: string
           id?: string
+          intent_embedding?: string | null
           is_auto?: boolean
           summary?: Json | null
           summary_updated_at?: string | null
@@ -777,6 +779,7 @@ export type Database = {
           author_id?: string | null
           created_at?: string
           id?: string
+          intent_embedding?: string | null
           is_auto?: boolean
           summary?: Json | null
           summary_updated_at?: string | null
@@ -1264,8 +1267,9 @@ export type Database = {
           content_ts: string
           created_at: string
           embeddings_version: number
-          generated_intent: string | null
+          generated_intents: string[]
           generated_summary: string | null
+          generated_type: string | null
           id: string
           ignored_collection_suggestions: Json | null
           is_suggestion_paused: boolean
@@ -1288,8 +1292,9 @@ export type Database = {
           content_ts?: string
           created_at?: string
           embeddings_version?: number
-          generated_intent?: string | null
+          generated_intents?: string[]
           generated_summary?: string | null
+          generated_type?: string | null
           id?: string
           ignored_collection_suggestions?: Json | null
           is_suggestion_paused?: boolean
@@ -1312,8 +1317,9 @@ export type Database = {
           content_ts?: string
           created_at?: string
           embeddings_version?: number
-          generated_intent?: string | null
+          generated_intents?: string[]
           generated_summary?: string | null
+          generated_type?: string | null
           id?: string
           ignored_collection_suggestions?: Json | null
           is_suggestion_paused?: boolean
@@ -1577,6 +1583,18 @@ export type Database = {
             }
             Returns: unknown
           }
+      embedding_collection_intent_search: {
+        Args: {
+          query_embedding: string
+          match_threshold: number
+          max_results: number
+          p_workspace_id: string
+        }
+        Returns: {
+          collection_id: string
+          similarity_score: number
+        }[]
+      }
       embedding_thought_summary_search: {
         Args: {
           query_embedding: string

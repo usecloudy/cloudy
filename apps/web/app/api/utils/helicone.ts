@@ -1,5 +1,6 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
+import { randomUUID } from "crypto";
 
 export const heliconeOpenAI = createOpenAI({
 	baseURL: "https://oai.helicone.ai/v1",
@@ -21,3 +22,20 @@ export const heliconeAnthropic = createAnthropic({
 		"Helicone-Posthog-Host": "https://us.posthog.com",
 	},
 });
+
+export interface HeliconeHeaderRequest {
+	userId?: string;
+	sessionName?: string;
+	sessionId?: string;
+	sessionPath?: string;
+}
+
+export const makeHeliconeHeaders = (request: HeliconeHeaderRequest) => {
+	const sessionId = request.sessionId || (request.sessionName ? `${request.sessionName}-${randomUUID()}` : randomUUID());
+	return {
+		...(request.userId && { "Helicone-User-Id": request.userId }),
+		...(request.sessionName && { "Helicone-Session-Name": request.sessionName }),
+		"Helicone-Session-Id": sessionId,
+		...(request.sessionPath && { "Helicone-Session-Path": request.sessionPath }),
+	};
+};

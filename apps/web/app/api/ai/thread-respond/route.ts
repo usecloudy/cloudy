@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 
 import { heliconeOpenAI } from "app/api/utils/helicone";
+import { makeHeliconeHeaders } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
 import { getContextForThought } from "app/api/utils/thoughts";
 
@@ -80,11 +81,11 @@ const respond = async (payload: ThreadRespondPostRequestBody, supabase: Supabase
 		throw new Error("User ID not found");
 	}
 
-	const heliconeHeaders = {
-		"Helicone-User-Id": userId,
-		"Helicone-Session-Name": "Respond to Thread",
-		"Helicone-Session-Id": `respond-to-thread/${randomUUID()}`,
-	};
+	const heliconeHeaders = makeHeliconeHeaders({
+		userId,
+		sessionName: "Respond to Thread",
+		sessionId: `respond-to-thread/${randomUUID()}`,
+	});
 
 	const comment = handleSupabaseError(await supabase.from("thought_chats").select("*").eq("id", payload.commentId).single());
 	const existingThread = handleSupabaseError(

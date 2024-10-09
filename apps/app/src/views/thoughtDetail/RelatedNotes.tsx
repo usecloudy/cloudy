@@ -1,11 +1,12 @@
 import { ThoughtSignals, handleSupabaseError } from "@cloudy/utils/common";
 import { useQuery } from "@tanstack/react-query";
-import { LinkIcon, SparklesIcon } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { ChevronDownIcon, ChevronUpIcon, LinkIcon, SparklesIcon } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { queryClient } from "src/api/queryClient";
 import { thoughtQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
+import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { ThoughtCard } from "src/components/ThoughtCard";
 import { fixOneToOne } from "src/utils";
@@ -265,7 +266,7 @@ export const RelatedNotes = ({ thoughtId }: { thoughtId?: string }) => {
 						emptyMessage="No linked notes"
 					/>
 					<RelatedNotesSection
-						title="Related Notes"
+						title="Potentially Related Notes"
 						thoughts={automaticallyLinked}
 						icon={<SparklesIcon className="mr-1 size-4 text-secondary" />}
 						emptyMessage="No related notes (yet, keep typing!)"
@@ -273,7 +274,16 @@ export const RelatedNotes = ({ thoughtId }: { thoughtId?: string }) => {
 					/>
 				</>
 			)}
-			{debug && <div className="mb-4">{thought?.generated_intent}</div>}
+			{debug && (
+				<div className="mb-4 flex flex-col text-xs">
+					<span className="font-medium">Type:</span>
+					<span>{thought?.generated_type}</span>
+					<span className="font-medium">Intents:</span>
+					<span>{thought?.generated_intents.join(", ")}</span>
+					<span className="font-medium">Summary:</span>
+					<span>{thought?.generated_summary}</span>
+				</div>
+			)}
 		</div>
 	);
 };
@@ -292,19 +302,49 @@ const RelatedNotesSection = ({
 	icon: React.ReactNode;
 	emptyMessage: string;
 	isLoading?: boolean;
-}) => (
-	<div className="mb-4">
-		<h5 className="mb-2 flex items-center text-sm font-medium text-secondary">
-			{icon}
-			{title}
-			{isLoading && <LoadingSpinner size="xs" className="ml-2" />}
-		</h5>
-		{thoughts && thoughts.length > 0 ? (
-			thoughts.map(thought => (
-				<ThoughtCard key={thought.id} thought={thought} variant="compact" hoursOnlyForUpdatedAt={false} />
-			))
-		) : (
-			<div className="text-sm text-tertiary">{emptyMessage}</div>
-		)}
-	</div>
-);
+}) => {
+	const [showAll, setShowAll] = useState(false);
+	const displayedThoughts = showAll ? thoughts : thoughts?.slice(0, 4);
+
+	return (
+		<div className="mb-4">
+			<h5 className="mb-2 flex items-center text-sm font-medium text-secondary">
+				{icon}
+				{title}
+				{isLoading && <LoadingSpinner size="xs" className="ml-2" />}
+			</h5>
+			<div className="flex w-full flex-col">
+				{thoughts && thoughts.length > 0 ? (
+					<>
+						{displayedThoughts?.map(thought => (
+							<ThoughtCard key={thought.id} thought={thought} variant="compact" hoursOnlyForUpdatedAt={false} />
+						))}
+						{thoughts.length > 4 ? (
+							!showAll ? (
+								<Button
+									variant="ghost"
+									size="sm"
+									className="mt-2 self-start text-secondary"
+									onClick={() => setShowAll(true)}>
+									<ChevronDownIcon className="size-4" />
+									<span>Show more</span>
+								</Button>
+							) : (
+								<Button
+									variant="ghost"
+									size="sm"
+									className="mt-2 self-start text-secondary"
+									onClick={() => setShowAll(false)}>
+									<ChevronUpIcon className="size-4" />
+									<span>Show less</span>
+								</Button>
+							)
+						) : null}
+					</>
+				) : (
+					<div className="text-sm text-tertiary">{emptyMessage}</div>
+				)}
+			</div>
+		</div>
+	);
+};

@@ -8,3 +8,6 @@ export type TopicRecord = Database["public"]["Tables"]["topics"]["Row"];
 
 export type ThoughtChatThreadRecord =
     Database["public"]["Tables"]["thought_chat_threads"]["Row"];
+
+export type CollectionThoughtRecord =
+    Database["public"]["Tables"]["collection_thoughts"]["Row"];

@@ -44,8 +44,9 @@ const processThought = async (thoughtId: string, supabase: SupabaseClient<Databa
 		return NextResponse.json({ message: "Content too short" });
 	}
 
+	let editDistance = 0;
 	if (!options?.force && lastContentMd) {
-		const editDistance = distance(contentMd, lastContentMd);
+		editDistance = distance(contentMd, lastContentMd);
 
 		if (editDistance < MINIMUM_EDIT_DISTANCE) {
 			console.log("Content too similar");
@@ -66,7 +67,7 @@ const processThought = async (thoughtId: string, supabase: SupabaseClient<Databa
 		await Promise.all([
 			ideateThought(thoughtRecord, supabase, options),
 			suggestTitle(thoughtRecord, supabase),
-			intentSummaryEmbeddingPipeline(thoughtRecord, supabase),
+			intentSummaryEmbeddingPipeline(thoughtRecord, editDistance, supabase, options?.force),
 		]);
 
 		await supabase.from("thoughts").update({ last_suggestion_content_md: contentMd }).eq("id", thoughtRecord.id);

@@ -1,7 +1,7 @@
 import { ThoughtSignals, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { generateObject } from "ai";
+import { cosineSimilarity, generateObject } from "ai";
 import { z } from "zod";
 
 import { generateEmbeddings } from "app/api/utils/embeddings";
@@ -11,49 +11,99 @@ import { addSignal, removeSignal } from "app/api/utils/thoughts";
 
 import { ThoughtRecord } from "../utils";
 
+export const THOUGHT_EMBEDDING_MODEL = "text-embedding-3-small";
+
+// AI Generation Functions
 const generateIntent = async (thoughtRecord: ThoughtRecord) => {
 	let {
-		object: { intent },
+		object: { intents, type: noteType },
 	} = await generateObject({
-		model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18"),
-		system: `Generate a concise single-line "intent" for a given note, determining the main purpose or goal of the note content.
+		model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18", { structuredOutputs: true }),
+		system: `Generate concise single-line "type" and "intent" for a given note, determining both the category of the note and its main purpose or goal.
 
 # Steps
 
 1. Analyze the note to understand its context and content.
-2. Determine the primary purpose or objective of the note based on its content.
-3. Formulate a clear, single-line intent that encapsulates this purpose.
+2. Determine the **type** of the note (e.g., meeting notes, interview evaluation, research summary, application, etc.).
+3. Identify the primary purpose or objective of the note based on its content.
+4. Formulate clear, single-line **intents** that encapsulates this purpose.
 
 # Output Format
 
-- A single line of text that clearly states the intent of the note.
+Provide the type of the note, its intent, and important keywords in a JSON format:
+
+\`\`\`json
+{
+  "type": "[Type of the note]",
+  "intents": ["[Primary purpose of the note]", "[Secondary purpose of the note]", ...]
+}
+\`\`\`
 
 # Examples
 
 **Input:** "John Doe's interview focused on his past project management experiences and his leadership skills."
 
-**Output:** "Evaluate interviewee's project management and leadership skills."
+**Output:**
+\`\`\`json
+{
+  "type": "Interview Evaluation",
+  "intents": ["Evaluate interviewee's project management and leadership skills", "Assess interviewee's past experiences"]
+}
+\`\`\`
+
+---
 
 **Input:** "Meeting notes from the quarterly financial review, highlighting budget allocations and expenditure trends."
 
-**Output:** "Summarize budget allocations and expenditure trends from the quarterly financial review."
+**Output:**
+\`\`\`json
+{
+  "type": "Meeting Notes",
+  "intents": ["Summarize budget allocations and expenditure trends from the quarterly financial review", "Review budget allocations and expenditure trends"]
+}
+\`\`\`
+
+---
 
 **Input:** "Customer feedback report analyzing satisfaction levels and areas for product improvement."
 
-**Output:** "Assess customer satisfaction and identify product improvement areas."
+**Output:**
+\`\`\`json
+{
+  "type": "Customer Feedback Report",
+  "intents": ["Assess customer satisfaction and identify product improvement areas", "Analyze customer feedback to improve product"]
+}
+\`\`\`
+
+---
 
 **Input:** "Research summary on the latest industry trends and their potential impact on our business strategy."
 
-**Output:** "Analyze industry trends and their impact on business strategy."
+**Output:**
+\`\`\`json
+{
+  "type": "Research Summary",
+  "intents": ["Analyze industry trends and their impact on business strategy", "Identify potential business opportunities"]
+}
+\`\`\`
 
-**Input:** "Training session notes covering new software tool functionalities and best practices for team usage."
+---
 
-**Output:** "Outline new software tool functionalities and best practices for team usage."
+**Input:** "Training session notes covering using LangChain's functionalities and best practices for team usage."
+
+**Output:**
+\`\`\`json
+{
+  "type": "LangChain Training Session Notes",
+  "intents": ["Outline new LangChain functionalities and best practices for team usage", "Assess LangChain functionalities and best practices for team usage"]
+}
+\`\`\`
 
 # Notes
 
-- Ensure that the generated intent is specific, clear, and directly related to the content of the note.
-- Avoid vague or overly broad intents; focus on the key purpose of the note.`,
+- Ensure that both the **type** and the **intent** are specific, clear, and directly related to the content of the note.
+- Avoid vague or overly broad descriptions; focus on the key purpose and nature of the note.
+- You MUST think out loud step-by-step before giving your final answer.`,
 		prompt: `Title: ${thoughtRecord.title}
 \`\`\`
 ${thoughtRecord.content_md}
@@ -63,16 +113,13 @@ ${thoughtRecord.content_md}
 		},
 		schema: z.object({
 			thoughts: z.array(z.string()),
-			intent: z.string(),
+			type: z.string(),
+			intents: z.array(z.string()),
 		}),
 		temperature: 0,
 	});
 
-	if (intent.endsWith(".")) {
-		intent = intent.slice(0, -1);
-	}
-
-	return intent;
+	return { noteType, intents: intents.map(intent => (intent.endsWith(".") ? intent.slice(0, -1) : intent)) };
 };
 
 const generateSummary = async (thoughtRecord: ThoughtRecord) => {
@@ -113,29 +160,53 @@ ${thoughtRecord.content_md}
 	return refinedFinalSummary;
 };
 
-const makeEmbeddingInput = (intent: string, summary: string) => {
-	return `${intent}; ${summary}`;
+// Helper Functions
+const makeEmbeddingInput = (
+	noteType: string | null | undefined,
+	intent: string,
+	summary: string,
+	contentMd: string,
+): string => {
+	return `${noteType ? noteType + ";\n" : ""}${intent}; ${summary};\n${contentMd.slice(0, 4096)}`;
 };
 
-const makeRerankerInput = (intent: string, summary: string, contentMd: string) => {
-	return `${intent}; ${summary}; ${contentMd}`;
+const makeRerankerInput = (noteType: string | null | undefined, intent: string, summary: string, contentMd: string): string => {
+	return `${noteType ? noteType + ";\n" : ""}${intent}; ${summary};\n${contentMd}`;
 };
 
-export const generateIntentSummaryAndEmbedding = async (thoughtRecord: ThoughtRecord, supabase: SupabaseClient<Database>) => {
-	let intent, summary;
-	if (thoughtRecord.generated_intent && thoughtRecord.generated_summary) {
-		intent = thoughtRecord.generated_intent;
+// Main Functions
+export const generateIntentSummaryAndEmbedding = async (
+	thoughtRecord: ThoughtRecord,
+	editDistance: number,
+	supabase: SupabaseClient<Database>,
+	force?: boolean,
+) => {
+	let noteType: string, intents: string[], summary: string;
+	if (
+		!force &&
+		thoughtRecord.generated_intents.length > 0 &&
+		thoughtRecord.generated_summary &&
+		thoughtRecord.generated_type &&
+		editDistance < 256
+	) {
+		noteType = thoughtRecord.generated_type;
+		intents = thoughtRecord.generated_intents;
 		summary = thoughtRecord.generated_summary;
 	} else {
 		if (!thoughtRecord.content_md || thoughtRecord.content_md.length < 36) {
 			throw new Error("Content too short");
 		}
 
-		[intent, summary] = await Promise.all([generateIntent(thoughtRecord), generateSummary(thoughtRecord)]);
+		[{ noteType, intents }, summary] = await Promise.all([generateIntent(thoughtRecord), generateSummary(thoughtRecord)]);
 	}
 
-	const embeddingInput = makeEmbeddingInput(intent, summary);
-	const embeddings = await generateEmbeddings([embeddingInput], "text-embedding-3-large");
+	const mainIntent = intents[0];
+	if (!mainIntent) {
+		throw new Error("No main intent");
+	}
+
+	const embeddingInput = makeEmbeddingInput(noteType, mainIntent, summary, thoughtRecord.content_md!);
+	const embeddings = await generateEmbeddings([embeddingInput], THOUGHT_EMBEDDING_MODEL);
 
 	if (!embeddings) {
 		throw new Error("No embeddings");
@@ -144,7 +215,7 @@ export const generateIntentSummaryAndEmbedding = async (thoughtRecord: ThoughtRe
 	handleSupabaseError(
 		await supabase
 			.from("thoughts")
-			.update({ generated_summary: summary, generated_intent: intent, embeddings_version: 2 })
+			.update({ generated_type: noteType, generated_summary: summary, generated_intents: intents, embeddings_version: 2 })
 			.eq("id", thoughtRecord.id),
 	);
 	handleSupabaseError(await supabase.from("thought_summary_embeddings").delete().eq("thought_id", thoughtRecord.id));
@@ -155,63 +226,75 @@ export const generateIntentSummaryAndEmbedding = async (thoughtRecord: ThoughtRe
 		}),
 	);
 
-	return { embedding: embeddings[0], intent, summary };
+	return { embedding: embeddings[0], intents, summary };
 };
 
-export const mapRelationshipsForThought = async (thoughtRecord: ThoughtRecord, supabase: SupabaseClient<Database>) => {
-	const { generated_intent: intent, generated_summary: summary, content_md: contentMd } = thoughtRecord;
-	if (!intent || !summary || !contentMd) {
-		throw new Error("No intent, summary, or content_md");
-	}
+interface SimilarThought {
+	thought_id: string;
+	similarity_score: number;
+}
 
+const getSimilarThoughts = async (
+	thoughtRecord: ThoughtRecord,
+	supabase: SupabaseClient<Database>,
+): Promise<SimilarThought[]> => {
 	const { embedding } = handleSupabaseError(
 		await supabase.from("thought_summary_embeddings").select("embedding").eq("thought_id", thoughtRecord.id).single(),
 	);
 
-	const similarThoughts = handleSupabaseError(
+	return handleSupabaseError(
 		await supabase.rpc("embedding_thought_summary_search", {
 			query_embedding: embedding,
-			match_threshold: 0.35,
+			match_threshold: 0.25,
 			max_results: 36,
 			p_workspace_id: thoughtRecord.workspace_id!,
 			ignore_thought_ids: [thoughtRecord.id],
 		}),
 	);
+};
 
-	if (similarThoughts.length === 0) {
-		handleSupabaseError(await supabase.from("thought_relations").delete().eq("matched_by", thoughtRecord.id));
-		handleSupabaseError(await supabase.from("thought_relations").delete().eq("matches", thoughtRecord.id));
-		return;
-	}
+interface FilteredThought {
+	id: string;
+	title: string;
+	content_md: string;
+	generated_intents: string[];
+	generated_summary: string;
+	generated_type: string;
+	collection_thoughts: Array<{ collections: { id: string } | null }>;
+	workspace_id: string;
+}
 
+const getFilteredThoughts = async (
+	similarThoughts: SimilarThought[],
+	supabase: SupabaseClient<Database>,
+	currentThoughtId: string,
+): Promise<FilteredThought[]> => {
 	const thoughts = handleSupabaseError(
 		await supabase
 			.from("thoughts")
-			.select("id,title,content_md,generated_intent,generated_summary,collection_thoughts(collections(id)), workspace_id")
+			.select(
+				"id,title,content_md,generated_intents,generated_summary,generated_type,collection_thoughts(collections(id)), workspace_id",
+			)
 			.in(
 				"id",
 				similarThoughts.map(t => t.thought_id),
 			),
 	);
 
-	const filteredThoughts = thoughts.filter(
-		t => t.id !== thoughtRecord.id && t.generated_intent && t.generated_summary && t.content_md,
-	);
+	return thoughts.filter(
+		t => t.id !== currentThoughtId && t.generated_intents.length > 0 && t.generated_summary && t.content_md,
+	) as FilteredThought[];
+};
 
-	const rerankedSimilarThoughts = await jinaRerankingWithExponentialBackoff(
-		makeRerankerInput(intent, summary, contentMd.slice(0, 4096)),
-		filteredThoughts.map(t => makeRerankerInput(t.generated_intent!, t.generated_summary!, t.content_md!.slice(0, 4096))),
-		36,
-	);
+interface ThoughtWithScore extends FilteredThought {
+	similarity_score: number;
+}
 
-	const filteredThoughtsWithScore = rerankedSimilarThoughts
-		.map(t => ({
-			...filteredThoughts[t.index]!,
-			similarity_score: t.relevance_score,
-		}))
-		.filter(t => t.similarity_score > 0.2)
-		.sort((a, b) => b.similarity_score - a.similarity_score);
-
+const updateThoughtRelations = async (
+	thoughtRecord: ThoughtRecord,
+	filteredThoughtsWithScore: ThoughtWithScore[],
+	supabase: SupabaseClient<Database>,
+): Promise<void> => {
 	handleSupabaseError(await supabase.from("thought_relations").delete().eq("matched_by", thoughtRecord.id));
 	handleSupabaseError(await supabase.from("thought_relations").delete().eq("matches", thoughtRecord.id));
 
@@ -225,7 +308,14 @@ export const mapRelationshipsForThought = async (thoughtRecord: ThoughtRecord, s
 			{ onConflict: "matched_by,matches", ignoreDuplicates: true },
 		),
 	);
+};
 
+interface CollectionScore {
+	collectionId: string;
+	meanScore: number;
+}
+
+const calculateCollectionScores = (filteredThoughtsWithScore: ThoughtWithScore[]): CollectionScore[] => {
 	const collectionScores = new Map<string, number[]>();
 	filteredThoughtsWithScore.forEach(thought =>
 		thought.collection_thoughts.forEach(collectionThought => {
@@ -238,26 +328,147 @@ export const mapRelationshipsForThought = async (thoughtRecord: ThoughtRecord, s
 			}
 		}),
 	);
-	const meanCollectionScores = Array.from(collectionScores.entries()).map(([collectionId, scores]) => ({
+	return Array.from(collectionScores.entries()).map(([collectionId, scores]) => ({
 		collectionId,
 		meanScore: scores.reduce((a, b) => a + b, 0) / scores.length,
 	}));
+};
 
-	const collectionIdsToSuggest = meanCollectionScores
+interface CollectionIntentEmbedding {
+	id: string;
+	intent_embedding: string | null;
+}
+
+interface RelevantCollection {
+	collection_id: string;
+	similarity_score: number;
+}
+
+interface SuggestedCollections {
+	collectionIntentEmbeddings: CollectionIntentEmbedding[];
+	intentOnlyEmbeddings: number[][];
+	relevantCollectionIdsAndScores: RelevantCollection[];
+}
+
+const getSuggestedCollections = async (
+	thoughtRecord: ThoughtRecord,
+	meanCollectionScores: CollectionScore[],
+	supabase: SupabaseClient<Database>,
+): Promise<SuggestedCollections> => {
+	const potentialCollectionIds = meanCollectionScores
 		.filter(
 			score =>
-				score.meanScore > 0.3 &&
+				score.meanScore > 0.4 &&
 				!(thoughtRecord.ignored_collection_suggestions as string[] | null)?.includes(score.collectionId),
 		)
 		.sort((a, b) => b.meanScore - a.meanScore)
 		.map(score => score.collectionId);
 
+	const collectionIntentEmbeddings = handleSupabaseError(
+		await supabase.from("collections").select("id,intent_embedding").in("id", potentialCollectionIds),
+	);
+
+	const intentOnlyEmbeddings = await generateEmbeddings(thoughtRecord.generated_intents, THOUGHT_EMBEDDING_MODEL);
+	const relevantCollectionIdsAndScores = (
+		await Promise.all(
+			intentOnlyEmbeddings.map(async embedding =>
+				handleSupabaseError(
+					await supabase.rpc("embedding_collection_intent_search", {
+						query_embedding: JSON.stringify(embedding),
+						match_threshold: 0.4,
+						max_results: 4,
+						p_workspace_id: thoughtRecord.workspace_id!,
+					}),
+				),
+			),
+		)
+	).flat();
+
+	return { collectionIntentEmbeddings, intentOnlyEmbeddings, relevantCollectionIdsAndScores };
+};
+
+export const mapRelationshipsForThought = async (
+	thoughtRecord: ThoughtRecord,
+	supabase: SupabaseClient<Database>,
+): Promise<void> => {
+	const {
+		generated_intents: intents,
+		generated_summary: summary,
+		generated_type: noteType,
+		content_md: contentMd,
+	} = thoughtRecord;
+	if (intents.length === 0 || !summary || !contentMd) {
+		throw new Error("No intent, summary, or content_md");
+	}
+
+	const similarThoughts = await getSimilarThoughts(thoughtRecord, supabase);
+
+	if (similarThoughts.length === 0) {
+		await updateThoughtRelations(thoughtRecord, [], supabase);
+		return;
+	}
+
+	const filteredThoughts = await getFilteredThoughts(similarThoughts, supabase, thoughtRecord.id);
+
+	const rerankedSimilarThoughts = await jinaRerankingWithExponentialBackoff(
+		makeRerankerInput(noteType, intents[0]!, summary, contentMd.slice(0, 4096)),
+		filteredThoughts.map(t =>
+			makeRerankerInput(t.generated_type, t.generated_intents[0]!, t.generated_summary!, t.content_md!.slice(0, 4096)),
+		),
+		36,
+	);
+
+	const filteredThoughtsWithScore: ThoughtWithScore[] = rerankedSimilarThoughts
+		.map(t => ({
+			...filteredThoughts[t.index]!,
+			similarity_score: t.relevance_score,
+		}))
+		.filter(t => t.similarity_score > 0.35)
+		.sort((a, b) => b.similarity_score - a.similarity_score);
+
+	await updateThoughtRelations(thoughtRecord, filteredThoughtsWithScore, supabase);
+
+	const meanCollectionScores = calculateCollectionScores(filteredThoughtsWithScore);
+
+	console.log("Mean collection scores", meanCollectionScores);
+
+	const { collectionIntentEmbeddings, intentOnlyEmbeddings, relevantCollectionIdsAndScores } = await getSuggestedCollections(
+		thoughtRecord,
+		meanCollectionScores,
+		supabase,
+	);
+
+	console.log("Relevant collection ids and scores", relevantCollectionIdsAndScores);
+
+	const finalCollectionIdsToSuggest = new Set<string>(
+		relevantCollectionIdsAndScores.map(collection => collection.collection_id),
+	);
+
+	collectionIntentEmbeddings.forEach(collection => {
+		if (collection.intent_embedding) {
+			const similarity = cosineSimilarity(intentOnlyEmbeddings[0]!, JSON.parse(collection.intent_embedding) as number[]);
+			if (similarity > 0.4) {
+				finalCollectionIdsToSuggest.add(collection.id);
+			}
+		}
+	});
+
+	console.log("Final collection suggestions", finalCollectionIdsToSuggest);
+
 	handleSupabaseError(
-		await supabase.from("thoughts").update({ collection_suggestions: collectionIdsToSuggest }).eq("id", thoughtRecord.id),
+		await supabase
+			.from("thoughts")
+			.update({ collection_suggestions: Array.from(finalCollectionIdsToSuggest) })
+			.eq("id", thoughtRecord.id),
 	);
 };
 
-export const intentSummaryEmbeddingPipeline = async (thoughtRecord: ThoughtRecord, supabase: SupabaseClient<Database>) => {
+export const intentSummaryEmbeddingPipeline = async (
+	thoughtRecord: ThoughtRecord,
+	editDistance: number,
+	supabase: SupabaseClient<Database>,
+	force?: boolean,
+) => {
 	if (!thoughtRecord.content_md) {
 		return;
 	}
@@ -265,7 +476,7 @@ export const intentSummaryEmbeddingPipeline = async (thoughtRecord: ThoughtRecor
 	await addSignal(ThoughtSignals.EMBEDDING_UPDATE, thoughtRecord.id, supabase);
 
 	try {
-		await generateIntentSummaryAndEmbedding(thoughtRecord, supabase);
+		await generateIntentSummaryAndEmbedding(thoughtRecord, editDistance, supabase, force);
 
 		const newThoughtRecord = handleSupabaseError(
 			await supabase.from("thoughts").select("*").eq("id", thoughtRecord.id).single(),

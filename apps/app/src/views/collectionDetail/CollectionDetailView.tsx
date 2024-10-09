@@ -20,6 +20,24 @@ import { useSave } from "src/utils/useSave";
 import { NewNote } from "../navigation/NewNote";
 import { CollectionSummaryCard } from "./CollectionSummaryCard";
 
+export const useCollectionListener = (collectionId: string) => {
+	useEffect(() => {
+		const channel = supabase
+			.channel("collection-detail")
+			.on(
+				"postgres_changes",
+				{ event: "*", schema: "public", table: "collections", filter: `id=eq.${collectionId}` },
+				() => {
+					queryClient.invalidateQueries({ queryKey: collectionQueryKeys.collectionDetail(collectionId) });
+				},
+			);
+
+		return () => {
+			supabase.removeChannel(channel);
+		};
+	}, [collectionId]);
+};
+
 export const useCollection = (collectionId?: string) => {
 	return useQuery({
 		queryKey: collectionQueryKeys.collectionDetail(collectionId ?? ""),
@@ -121,6 +139,36 @@ const useEditCollection = (collectionId: string) => {
 	});
 };
 
+const useToggleAutoCollection = (collectionId: string) => {
+	const workspace = useWorkspace();
+
+	return useMutation({
+		mutationFn: async (isAuto: boolean) => {
+			if (!collectionId) {
+				throw new Error("Collection ID is required");
+			}
+			const { data, error } = await supabase
+				.from("collections")
+				.update({ is_auto: isAuto })
+				.eq("id", collectionId)
+				.single();
+
+			if (error) {
+				throw error;
+			}
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: collectionQueryKeys.collectionDetail(collectionId),
+			});
+			queryClient.invalidateQueries({
+				queryKey: collectionQueryKeys.workspaceCollections(workspace.id),
+			});
+		},
+	});
+};
+
 export const CollectionDetailView = () => {
 	const { collectionId } = useParams<{ collectionId: string }>();
 
@@ -128,11 +176,14 @@ export const CollectionDetailView = () => {
 		throw new Error("Collection ID is required");
 	}
 
+	useCollectionListener(collectionId);
 	const { data: collection, isLoading: isCollectionLoading } = useCollection(collectionId);
 	const { data: thoughts, isLoading: areThoughtsLoading } = useCollectionThoughts(collectionId);
 
 	const { mutate: editCollection } = useEditCollection(collectionId);
 	const { onChange: onTitleChange } = useSave(editCollection);
+
+	const { mutate: toggleAutoCollection } = useToggleAutoCollection(collectionId);
 
 	const [title, setTitle] = useState<string | null>(null);
 
@@ -145,6 +196,10 @@ export const CollectionDetailView = () => {
 	const handleTitleChange = (newTitle: string) => {
 		setTitle(newTitle);
 		onTitleChange({ title: newTitle });
+	};
+
+	const handleAutoCollectionToggle = (checked: boolean) => {
+		toggleAutoCollection(checked);
 	};
 
 	return (
@@ -178,11 +233,11 @@ export const CollectionDetailView = () => {
 						<div>
 							<NewNote collectionId={collectionId} />
 						</div>
-						{/* <div className="flex flex-row items-center gap-1 rounded border border-border px-2 py-1.5">
+						<div className="flex flex-row items-center gap-1 rounded border border-border px-2 py-1.5">
 							<SparklesIcon className="size-4 text-accent" />
 							<span className="text-sm text-secondary">Automatically add notes to this collection</span>
-							<Switch checked onChange={() => {}} />
-						</div> */}
+							<Switch checked={collection.is_auto} onCheckedChange={handleAutoCollectionToggle} />
+						</div>
 					</div>
 					<ThoughtList thoughts={thoughts ?? []} />
 				</div>

@@ -7,6 +7,7 @@ import { apiClient } from "src/api/client";
 import { collectionQueryKeys } from "src/api/queryKeys";
 import { Button } from "src/components/Button";
 import { cn } from "src/utils";
+import { useDebug } from "src/utils/debug";
 
 interface CollectionSummaryCardProps {
 	summary: CollectionSummary | null;
@@ -35,6 +36,8 @@ export const CollectionSummaryCard: React.FC<CollectionSummaryCardProps> = ({
 	collectionId,
 	canGenerateSummary,
 }) => {
+	const debug = useDebug();
+
 	const [isExpanded, setIsExpanded] = useState(false);
 	const { mutate: refreshSummary, isPending } = useRefreshSummary(collectionId);
 
@@ -94,6 +97,7 @@ export const CollectionSummaryCard: React.FC<CollectionSummaryCardProps> = ({
 						))}
 					</ul>
 				</div>
+				{debug && <div>{summary.intent}</div>}
 			</div>
 			<div className="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
 				<Button

@@ -65,3 +65,7 @@ export interface ApplyChangePostRequestBody {
     thoughtId: string;
     suggestionContent: string;
 }
+
+export interface CollectionSummaryPostRequestBody {
+    collectionId: string;
+}
