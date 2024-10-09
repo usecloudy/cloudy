@@ -233,11 +233,11 @@ export const CollectionDetailView = () => {
 						<div>
 							<NewNote collectionId={collectionId} />
 						</div>
-						<div className="flex flex-row items-center gap-1 rounded border border-border px-2 py-1.5">
+						{/* <div className="flex flex-row items-center gap-1 rounded border border-border px-2 py-1.5">
 							<SparklesIcon className="size-4 text-accent" />
 							<span className="text-sm text-secondary">Automatically add notes to this collection</span>
 							<Switch checked={collection.is_auto} onCheckedChange={handleAutoCollectionToggle} />
-						</div>
+						</div> */}
 					</div>
 					<ThoughtList thoughts={thoughts ?? []} />
 				</div>
