@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { mapRelationshipsForThought } from "app/api/ai/update-thought/embed/embedThought";
 import { getSupabase } from "app/api/utils/supabase";
+import { addSignal } from "app/api/utils/thoughts";
 
 export const maxDuration = 300;
 
@@ -14,7 +15,7 @@ export const POST = async (req: NextRequest) => {
 		await supabase
 			.from("thoughts")
 			.select(
-				"id, thought_summary_embeddings(created_at), content_md, generated_summary, generated_intents, incoming_relations:thought_relations!matches(created_at), outgoing_relations:thought_relations!matched_by(created_at)",
+				"id, thought_summary_embeddings(created_at), content_md, generated_summary, generated_intents, incoming_relations:thought_relations!matches(created_at), signals, outgoing_relations:thought_relations!matched_by(created_at)",
 			),
 	);
 
@@ -26,7 +27,9 @@ export const POST = async (req: NextRequest) => {
 				t.generated_summary &&
 				t.generated_intents.length > 0 &&
 				t.content_md.length > 36 &&
-				(t.incoming_relations.length === 0 || t.outgoing_relations.length === 0),
+				(t.incoming_relations.length === 0 || t.outgoing_relations.length === 0) &&
+				t.signals &&
+				!(t.signals as string[]).includes("thought_summary_relationships_migrated"),
 		)
 		.map(t => t.id);
 	const thoughtRecords = handleSupabaseError(await supabase.from("thoughts").select("*").in("id", thoughtIds));
@@ -38,6 +41,7 @@ export const POST = async (req: NextRequest) => {
 		thoughtRecords.map(async t => {
 			try {
 				await mapRelationshipsForThought(t, supabase);
+				await addSignal("thought_summary_relationships_migrated", t.id, supabase);
 				success++;
 			} catch (e) {
 				console.log("Error generating relationships for thought", t.id, e);
