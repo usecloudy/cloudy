@@ -11,6 +11,7 @@ import LoadingSpinner from "src/components/LoadingSpinner";
 import { useWorkspace, useWorkspaceSlug, useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
+import { useBreakpoint } from "src/utils/tailwind";
 import { makeThoughtUrl } from "src/utils/thought";
 
 import { useSearchBarStore } from "./searchBarStore";
@@ -52,6 +53,7 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
 	const [query, setQuery] = useState("");
 	const navigate = useNavigate();
 	const wsSlug = useWorkspaceStore(({ workspace }) => workspace?.slug);
+	const isMdBreakpoint = useBreakpoint("md");
 
 	const listRef = useRef<Array<HTMLElement | null>>([]);
 	const listContainerRef = useRef<HTMLDivElement>(null);
@@ -163,7 +165,10 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
 					handleClose();
 				}
 			}}>
-			<DialogContent className="overflow-hidden p-0" position="top" offset="33%">
+			<DialogContent
+				className="max-w-[calc(100vw-2rem)] overflow-hidden p-0"
+				position="top"
+				offset={isMdBreakpoint ? "33%" : "8%"}>
 				<div className="relative flex w-full flex-col items-center">
 					<div className="relative flex w-full items-center">
 						<div className="absolute left-3 top-0 flex h-full items-center">
