@@ -5,7 +5,8 @@ import {
 	ChevronsRightIcon,
 	CircleFadingArrowUp,
 	FilePlusIcon,
-	HomeIcon
+	HomeIcon,
+	SearchIcon,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -20,6 +21,7 @@ import { useBreakpoint } from "src/utils/tailwind";
 import { useCreateThought } from "src/utils/thought";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
+import { useSearchBarStore } from "../search/searchBarStore";
 import { Collections } from "./Collections";
 import { LatestThoughts } from "./LatestThoughts";
 import { NewNote } from "./NewNote";
@@ -36,6 +38,7 @@ export const SidebarView = () => {
 
 	const userRecord = useUserRecord();
 	const workspace = useWorkspaceStore(s => s.workspace);
+	const { setIsOpen: setIsSearchBarOpen } = useSearchBarStore();
 
 	const { data } = useCustomerStatus();
 	const customerStatus = data?.customerStatus;
@@ -78,6 +81,16 @@ export const SidebarView = () => {
 									</Button>
 								</TooltipTrigger>
 								<TooltipContent>New note</TooltipContent>
+							</Tooltip>
+						)}
+						{workspace && (
+							<Tooltip>
+								<TooltipTrigger>
+									<Button onClick={() => setIsSearchBarOpen(true)} variant="ghost" size="icon">
+										<SearchIcon className="size-5" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>Search for notes</TooltipContent>
 							</Tooltip>
 						)}
 					</div>
@@ -134,12 +147,13 @@ export const SidebarView = () => {
 							</div>
 						)}
 						<div className="no-scrollbar mt-4 flex flex-1 flex-col gap-4 overflow-y-auto px-4">
-							{/* <Button
+							<Button
 								variant="secondary"
-								className="w-full justify-start border border-border text-sm font-medium text-secondary hover:bg-card/50 hover:text-secondary">
+								className="w-full justify-start border border-border text-sm font-medium text-secondary hover:bg-card/50 hover:text-secondary"
+								onClick={() => setIsSearchBarOpen(true)}>
 								<SearchIcon className="size-4" />
-								<span>Search or ask</span>
-							</Button> */}
+								<span>Search for notes</span>
+							</Button>
 							<LatestThoughts />
 							<Collections />
 							<div className="h-4" />

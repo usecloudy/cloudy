@@ -1,10 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { FileIcon, MessageCircleWarningIcon } from "lucide-react";
-import { useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 
-import { queryClient } from "src/api/queryClient";
 import { thoughtQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
@@ -14,7 +12,6 @@ import { useWorkspace, useWorkspaceSlug } from "src/stores/workspace";
 import { makeHeadTitle } from "src/utils/strings";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
-import { SearchBar } from "./SearchBar";
 import { ThoughtsEmptyState } from "./ThoughtsEmptyState";
 
 const useThoughts = () => {
@@ -68,7 +65,6 @@ export const HomeView = () => {
 							<FileIcon className="size-4 text-secondary" />
 							<h3 className="whitespace-nowrap font-semibold text-secondary">Notes</h3>
 						</div>
-						<SearchBar />
 					</div>
 					{!customerStatus?.customerStatus?.isActive && (
 						<div className="flex w-full flex-row items-center gap-2 rounded-md border border-red-400 p-4 text-red-600">

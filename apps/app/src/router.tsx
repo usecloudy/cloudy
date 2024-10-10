@@ -21,6 +21,7 @@ import { Navbar } from "./views/navigation/Navbar";
 import { SidebarView } from "./views/navigation/SidebarView";
 import { NotFoundView } from "./views/notFound/NotFoundView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
+import { SearchBarControl } from "./views/search/SearchBar";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
 import { WorkspacelessThoughtRedirectView } from "./views/thoughtDetail/WorkspacelessThoughtRedirectView";
 import { NewWorkspaceView } from "./views/workspaces/NewWorkspaceView";
@@ -55,6 +56,7 @@ const ProtectedLayout: FC = () => {
 				</main>
 			</div>
 			<MobileTabBar />
+			<SearchBarControl />
 			<PaymentSuccessDialog />
 		</div>
 	);
