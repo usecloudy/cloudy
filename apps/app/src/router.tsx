@@ -24,9 +24,11 @@ import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { SearchBarControl } from "./views/search/SearchBar";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
 import { WorkspacelessThoughtRedirectView } from "./views/thoughtDetail/WorkspacelessThoughtRedirectView";
+import { InitialCollectionsView } from "./views/workspaces/InitialCollectionsView";
 import { NewWorkspaceView } from "./views/workspaces/NewWorkspaceView";
 import { WorkspaceLayout } from "./views/workspaces/WorkspaceLayout";
 import { WorkspaceSettingsView } from "./views/workspaces/WorkspaceSettingsView";
+import { WorkspaceWebsiteOnboardingView } from "./views/workspaces/WorkspaceWebsiteOnboardingView";
 
 const ProtectedLayout: FC = () => {
 	useDebugQuery();
@@ -48,6 +50,14 @@ const ProtectedLayout: FC = () => {
 
 	return (
 		<div className="flex h-dvh w-screen flex-col">
+			<Outlet />
+		</div>
+	);
+};
+
+const SidebarLayout: FC = () => {
+	return (
+		<>
 			<Navbar />
 			<div className="flex flex-1 flex-row overflow-hidden">
 				<SidebarView />
@@ -58,7 +68,7 @@ const ProtectedLayout: FC = () => {
 			<MobileTabBar />
 			<SearchBarControl />
 			<PaymentSuccessDialog />
-		</div>
+		</>
 	);
 };
 
@@ -73,21 +83,26 @@ export const Router: FC = () => {
 					<Route path="/auth/forgot-password" element={<ForgotPassword />} />
 				</Route>
 				<Route element={<ProtectedLayout />}>
-					<Route path="/" element={<RedirectToDefaultOrg />} />
-					<Route path="/404" element={<NotFoundView />} />
-					<Route path="/workspaces/new" element={<NewWorkspaceView />} />
-					<Route path="/workspaces/new/setup" element={<NewWorkspaceView setup />} />
-					<Route path="/thoughts/:thoughtId" element={<WorkspacelessThoughtRedirectView />} />
-					<Route path="/workspaces/:wsSlug" element={<WorkspaceLayout />}>
-						<Route path="/workspaces/:wsSlug" element={<HomeView />} />
-						<Route path="/workspaces/:wsSlug/settings" element={<WorkspaceSettingsView />} />
-						<Route path="/workspaces/:wsSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
-						<Route path="/workspaces/:wsSlug/collections/:collectionId" element={<CollectionDetailView />} />
+					<Route element={<SidebarLayout />}>
+						<Route path="/" element={<RedirectToDefaultOrg />} />
+						<Route path="/404" element={<NotFoundView />} />
+						<Route path="/thoughts/:thoughtId" element={<WorkspacelessThoughtRedirectView />} />
+						<Route path="/workspaces/:wsSlug" element={<WorkspaceLayout />}>
+							<Route path="/workspaces/:wsSlug" element={<HomeView />} />
+							<Route path="/workspaces/:wsSlug/settings" element={<WorkspaceSettingsView />} />
+							<Route path="/workspaces/:wsSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
+							<Route path="/workspaces/:wsSlug/collections/:collectionId" element={<CollectionDetailView />} />
+						</Route>
+						<Route path="/auth/password-reset" element={<PasswordResetView />} />
+						<Route path="/auth/invite-accept" element={<InviteAcceptView />} />
+						<Route path="/auth/complete-account-setup" element={<PendingAccountSetupView />} />
+						<Route path="/signout" element={<SignOutView />} />
 					</Route>
-					<Route path="/auth/password-reset" element={<PasswordResetView />} />
-					<Route path="/auth/invite-accept" element={<InviteAcceptView />} />
-					<Route path="/auth/complete-account-setup" element={<PendingAccountSetupView />} />
-					<Route path="/signout" element={<SignOutView />} />
+					<Route path="/onboarding/workspaces/new" element={<NewWorkspaceView />} />
+					<Route path="/onboarding/workspaces/new/website-onboarding" element={<WorkspaceWebsiteOnboardingView />} />
+					<Route path="/onboarding/workspaces/:wsSlug" element={<WorkspaceLayout />}>
+						<Route path="/onboarding/workspaces/:wsSlug/initial-collections" element={<InitialCollectionsView />} />
+					</Route>
 				</Route>
 			</Routes>
 		</BrowserRouter>

@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+	*:focus {
+		outline: none !important;
+	}
+
 	:root {
 		--color-primary: 11 11 11;
 		--color-secondary: 116 113 111;

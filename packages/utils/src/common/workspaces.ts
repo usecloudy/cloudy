@@ -49,3 +49,5 @@ export const createNonConflictingSlug = async (
             : 1;
     return `${slugBase}-${nextNumber}`;
 };
+
+export type OnboardingStatus = "initial-collections" | "done";

@@ -53,7 +53,7 @@ export const RedirectToDefaultOrg = () => {
 	}
 
 	if (!wsSlug || validSlugs.size === 0) {
-		return <Navigate to={`/workspaces/new/setup`} />;
+		return <Navigate to={`/onboarding/workspaces/new/website-onboarding`} />;
 	}
 
 	return <Navigate to={`/workspaces/${wsSlug}`} />;

@@ -1,7 +1,7 @@
 import { WorkspaceRole, handleSupabaseError } from "@cloudy/utils/common";
 import { useEffect } from "react";
 import { Navigate, Outlet, useNavigate, useParams } from "react-router-dom";
-import { useAsync } from "react-use";
+import { useAsync, useLocation } from "react-use";
 
 import { supabase } from "src/clients/supabase";
 import { useUser, useUserOptions } from "src/stores/user";
@@ -38,13 +38,13 @@ const useWorkspaceSlug = (wsSlug: string) => {
 		}
 	}, [wsSlug, user.id]);
 
-	return Boolean(workspace && role);
+	return { isReady: Boolean(workspace && role), workspace, role };
 };
 
 export const WorkspaceLayout = () => {
 	const { wsSlug } = useParams();
 	const userOptions = useUserOptions();
-	const isReady = useWorkspaceSlug(wsSlug!);
+	const { isReady } = useWorkspaceSlug(wsSlug!);
 
 	useEffect(() => {
 		if (wsSlug && wsSlug !== "undefined") {

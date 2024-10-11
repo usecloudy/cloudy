@@ -38,6 +38,7 @@ export const POST = async (req: NextRequest) => {
 				name,
 				slug,
 				stripe_customer_id: customer.id,
+				onboarding_status: "initial-collections",
 			})
 			.select()
 			.single(),

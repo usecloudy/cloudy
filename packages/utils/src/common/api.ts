@@ -69,3 +69,7 @@ export interface ApplyChangePostRequestBody {
 export interface CollectionSummaryPostRequestBody {
     collectionId: string;
 }
+export interface ScrapeSiteGetResponse {
+    name: string | null;
+    welcomeMessage: string | null;
+}

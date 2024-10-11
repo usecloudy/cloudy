@@ -91,7 +91,7 @@ const WorkspaceList = () => {
 					</DropdownItem>
 				</Link>
 			))}
-			<Link to="/workspaces/new">
+			<Link to="/onboarding/workspaces/new/website-onboarding">
 				<DropdownItem>
 					<PlusIcon className="size-4" />
 					<span className="text-sm">Create new workspace</span>

@@ -1546,6 +1546,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          onboarding_status: string
           slug: string
           stripe_customer_id: string | null
         }
@@ -1553,6 +1554,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          onboarding_status?: string
           slug?: string
           stripe_customer_id?: string | null
         }
@@ -1560,6 +1562,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          onboarding_status?: string
           slug?: string
           stripe_customer_id?: string | null
         }
