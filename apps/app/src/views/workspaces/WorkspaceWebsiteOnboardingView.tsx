@@ -21,6 +21,8 @@ type FormData = {
 	websiteUrl: string;
 	name: string;
 	slug: string;
+	missionBlurb: string | null;
+	collectionNames: string[];
 };
 
 const useScrapeSite = () => {
@@ -70,9 +72,13 @@ export const WorkspaceWebsiteOnboardingView = () => {
 		if (status === "initial") {
 			setIsScraping(true);
 			try {
-				const { name, welcomeMessage } = await scrapeSiteMutation.mutateAsync({ websiteUrl: data.websiteUrl });
+				const { name, welcomeMessage, missionBlurb, collectionNames } = await scrapeSiteMutation.mutateAsync({
+					websiteUrl: data.websiteUrl,
+				});
 				setValue("name", name!);
 				setValue("slug", name!.toLowerCase().replace(/[^a-z0-9-]/g, "-"));
+				setValue("missionBlurb", missionBlurb);
+				setValue("collectionNames", collectionNames);
 				setWelcomeMessage(welcomeMessage);
 				setStatus("ready");
 			} catch (error) {
@@ -82,8 +88,14 @@ export const WorkspaceWebsiteOnboardingView = () => {
 				setIsScraping(false);
 			}
 		} else {
-			await createWorkspaceMutation.mutateAsync({ name: data.name, slug: data.slug });
-			navigate(`/onboarding/workspaces/${data.slug}/initial-collections`);
+			await createWorkspaceMutation.mutateAsync({
+				name: data.name,
+				slug: data.slug,
+				missionBlurb: data.missionBlurb,
+			});
+			const urlParams = new URLSearchParams();
+			urlParams.set("initialCollections", JSON.stringify(data.collectionNames));
+			navigate(`/onboarding/workspaces/${data.slug}/initial-collections?${urlParams.toString()}`);
 		}
 	};
 
@@ -101,6 +113,8 @@ export const WorkspaceWebsiteOnboardingView = () => {
 		setValue("websiteUrl", "");
 		setValue("name", "");
 		setValue("slug", "");
+		setValue("missionBlurb", null);
+		setValue("collectionNames", []);
 		setIsSlugAvailable(null);
 	};
 

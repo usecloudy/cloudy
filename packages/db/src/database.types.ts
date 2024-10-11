@@ -1281,7 +1281,7 @@ export type Database = {
           title_ts: string
           updated_at: string
           user_intent: string | null
-          workspace_id: string | null
+          workspace_id: string
         }
         Insert: {
           author_id?: string
@@ -1306,7 +1306,7 @@ export type Database = {
           title_ts?: string
           updated_at?: string
           user_intent?: string | null
-          workspace_id?: string | null
+          workspace_id: string
         }
         Update: {
           author_id?: string
@@ -1331,7 +1331,7 @@ export type Database = {
           title_ts?: string
           updated_at?: string
           user_intent?: string | null
-          workspace_id?: string | null
+          workspace_id?: string
         }
         Relationships: [
           {
@@ -1498,6 +1498,29 @@ export type Database = {
             columns: ["id"]
             isOneToOne: true
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_memories: {
+        Row: {
+          mission_blurb: string | null
+          workspace_id: string
+        }
+        Insert: {
+          mission_blurb?: string | null
+          workspace_id: string
+        }
+        Update: {
+          mission_blurb?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_memories_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]

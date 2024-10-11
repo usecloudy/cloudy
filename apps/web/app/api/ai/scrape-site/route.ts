@@ -69,10 +69,17 @@ async function getAIResponse(content: string) {
 			companyMission: z.string(),
 			companyIndustry: z.string(),
 			companySummary: z.string(),
+			companyStage: z.string().describe("The stage of the company, for example 'Series A' or 'Pre-seed'"),
+			companyMarketType: z.string().describe("The market type of the company, for example 'B2B' or 'B2C'"),
 			companyWelcomeMessage: z
 				.string()
 				.describe(
 					'Formulate a friendly markdown welcome message with the company and its mission, for example "Hey there **Big Enterprise**! Looks like you ... ."',
+				),
+			companyBlurb: z
+				.string()
+				.describe(
+					'A blurb about the company and its mission, your goal is to give a very detailed description of what the company does. This will be used to inform an AI assistant for the company. Describe the company in great detail, start with, for example, "Big Enterprise is a ..."',
 				),
 		}),
 		headers: makeHeliconeHeaders({
@@ -80,20 +87,47 @@ async function getAIResponse(content: string) {
 		}),
 	});
 
-	// 	const textResponse = await generateText({
-	// 		model: heliconeOpenAI("gpt-4o-mini"),
-	// 		prompt: `Given the following company's information, what would be a reasonable set of folders and files they would have in their internal notetaking app, be pretty specific with the folder names.
+	const missionBlurb = response.object.companyBlurb === "UNKNOWN" ? null : response.object.companyBlurb;
+	let collectionNames = ["Ideation", "Meeting Notes", "Product Roadmap", "Hiring", "Onboarding"];
+	if (missionBlurb) {
+		const { object } = await generateObject({
+			model: heliconeOpenAI("gpt-4o-mini"),
+			schema: z.object({
+				collectionNames: z
+					.array(z.string())
+					.describe("A list of 5-7 high-level generic collection names that would be relevant for this company."),
+			}),
+			prompt: `Select 5-7 collection names from the following list of high-level generic collection names that would be relevant for this company. Keep the names high level and generalizable.
 
-	// ${JSON.stringify(response.object)}`,
-	// 		maxTokens: 512,
-	// 		temperature: 0.0,
-	// 	});
+# Collection name bank
+Good examples for collection names include
+- Sales: For b2b companies
+- Customer Interviews: For early stage b2b companies
+- Content Strategy: For b2c companies
+- Tech Specs: For technical companies
+- Ideation: For creative companies
+- Meeting Notes: For any company
+- Product Roadmap: For tech companies
+- Hiring: For any company
+- Onboarding: For any company
+- ...
 
-	// 	console.log("Text Response:", textResponse.text);
+# Output Format
+
+- Provide generic collection names for the company's notes. Each name should be a generic collection name that would be relevant for this company. See the examples above for inspiration.
+
+\`\`\`${response.object.companyStage} ${response.object.companyMarketType}\n
+${missionBlurb}
+\`\`\``,
+		});
+		collectionNames = object.collectionNames;
+	}
 
 	return {
 		name: response.object.companyName === "UNKNOWN" ? null : response.object.companyName,
 		welcomeMessage: response.object.companyWelcomeMessage === "UNKNOWN" ? null : response.object.companyWelcomeMessage,
+		missionBlurb,
+		collectionNames,
 	};
 }
 

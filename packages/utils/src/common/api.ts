@@ -72,4 +72,6 @@ export interface CollectionSummaryPostRequestBody {
 export interface ScrapeSiteGetResponse {
     name: string | null;
     welcomeMessage: string | null;
+    missionBlurb: string | null;
+    collectionNames: string[];
 }

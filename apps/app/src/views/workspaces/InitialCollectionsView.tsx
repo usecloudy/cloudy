@@ -2,7 +2,7 @@ import { handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { PlusIcon, XIcon } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { queryClient } from "src/api/queryClient";
 import { collectionQueryKeys } from "src/api/queryKeys";
@@ -16,7 +16,7 @@ type FormData = {
 	collections: { name: string }[];
 };
 
-const defaultCollections = [{ name: "Ideation" }, { name: "Tech Specs" }, { name: "Interviews" }];
+const defaultCollections = ["Ideation", "Tech Specs", "Interviews"];
 
 const useCreateCollections = () => {
 	const workspace = useWorkspace();
@@ -48,12 +48,17 @@ const useSkipOnboarding = () => {
 };
 
 export const InitialCollectionsView = () => {
+	const [searchParams] = useSearchParams();
+	const initialCollections = searchParams.get("initialCollections")
+		? JSON.parse(searchParams.get("initialCollections")!)
+		: defaultCollections;
+
 	const navigate = useNavigate();
 	const workspace = useWorkspace();
 
 	const { control, handleSubmit, register } = useForm<FormData>({
 		defaultValues: {
-			collections: defaultCollections,
+			collections: initialCollections.map((name: string) => ({ name })),
 		},
 	});
 

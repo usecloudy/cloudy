@@ -4,6 +4,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { generateText } from "ai";
 
 import { heliconeOpenAI } from "./helicone";
+import { getWorkspaceMemoryPromptDump } from "./memory";
 import { getRelatedThoughts } from "./relatedChunks";
 
 export const checkForSignal = async (signal: string, thoughtId: string, supabase: SupabaseClient) => {
@@ -103,9 +104,11 @@ ${relatedThoughts.map(thought => thoughtToPrompt(thought)).join("\n")}
 
 export const getContextForThought = async (
 	thoughtId: string,
+	workspaceId: string,
 	supabase: SupabaseClient<Database>,
 	headers: Record<string, string>,
 ) => {
+	const workspaceMemoryText = await getWorkspaceMemoryPromptDump(workspaceId, supabase);
 	const linkedThoughtsText = await getLinkedThoughtsPromptDump(thoughtId, supabase);
 	const relatedThoughtsText = await getRelatedThoughtsPromptDump(thoughtId, supabase);
 
@@ -113,7 +116,7 @@ export const getContextForThought = async (
 		return condenseContext(linkedThoughtsText, relatedThoughtsText, headers);
 	}
 
-	return linkedThoughtsText + relatedThoughtsText;
+	return workspaceMemoryText + linkedThoughtsText + relatedThoughtsText;
 };
 
 const condenseContext = async (linkedThoughtsText: string, relatedThoughtsText: string, headers: Record<string, string>) => {

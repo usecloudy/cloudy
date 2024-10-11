@@ -68,7 +68,7 @@ export const respondToComment = async (threadId: string, supabase: SupabaseClien
 	};
 
 	const messages = makeCommentRespondPrompts({
-		contextText: await getContextForThought(thought.id, supabase, {
+		contextText: await getContextForThought(thought.id, thought.workspace_id, supabase, {
 			...sharedHeliconeHeaders,
 			"Helicone-Session-Path": "thought-thread-respond/context-condense",
 		}),

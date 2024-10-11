@@ -58,7 +58,7 @@ export const suggestTitle = async (thoughtRecord: ThoughtRecord, supabase: Supab
 		};
 
 		const messages = makeTitleSuggestionPrompts({
-			contextText: await getContextForThought(thoughtRecord.id, supabase, {
+			contextText: await getContextForThought(thoughtRecord.id, thoughtRecord.workspace_id, supabase, {
 				...heliconeHeaders,
 				"Helicone-Session-Path": "thought-suggest-title/context",
 			}),

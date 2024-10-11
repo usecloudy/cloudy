@@ -30,6 +30,7 @@ export const ideateThought = async (
 			content_md: contentMd,
 			last_suggestion_content_md: lastContentMd,
 			is_suggestion_paused: isPaused,
+			workspace_id: workspaceId,
 		} = thought;
 
 		if (!options?.force && isPaused) {
@@ -72,7 +73,7 @@ export const ideateThought = async (
 		);
 
 		const { commentsToAdd, commentsToArchive } = await generateComments({
-			contextText: await getContextForThought(thoughtId, supabase, {
+			contextText: await getContextForThought(thoughtId, workspaceId, supabase, {
 				...heliconeHeaders,
 				"Helicone-Session-Path": "thought-ideate/context",
 			}),

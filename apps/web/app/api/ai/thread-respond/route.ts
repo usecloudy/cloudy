@@ -67,8 +67,12 @@ interface Comment {
 }
 
 const respond = async (payload: ThreadRespondPostRequestBody, supabase: SupabaseClient<Database>) => {
-	const { title, content_md: contentMd } = handleSupabaseError(
-		await supabase.from("thoughts").select("title, content_md").eq("id", payload.thoughtId).single(),
+	const {
+		title,
+		content_md: contentMd,
+		workspace_id: workspaceId,
+	} = handleSupabaseError(
+		await supabase.from("thoughts").select("title, content_md, workspace_id").eq("id", payload.thoughtId).single(),
 	);
 
 	if (!contentMd) {
@@ -126,7 +130,7 @@ const respond = async (payload: ThreadRespondPostRequestBody, supabase: Supabase
 			contentMd.slice(0, selectionStart) + `[[[${comment.related_chunks![0]!}]]]` + contentMd.slice(selectionEnd);
 	}
 
-	const contextText = await getContextForThought(payload.thoughtId, supabase, {
+	const contextText = await getContextForThought(payload.thoughtId, workspaceId, supabase, {
 		...heliconeHeaders,
 		"Helicone-Session-Path": "respond-to-selection/context",
 	});

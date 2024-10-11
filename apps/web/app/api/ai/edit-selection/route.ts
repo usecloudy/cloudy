@@ -1,3 +1,4 @@
+import { handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { streamText } from "ai";
@@ -34,12 +35,16 @@ const editSelection = async (payload: Payload, supabase: SupabaseClient<Database
 		throw new Error("User ID not found");
 	}
 
+	const { workspace_id: workspaceId } = handleSupabaseError(
+		await supabase.from("thoughts").select("workspace_id").eq("id", payload.thoughtId).single(),
+	);
+
 	const heliconeHeaders = {
 		"Helicone-User-Id": userId,
 		"Helicone-Session-Name": "Edit Selection",
 		"Helicone-Session-Id": `edit-selection/${randomUUID()}`,
 	};
-	const contextText = await getContextForThought(payload.thoughtId, supabase, {
+	const contextText = await getContextForThought(payload.thoughtId, workspaceId, supabase, {
 		...heliconeHeaders,
 		"Helicone-Session-Path": "edit-selection/context",
 	});
