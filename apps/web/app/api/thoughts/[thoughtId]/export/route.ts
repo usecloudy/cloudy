@@ -1,44 +1,21 @@
 import { ThoughtsExportGetRequestBody, handleSupabaseError } from "@cloudy/utils/common";
-import chromium from "@sparticuz/chromium";
 import { NextRequest } from "next/server";
-// Importing Puppeteer core as default otherwise
-// it won't function correctly with "launch()"
-import puppeteer from "puppeteer-core";
 
+import { loadFont, setupPuppeteer } from "app/api/utils/puppeteer";
 import { getSupabase } from "app/api/utils/supabase";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const maxDuration = 30;
 
-// Optional: If you'd like to use the new headless mode. "shell" is the default.
-// NOTE: Because we build the shell binary, this option does not work.
-//       However, this option will stay so when we migrate to full chromium it will work.
-chromium.setHeadlessMode = true;
-
-// Optional: If you'd like to disable webgl, true is the default.
-chromium.setGraphicsMode = false;
-// You may want to change this if you're developing
-// on a platform different from macOS.
-// See https://github.com/vercel/og-image for a more resilient
-// system-agnostic options for Puppeteeer.
-const LOCAL_CHROME_EXECUTABLE = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-
 export const GET = async (req: NextRequest, { params: { thoughtId } }: { params: { thoughtId: string } }) => {
 	const supabase = getSupabase({ authHeader: "Bearer labu-labu-labubu", mode: "service" });
 
 	const thought = handleSupabaseError(await supabase.from("thoughts").select("title, content").eq("id", thoughtId).single());
 
-	await chromium.font("https://fonts.gstatic.com/s/notosans/v36/o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5ardu3mhPy1Fig.woff2");
+	await loadFont();
 
-	const isProduction = process.env.NODE_ENV === "production";
-	const executablePath = isProduction ? await chromium.executablePath() : LOCAL_CHROME_EXECUTABLE;
-	const browser = await puppeteer.launch({
-		executablePath,
-		defaultViewport: isProduction ? chromium.defaultViewport : undefined,
-		args: isProduction ? chromium.args : [],
-		headless: true,
-	});
+	const browser = await setupPuppeteer();
 	const page = await browser.newPage();
 
 	const searchParams = req.nextUrl.searchParams;

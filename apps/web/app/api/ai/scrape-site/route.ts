@@ -1,15 +1,15 @@
-import { generateObject, generateText } from "ai";
+import { generateObject } from "ai";
 import * as dotenv from "dotenv";
 import { NextRequest, NextResponse } from "next/server";
-import puppeteer from "puppeteer";
 import { z } from "zod";
 
 import { heliconeOpenAI, makeHeliconeHeaders } from "app/api/utils/helicone";
+import { setupPuppeteer } from "app/api/utils/puppeteer";
 
 dotenv.config();
 
 async function scrapeSite(url: string, maxPages = 10): Promise<string> {
-	const browser = await puppeteer.launch();
+	const browser = await setupPuppeteer();
 	const page = await browser.newPage();
 
 	const visited = new Set<string>();

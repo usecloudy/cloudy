@@ -96,7 +96,6 @@ export const Router: FC = () => {
 						<Route path="/auth/password-reset" element={<PasswordResetView />} />
 						<Route path="/auth/invite-accept" element={<InviteAcceptView />} />
 						<Route path="/auth/complete-account-setup" element={<PendingAccountSetupView />} />
-						<Route path="/signout" element={<SignOutView />} />
 					</Route>
 					<Route path="/onboarding/workspaces/new" element={<NewWorkspaceView />} />
 					<Route path="/onboarding/workspaces/new/website-onboarding" element={<WorkspaceWebsiteOnboardingView />} />
@@ -104,6 +103,7 @@ export const Router: FC = () => {
 						<Route path="/onboarding/workspaces/:wsSlug/initial-collections" element={<InitialCollectionsView />} />
 					</Route>
 				</Route>
+				<Route path="/signout" element={<SignOutView />} />
 			</Routes>
 		</BrowserRouter>
 	);

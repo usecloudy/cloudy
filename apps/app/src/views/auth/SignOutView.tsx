@@ -1,11 +1,16 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAsync } from "react-use";
 
 import { supabase } from "src/clients/supabase";
 import { SimpleLayout } from "src/components/SimpleLayout";
 
 export const SignOutView = () => {
-	useEffect(() => {
-		supabase.auth.signOut();
+	const navigate = useNavigate();
+
+	useAsync(async () => {
+		await supabase.auth.signOut();
+		navigate("/");
 	}, []);
 
 	return (
