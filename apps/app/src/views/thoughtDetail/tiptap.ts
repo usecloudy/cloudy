@@ -1,5 +1,6 @@
 import { Mark, mergeAttributes } from "@tiptap/core";
 import { Extension, Node } from "@tiptap/core";
+import Link from "@tiptap/extension-link";
 import ListKeymap from "@tiptap/extension-list-keymap";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskItem from "@tiptap/extension-task-item";
@@ -168,6 +169,11 @@ export const tiptapExtensions = [
 	}),
 	ResizableImageExtension,
 	PendingAttachmentNode,
+	Link.configure({
+		autolink: true,
+		linkOnPaste: true,
+		protocols: ["http", "https", "mailto"],
+	}),
 ];
 
 export const clearAllEditMarks = (editor: Editor) => {

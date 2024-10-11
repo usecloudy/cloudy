@@ -4,6 +4,7 @@ import {
 	BoldIcon,
 	CodeIcon,
 	ItalicIcon,
+	Link2OffIcon,
 	ListIcon,
 	ListOrderedIcon,
 	SparklesIcon,
@@ -96,6 +97,11 @@ export const EditorBubbleMenu = () => {
 						className={editor.isActive("blockquote") ? "bg-accent/20 text-accent" : ""}>
 						<TextQuoteIcon className="h-4 w-4" />
 					</Button>
+					{editor.isActive("link") && (
+						<Button onClick={() => editor.chain().focus().unsetLink().run()} variant="ghost" size="icon-sm">
+							<Link2OffIcon className="h-4 w-4" />
+						</Button>
+					)}
 				</div>
 			</BubbleMenu>
 		</div>

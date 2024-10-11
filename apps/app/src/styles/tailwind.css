@@ -247,6 +247,10 @@
 	@apply cursor-pointer rounded-sm bg-accent/10 px-1 text-accent hover:bg-accent/20 hover:underline active:bg-accent/10;
 }
 
+.tiptap a {
+	@apply underline text-accent hover:opacity-70 cursor-pointer active:opacity-50;
+}
+
 .tiptap .collaboration-cursor__caret {
 	border-left: 1px solid #0d0d0d;
 	border-right: 1px solid #0d0d0d;
