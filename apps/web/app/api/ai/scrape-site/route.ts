@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { heliconeOpenAI, makeHeliconeHeaders } from "app/api/utils/helicone";
 import { setupPuppeteer } from "app/api/utils/puppeteer";
+import { getSupabase } from "app/api/utils/supabase";
 
 dotenv.config();
 
@@ -132,6 +133,7 @@ ${missionBlurb}
 }
 
 export async function GET(req: NextRequest) {
+	getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 	const url = req.nextUrl.searchParams.get("url");
 
 	if (!url) {
