@@ -166,7 +166,7 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
 				}
 			}}>
 			<DialogContent
-				className="max-w-[calc(100vw-2rem)] overflow-hidden p-0"
+				className="max-w-[calc(100vw-2rem)] overflow-hidden p-0 md:max-w-lg"
 				position="top"
 				offset={isMdBreakpoint ? "33%" : "8%"}>
 				<div className="relative flex w-full flex-col items-center">
