@@ -1,0 +1,1 @@
+alter table "public"."workspaces" add column "onboarding_status" text not null default 'done'::text;
