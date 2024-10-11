@@ -13,6 +13,7 @@ import { Button } from "src/components/Button";
 import { Input } from "src/components/Input";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { MainLayout } from "src/components/MainLayout";
+import { RotatingLoadingMessage } from "src/components/RotatingLoadingMessage";
 
 import { NameAndSlugFields } from "./Fields";
 import { useCreateWorkspace, useUserWorkspaces } from "./hooks";
@@ -33,13 +34,17 @@ const useScrapeSite = () => {
 					url: `https://${data.websiteUrl}`,
 				},
 			});
+
+			if (response.data?.name === null || response.data?.welcomeMessage === null) {
+				throw new Error("Failed to scrape the website. Please check the URL and try again.");
+			}
+
 			return response.data;
 		},
 	});
 };
 
 export const WorkspaceWebsiteOnboardingView = () => {
-	const [isScraping, setIsScraping] = useState(false);
 	const [status, setStatus] = useState<"initial" | "ready">("initial");
 	const [welcomeMessage, setWelcomeMessage] = useState<string | null>(null);
 	const [isSlugAvailable, setIsSlugAvailable] = useState<boolean | null>(null);
@@ -70,7 +75,6 @@ export const WorkspaceWebsiteOnboardingView = () => {
 
 	const onSubmit = async (data: FormData) => {
 		if (status === "initial") {
-			setIsScraping(true);
 			try {
 				const { name, welcomeMessage, missionBlurb, collectionNames } = await scrapeSiteMutation.mutateAsync({
 					websiteUrl: data.websiteUrl,
@@ -82,10 +86,8 @@ export const WorkspaceWebsiteOnboardingView = () => {
 				setWelcomeMessage(welcomeMessage);
 				setStatus("ready");
 			} catch (error) {
-				console.error("Error creating workspace:", error);
-				// Handle error (e.g., show error message to user)
-			} finally {
-				setIsScraping(false);
+				// Error handling is now managed by React Query
+				console.error("Error scraping website:", error);
 			}
 		} else {
 			await createWorkspaceMutation.mutateAsync({
@@ -118,7 +120,7 @@ export const WorkspaceWebsiteOnboardingView = () => {
 		setIsSlugAvailable(null);
 	};
 
-	const isLoading = isScraping || createWorkspaceMutation.isPending;
+	const isLoading = scrapeSiteMutation.isPending || createWorkspaceMutation.isPending;
 
 	return (
 		<MainLayout className="flex h-screen flex-col items-center justify-center">
@@ -164,6 +166,11 @@ export const WorkspaceWebsiteOnboardingView = () => {
 								onPaste={handlePaste}
 							/>
 							{errors.websiteUrl && <p className="mt-1 text-sm text-red-500">{errors.websiteUrl.message}</p>}
+							{scrapeSiteMutation.isError && (
+								<p className="mt-1 text-xs text-red-500">
+									Failed to read from the website. Please check the URL and try again.
+								</p>
+							)}
 						</div>
 					) : (
 						<NameAndSlugFields
@@ -174,16 +181,24 @@ export const WorkspaceWebsiteOnboardingView = () => {
 						/>
 					)}
 					<Button type="submit" disabled={isLoading}>
-						<SparklesIcon className="size-4" />
-						<span>
-							{isLoading ? (
+						{isLoading ? (
+							<>
 								<LoadingSpinner size="xs" variant="background" />
-							) : status === "initial" ? (
-								"Read from website"
-							) : (
-								"Create Workspace"
-							)}
-						</span>
+								<span>
+									<RotatingLoadingMessage />
+								</span>
+							</>
+						) : status === "initial" ? (
+							<>
+								<SparklesIcon className="size-4" />
+								<span>Read from website</span>
+							</>
+						) : (
+							<>
+								<SparklesIcon className="size-4" />
+								<span>Create Workspace</span>
+							</>
+						)}
 					</Button>
 					{status === "ready" && (
 						<Button type="button" variant="secondary" onClick={handleBack}>
