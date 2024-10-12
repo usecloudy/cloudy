@@ -42,7 +42,7 @@ const baseConfig = {
 			fallback: [
 				{
 					source: "/:path*",
-					destination: "https://cloudy-landing-page.webflow.io/:path*",
+					destination: "https://usecloudyai.webflow.io/:path*",
 				},
 			],
 		};
