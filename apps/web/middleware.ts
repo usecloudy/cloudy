@@ -26,15 +26,15 @@ export const middleware = (request: NextRequest) => {
 		return NextResponse.json({}, { headers: preflightHeaders });
 	}
 
-	const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+	// TODO: Revisit this
+	// const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+	// if (request.nextUrl.pathname.startsWith("/app")) {
+	// 	return NextResponse.rewrite(new URL(appUrl + request.nextUrl.pathname + request.nextUrl.search, request.url));
+	// }
 
-	if (request.nextUrl.pathname.startsWith("/app")) {
-		return NextResponse.rewrite(new URL(appUrl + request.nextUrl.pathname + request.nextUrl.search, request.url));
-	}
-
-	if (request.nextUrl.pathname.startsWith("/site.webmanifest")) {
-		return NextResponse.rewrite(new URL(appUrl + "/site.webmanifest", request.url));
-	}
+	// if (request.nextUrl.pathname.startsWith("/site.webmanifest")) {
+	// 	return NextResponse.rewrite(new URL(appUrl + "/site.webmanifest", request.url));
+	// }
 
 	// Handle simple requests
 	const response = NextResponse.next();
