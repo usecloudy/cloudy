@@ -28,6 +28,13 @@ export const generateCollectionSummary = async (collectionId: string, supabase: 
 			.limit(24),
 	).flatMap(n => (n.thoughts ? [n.thoughts] : []));
 
+	const totalCharactersInNotes = notes.reduce((acc, note) => acc + (note.content_md?.length ?? 0), 0);
+
+	if (totalCharactersInNotes < 128) {
+		// Not enough content to summarize
+		return;
+	}
+
 	// Generate summary using AI
 	const { object: summary } = await generateObject({
 		model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18", { structuredOutputs: true }),
