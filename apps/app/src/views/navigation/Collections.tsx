@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDownIcon, ChevronUpIcon, EllipsisIcon, NotebookIcon, PlusIcon, SparklesIcon, TrashIcon } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import { collectionQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
@@ -9,6 +9,7 @@ import { Button } from "src/components/Button";
 import { Dropdown, DropdownItem, DropdownItemButton } from "src/components/Dropdown";
 import { Input } from "src/components/Input";
 import { useWorkspaceStore } from "src/stores/workspace";
+import { cn } from "src/utils";
 import { makeCollectionUrl, useCreateCollection, useDeleteCollection } from "src/utils/collection";
 
 const useCollections = () => {
@@ -44,9 +45,14 @@ export const Collections = () => {
 	const [showAll, setShowAll] = useState(false);
 	const [newCollectionName, setNewCollectionName] = useState("");
 
+	const location = useLocation();
+
 	if (isLoading || !collections) {
 		return null;
 	}
+
+	const isViewingCollection = location.pathname.includes("collections");
+	const collectionId = location.pathname.split("/").pop();
 
 	const displayedCollections = showAll ? collections : collections.slice(0, 6);
 	const hasMore = collections.length > 6;
@@ -101,7 +107,10 @@ export const Collections = () => {
 					{displayedCollections.map(collection => (
 						<li
 							key={collection.id}
-							className="group/collection flex flex-row items-center justify-between gap-1 rounded pr-0.5 hover:bg-card">
+							className={cn(
+								"group/collection flex flex-row items-center justify-between gap-1 rounded pr-0.5 hover:bg-card",
+								isViewingCollection && collection.id === collectionId && "bg-accent/10",
+							)}>
 							<Link
 								to={makeCollectionUrl(workspace.slug, collection.id)}
 								className="flex flex-1 flex-row items-center gap-1 overflow-hidden px-2 py-1">
