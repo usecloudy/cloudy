@@ -1,7 +1,6 @@
-import { Switch } from "@cloudy/ui";
 import { CollectionSummary } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { PlusIcon, SparklesIcon } from "lucide-react";
+import { FolderPlusIcon, PlusIcon } from "lucide-react";
 import { PostHogFeature } from "posthog-js/react";
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
@@ -10,10 +9,14 @@ import { useParams } from "react-router-dom";
 import { queryClient } from "src/api/queryClient";
 import { collectionQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
+import { Breadcrumbs } from "src/components/Breadcrumbs";
 import { Button } from "src/components/Button";
+import { Dropdown, DropdownItemButton } from "src/components/Dropdown";
+import { Input } from "src/components/Input";
 import { MainLayout } from "src/components/MainLayout";
 import { ThoughtList } from "src/components/ThoughtList";
 import { useWorkspace } from "src/stores/workspace";
+import { makeCollectionUrl, useCreateCollection } from "src/utils/collection";
 import { ellipsizeText, makeHeadTitle, pluralize } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
 
@@ -53,6 +56,53 @@ export const useCollection = (collectionId?: string) => {
 			}
 
 			return data;
+		},
+		enabled: !!collectionId,
+	});
+};
+
+export const useCollectionSubCollections = (collectionId: string) => {
+	return useQuery({
+		queryKey: collectionQueryKeys.collectionDetailSubCollections(collectionId),
+		queryFn: async () => {
+			if (!collectionId) {
+				return [];
+			}
+
+			const { data, error } = await supabase
+				.from("collections")
+				.select("*")
+				.eq("parent_collection_id", collectionId)
+				.order("updated_at", { ascending: false });
+
+			if (error) {
+				throw error;
+			}
+
+			return data;
+		},
+		enabled: !!collectionId,
+	});
+};
+
+const useCollectionParents = (collectionId: string) => {
+	return useQuery({
+		queryKey: collectionQueryKeys.collectionDetailParents(collectionId),
+		queryFn: async () => {
+			if (!collectionId) {
+				return [];
+			}
+
+			const { data, error } = await supabase.rpc("get_collection_parents", {
+				collection_id: collectionId,
+			});
+
+			if (error) {
+				throw error;
+			}
+
+			// Reverse the data to have the root parent first
+			return (data as { id: string; title: string }[]).reverse();
 		},
 		enabled: !!collectionId,
 	});
@@ -176,9 +226,15 @@ export const CollectionDetailView = () => {
 		throw new Error("Collection ID is required");
 	}
 
+	const workspace = useWorkspace();
+
+	const createCollectionMutation = useCreateCollection();
+
 	useCollectionListener(collectionId);
 	const { data: collection, isLoading: isCollectionLoading } = useCollection(collectionId);
 	const { data: thoughts, isLoading: areThoughtsLoading } = useCollectionThoughts(collectionId);
+	const { data: subCollections, isLoading: areSubCollectionsLoading } = useCollectionSubCollections(collectionId);
+	const { data: parents, isLoading: areParentsLoading } = useCollectionParents(collectionId);
 
 	const { mutate: editCollection } = useEditCollection(collectionId);
 	const { onChange: onTitleChange } = useSave(editCollection);
@@ -202,13 +258,36 @@ export const CollectionDetailView = () => {
 		toggleAutoCollection(checked);
 	};
 
+	const [newSubCollectionName, setNewSubCollectionName] = useState("");
+
+	const handleCreateSubCollection = () => {
+		if (newSubCollectionName.trim()) {
+			createCollectionMutation.mutate({ title: newSubCollectionName.trim(), parentCollectionId: collectionId });
+			setNewSubCollectionName("");
+		}
+	};
+
+	const isLoading = isCollectionLoading || areThoughtsLoading || areSubCollectionsLoading || areParentsLoading;
+
 	return (
-		<MainLayout isLoading={isCollectionLoading || areThoughtsLoading} className="h-screen overflow-y-scroll">
+		<MainLayout isLoading={isLoading} className="h-screen overflow-y-scroll">
 			<Helmet>
 				<title>{makeHeadTitle(collection?.title ? ellipsizeText(collection.title, 16) : "Untitled Collection")}</title>
 			</Helmet>
 			{collection && (
 				<div className="flex flex-col py-8">
+					{parents && parents.length > 1 && (
+						<div className="mb-4">
+							<Breadcrumbs
+								items={
+									parents?.map(parent => ({
+										label: parent.title || "Untitled Collection",
+										url: makeCollectionUrl(workspace.slug, parent.id),
+									})) ?? []
+								}
+							/>
+						</div>
+					)}
 					<div className="text-sm text-secondary">Collection • {pluralize(thoughts?.length ?? 0, "note")}</div>
 					<input
 						className="mb-4 w-full appearance-none border-none bg-transparent text-3xl font-bold leading-5 outline-none"
@@ -226,20 +305,45 @@ export const CollectionDetailView = () => {
 						/>
 					</PostHogFeature>
 					<div className="my-4 flex flex-row items-center gap-2">
-						{/* <Button variant="outline">
-							<PlusIcon className="size-4" />
-							New sub-collection
-						</Button> */}
+						<Dropdown
+							trigger={
+								<Button variant="outline">
+									<FolderPlusIcon className="size-4" />
+									New sub-collection
+								</Button>
+							}
+							className="w-64"
+							align="start">
+							<div className="p-2">
+								<Input
+									type="text"
+									placeholder="New sub-collection name..."
+									value={newSubCollectionName}
+									onChange={e => setNewSubCollectionName(e.target.value)}
+									className="mb-2"
+									onKeyDown={e => {
+										if (e.key === "Enter") {
+											handleCreateSubCollection();
+										}
+									}}
+									autoFocus
+								/>
+								<DropdownItemButton
+									className="w-full justify-center"
+									variant="default"
+									size="sm"
+									disabled={!newSubCollectionName.trim()}
+									onClick={handleCreateSubCollection}>
+									<PlusIcon className="size-4" />
+									<span>Create Sub-collection</span>
+								</DropdownItemButton>
+							</div>
+						</Dropdown>
 						<div>
 							<NewNote collectionId={collectionId} />
 						</div>
-						{/* <div className="flex flex-row items-center gap-1 rounded border border-border px-2 py-1.5">
-							<SparklesIcon className="size-4 text-accent" />
-							<span className="text-sm text-secondary">Automatically add notes to this collection</span>
-							<Switch checked={collection.is_auto} onCheckedChange={handleAutoCollectionToggle} />
-						</div> */}
 					</div>
-					<ThoughtList thoughts={thoughts ?? []} />
+					<ThoughtList thoughts={thoughts ?? []} collections={subCollections ?? []} />
 				</div>
 			)}
 		</MainLayout>

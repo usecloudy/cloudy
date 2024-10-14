@@ -757,10 +757,11 @@ export type Database = {
           id: string
           intent_embedding: string | null
           is_auto: boolean
+          parent_collection_id: string | null
           summary: Json | null
           summary_updated_at: string | null
           title: string | null
-          updated_at: string | null
+          updated_at: string
           workspace_id: string | null
         }
         Insert: {
@@ -769,10 +770,11 @@ export type Database = {
           id?: string
           intent_embedding?: string | null
           is_auto?: boolean
+          parent_collection_id?: string | null
           summary?: Json | null
           summary_updated_at?: string | null
           title?: string | null
-          updated_at?: string | null
+          updated_at?: string
           workspace_id?: string | null
         }
         Update: {
@@ -781,10 +783,11 @@ export type Database = {
           id?: string
           intent_embedding?: string | null
           is_auto?: boolean
+          parent_collection_id?: string | null
           summary?: Json | null
           summary_updated_at?: string | null
           title?: string | null
-          updated_at?: string | null
+          updated_at?: string
           workspace_id?: string | null
         }
         Relationships: [
@@ -800,6 +803,13 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collections_parent_collection_id_fkey"
+            columns: ["parent_collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
             referencedColumns: ["id"]
           },
         ]
@@ -1632,6 +1642,15 @@ export type Database = {
         Returns: {
           thought_id: string
           similarity_score: number
+        }[]
+      }
+      get_collection_parents: {
+        Args: {
+          collection_id: string
+        }
+        Returns: {
+          id: string
+          title: string
         }[]
       }
       halfvec_avg: {

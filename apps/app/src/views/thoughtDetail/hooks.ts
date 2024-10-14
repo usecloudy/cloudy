@@ -104,7 +104,7 @@ export const useEditThought = (thoughtId?: string) => {
 						...contentMdObj,
 						...contentPlainTextObj,
 					})
-					.select()
+					.select("*, collections:collection_thoughts(collection_id, collection:collections(id))")
 					.single(),
 			);
 
@@ -115,12 +115,20 @@ export const useEditThought = (thoughtId?: string) => {
 			);
 
 			if (payload?.collectionId) {
+				// TODO: make sure this doesn't cause duplicate entries
 				await supabase.from("collection_thoughts").insert({
 					collection_id: payload.collectionId,
 					thought_id: newThought.id,
 					workspace_id: workspace.id,
 				});
 			}
+
+			await supabase
+				.from("collections")
+				.update({
+					updated_at: new Date().toISOString(),
+				})
+				.in("id", newThought.collections.map(collection => collection.collection?.id).filter(Boolean));
 
 			posthog.capture("edit_thought", {
 				thoughtId,

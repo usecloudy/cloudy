@@ -62,21 +62,42 @@ const dropdownItemVariants = cva(
 	{
 		variants: {
 			variant: {
-				default: "focus:bg-card",
-				ghost: "hover:bg-accent focus:bg-accent focus:text-background",
+				default: "",
+				ghost: "focus:bg-accent focus:text-background",
+			},
+			disableHover: {
+				true: "",
+				false: "",
 			},
 		},
+		compoundVariants: [
+			{
+				variant: "default",
+				disableHover: false,
+				className: "focus:bg-card",
+			},
+			{
+				variant: "ghost",
+				disableHover: false,
+				className: "hover:bg-accent",
+			},
+		],
 		defaultVariants: {
 			variant: "default",
+			disableHover: false,
 		},
 	},
 );
 
-export interface DropdownItemProps extends DropdownMenu.DropdownMenuItemProps, VariantProps<typeof dropdownItemVariants> {}
+export interface DropdownItemProps extends DropdownMenu.DropdownMenuItemProps, VariantProps<typeof dropdownItemVariants> {
+	disableHover?: boolean;
+}
 
-export const DropdownItem = React.forwardRef<HTMLDivElement, DropdownItemProps>(({ className, variant, ...props }, ref) => (
-	<DropdownMenu.Item ref={ref} className={cn(dropdownItemVariants({ variant, className }))} {...props} />
-));
+export const DropdownItem = React.forwardRef<HTMLDivElement, DropdownItemProps>(
+	({ className, variant, disableHover, ...props }, ref) => (
+		<DropdownMenu.Item ref={ref} className={cn(dropdownItemVariants({ variant, disableHover }), className)} {...props} />
+	),
+);
 
 DropdownItem.displayName = "DropdownItem";
 

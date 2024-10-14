@@ -1,11 +1,16 @@
 import { format, isSameWeek, isSameYear, isToday, isYesterday } from "date-fns";
-import { CloudIcon, CloudyIcon, LightbulbIcon, ListIcon } from "lucide-react";
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
 
+import { CollectionCard } from "./CollectionCard";
 import { ThoughtCard } from "./ThoughtCard";
 
-interface Collection {
+interface SubCollection {
+	id: string;
+	title: string | null;
+	updated_at: string;
+}
+
+interface ThoughtCollection {
 	id: string;
 	title: string | null;
 }
@@ -17,59 +22,81 @@ interface Thought {
 	content_plaintext: string | null;
 	created_at: string;
 	updated_at: string;
-	collections: Collection[];
+	collections: ThoughtCollection[];
 }
 
 interface ThoughtListProps {
 	thoughts: Thought[];
+	collections?: SubCollection[];
 }
 
-export const ThoughtList = ({ thoughts }: ThoughtListProps) => {
-	const groupThoughtsByDate = useMemo(() => {
-		return (thoughts: Thought[]) => {
-			const grouped: { [key: string]: Thought[] } = {};
+interface BaseGroupItem {
+	updated_at: string;
+}
 
-			// Sort thoughts by newest first
-			const sortedThoughts = [...thoughts].sort(
-				(a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-			);
+interface ThoughtGroupItem extends BaseGroupItem {
+	type: "thought";
+	thought: Thought;
+}
 
-			sortedThoughts.forEach(thought => {
-				const date = new Date(thought.updated_at);
-				let groupKey: string;
+interface CollectionGroupItem extends BaseGroupItem {
+	type: "collection";
+	collection: SubCollection;
+}
 
-				if (isToday(date)) {
-					groupKey = "Today";
-				} else if (isYesterday(date)) {
-					groupKey = "Yesterday";
-				} else if (isSameWeek(date, new Date())) {
-					groupKey = format(date, "EEEE"); // Day of the week
-				} else if (isSameYear(date, new Date())) {
-					groupKey = format(date, "MMMM d"); // Month and day
-				} else {
-					groupKey = format(date, "MMMM d, yyyy"); // Full date for older thoughts
-				}
+type GroupItem = ThoughtGroupItem | CollectionGroupItem;
 
-				if (!grouped[groupKey]) {
-					grouped[groupKey] = [];
-				}
-				grouped[groupKey].push(thought);
-			});
+export const ThoughtList = ({ thoughts, collections }: ThoughtListProps) => {
+	const groupedItems = useMemo(() => {
+		const grouped: { [key: string]: GroupItem[] } = {};
 
-			return grouped;
-		};
-	}, []);
+		const allItems: GroupItem[] = [
+			...thoughts.map(thought => ({ type: "thought", thought, updated_at: thought.updated_at }) as ThoughtGroupItem),
+			...(collections?.map(
+				collection => ({ type: "collection", collection, updated_at: collection.updated_at }) as CollectionGroupItem,
+			) || []),
+		];
 
-	const groupedThoughts = groupThoughtsByDate(thoughts);
+		// Sort all items by newest first
+		const sortedItems = allItems.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+
+		sortedItems.forEach(item => {
+			const date = new Date(item.updated_at);
+			let groupKey: string;
+
+			if (isToday(date)) {
+				groupKey = "Today";
+			} else if (isYesterday(date)) {
+				groupKey = "Yesterday";
+			} else if (isSameWeek(date, new Date())) {
+				groupKey = format(date, "EEEE"); // Day of the week
+			} else if (isSameYear(date, new Date())) {
+				groupKey = format(date, "MMMM d"); // Month and day
+			} else {
+				groupKey = format(date, "MMMM d, yyyy"); // Full date for older items
+			}
+
+			if (!grouped[groupKey]) {
+				grouped[groupKey] = [];
+			}
+			grouped[groupKey].push(item);
+		});
+
+		return grouped;
+	}, [thoughts, collections]);
 
 	return (
 		<div className="space-y-6">
-			{Object.entries(groupedThoughts).map(([date, thoughtsInGroup]) => (
+			{Object.entries(groupedItems).map(([date, groupItems]) => (
 				<div key={date} className="space-y-2">
 					<h2 className="mb-1 text-sm font-medium text-secondary">{date}</h2>
-					{thoughtsInGroup.map(thought => (
-						<ThoughtCard key={thought.id} thought={thought} />
-					))}
+					{groupItems.map(item => {
+						if (item.type === "thought") {
+							return <ThoughtCard key={item.thought.id} thought={item.thought} />;
+						} else {
+							return <CollectionCard key={item.collection.id} collection={item.collection} />;
+						}
+					})}
 				</div>
 			))}
 		</div>

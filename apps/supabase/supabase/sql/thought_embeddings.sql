@@ -108,3 +108,19 @@ AS $function$
   LIMIT max_results;
 $function$
 ;
+
+CREATE OR REPLACE FUNCTION get_collection_parents(collection_id UUID)
+   RETURNS TABLE(id UUID, title TEXT)
+   LANGUAGE SQL STABLE AS $$
+   WITH RECURSIVE parent_collections AS (
+     SELECT id, title, parent_collection_id
+     FROM collections
+     WHERE id = collection_id
+     UNION ALL
+     SELECT c.id, c.title, c.parent_collection_id
+     FROM collections c
+     INNER JOIN parent_collections pc ON c.id = pc.parent_collection_id
+   )
+   SELECT id, title
+   FROM parent_collections;
+   $$;

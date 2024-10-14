@@ -1,10 +1,7 @@
-import { useMutation } from "@tanstack/react-query";
 import { VariantProps, cva } from "class-variance-authority";
 import { FileIcon, MoreHorizontalIcon, NotebookTextIcon, Trash2Icon } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { queryClient } from "src/api/queryClient";
-import { supabase } from "src/clients/supabase";
 import { useWorkspaceSlug } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { ellipsizeText, makeHumanizedTime } from "src/utils/strings";

@@ -1,5 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDownIcon, ChevronUpIcon, EllipsisIcon, NotebookIcon, PlusIcon, SparklesIcon, TrashIcon } from "lucide-react";
+import {
+	ChevronDownIcon,
+	ChevronUpIcon,
+	EllipsisIcon,
+	FolderIcon,
+	FolderPlusIcon,
+	PlusIcon,
+	SparklesIcon,
+	TrashIcon,
+} from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -8,6 +17,7 @@ import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Dropdown, DropdownItem, DropdownItemButton } from "src/components/Dropdown";
 import { Input } from "src/components/Input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip";
 import { useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { makeCollectionUrl, useCreateCollection, useDeleteCollection } from "src/utils/collection";
@@ -25,6 +35,7 @@ const useCollections = () => {
 				.from("collections")
 				.select("*, collection_thoughts(id)")
 				.eq("workspace_id", workspace.id)
+				.is("parent_collection_id", null) // top level collections only
 				.order("updated_at", { ascending: false });
 
 			return data?.map(collection => ({
@@ -70,9 +81,16 @@ export const Collections = () => {
 				<h3 className="whitespace-nowrap text-sm font-semibold text-secondary">Collections</h3>
 				<Dropdown
 					trigger={
-						<Button variant="ghost" size="icon-sm" className="text-secondary">
-							<PlusIcon className="size-4" />
-						</Button>
+						<div>
+							<Tooltip>
+								<TooltipTrigger>
+									<Button variant="ghost" size="icon-sm" className="text-secondary">
+										<FolderPlusIcon className="size-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>Create collection</TooltipContent>
+							</Tooltip>
+						</div>
 					}
 					className="w-64"
 					align="end">
@@ -117,7 +135,7 @@ export const Collections = () => {
 								{collection.is_auto ? (
 									<SparklesIcon className="size-4 shrink-0" />
 								) : (
-									<NotebookIcon className="size-4 shrink-0" />
+									<FolderIcon className="size-4 shrink-0" />
 								)}
 								<span className="truncate text-sm font-medium">{collection.title}</span>
 							</Link>

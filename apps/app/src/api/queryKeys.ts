@@ -2,6 +2,10 @@ export const collectionQueryKeys = {
 	collectionDetail: (collectionId: string) => ["collection", collectionId] as const,
 	collectionDetailThoughts: (collectionId?: string) =>
 		collectionId ? (["collection", "thoughts", collectionId] as const) : (["collection", "thoughts"] as const),
+	collectionDetailSubCollections: (collectionId?: string) =>
+		collectionId ? (["collection", "subCollections", collectionId] as const) : (["collection", "subCollections"] as const),
+	collectionDetailParents: (collectionId?: string) =>
+		collectionId ? (["collection", "parents", collectionId] as const) : (["collection", "parents"] as const),
 	workspaceCollections: (workspaceId?: string) => [workspaceId, "collections"] as const,
 };
 

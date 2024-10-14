@@ -189,11 +189,6 @@ export const CollectionCarousel = () => {
 		[thought?.collections],
 	);
 
-	const collectionsWhereThoughtIsNotIn = useMemo(
-		() => allCollections?.filter(collection => !thoughtCollectionSet.has(collection.id)),
-		[allCollections, thoughtCollectionSet],
-	);
-
 	const collectionIds = useMemo(() => {
 		return new Set(thought?.collections?.map(collection => collection.id) ?? []);
 	}, [thought?.collections]);
@@ -251,7 +246,7 @@ export const CollectionCarousel = () => {
 									</div>
 								}>
 								<NotebookIcon className="h-4 w-4 flex-shrink-0" />
-								<span>{collection.title}</span>
+								<span>{collection.title || "Untitled Collection"}</span>
 							</Chip>
 						</Link>
 					))}
@@ -297,7 +292,7 @@ export const CollectionCarousel = () => {
 							<span>Add to collection</span>
 						</Chip>
 					}
-					collections={collectionsWhereThoughtIsNotIn ?? []}
+					collections={allCollections ?? []}
 					onSelect={collectionId => {
 						addToCollection({
 							collectionId,
