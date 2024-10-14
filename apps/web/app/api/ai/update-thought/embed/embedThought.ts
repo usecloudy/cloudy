@@ -194,7 +194,7 @@ export const generateIntentSummaryAndEmbedding = async (
 		summary = thoughtRecord.generated_summary;
 	} else {
 		if (!thoughtRecord.content_md || thoughtRecord.content_md.length < 36) {
-			throw new Error("Content too short");
+			return;
 		}
 
 		[{ noteType, intents }, summary] = await Promise.all([generateIntent(thoughtRecord), generateSummary(thoughtRecord)]);
@@ -476,7 +476,11 @@ export const intentSummaryEmbeddingPipeline = async (
 	await addSignal(ThoughtSignals.EMBEDDING_UPDATE, thoughtRecord.id, supabase);
 
 	try {
-		await generateIntentSummaryAndEmbedding(thoughtRecord, editDistance, supabase, force);
+		const result = await generateIntentSummaryAndEmbedding(thoughtRecord, editDistance, supabase, force);
+
+		if (!result) {
+			return;
+		}
 
 		const newThoughtRecord = handleSupabaseError(
 			await supabase.from("thoughts").select("*").eq("id", thoughtRecord.id).single(),
