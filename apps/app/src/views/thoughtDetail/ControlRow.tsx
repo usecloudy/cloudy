@@ -1,6 +1,6 @@
 import { Hotkey } from "@cloudy/ui";
 import { Editor } from "@tiptap/react";
-import { ChevronsLeftIcon, GoalIcon, MoreHorizontalIcon, RedoIcon, UndoIcon } from "lucide-react";
+import { ChevronsLeftIcon, GoalIcon, MoreHorizontalIcon, PenIcon, PenOffIcon, RedoIcon, UndoIcon } from "lucide-react";
 import { useContext } from "react";
 
 import { Button } from "src/components/Button";
@@ -12,12 +12,14 @@ import { DeleteDialog } from "./DeleteDialog";
 import { ExportDialog } from "./ExportDialog";
 import { GoalDropdown } from "./GoalDropdown";
 import { ShareDialog } from "./ShareDialog";
-import { useThought } from "./hooks";
+import { useThought, useToggleDisableTitleSuggestions } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";
 
 export const ControlRow = ({ thoughtId, editor }: { thoughtId: string; editor?: Editor | null }) => {
 	const { data: thought } = useThought(thoughtId);
 	const { hideControlColumn, setHideControlColumn } = useContext(ThoughtContext);
+
+	const toggleDisableTitleSuggestionsMutation = useToggleDisableTitleSuggestions();
 
 	return (
 		<div className="flex w-full flex-row items-center justify-between gap-2">
@@ -85,7 +87,24 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId: string; editor?: 
 							<MoreHorizontalIcon className="size-5" />
 						</Button>
 					}>
-					<div className="flex w-36 flex-col">
+					<div className="flex w-64 flex-col">
+						<Button
+							variant="ghost"
+							size="sm"
+							className="w-full justify-start"
+							onClick={() => toggleDisableTitleSuggestionsMutation.mutate({ thoughtId })}>
+							{thought?.disable_title_suggestions ? (
+								<>
+									<PenIcon className="size-4" />
+									<span>Enable title suggestions</span>
+								</>
+							) : (
+								<>
+									<PenOffIcon className="size-4" />
+									<span>Disable title suggestions</span>
+								</>
+							)}
+						</Button>
 						<ExportDialog thoughtId={thoughtId} title={thought?.title ?? undefined} />
 						<DeleteDialog thoughtId={thoughtId} />
 					</div>

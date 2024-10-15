@@ -1276,6 +1276,7 @@ export type Database = {
           content_plaintext: string | null
           content_ts: string
           created_at: string
+          disable_title_suggestions: boolean | null
           embeddings_version: number
           generated_intents: string[]
           generated_summary: string | null
@@ -1288,6 +1289,8 @@ export type Database = {
           suggestion_index: number
           suggestion_status: string
           title: string | null
+          title_suggestion: string | null
+          title_suggestion_content_md: string | null
           title_ts: string
           updated_at: string
           user_intent: string | null
@@ -1301,6 +1304,7 @@ export type Database = {
           content_plaintext?: string | null
           content_ts?: string
           created_at?: string
+          disable_title_suggestions?: boolean | null
           embeddings_version?: number
           generated_intents?: string[]
           generated_summary?: string | null
@@ -1313,6 +1317,8 @@ export type Database = {
           suggestion_index?: number
           suggestion_status?: string
           title?: string | null
+          title_suggestion?: string | null
+          title_suggestion_content_md?: string | null
           title_ts?: string
           updated_at?: string
           user_intent?: string | null
@@ -1326,6 +1332,7 @@ export type Database = {
           content_plaintext?: string | null
           content_ts?: string
           created_at?: string
+          disable_title_suggestions?: boolean | null
           embeddings_version?: number
           generated_intents?: string[]
           generated_summary?: string | null
@@ -1338,6 +1345,8 @@ export type Database = {
           suggestion_index?: number
           suggestion_status?: string
           title?: string | null
+          title_suggestion?: string | null
+          title_suggestion_content_md?: string | null
           title_ts?: string
           updated_at?: string
           user_intent?: string | null

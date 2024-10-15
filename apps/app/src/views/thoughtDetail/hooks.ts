@@ -5,7 +5,7 @@ import posthog from "posthog-js";
 import { useContext, useEffect } from "react";
 
 import { collectionQueryKeys, commentThreadQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
-import { useWorkspace, useWorkspaceSlug } from "src/stores/workspace";
+import { useWorkspace } from "src/stores/workspace";
 
 import { apiClient } from "../../api/client";
 import { queryClient } from "../../api/queryClient";
@@ -74,7 +74,7 @@ export const useEditThought = (thoughtId?: string) => {
 
 			let titleObj = {};
 			if (payload?.title !== undefined) {
-				titleObj = { title: payload.title, title_ts: payload.ts };
+				titleObj = { title: payload.title, title_ts: payload.ts, title_suggestion: null };
 			}
 
 			let contentObj = {};
@@ -499,6 +499,32 @@ export const useTemporaryComment = (commentId?: string | null) => {
 			}
 
 			return null;
+		},
+	});
+};
+
+export const useToggleDisableTitleSuggestions = () => {
+	return useMutation({
+		mutationFn: async (payload: { thoughtId: string; disableTitleSuggestions?: boolean }) => {
+			let outcome = !payload.disableTitleSuggestions;
+			if (typeof payload.disableTitleSuggestions !== "boolean") {
+				const currentValue = handleSupabaseError(
+					await supabase.from("thoughts").select("disable_title_suggestions").eq("id", payload.thoughtId).single(),
+				);
+
+				outcome = !currentValue.disable_title_suggestions;
+			}
+
+			await supabase
+				.from("thoughts")
+				.update({ disable_title_suggestions: outcome, title_suggestion: null })
+				.eq("id", payload.thoughtId);
+		},
+
+		onSuccess: (_, payload) => {
+			queryClient.invalidateQueries({
+				queryKey: thoughtQueryKeys.thoughtDetail(payload.thoughtId),
+			});
 		},
 	});
 };

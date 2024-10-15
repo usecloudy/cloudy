@@ -1,12 +1,13 @@
+import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { generateObject } from "ai";
 import { randomUUID } from "crypto";
+import { distance } from "fastest-levenshtein";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { heliconeOpenAI } from "app/api/utils/helicone";
 import { addSignal, getContextForThought, removeSignal } from "app/api/utils/thoughts";
-import { Database } from "app/db/database.types";
 
 import { ThoughtRecord } from "../utils";
 import { makeTitleSuggestionPrompts } from "./prompts";
@@ -19,19 +20,12 @@ const TitleSuggestionSchema = z.object({
 export const suggestTitle = async (thoughtRecord: ThoughtRecord, supabase: SupabaseClient<Database>) => {
 	console.log("Will suggest a title for thought", thoughtRecord.id);
 
-	if (thoughtRecord.title && thoughtRecord.title.length > 2) {
-		return NextResponse.json({ success: false, reason: "title_already_exists" });
+	if (thoughtRecord.disable_title_suggestions) {
+		return NextResponse.json({ success: false, reason: "title_suggestions_disabled" });
 	}
 
-	const { data: existingTitleSuggestion } = await supabase
-		.from("thought_chats")
-		.select("id, created_at")
-		.eq("thought_id", thoughtRecord.id)
-		.eq("type", "title_suggestion")
-		.maybeSingle();
-
-	if (existingTitleSuggestion) {
-		return NextResponse.json({ success: false, reason: "title_suggestion_already_exists" });
+	if (thoughtRecord.title) {
+		return NextResponse.json({ success: false, reason: "title_already_exists" });
 	}
 
 	const contentMd = thoughtRecord.content_md;
@@ -42,6 +36,14 @@ export const suggestTitle = async (thoughtRecord: ThoughtRecord, supabase: Supab
 
 	if (contentMd.length < 64) {
 		return NextResponse.json({ success: false, reason: "content_md_too_short" });
+	}
+
+	if (thoughtRecord.title_suggestion_content_md) {
+		const editDistance = distance(contentMd, thoughtRecord.title_suggestion_content_md);
+
+		if (editDistance < 128) {
+			return NextResponse.json({ success: false, reason: "title_suggestion_too_similar" });
+		}
 	}
 
 	try {
@@ -83,12 +85,10 @@ export const suggestTitle = async (thoughtRecord: ThoughtRecord, supabase: Supab
 		if (titleSuggestion) {
 			const title = titleSuggestion.title;
 
-			await supabase.from("thought_chats").insert({
-				thought_id: thoughtRecord.id,
-				type: "title_suggestion",
-				role: "assistant",
-				content: title,
-			});
+			await supabase
+				.from("thoughts")
+				.update({ title_suggestion: title, title_suggestion_content_md: contentMd })
+				.eq("id", thoughtRecord.id);
 		}
 	} finally {
 		await removeSignal("suggest-title", thoughtRecord.id, supabase);

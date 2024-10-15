@@ -7,7 +7,6 @@ import { GripVertical } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { Navigate, useParams } from "react-router-dom";
-import TextareaAutosize from "react-textarea-autosize";
 import { useLocalStorage, useMount, usePrevious, useUnmount, useUpdateEffect } from "react-use";
 
 import LoadingSpinner from "src/components/LoadingSpinner";
@@ -19,13 +18,13 @@ import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
 import { AiEditorMenu } from "./AiEditorMenu";
-import { CollectionCarousel } from "./CollectionCarousel";
 import { CommentColumn } from "./CommentColumn";
 import { ControlColumn } from "./ControlColumn";
 import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { FooterRow } from "./FooterRow";
+import { TitleArea } from "./TitleArea";
 import { createFileHandlerExtension } from "./fileHandlerExtension";
 import { ThoughtEditPayload, useEditThought, useThought, useThoughtChannelListeners } from "./hooks";
 import { updateMentionNodeNames } from "./mention";
@@ -326,21 +325,7 @@ const EditorView = ({
 					"-ml-8 box-border flex w-full max-w-screen-lg grow flex-col px-3 md:pl-16 md:pt-16 lg:flex-1",
 					hideControlColumn ? "lg:pr-16" : "lg:pr-4",
 				)}>
-				<div className="ml-8 flex flex-col gap-3 pb-4">
-					<TextareaAutosize
-						className="no-scrollbar w-full resize-none appearance-none border-none bg-transparent text-2xl font-bold leading-8 outline-none md:text-3xl md:leading-10"
-						contentEditable={true}
-						placeholder="Untitled"
-						value={title ?? ""}
-						onChange={e => {
-							handleChangeTitle(e.target.value);
-						}}
-						suppressContentEditableWarning
-					/>
-					<div className="pr-4">
-						<CollectionCarousel />
-					</div>
-				</div>
+				<TitleArea title={title} onChange={handleChangeTitle} />
 				<div
 					// On larger screens, we need left padding to avoid some characters being cut off
 					className="flex flex-row md:pl-[2px]">
