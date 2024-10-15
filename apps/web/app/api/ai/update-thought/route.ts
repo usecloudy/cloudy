@@ -67,7 +67,7 @@ const processThought = async (thoughtId: string, supabase: SupabaseClient<Databa
 		await Promise.all([
 			ideateThought(thoughtRecord, supabase, options),
 			suggestTitle(thoughtRecord, supabase),
-			intentSummaryEmbeddingPipeline(thoughtRecord, editDistance, supabase, options?.force),
+			intentSummaryEmbeddingPipeline(thoughtRecord, supabase, options?.force),
 		]);
 
 		await supabase.from("thoughts").update({ last_suggestion_content_md: contentMd }).eq("id", thoughtRecord.id);

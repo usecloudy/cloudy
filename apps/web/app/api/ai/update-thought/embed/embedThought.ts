@@ -177,16 +177,21 @@ const makeRerankerInput = (noteType: string | null | undefined, intent: string, 
 // Main Functions
 export const generateIntentSummaryAndEmbedding = async (
 	thoughtRecord: ThoughtRecord,
-	editDistance: number,
 	supabase: SupabaseClient<Database>,
 	force?: boolean,
 ) => {
 	let noteType: string, intents: string[], summary: string;
+
+	const editDistance = thoughtRecord.generated_summary_content_md
+		? levenshteinDistance(thoughtRecord.content_md, thoughtRecord.generated_summary_content_md)
+		: null;
+
 	if (
 		!force &&
 		thoughtRecord.generated_intents.length > 0 &&
 		thoughtRecord.generated_summary &&
 		thoughtRecord.generated_type &&
+		editDistance &&
 		editDistance < 256
 	) {
 		noteType = thoughtRecord.generated_type;
@@ -215,7 +220,13 @@ export const generateIntentSummaryAndEmbedding = async (
 	handleSupabaseError(
 		await supabase
 			.from("thoughts")
-			.update({ generated_type: noteType, generated_summary: summary, generated_intents: intents, embeddings_version: 2 })
+			.update({
+				generated_type: noteType,
+				generated_summary: summary,
+				generated_intents: intents,
+				embeddings_version: 2,
+				generated_summary_content_md: thoughtRecord.content_md,
+			})
 			.eq("id", thoughtRecord.id),
 	);
 	handleSupabaseError(await supabase.from("thought_summary_embeddings").delete().eq("thought_id", thoughtRecord.id));
@@ -447,7 +458,7 @@ export const mapRelationshipsForThought = async (
 	collectionIntentEmbeddings.forEach(collection => {
 		if (collection.intent_embedding) {
 			const similarity = cosineSimilarity(intentOnlyEmbeddings[0]!, JSON.parse(collection.intent_embedding) as number[]);
-			if (similarity > 0.4) {
+			if (similarity > 0.45) {
 				finalCollectionIdsToSuggest.add(collection.id);
 			}
 		}
@@ -465,7 +476,6 @@ export const mapRelationshipsForThought = async (
 
 export const intentSummaryEmbeddingPipeline = async (
 	thoughtRecord: ThoughtRecord,
-	editDistance: number,
 	supabase: SupabaseClient<Database>,
 	force?: boolean,
 ) => {
@@ -476,7 +486,7 @@ export const intentSummaryEmbeddingPipeline = async (
 	await addSignal(ThoughtSignals.EMBEDDING_UPDATE, thoughtRecord.id, supabase);
 
 	try {
-		const result = await generateIntentSummaryAndEmbedding(thoughtRecord, editDistance, supabase, force);
+		const result = await generateIntentSummaryAndEmbedding(thoughtRecord, supabase, force);
 
 		if (!result) {
 			return;
@@ -490,3 +500,6 @@ export const intentSummaryEmbeddingPipeline = async (
 		await removeSignal(ThoughtSignals.EMBEDDING_UPDATE, thoughtRecord.id, supabase);
 	}
 };
+function levenshteinDistance(title: string | null, title_suggestion: string | null) {
+	throw new Error("Function not implemented.");
+}

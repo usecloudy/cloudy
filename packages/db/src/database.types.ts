@@ -1280,6 +1280,7 @@ export type Database = {
           embeddings_version: number
           generated_intents: string[]
           generated_summary: string | null
+          generated_summary_content_md: string | null
           generated_type: string | null
           id: string
           ignored_collection_suggestions: Json | null
@@ -1308,6 +1309,7 @@ export type Database = {
           embeddings_version?: number
           generated_intents?: string[]
           generated_summary?: string | null
+          generated_summary_content_md?: string | null
           generated_type?: string | null
           id?: string
           ignored_collection_suggestions?: Json | null
@@ -1336,6 +1338,7 @@ export type Database = {
           embeddings_version?: number
           generated_intents?: string[]
           generated_summary?: string | null
+          generated_summary_content_md?: string | null
           generated_type?: string | null
           id?: string
           ignored_collection_suggestions?: Json | null
