@@ -34,7 +34,7 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 						onChange(e.target.value);
 					}}
 					onKeyDown={e => {
-						if (e.key === "Enter" && e.shiftKey) {
+						if (e.key === "Tab") {
 							handleAcceptTitleSuggestion();
 							e.preventDefault();
 							e.stopPropagation();
@@ -45,7 +45,7 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 				{thought?.title_suggestion && !title && (
 					<div className="mt-1.5 flex gap-1">
 						<Button size="sm" variant="outline" onClick={handleAcceptTitleSuggestion}>
-							<Hotkey keys={["shift", "enter"]} />
+							<Hotkey keys={["tab"]} />
 							<span>Accept</span>
 						</Button>
 						<Dropdown
