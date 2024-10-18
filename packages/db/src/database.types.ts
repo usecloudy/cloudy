@@ -1278,10 +1278,12 @@ export type Database = {
           created_at: string
           disable_title_suggestions: boolean | null
           embeddings_version: number
+          generated_at: string | null
           generated_intents: string[]
           generated_summary: string | null
           generated_summary_content_md: string | null
           generated_type: string | null
+          generation_prompt: string | null
           id: string
           ignored_collection_suggestions: Json | null
           is_suggestion_paused: boolean
@@ -1307,10 +1309,12 @@ export type Database = {
           created_at?: string
           disable_title_suggestions?: boolean | null
           embeddings_version?: number
+          generated_at?: string | null
           generated_intents?: string[]
           generated_summary?: string | null
           generated_summary_content_md?: string | null
           generated_type?: string | null
+          generation_prompt?: string | null
           id?: string
           ignored_collection_suggestions?: Json | null
           is_suggestion_paused?: boolean
@@ -1336,10 +1340,12 @@ export type Database = {
           created_at?: string
           disable_title_suggestions?: boolean | null
           embeddings_version?: number
+          generated_at?: string | null
           generated_intents?: string[]
           generated_summary?: string | null
           generated_summary_content_md?: string | null
           generated_type?: string | null
+          generation_prompt?: string | null
           id?: string
           ignored_collection_suggestions?: Json | null
           is_suggestion_paused?: boolean

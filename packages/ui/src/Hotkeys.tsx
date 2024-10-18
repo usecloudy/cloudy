@@ -7,7 +7,6 @@ import {
     ArrowDown,
     ArrowLeft,
     ArrowRight,
-    ArrowDownLeft,
     CornerDownLeftIcon,
 } from "lucide-react";
 import { cn } from "./utils";

@@ -1,5 +1,6 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useIsMutating, useMutation, useQuery } from "@tanstack/react-query";
+import { Editor } from "@tiptap/react";
 import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
 import { useContext, useEffect } from "react";
@@ -525,6 +526,46 @@ export const useToggleDisableTitleSuggestions = () => {
 			queryClient.invalidateQueries({
 				queryKey: thoughtQueryKeys.thoughtDetail(payload.thoughtId),
 			});
+		},
+	});
+};
+
+export const useGenerateDocument = () => {
+	const { editor } = useContext(ThoughtContext);
+
+	return useMutation({
+		mutationFn: async (thoughtId: string) => {
+			if (!editor) {
+				throw new Error("Editor not found");
+			}
+
+			const response = await fetch(apiClient.getUri({ url: "/api/ai/generate-document" }), {
+				method: "POST",
+				// @ts-ignore
+				headers: {
+					...apiClient.defaults.headers.common,
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ thoughtId }),
+			});
+
+			const reader = response.body?.getReader();
+			if (!reader) {
+				throw new Error("Failed to get reader from response");
+			}
+
+			let fullText = "";
+			let mdContent = "";
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				const chunk = new TextDecoder().decode(value);
+				fullText += chunk;
+
+				editor.commands.setContent(fullText);
+			}
+
+			await supabase.from("thoughts").update({ generated_at: new Date().toISOString() }).eq("id", thoughtId);
 		},
 	});
 };

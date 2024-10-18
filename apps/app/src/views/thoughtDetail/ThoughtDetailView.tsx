@@ -7,7 +7,7 @@ import { GripVertical } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { Navigate, useParams } from "react-router-dom";
-import { useLocalStorage, useMount, usePrevious, useUnmount, useUpdateEffect } from "react-use";
+import { useAsync, useEffectOnce, useLocalStorage, useMount, usePrevious, useUnmount, useUpdateEffect } from "react-use";
 
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { MainLayout } from "src/components/MainLayout";
@@ -26,7 +26,7 @@ import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { FooterRow } from "./FooterRow";
 import { TitleArea } from "./TitleArea";
 import { createFileHandlerExtension } from "./fileHandlerExtension";
-import { ThoughtEditPayload, useEditThought, useThought, useThoughtChannelListeners } from "./hooks";
+import { ThoughtEditPayload, useEditThought, useGenerateDocument, useThought, useThoughtChannelListeners } from "./hooks";
 import { updateMentionNodeNames } from "./mention";
 import { ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
@@ -251,6 +251,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				onFinishAiEdits,
 			}}>
 			<div className="no-scrollbar relative flex w-full flex-grow flex-col overflow-hidden lg:flex-row">
+				<AiDocumentGeneration thought={thought} />
 				<EditorView
 					thoughtId={thoughtId!}
 					remoteTitle={thought?.title ?? undefined}
@@ -261,6 +262,25 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 			</div>
 		</ThoughtContext.Provider>
 	);
+};
+
+const AiDocumentGeneration = ({ thought }: { thought: Thought }) => {
+	const { onStartAiEdits, onFinishAiEdits } = useContext(ThoughtContext);
+	const generateDocumentMutation = useGenerateDocument();
+
+	const hasGenerated = useRef(false);
+
+	useAsync(async () => {
+		if (!hasGenerated.current && thought.generation_prompt && !thought.generated_at) {
+			hasGenerated.current = true;
+			onStartAiEdits();
+			console.log("generating document", thought);
+			await generateDocumentMutation.mutateAsync(thought.id);
+			onFinishAiEdits();
+		}
+	}, [thought?.id]);
+
+	return null;
 };
 
 const EditorView = ({

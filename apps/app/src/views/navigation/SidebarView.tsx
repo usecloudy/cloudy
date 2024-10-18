@@ -22,6 +22,7 @@ import { useCreateThought } from "src/utils/thought";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
 import { useSearchBarStore } from "../search/searchBarStore";
+import { GenerateDoc } from "../thoughtDetail/GenerateDoc";
 import { Collections } from "./Collections";
 import { LatestThoughts } from "./LatestThoughts";
 import { NewNote } from "./NewNote";
@@ -142,8 +143,9 @@ export const SidebarView = () => {
 						</div>
 						<WorkspaceSelector />
 						{workspace && (
-							<div className="mt-4 px-4">
+							<div className="mt-4 flex items-center gap-1 px-4">
 								<NewNote />
+								<GenerateDoc />
 							</div>
 						)}
 						<div className="no-scrollbar mt-4 flex flex-1 flex-col gap-4 overflow-y-auto px-4">
