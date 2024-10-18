@@ -22,6 +22,7 @@ export const MoveWorkspaceDialog = () => {
 	const moveThoughtMutation = useMutation({
 		mutationFn: async (newWorkspaceId: string) => {
 			await supabase.from("thoughts").update({ workspace_id: newWorkspaceId }).eq("id", thoughtId);
+			await supabase.from("collection_thoughts").delete().eq("thought_id", thoughtId); // Delete from all collections because they dont span workspaces
 		},
 		onSuccess: (_, newWorkspaceId) => {
 			const newWorkspace = allUserWorkspaces?.find(w => w.id === newWorkspaceId);
