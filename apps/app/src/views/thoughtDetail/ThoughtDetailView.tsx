@@ -24,6 +24,7 @@ import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { FooterRow } from "./FooterRow";
+import { MoveWorkspaceDialog } from "./MoveWorkspaceDialog";
 import { TitleArea } from "./TitleArea";
 import { createFileHandlerExtension } from "./fileHandlerExtension";
 import { ThoughtEditPayload, useEditThought, useThought, useThoughtChannelListeners } from "./hooks";
@@ -62,6 +63,7 @@ const ThoughtDetailInner = ({ thoughtId }: { thoughtId?: string }) => {
 					<title>{headTitle}</title>
 				</Helmet>
 				{thought && <ThoughtContent key={thoughtId} thoughtId={thoughtId!} thought={thought} />}
+				<MoveWorkspaceDialog />
 			</MainLayout>
 		</EditorErrorBoundary>
 	);

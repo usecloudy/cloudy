@@ -11,6 +11,7 @@ import { makeHumanizedTime } from "src/utils/strings";
 import { DeleteDialog } from "./DeleteDialog";
 import { ExportDialog } from "./ExportDialog";
 import { GoalDropdown } from "./GoalDropdown";
+import { MoveWorkspaceDialog } from "./MoveWorkspaceDialog";
 import { ShareDialog } from "./ShareDialog";
 import { useThought, useToggleDisableTitleSuggestions } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";
@@ -105,6 +106,7 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId: string; editor?: 
 								</>
 							)}
 						</Button>
+						<MoveWorkspaceDialog />
 						<ExportDialog thoughtId={thoughtId} title={thought?.title ?? undefined} />
 						<DeleteDialog thoughtId={thoughtId} />
 					</div>
