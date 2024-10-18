@@ -21,8 +21,10 @@ export const WorkspaceSelector = () => {
 				<Dropdown
 					trigger={
 						<Button variant="outline" className="flex flex-1 items-center justify-between overflow-hidden">
-							<LayoutDashboardIcon className="size-4 text-secondary group-hover:text-accent" />
-							<span className="flex-1 truncate">{currentWorkspace.name}</span>
+							<div className="flex flex-1 flex-row items-center gap-2 overflow-hidden">
+								<LayoutDashboardIcon className="size-4 shrink-0 text-secondary group-hover:text-accent" />
+								<span className="truncate">{currentWorkspace.name}</span>
+							</div>
 							<ChevronDownIcon className="size-4" />
 						</Button>
 					}>
