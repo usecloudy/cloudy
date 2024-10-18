@@ -16,42 +16,45 @@ export const WorkspaceSelector = () => {
 	}
 
 	return (
-		<div className="flex w-full items-center justify-between gap-1 px-4">
-			<Dropdown
-				trigger={
-					<Button variant="outline" className="flex flex-1 items-center justify-between">
-						<div className="flex flex-row items-center gap-2">
+		<div className="flex max-w-full items-center justify-between gap-1 overflow-hidden px-4">
+			<div className="flex flex-1 overflow-hidden">
+				<Dropdown
+					trigger={
+						<Button variant="outline" className="flex flex-1 items-center justify-between overflow-hidden">
 							<LayoutDashboardIcon className="size-4 text-secondary group-hover:text-accent" />
-							<span>{currentWorkspace.name}</span>
-						</div>
-						<ChevronDownIcon className="size-4" />
-					</Button>
-				}>
-				<div className="flex flex-col">
-					{allUserWorkspaces?.map(workspace => (
-						<Link to={`/workspaces/${workspace.slug}`} key={workspace.id}>
-							<DropdownItem className={cn(workspace.id === currentWorkspace.id ? "bg-card/50" : "")}>
-								{workspace.id === currentWorkspace.id ? (
-									<CheckIcon className="h-4 w-4" />
-								) : (
-									<span className="w-4" />
-								)}
-								<span
-									className={cn("flex-1 text-sm", workspace.id === currentWorkspace.id ? "font-medium" : "")}>
-									{workspace.name}
-								</span>
+							<span className="flex-1 truncate">{currentWorkspace.name}</span>
+							<ChevronDownIcon className="size-4" />
+						</Button>
+					}>
+					<div className="flex flex-col">
+						{allUserWorkspaces?.map(workspace => (
+							<Link to={`/workspaces/${workspace.slug}`} key={workspace.id}>
+								<DropdownItem className={cn(workspace.id === currentWorkspace.id ? "bg-card/50" : "")}>
+									{workspace.id === currentWorkspace.id ? (
+										<CheckIcon className="h-4 w-4" />
+									) : (
+										<span className="w-4" />
+									)}
+									<span
+										className={cn(
+											"flex-1 text-sm",
+											workspace.id === currentWorkspace.id ? "font-medium" : "",
+										)}>
+										{workspace.name}
+									</span>
+								</DropdownItem>
+							</Link>
+						))}
+						<DropdownSeparator />
+						<Link to="/onboarding/workspaces/new/website-onboarding">
+							<DropdownItem className="text-accent hover:bg-accent/10">
+								<PlusIcon className="size-4" />
+								Create new workspace
 							</DropdownItem>
 						</Link>
-					))}
-					<DropdownSeparator />
-					<Link to="/onboarding/workspaces/new/website-onboarding">
-						<DropdownItem className="text-accent hover:bg-accent/10">
-							<PlusIcon className="size-4" />
-							Create new workspace
-						</DropdownItem>
-					</Link>
-				</div>
-			</Dropdown>
+					</div>
+				</Dropdown>
+			</div>
 			<Link to={`/workspaces/${currentWorkspace.slug}/settings`}>
 				<Button variant="ghost" size="icon">
 					<SettingsIcon className="size-5" />
