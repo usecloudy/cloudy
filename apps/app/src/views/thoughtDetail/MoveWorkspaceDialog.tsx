@@ -1,8 +1,10 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { ArrowRightIcon, CheckIcon } from "lucide-react";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { queryClient } from "src/api/queryClient";
+import { thoughtQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Dropdown, DropdownItem } from "src/components/Dropdown";
@@ -29,6 +31,7 @@ export const MoveWorkspaceDialog = () => {
 			if (newWorkspace) {
 				navigate(makeThoughtUrl(newWorkspace.slug, thoughtId));
 			}
+			queryClient.invalidateQueries({ queryKey: thoughtQueryKeys.thoughtDetail(thoughtId) });
 		},
 	});
 
