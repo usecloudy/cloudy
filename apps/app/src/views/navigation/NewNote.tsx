@@ -17,7 +17,7 @@ export const NewNote = ({ collectionId }: { collectionId?: string }) => {
 			) : (
 				<>
 					<FilePlusIcon className="size-4" />
-					<span>New note{collectionId ? ` in collection` : ""}</span>
+					<span>Blank doc{collectionId ? ` in collection` : ""}</span>
 				</>
 			)}
 		</Button>

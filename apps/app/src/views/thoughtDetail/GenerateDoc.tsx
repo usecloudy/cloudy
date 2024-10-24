@@ -1,32 +1,52 @@
-import { handleSupabaseError } from "@cloudy/utils/common";
+import { RepoReference, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
-import { Sparkles, SparklesIcon } from "lucide-react";
+import { SparklesIcon } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { apiClient } from "src/api/client";
 import { supabase } from "src/clients/supabase";
-import { AiTextArea } from "src/components/AiTextArea";
 import { Button } from "src/components/Button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "src/components/Dialog";
+import { Dialog, DialogContent } from "src/components/Dialog";
 import { useWorkspace } from "src/stores/workspace";
 import { useBreakpoint } from "src/utils/tailwind";
-import { makeThoughtUrl } from "src/utils/thought";
+import { makeProjectDocUrl } from "src/utils/thought";
+import { AiTextArea } from "src/views/aiTextArea/AiTextArea";
+
+import { useProject } from "../projects/ProjectContext";
 
 const useCreateNoteWithGeneration = () => {
 	const workspace = useWorkspace();
+	const project = useProject();
 	return useMutation({
-		mutationFn: async (prompt: string) => {
-			return handleSupabaseError(
+		mutationFn: async (payload: { prompt: string; references: RepoReference[] }) => {
+			if (!project) {
+				throw new Error("Project not loaded");
+			}
+
+			const doc = handleSupabaseError(
 				await supabase
 					.from("thoughts")
 					.insert({
-						generation_prompt: prompt,
+						generation_prompt: payload.prompt,
 						workspace_id: workspace.id,
+						project_id: project.id,
 					})
 					.select()
 					.single(),
 			);
+
+			handleSupabaseError(
+				await supabase.from("document_repo_links").insert(
+					payload.references.map(ref => ({
+						doc_id: doc.id,
+						path: ref.path,
+						repo_connection_id: ref.repoConnectionId,
+						type: ref.type,
+					})),
+				),
+			);
+
+			return doc;
 		},
 	});
 };
@@ -37,11 +57,19 @@ export const GenerateDoc = () => {
 	const createNoteWithGeneration = useCreateNoteWithGeneration();
 	const navigate = useNavigate();
 	const workspace = useWorkspace();
+	const project = useProject();
 
-	const handleSubmit = async (prompt: string) => {
-		const thought = await createNoteWithGeneration.mutateAsync(prompt);
+	const handleSubmit = async (prompt: string, references: RepoReference[]) => {
+		if (!project) {
+			throw new Error("Project not loaded");
+		}
+
+		const thought = await createNoteWithGeneration.mutateAsync({
+			prompt,
+			references,
+		});
 		setIsOpen(false);
-		navigate(makeThoughtUrl(workspace.slug, thought.id));
+		navigate(makeProjectDocUrl(workspace.slug, project.slug, thought.id));
 	};
 
 	return (
@@ -50,19 +78,21 @@ export const GenerateDoc = () => {
 				<SparklesIcon className="size-4" />
 			</Button>
 			<Dialog open={isOpen} onOpenChange={setIsOpen}>
-				<DialogContent className="max-w-[calc(100vw-2rem)] overflow-hidden p-0 md:max-w-lg">
+				<DialogContent className="max-w-[calc(100vw-2rem)] gap-0 overflow-hidden p-0 md:max-w-lg">
 					<div className="flex w-full items-center justify-between gap-2 border-b border-border px-4 py-2 font-medium">
 						<div className="flex items-center gap-1 text-sm">
 							<SparklesIcon className="size-4 text-accent" />
 							<span>Generate Document</span>
 						</div>
 					</div>
-					<AiTextArea
-						onSubmit={handleSubmit}
-						onCancel={() => setIsOpen(false)}
-						placeholder="Describe the document you want to generate"
-						submitButtonText="Generate"
-					/>
+					<div className="p-4">
+						<AiTextArea
+							onSubmit={handleSubmit}
+							onCancel={() => setIsOpen(false)}
+							placeholder="Describe the document you want to generate"
+							submitButtonText="Generate"
+						/>
+					</div>
 				</DialogContent>
 			</Dialog>
 		</>

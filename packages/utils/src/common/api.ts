@@ -1,3 +1,4 @@
+import { RepoReference } from "./docs";
 import { Product } from "./pricing";
 
 export interface PaymentsProductsGetResponse {
@@ -69,9 +70,14 @@ export interface ApplyChangePostRequestBody {
 export interface CollectionSummaryPostRequestBody {
     collectionId: string;
 }
+
 export interface ScrapeSiteGetResponse {
     name: string | null;
     welcomeMessage: string | null;
     missionBlurb: string | null;
     collectionNames: string[];
+}
+
+export interface RepoFilesGetResponse {
+    paths: RepoReference[];
 }

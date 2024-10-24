@@ -5,13 +5,12 @@ import { streamText } from "ai";
 import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
 
-import { octokit } from "app/api/utils/github";
-import { heliconeAnthropic, heliconeOpenAI } from "app/api/utils/helicone";
+import { getOctokitAppClient } from "app/api/utils/github";
+import { heliconeOpenAI } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
-import { getContextForThought } from "app/api/utils/thoughts";
 
 interface Payload {
-	thoughtId: string;
+	docId: string;
 }
 
 export const maxDuration = 90;
@@ -27,29 +26,49 @@ export const POST = async (req: NextRequest) => {
 	return generateDocument(payload, supabase);
 };
 
-const getFileContents = async () => {
-	const results = await Promise.all([
-		octokit.rest.repos.getContent({
-			owner: "getsentry",
-			repo: "seer",
-			path: "src/seer/automation/agent/client.py",
-		}),
-		octokit.rest.repos.getContent({
-			owner: "getsentry",
-			repo: "seer",
-			path: "src/seer/automation/agent/models.py",
-		}),
-	]);
+const getFileContents = async (docId: string, supabase: SupabaseClient<Database>) => {
+	const repoReferences = handleSupabaseError(
+		await supabase.from("document_repo_links").select("path, repo_connection_id, type").eq("doc_id", docId),
+	);
 
-	return results
-		.map(result => result.data)
-		.flatMap(file => {
-			if (!Array.isArray(file) && file.type === "file") {
-				return Buffer.from(file.content, "base64").toString("utf-8");
-			}
+	const results = (
+		await Promise.all(
+			repoReferences.flatMap(async repoReference => {
+				const { installation_id, owner, name } = handleSupabaseError(
+					await supabase
+						.from("repository_connections")
+						.select("installation_id, owner, name")
+						.eq("id", repoReference.repo_connection_id)
+						.single(),
+				);
+				const octokit = await getOctokitAppClient(installation_id);
 
-			return [];
-		});
+				if (repoReference.type === "file") {
+					const { data: file } = await octokit.rest.repos.getContent({
+						owner,
+						repo: name,
+						path: repoReference.path,
+					});
+
+					if (!Array.isArray(file) && file.type === "file") {
+						return [
+							{
+								path: file.path,
+								content: Buffer.from(file.content, "base64").toString("utf-8"),
+							},
+						];
+					}
+
+					return [];
+				}
+
+				// TODO: Support directories
+				return [];
+			}),
+		)
+	).flat();
+
+	return results;
 };
 
 const generateDocument = async (payload: Payload, supabase: SupabaseClient<Database>) => {
@@ -60,7 +79,7 @@ const generateDocument = async (payload: Payload, supabase: SupabaseClient<Datab
 	}
 
 	const { generation_prompt } = handleSupabaseError(
-		await supabase.from("thoughts").select("generation_prompt").eq("id", payload.thoughtId).single(),
+		await supabase.from("thoughts").select("generation_prompt").eq("id", payload.docId).single(),
 	);
 
 	if (!generation_prompt) {
@@ -73,13 +92,19 @@ const generateDocument = async (payload: Payload, supabase: SupabaseClient<Datab
 		"Helicone-Session-Id": `generate-document/${randomUUID()}`,
 	};
 
-	const fileContents = await getFileContents();
+	const files = await getFileContents(payload.docId, supabase);
 
 	const stream = await streamText({
 		model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18"),
 		system: "You are an excellent technical documentation writer. You are given a set of files and a user instruction. You need to write documentation for the files.",
-		prompt: `Files:
-${fileContents.join("\n")}
+		prompt: `Follow this output format exactly:
+\`\`\`title:The title of the document
+Here you place the content of the document
+...
+\`\`\`
+
+Files:
+${files.map(file => `\`\`\`path:${file.path}\n${file.content}\n\`\`\``).join("\n")}
 
 User Instruction:
 ${generation_prompt}`,

@@ -534,7 +534,7 @@ export const useGenerateDocument = () => {
 	const { editor } = useContext(ThoughtContext);
 
 	return useMutation({
-		mutationFn: async (thoughtId: string) => {
+		mutationFn: async (docId: string) => {
 			if (!editor) {
 				throw new Error("Editor not found");
 			}
@@ -546,7 +546,7 @@ export const useGenerateDocument = () => {
 					...apiClient.defaults.headers.common,
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ thoughtId }),
+				body: JSON.stringify({ docId }),
 			});
 
 			const reader = response.body?.getReader();
@@ -555,17 +555,22 @@ export const useGenerateDocument = () => {
 			}
 
 			let fullText = "";
-			let mdContent = "";
+			let title = "";
 			while (true) {
 				const { done, value } = await reader.read();
 				if (done) break;
 				const chunk = new TextDecoder().decode(value);
 				fullText += chunk;
 
+				if (fullText.startsWith("```title:")) {
+					title = fullText.split("\n")[0].replace("```title:", "").trim();
+					fullText = fullText.split("\n").slice(1).join("\n");
+				}
+
 				editor.commands.setContent(fullText);
 			}
 
-			await supabase.from("thoughts").update({ generated_at: new Date().toISOString() }).eq("id", thoughtId);
+			await supabase.from("thoughts").update({ title, generated_at: new Date().toISOString() }).eq("id", docId);
 		},
 	});
 };

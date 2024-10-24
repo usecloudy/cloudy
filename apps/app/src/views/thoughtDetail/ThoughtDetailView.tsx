@@ -362,7 +362,7 @@ const EditorView = ({
 					{isConnected ? (
 						<EditorContent
 							editor={editor}
-							className={cn("w-full", isAiWriting && "pointer-events-none opacity-70")}
+							className={cn("main-editor w-full", isAiWriting && "pointer-events-none opacity-70")}
 						/>
 					) : (
 						<div className="flex h-full w-full items-center justify-center">

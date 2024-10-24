@@ -25,7 +25,9 @@ import { useSearchBarStore } from "../search/searchBarStore";
 import { GenerateDoc } from "../thoughtDetail/GenerateDoc";
 import { Collections } from "./Collections";
 import { LatestThoughts } from "./LatestThoughts";
+import { LibraryView } from "./LibraryView";
 import { NewNote } from "./NewNote";
+import { ProjectSelector } from "./ProjectSelector";
 import { SidebarDropdown } from "./SidebarDropdown";
 import { useSidebarContext } from "./SidebarProvider";
 import { WorkspaceSelector } from "./WorkspaceSelector";
@@ -81,7 +83,7 @@ export const SidebarView = () => {
 										<FilePlusIcon className="size-5" />
 									</Button>
 								</TooltipTrigger>
-								<TooltipContent>New note</TooltipContent>
+								<TooltipContent>New doc</TooltipContent>
 							</Tooltip>
 						)}
 						{workspace && (
@@ -141,7 +143,7 @@ export const SidebarView = () => {
 								<TooltipContent>Collapse sidebar</TooltipContent>
 							</Tooltip>
 						</div>
-						<WorkspaceSelector />
+						<ProjectSelector />
 						{workspace && (
 							<div className="mt-4 flex items-center gap-1 px-4">
 								<NewNote />
@@ -154,10 +156,11 @@ export const SidebarView = () => {
 								className="w-full justify-start border border-border text-sm font-medium text-secondary hover:bg-card/50 hover:text-secondary"
 								onClick={() => setIsSearchBarOpen(true)}>
 								<SearchIcon className="size-4" />
-								<span>Search for notes</span>
+								<span>Search</span>
 							</Button>
-							<LatestThoughts />
-							<Collections />
+							<LibraryView />
+							{/* <LatestThoughts /> */}
+							{/* <Collections /> */}
 							<div className="h-4" />
 						</div>
 					</>

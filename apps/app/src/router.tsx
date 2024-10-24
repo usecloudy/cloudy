@@ -21,6 +21,9 @@ import { Navbar } from "./views/navigation/Navbar";
 import { SidebarView } from "./views/navigation/SidebarView";
 import { NotFoundView } from "./views/notFound/NotFoundView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
+import { NewProjectView } from "./views/projects/NewProjectView";
+import { ProjectOutlet } from "./views/projects/ProjectContext";
+import { ProjectView } from "./views/projects/ProjectView";
 import { SearchBarControl } from "./views/search/SearchBar";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
 import { WorkspacelessThoughtRedirectView } from "./views/thoughtDetail/WorkspacelessThoughtRedirectView";
@@ -92,6 +95,14 @@ export const Router: FC = () => {
 							<Route path="/workspaces/:wsSlug/settings" element={<WorkspaceSettingsView />} />
 							<Route path="/workspaces/:wsSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
 							<Route path="/workspaces/:wsSlug/collections/:collectionId" element={<CollectionDetailView />} />
+							<Route path="/workspaces/:wsSlug/projects/new" element={<NewProjectView />} />
+							<Route path="/workspaces/:wsSlug/projects/:projectSlug" element={<ProjectOutlet />}>
+								<Route path="/workspaces/:wsSlug/projects/:projectSlug" element={<ProjectView />} />
+								<Route
+									path="/workspaces/:wsSlug/projects/:projectSlug/docs/:thoughtId"
+									element={<ThoughtDetailView />}
+								/>
+							</Route>
 						</Route>
 						<Route path="/auth/password-reset" element={<PasswordResetView />} />
 						<Route path="/auth/invite-accept" element={<InviteAcceptView />} />

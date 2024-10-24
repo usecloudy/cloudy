@@ -35,3 +35,11 @@ export const commentThreadQueryKeys = {
 	threadComments: (commentId?: string | null) => ["comment", commentId, "threadComments"] as const,
 	temporaryComment: (commentId?: string | null) => ["comment", commentId, "temporaryComment"] as const,
 };
+
+export const workspaceQueryKeys = {
+	allProjects: (workspaceId?: string) => ["workspace", workspaceId, "projects"] as const,
+};
+
+export const projectQueryKeys = {
+	library: (projectId?: string) => ["project", projectId, "library"] as const,
+};

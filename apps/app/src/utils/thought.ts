@@ -10,6 +10,10 @@ export const makeThoughtUrl = (wsSlug: string, thoughtId: string) => {
 	return `/workspaces/${wsSlug}/thoughts/${thoughtId}`;
 };
 
+export const makeProjectDocUrl = (wsSlug: string, projectSlug: string, docId: string) => {
+	return `/workspaces/${wsSlug}/projects/${projectSlug}/docs/${docId}`;
+};
+
 export const makeThoughtLabel = (thought: {
 	title: string | null;
 	content_plaintext: string | null;
