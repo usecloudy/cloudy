@@ -11,6 +11,8 @@ import { useAllUserWorkspaces } from "src/stores/user";
 import { useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
 
+import { useProject } from "../projects/ProjectContext";
+
 const useWorkspaceProjects = () => {
 	const currentWorkspace = useWorkspaceStore(s => s.workspace);
 
@@ -30,6 +32,7 @@ const useWorkspaceProjects = () => {
 export const ProjectSelector = () => {
 	const currentWorkspace = useWorkspaceStore(s => s.workspace);
 	const { data: projects } = useWorkspaceProjects();
+	const project = useProject();
 
 	if (!currentWorkspace) {
 		return null;
@@ -40,10 +43,16 @@ export const ProjectSelector = () => {
 			<div className="flex flex-1 overflow-hidden">
 				<Dropdown
 					trigger={
-						<Button variant="outline" className="flex flex-1 items-center justify-between overflow-hidden">
-							<div className="flex flex-1 flex-row items-center gap-2 overflow-hidden">
-								<LayoutDashboardIcon className="size-4 shrink-0 text-secondary group-hover:text-accent" />
-								{/* <span className="truncate">{currentWorkspace.name}</span> */}
+						<Button
+							variant="outline"
+							className="flex h-12 flex-1 items-center justify-between overflow-hidden pl-4 pr-2">
+							<div className="flex flex-1 flex-col items-start overflow-hidden">
+								<span className="text-xs text-secondary">Project</span>
+								{project ? (
+									<span className="truncate">{project.name}</span>
+								) : (
+									<span className="truncate">No project selected</span>
+								)}
 							</div>
 							<ChevronDownIcon className="size-4" />
 						</Button>
@@ -77,11 +86,6 @@ export const ProjectSelector = () => {
 					</div>
 				</Dropdown>
 			</div>
-			<Link to={`/workspaces/${currentWorkspace.slug}/settings`}>
-				<Button variant="ghost" size="icon">
-					<SettingsIcon className="size-5" />
-				</Button>
-			</Link>
 		</div>
 	);
 };

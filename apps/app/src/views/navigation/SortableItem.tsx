@@ -7,8 +7,8 @@ import { useEditable } from "use-editable";
 
 import { Button } from "src/components/Button";
 import { Dropdown, DropdownItem } from "src/components/Dropdown";
-import { useClickOutside } from "src/hooks/useClickOutside";
 import { cn } from "src/utils";
+import { useClickOutside } from "src/utils/hooks/useClickOutside";
 
 type SortableItemProps = {
 	id: string;
@@ -118,7 +118,7 @@ export const SortableItem = ({
 					</>
 				)}
 				{type === "document" && <FileIcon className="size-4 shrink-0" />}
-				<span className="flex-1 truncate">{name}</span>
+				<span className="flex-1 truncate">{name || "Untitled"}</span>
 				<Button
 					variant="ghost"
 					size="icon-xs-overflow"

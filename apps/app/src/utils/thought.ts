@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 import { useWorkspaceStore } from "src/stores/workspace";
+import { useProject } from "src/views/projects/ProjectContext";
 import { useEditThought } from "src/views/thoughtDetail/hooks";
 
 import { ellipsizeText } from "./strings";
@@ -24,6 +25,8 @@ export const makeThoughtLabel = (thought: {
 
 export const useCreateThought = () => {
 	const workspace = useWorkspaceStore(s => s.workspace);
+	const project = useProject();
+
 	const editThoughtMutation = useEditThought();
 	const navigate = useNavigate();
 
@@ -37,8 +40,13 @@ export const useCreateThought = () => {
 				collectionId: payload.collectionId,
 				ts: new Date(),
 			});
+
 			if (newThought) {
-				navigate(makeThoughtUrl(workspace.slug, newThought.id));
+				if (project) {
+					navigate(makeProjectDocUrl(workspace.slug, project.slug, newThought.id));
+				} else {
+					navigate(makeThoughtUrl(workspace.slug, newThought.id));
+				}
 			}
 		},
 	});

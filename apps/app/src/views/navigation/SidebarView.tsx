@@ -23,14 +23,11 @@ import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
 import { useSearchBarStore } from "../search/searchBarStore";
 import { GenerateDoc } from "../thoughtDetail/GenerateDoc";
-import { Collections } from "./Collections";
-import { LatestThoughts } from "./LatestThoughts";
 import { LibraryView } from "./LibraryView";
 import { NewNote } from "./NewNote";
 import { ProjectSelector } from "./ProjectSelector";
 import { SidebarDropdown } from "./SidebarDropdown";
 import { useSidebarContext } from "./SidebarProvider";
-import { WorkspaceSelector } from "./WorkspaceSelector";
 
 const minimalSidebarRoutePaths = ["/workspaces/new/setup", "/auth/invite-accept", "/auth/complete-account-setup"];
 
