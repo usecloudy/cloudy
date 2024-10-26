@@ -9,7 +9,7 @@ import { LoadingView } from "../loading/LoadingView";
 
 interface ProjectStore {
 	project: ProjectRecord | null;
-	setProject: (project: ProjectRecord) => void;
+	setProject: (project: ProjectRecord | null) => void;
 }
 
 export const useProjectStore = create<ProjectStore>(set => ({
@@ -19,9 +19,7 @@ export const useProjectStore = create<ProjectStore>(set => ({
 
 export const useProject = () => {
 	const { project } = useProjectStore();
-	// if (!project) {
-	// 	throw new Error("Project not loaded");
-	// }
+
 	return project;
 };
 

@@ -1,4 +1,4 @@
-import { ProjectConnections, RepositoryConnection, RepositoryProvider } from "@cloudy/utils/common";
+import { RepositoryConnection, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { supabase } from "src/clients/supabase";
@@ -9,26 +9,27 @@ export const useCreateProject = () => {
 
 	return useMutation({
 		mutationFn: async (data: { name: string; slug: string; repositoryConnection?: RepositoryConnection }) => {
-			const projectConnections: ProjectConnections = {
-				repositories: [],
-			};
-
-			if (data.repositoryConnection) {
-				projectConnections.repositories.push(data.repositoryConnection);
-			}
-
 			const { data: project, error } = await supabase
 				.from("projects")
 				.insert({
 					name: data.name,
 					slug: data.slug,
 					workspace_id: workspace.id,
-					connections: JSON.stringify(projectConnections),
 				})
 				.select()
 				.single();
 
 			if (error) throw error;
+
+			if (data.repositoryConnection) {
+				handleSupabaseError(
+					await supabase.from("repository_connections").insert({
+						project_id: project.id,
+						...data.repositoryConnection,
+					}),
+				);
+			}
+
 			return { projectSlug: project.slug };
 		},
 	});

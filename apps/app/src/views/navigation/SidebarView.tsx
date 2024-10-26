@@ -1,6 +1,5 @@
 import {
 	ArrowLeftIcon,
-	ArrowRightIcon,
 	ChevronsLeftIcon,
 	ChevronsRightIcon,
 	CircleFadingArrowUp,
@@ -21,13 +20,16 @@ import { useBreakpoint } from "src/utils/tailwind";
 import { useCreateThought } from "src/utils/thought";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
+import { useProject } from "../projects/ProjectContext";
 import { useSearchBarStore } from "../search/searchBarStore";
 import { GenerateDoc } from "../thoughtDetail/GenerateDoc";
 import { LibraryView } from "./LibraryView";
 import { NewNote } from "./NewNote";
 import { ProjectSelector } from "./ProjectSelector";
+import { ProjectsList } from "./ProjectsList";
 import { SidebarDropdown } from "./SidebarDropdown";
 import { useSidebarContext } from "./SidebarProvider";
+import { WorkspaceSelector } from "./WorkspaceSelector";
 
 const minimalSidebarRoutePaths = ["/workspaces/new/setup", "/auth/invite-accept", "/auth/complete-account-setup"];
 
@@ -39,6 +41,7 @@ export const SidebarView = () => {
 	const userRecord = useUserRecord();
 	const workspace = useWorkspaceStore(s => s.workspace);
 	const { setIsOpen: setIsSearchBarOpen } = useSearchBarStore();
+	const project = useProject();
 
 	const { data } = useCustomerStatus();
 	const customerStatus = data?.customerStatus;
@@ -107,42 +110,14 @@ export const SidebarView = () => {
 					<div className="flex-1"></div>
 				) : (
 					<>
-						<div className="mb-2 hidden w-full flex-row items-center justify-between gap-2 px-4 md:flex">
-							<div className="flex flex-row items-center">
-								<div className="hidden md:block">
-									<Link to="/">
-										<Button aria-label="Home" variant="ghost" size="icon">
-											<HomeIcon className="size-5" />
-										</Button>
-									</Link>
-								</div>
-								<Button onClick={() => window.history.back()} aria-label="Go back" variant="ghost" size="icon">
-									<ArrowLeftIcon className="size-5" />
-								</Button>
-								<Button
-									onClick={() => window.history.forward()}
-									aria-label="Go forward"
-									variant="ghost"
-									size="icon">
-									<ArrowRightIcon className="size-5" />
-								</Button>
+						<WorkspaceSelector />
+						{project && (
+							<div className="mb-4">
+								<ProjectSelector />
 							</div>
-							<Tooltip durationPreset="short">
-								<TooltipTrigger>
-									<Button
-										onClick={() => setIsSidebarCollapsed(true)}
-										variant="ghost"
-										size="icon"
-										aria-label="Collapse sidebar">
-										<ChevronsLeftIcon className="size-6" />
-									</Button>
-								</TooltipTrigger>
-								<TooltipContent>Collapse sidebar</TooltipContent>
-							</Tooltip>
-						</div>
-						<ProjectSelector />
+						)}
 						{workspace && (
-							<div className="mt-4 flex items-center gap-1 px-4">
+							<div className="flex items-center gap-1 px-4">
 								<NewNote />
 								<GenerateDoc />
 							</div>
@@ -155,6 +130,7 @@ export const SidebarView = () => {
 								<SearchIcon className="size-4" />
 								<span>Search</span>
 							</Button>
+							{!project && <ProjectsList />}
 							<LibraryView />
 							{/* <LatestThoughts /> */}
 							{/* <Collections /> */}

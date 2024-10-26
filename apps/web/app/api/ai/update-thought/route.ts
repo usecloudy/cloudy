@@ -7,8 +7,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "app/api/utils/supabase";
 import { addSignal, checkForSignal, removeSignal } from "app/api/utils/thoughts";
 
-import { intentSummaryEmbeddingPipeline } from "./embed/embedThought";
-import { ideateThought } from "./ideate";
 import { suggestTitle } from "./suggest-title";
 
 const MINIMUM_CONTENT_LENGTH = 3;
@@ -64,11 +62,7 @@ const processThought = async (thoughtId: string, supabase: SupabaseClient<Databa
 	await addSignal(ThoughtSignals.AI_THOUGHT_UPDATE, thoughtRecord.id, supabase);
 
 	try {
-		await Promise.all([
-			ideateThought(thoughtRecord, supabase, options),
-			suggestTitle(thoughtRecord, supabase),
-			intentSummaryEmbeddingPipeline(thoughtRecord, supabase, options?.force),
-		]);
+		await Promise.all([suggestTitle(thoughtRecord, supabase)]);
 
 		await supabase.from("thoughts").update({ last_suggestion_content_md: contentMd }).eq("id", thoughtRecord.id);
 	} finally {

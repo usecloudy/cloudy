@@ -65,9 +65,6 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 					</div>
 				)}
 			</div>
-			<div className="pr-4">
-				<CollectionCarousel />
-			</div>
 		</div>
 	);
 };

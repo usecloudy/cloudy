@@ -12,7 +12,6 @@ import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
 
 import { PendingAttachmentNode } from "./PendingAttachment";
-import { EvolvingSectionNode } from "./evolvingSection/EvolvingSectionNode";
 import { Mention, mention } from "./mention";
 import ResizableImageExtension from "./resizableImageExtension";
 
@@ -175,7 +174,6 @@ export const tiptapExtensions = [
 		linkOnPaste: true,
 		protocols: ["http", "https", "mailto"],
 	}),
-	EvolvingSectionNode,
 ];
 
 export const clearAllEditMarks = (editor: Editor) => {

@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { produce } from "immer";
 
 import { queryClient } from "src/api/queryClient";
-import { projectQueryKeys } from "src/api/queryKeys";
+import { projectQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { useWorkspace } from "src/stores/workspace";
 import { useProject } from "src/views/projects/ProjectContext";
@@ -17,15 +17,23 @@ export const assignDocumentToFolder = async (docId: string, folderId: string) =>
 		.eq("id", docId);
 };
 
-export const getRootFolder = async (projectId: string) => {
-	return handleSupabaseError(
-		await supabase.from("folders").select("id").eq("project_id", projectId).eq("is_root", true).maybeSingle(),
-	);
+export const getRootFolder = async (projectId?: string) => {
+	let rootFolderQuery = supabase.from("folders").select("id").eq("is_root", true);
+	if (projectId) {
+		rootFolderQuery = rootFolderQuery.eq("project_id", projectId);
+	} else {
+		rootFolderQuery = rootFolderQuery.is("project_id", null);
+	}
+	return handleSupabaseError(await rootFolderQuery.maybeSingle());
 };
 
-export const createRootFolder = async (projectId: string) => {
+export const createRootFolder = async (projectId?: string) => {
 	return handleSupabaseError(
-		await supabase.from("folders").insert({ project_id: projectId, name: "<ROOT>", is_root: true }).select().single(),
+		await supabase
+			.from("folders")
+			.insert({ project_id: projectId ?? null, name: "<ROOT>", is_root: true })
+			.select()
+			.single(),
 	);
 };
 
@@ -49,35 +57,39 @@ export type PreFlattenedFolder = FlattenedItem & {
 
 export const useLibraryItems = () => {
 	const project = useProject();
+
 	return useQuery({
 		queryKey: projectQueryKeys.library(project?.id),
 		queryFn: async () => {
-			if (!project) return [];
-			const recentDocs = handleSupabaseError(
-				await supabase.from("thoughts").select("id, title").eq("project_id", project.id).is("folder_id", null),
-			);
-			const docs = handleSupabaseError(
-				await supabase
-					.from("thoughts")
-					.select("id, title, index, folder:folders!inner(id, is_root)")
-					.eq("project_id", project.id)
-					.not("folder_id", "is", null),
-			);
-			const rootFolder = await getRootFolder(project.id);
-			if (!rootFolder) return [];
-			const folders = handleSupabaseError(
-				await supabase
-					.from("folders")
-					.select("id, name, parent_id, is_root, index")
-					.eq("project_id", project.id)
-					.eq("is_root", false),
-			);
+			let recentDocsQuery = supabase.from("thoughts").select("id, title").is("folder_id", null);
+
+			let docsQuery = supabase
+				.from("thoughts")
+				.select("id, title, index, folder:folders!inner(id, is_root)")
+				.not("folder_id", "is", null);
+
+			let foldersQuery = supabase.from("folders").select("id, name, parent_id, is_root, index").eq("is_root", false);
+
+			if (project) {
+				recentDocsQuery = recentDocsQuery.eq("project_id", project.id);
+				docsQuery = docsQuery.eq("project_id", project.id);
+				foldersQuery = foldersQuery.eq("project_id", project.id);
+			} else {
+				recentDocsQuery = recentDocsQuery.is("project_id", null);
+				docsQuery = docsQuery.is("project_id", null);
+				foldersQuery = foldersQuery.is("project_id", null);
+			}
+
+			const recentDocs = handleSupabaseError(await recentDocsQuery);
+			const docs = handleSupabaseError(await docsQuery);
+			const rootFolder = await getRootFolder(project?.id);
+			const folders = handleSupabaseError(await foldersQuery);
 
 			console.log("docs", docs);
 			console.log("root", rootFolder);
 			const getFolderChildren = (folderId: string, depth: number): FlattenedItem[] => {
 				console.log("getFolderChildren", folderId, depth);
-				const parentId = folderId === rootFolder.id ? "<ROOT>" : folderId;
+				const parentId = folderId === rootFolder!.id ? "<ROOT>" : folderId;
 				const childDocs = docs
 					.filter(doc => doc.folder?.id === folderId)
 					.map(
@@ -123,7 +135,7 @@ export const useLibraryItems = () => {
 				return result;
 			};
 
-			const rootItems = getFolderChildren(rootFolder.id, 0);
+			const rootItems = rootFolder ? getFolderChildren(rootFolder.id, 0) : [];
 
 			let items = [
 				...rootItems,
@@ -140,7 +152,6 @@ export const useLibraryItems = () => {
 
 			return items as FlattenedItem[];
 		},
-		enabled: Boolean(project),
 		initialData: [],
 	});
 };
@@ -151,13 +162,12 @@ export const useSetLibraryItems = () => {
 
 	return useMutation({
 		mutationFn: async (payload: { prevItems: FlattenedItem[]; newItems: FlattenedItem[] }) => {
-			if (!project) return;
 			const { prevItems, newItems } = payload;
 
 			console.log("prevItems", prevItems);
 			console.log("newItems", newItems);
 
-			const rootFolder = await getRootFolder(project.id);
+			const rootFolder = await getRootFolder(project?.id);
 
 			if (!rootFolder) {
 				return;
@@ -196,6 +206,7 @@ export const useSetLibraryItems = () => {
 						folder_id: doc.parentId,
 						index: doc.index,
 						workspace_id: workspace.id,
+						project_id: project?.id,
 					})),
 				),
 			);
@@ -206,7 +217,7 @@ export const useSetLibraryItems = () => {
 						id: folder.id,
 						index: folder.index,
 						parent_id: folder.parentId,
-						project_id: project.id,
+						project_id: project?.id,
 					})),
 				),
 			);
@@ -221,11 +232,9 @@ export const useMakeInitialLibrary = () => {
 	const project = useProject();
 	return useMutation({
 		mutationFn: async (initialDocId?: string) => {
-			if (!project) return;
-
-			let rootFolder = await getRootFolder(project.id);
+			let rootFolder = await getRootFolder(project?.id);
 			if (!rootFolder) {
-				rootFolder = await createRootFolder(project.id);
+				rootFolder = await createRootFolder(project?.id);
 			}
 
 			if (initialDocId) {
@@ -254,11 +263,10 @@ export const useCreateFolder = () => {
 	const project = useProject();
 	return useMutation({
 		mutationFn: async () => {
-			if (!project) return;
-			const rootFolder = await getRootFolder(project.id);
+			const rootFolder = await getRootFolder(project?.id);
 			if (!rootFolder) return;
 			await supabase.from("folders").insert({
-				project_id: project.id,
+				project_id: project?.id,
 				name: "New Folder",
 				is_root: false,
 				parent_id: rootFolder.id,
@@ -284,3 +292,45 @@ export const syncItemIndices = (items: FlattenedItem[]) =>
 			currentFolderIndex++;
 		}
 	});
+
+export const useRenameItem = () => {
+	const project = useProject();
+
+	return useMutation({
+		mutationFn: async (payload: { id: string; name: string; type: "document" | "folder" }) => {
+			const { id, name, type } = payload;
+
+			if (type === "document") {
+				await supabase.from("thoughts").update({ title: name }).eq("id", id);
+			} else {
+				await supabase.from("folders").update({ name }).eq("id", id);
+			}
+		},
+		onSuccess: (_, payload) => {
+			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(project?.id) });
+			if (payload.type === "document") {
+				queryClient.invalidateQueries({ queryKey: thoughtQueryKeys.thoughtDetail(payload.id) });
+			}
+		},
+	});
+};
+
+export const useDeleteItem = () => {
+	const project = useProject();
+	return useMutation({
+		mutationFn: async (payload: { id: string; type: "document" | "folder" }) => {
+			const { id, type } = payload;
+			if (type === "document") {
+				await supabase.from("thoughts").delete().eq("id", id);
+			} else {
+				await supabase.from("folders").delete().eq("id", id);
+			}
+		},
+		onSuccess: (_, payload) => {
+			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(project?.id) });
+			if (payload.type === "document") {
+				queryClient.invalidateQueries({ queryKey: thoughtQueryKeys.thoughtDetail(payload.id) });
+			}
+		},
+	});
+};

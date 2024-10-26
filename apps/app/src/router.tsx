@@ -13,6 +13,7 @@ import { SignIn } from "./views/auth/SignIn";
 import { SignOutView } from "./views/auth/SignOutView";
 import { SignUp } from "./views/auth/SignUp";
 import { CollectionDetailView } from "./views/collectionDetail/CollectionDetailView";
+import { ConnectGithubToWorkspaceView } from "./views/github/ConnectGithubToWorkspaceView";
 import { HomeView } from "./views/home/HomeView";
 import { RedirectToDefaultOrg } from "./views/home/RedirectToDefaultOrg";
 import { LoadingView } from "./views/loading/LoadingView";
@@ -110,6 +111,7 @@ export const Router: FC = () => {
 					</Route>
 					<Route path="/onboarding/workspaces/new" element={<NewWorkspaceView />} />
 					<Route path="/onboarding/workspaces/new/website-onboarding" element={<WorkspaceWebsiteOnboardingView />} />
+					<Route path="/onboarding/integrations/github/connect" element={<ConnectGithubToWorkspaceView />} />
 					<Route path="/onboarding/workspaces/:wsSlug" element={<WorkspaceLayout />}>
 						<Route path="/onboarding/workspaces/:wsSlug/initial-collections" element={<InitialCollectionsView />} />
 					</Route>

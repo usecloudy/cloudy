@@ -864,7 +864,7 @@ export type Database = {
           is_root: boolean | null
           name: string | null
           parent_id: string | null
-          project_id: string
+          project_id: string | null
         }
         Insert: {
           created_at?: string
@@ -873,7 +873,7 @@ export type Database = {
           is_root?: boolean | null
           name?: string | null
           parent_id?: string | null
-          project_id: string
+          project_id?: string | null
         }
         Update: {
           created_at?: string
@@ -882,7 +882,7 @@ export type Database = {
           is_root?: boolean | null
           name?: string | null
           parent_id?: string | null
-          project_id?: string
+          project_id?: string | null
         }
         Relationships: [
           {
@@ -1634,6 +1634,35 @@ export type Database = {
             columns: ["id"]
             isOneToOne: true
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_github_connections: {
+        Row: {
+          created_at: string
+          id: string
+          installation_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          installation_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          installation_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_github_connections_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]

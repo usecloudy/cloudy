@@ -28,7 +28,6 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 					</Button>
 				</div>
 				<div className="flex w-full flex-col gap-4 md:flex-row lg:flex-col">
-					<AiFeed thoughtId={thoughtId} />
 					<div className="flex w-full flex-col gap-4 md:w-1/2 lg:w-full">
 						<RelatedNotes thoughtId={thoughtId} />
 					</div>

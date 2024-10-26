@@ -81,3 +81,26 @@ export interface ScrapeSiteGetResponse {
 export interface RepoFilesGetResponse {
     paths: RepoReference[];
 }
+
+export interface GithubVerifyInstallationResponse {
+    success: boolean;
+    account: {
+        id: string;
+        login: string;
+    };
+    accessToken: string;
+}
+
+export interface GithubRepository {
+    id: number;
+    name: string;
+    fullName: string;
+    private: boolean;
+    description: string | null;
+    defaultBranch: string;
+    installationId: number;
+}
+
+export interface GithubAllWorkspaceReposGetResponse {
+    repositories: GithubRepository[];
+}

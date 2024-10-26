@@ -1,21 +1,33 @@
-import { VALID_WORKSPACE_SLUG_CHARS, checkIfSlugIsAvailable, createNonConflictingSlug } from "@cloudy/utils/common";
+import {
+	GithubRepository,
+	RepositoryConnection,
+	RepositoryProvider,
+	VALID_WORKSPACE_SLUG_CHARS,
+	checkIfSlugIsAvailable,
+	createNonConflictingSlug,
+} from "@cloudy/utils/common";
+import { GithubAllWorkspaceReposGetResponse } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftIcon, GitBranchIcon } from "lucide-react";
 import posthog from "posthog-js";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import { useMount } from "react-use";
 
+import { apiClient } from "src/api/client";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Input } from "src/components/Input";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { MainLayout } from "src/components/MainLayout";
+import { SelectDropdown } from "src/components/SelectDropdown";
 import { useUserRecord } from "src/stores/user";
 import { useWorkspace } from "src/stores/workspace";
 
+import { ConnectGithubCard } from "../github/ConnectGithubCard";
 import { NameAndSlugFields } from "../workspaces/Fields";
 import { useCreateProject, useUserProjects } from "./hooks";
 
@@ -39,6 +51,23 @@ const useCheckSlugAvailability = () => {
 		mutationFn: async (slug: string) => {
 			return await checkIfSlugIsAvailable(slug, supabase);
 		},
+	});
+};
+
+const useWorkspaceRepos = (workspaceId?: string) => {
+	return useQuery({
+		queryKey: ["workspace-repos", workspaceId],
+		queryFn: async () => {
+			if (!workspaceId) return { repositories: [] };
+			const response = await apiClient.get<GithubAllWorkspaceReposGetResponse>(
+				"/api/integrations/github/all-workspace-repos",
+				{
+					params: { workspaceId },
+				},
+			);
+			return response.data;
+		},
+		enabled: !!workspaceId,
 	});
 };
 
@@ -85,8 +114,25 @@ export const NewProjectView = () => {
 		}
 	});
 
+	const { data: reposData } = useWorkspaceRepos(workspace?.id);
+
 	const onSubmit = async (data: FormData) => {
-		const { projectSlug } = await createProjectMutation.mutateAsync(data);
+		const repo = reposData?.repositories.find(repo => repo.fullName === data.githubRepo);
+		let repositoryConnection: RepositoryConnection | undefined;
+		if (repo) {
+			repositoryConnection = {
+				provider: RepositoryProvider.GITHUB,
+				external_id: String(repo.id),
+				name: repo.name,
+				owner: repo.fullName.split("/")[0],
+				installation_id: String(repo.installationId),
+			} satisfies RepositoryConnection;
+		}
+
+		const { projectSlug } = await createProjectMutation.mutateAsync({
+			...data,
+			repositoryConnection,
+		});
 
 		posthog.capture("project_created", {
 			project_id: projectSlug,
@@ -113,6 +159,53 @@ export const NewProjectView = () => {
 		} else {
 			setIsSlugAvailable(null);
 		}
+	};
+
+	const [selectedOwner, setSelectedOwner] = useState<string>("");
+
+	// Group repositories by owner
+	const reposByOwner = useMemo(() => {
+		if (!reposData?.repositories) return [];
+
+		const ownerMap = new Map<string, GithubRepository[]>();
+
+		reposData.repositories.forEach(repo => {
+			const owner = repo.fullName.split("/")[0];
+			if (!ownerMap.has(owner)) {
+				ownerMap.set(owner, []);
+			}
+			ownerMap.get(owner)!.push(repo);
+		});
+
+		return Array.from(ownerMap.entries()).map(([login, repositories]) => ({
+			login,
+			repositories,
+		}));
+	}, [reposData?.repositories]);
+
+	// Create options for owner dropdown
+	const ownerOptions = reposByOwner.map(owner => ({
+		value: owner.login,
+		label: owner.login,
+		disabled: false,
+	}));
+
+	// Create options for repository dropdown
+	const repoOptions = useMemo(() => {
+		const owner = reposByOwner.find(o => o.login === selectedOwner);
+		if (!owner) return [];
+
+		return owner.repositories.map(repo => ({
+			value: repo.fullName,
+			label: repo.name,
+			disabled: false,
+		}));
+	}, [reposByOwner, selectedOwner]);
+
+	// Handle owner selection
+	const handleOwnerChange = (value: string) => {
+		setSelectedOwner(value);
+		setValue("githubRepo", ""); // Clear repo selection when owner changes
 	};
 
 	return (
@@ -162,14 +255,26 @@ export const NewProjectView = () => {
 					</div>
 					<div className="flex flex-col gap-2">
 						<label htmlFor="githubRepo" className="font-medium">
-							GitHub Repository (optional)
+							Connect GitHub Repository (optional)
 						</label>
-						<input
-							id="githubRepo"
-							{...register("githubRepo")}
-							placeholder="username/repo"
-							className="rounded-md border border-border bg-background px-3 py-2 text-sm"
-						/>
+						<ConnectGithubCard />
+						<div className="flex flex-col gap-2">
+							<SelectDropdown
+								options={ownerOptions}
+								value={selectedOwner}
+								onChange={handleOwnerChange}
+								placeholder="Select organization/owner"
+								className="w-full"
+							/>
+							<SelectDropdown
+								options={repoOptions}
+								value={watch("githubRepo") || ""}
+								onChange={value => setValue("githubRepo", value)}
+								placeholder="Select repository"
+								className="w-full"
+								disabled={!selectedOwner}
+							/>
+						</div>
 					</div>
 					<Button
 						type="submit"

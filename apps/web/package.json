@@ -26,6 +26,7 @@
 		"@cloudy/utils": "*",
 		"@next/bundle-analyzer": "^14.2.3",
 		"@octokit/auth-app": "^7.1.1",
+		"@octokit/oauth-methods": "^5.1.2",
 		"@opentelemetry/api-logs": "^0.52.1",
 		"@opentelemetry/instrumentation": "^0.52.1",
 		"@opentelemetry/sdk-logs": "^0.52.1",

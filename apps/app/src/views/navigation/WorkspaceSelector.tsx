@@ -1,4 +1,4 @@
-import { CheckIcon, ChevronDownIcon, LayoutDashboardIcon, PlusIcon, SettingsIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, HomeIcon, LayoutDashboardIcon, PlusIcon, SettingsIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Button } from "src/components/Button";
@@ -6,6 +6,7 @@ import { Dropdown, DropdownItem, DropdownSeparator } from "src/components/Dropdo
 import { useAllUserWorkspaces } from "src/stores/user";
 import { useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
+import { makeWorkspaceHomeUrl, makeWorkspaceSettingsUrl } from "src/utils/workspaces";
 
 export const WorkspaceSelector = () => {
 	const currentWorkspace = useWorkspaceStore(s => s.workspace);
@@ -16,19 +17,35 @@ export const WorkspaceSelector = () => {
 	}
 
 	return (
-		<div className="flex max-w-full items-center justify-between gap-1 overflow-hidden px-4">
+		<div className="mb-2 flex max-w-full items-center justify-between gap-1 overflow-hidden border-b border-border px-4 pb-2">
 			<div className="flex flex-1 overflow-hidden">
 				<Dropdown
 					trigger={
-						<Button variant="outline" className="flex flex-1 items-center justify-between overflow-hidden">
-							<div className="flex flex-1 flex-row items-center gap-2 overflow-hidden">
-								<LayoutDashboardIcon className="size-4 shrink-0 text-secondary group-hover:text-accent" />
+						<Button
+							variant="outline"
+							className="flex h-12 flex-1 items-center justify-between overflow-hidden pr-2">
+							<div className="flex flex-1 flex-col items-start overflow-hidden">
+								<span className="text-xs text-secondary">Workspace</span>
 								<span className="truncate">{currentWorkspace.name}</span>
 							</div>
 							<ChevronDownIcon className="size-4" />
 						</Button>
 					}>
 					<div className="flex flex-col">
+						<Link to={makeWorkspaceHomeUrl(currentWorkspace.slug)}>
+							<DropdownItem>
+								<HomeIcon className="size-4" />
+								Workspace home
+							</DropdownItem>
+						</Link>
+						<Link to={makeWorkspaceSettingsUrl(currentWorkspace.slug)}>
+							<DropdownItem>
+								<SettingsIcon className="size-4" />
+								Workspace settings
+							</DropdownItem>
+						</Link>
+						<DropdownSeparator />
+						<span className="pl-3 pt-1 text-xs font-medium text-secondary">Your Workspaces</span>
 						{allUserWorkspaces?.map(workspace => (
 							<Link to={`/workspaces/${workspace.slug}`} key={workspace.id}>
 								<DropdownItem className={cn(workspace.id === currentWorkspace.id ? "bg-card/50" : "")}>
@@ -57,11 +74,6 @@ export const WorkspaceSelector = () => {
 					</div>
 				</Dropdown>
 			</div>
-			<Link to={`/workspaces/${currentWorkspace.slug}/settings`}>
-				<Button variant="ghost" size="icon">
-					<SettingsIcon className="size-5" />
-				</Button>
-			</Link>
 		</div>
 	);
 };

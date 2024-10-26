@@ -24,9 +24,10 @@ import {
 	useLibraryItems,
 	useMakeInitialLibrary,
 	useMoveOutOfLibrary,
+	useRenameItem,
 	useSetLibraryItems,
 } from "src/utils/folders";
-import { makeProjectDocUrl } from "src/utils/thought";
+import { makeProjectDocUrl, makeThoughtUrl } from "src/utils/thought";
 
 import { useProject } from "../projects/ProjectContext";
 import { SortableItem } from "./SortableItem";
@@ -51,78 +52,6 @@ const findDescendantFolderIds = (items: FlattenedItem[], folderId: string): stri
 };
 
 export const LibraryView = () => {
-	// const [items, setItems] = useState<FlattenedItem[]>([
-	// 	{
-	// 		id: "1",
-	// 		type: "folder",
-	// 		name: "Folder 1",
-	// 		depth: 0,
-	// 		parentId: "<ROOT>",
-	// 	},
-	// 	{
-	// 		id: "5",
-	// 		type: "document",
-	// 		name: "Document 4",
-	// 		depth: 1,
-	// 		parentId: "1",
-	// 	},
-	// 	{
-	// 		id: "6",
-	// 		type: "folder",
-	// 		name: "Folder 2",
-	// 		depth: 1,
-	// 		parentId: "1",
-	// 	},
-	// 	{
-	// 		id: "7",
-	// 		type: "document",
-	// 		name: "Document 5",
-	// 		depth: 2,
-	// 		parentId: "6",
-	// 	},
-	// 	{
-	// 		id: "2",
-	// 		type: "document",
-	// 		name: "Document 1",
-	// 		depth: 0,
-	// 		parentId: "<ROOT>",
-	// 	},
-	// 	{
-	// 		id: "3",
-	// 		type: "document",
-	// 		name: "Document 2",
-	// 		depth: 0,
-	// 		parentId: "<ROOT>",
-	// 	},
-	// 	{
-	// 		id: "4",
-	// 		type: "document",
-	// 		name: "Document 3",
-	// 		depth: 0,
-	// 		parentId: "<ROOT>",
-	// 	},
-	// 	{
-	// 		id: "r2",
-	// 		type: "document",
-	// 		name: "Recent Document 1",
-	// 		depth: 0,
-	// 		parentId: null,
-	// 	},
-	// 	{
-	// 		id: "r3",
-	// 		type: "document",
-	// 		name: "Recent Document 2",
-	// 		depth: 0,
-	// 		parentId: null,
-	// 	},
-	// 	{
-	// 		id: "r4",
-	// 		type: "document",
-	// 		name: "Recent Document 3",
-	// 		depth: 0,
-	// 		parentId: null,
-	// 	},
-	// ]);
 	const navigate = useNavigate();
 	const workspace = useWorkspace();
 	const project = useProject();
@@ -150,9 +79,6 @@ export const LibraryView = () => {
 			activationConstraint: {
 				distance: 5,
 			},
-		}),
-		useSensor(KeyboardSensor, {
-			coordinateGetter: sortableKeyboardCoordinates,
 		}),
 	);
 
@@ -303,7 +229,11 @@ export const LibraryView = () => {
 											toggleFolder={toggleFolder}
 											navigateToDoc={() => {
 												if (item.type === "document") {
-													navigate(makeProjectDocUrl(workspace.slug, project!.slug, item.id));
+													navigate(
+														project
+															? makeProjectDocUrl(workspace.slug, project.slug, item.id)
+															: makeThoughtUrl(workspace.slug, item.id),
+													);
 												}
 											}}
 											hasAfterDroppable={index === arr.length - 1 || isLastItemWithParent}
@@ -344,7 +274,7 @@ export const LibraryView = () => {
 				</SortableContext>
 				<DragOverlay>
 					{activeItem ? (
-						<div className="shadow-md">
+						<div className="opacity-40 shadow-md">
 							<SortableItem
 								id={activeItem.id}
 								depth={activeItem.depth}
@@ -396,8 +326,7 @@ const MoveOutOfLibraryDroppable = ({ hasRecentDocs }: { hasRecentDocs: boolean }
 		);
 	}
 
-	console.log("active", active);
-	if (!active.data.current?.isInLibrary) {
+	if (!active.data.current?.isInLibrary || active.data.current.type === "folder") {
 		return null;
 	}
 

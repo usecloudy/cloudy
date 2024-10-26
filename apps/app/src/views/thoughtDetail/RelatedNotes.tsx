@@ -1,7 +1,7 @@
-import { ThoughtSignals, handleSupabaseError } from "@cloudy/utils/common";
+import { handleSupabaseError } from "@cloudy/utils/common";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDownIcon, ChevronUpIcon, LinkIcon, SparklesIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { ChevronDownIcon, ChevronUpIcon, LinkIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { queryClient } from "src/api/queryClient";
 import { thoughtQueryKeys } from "src/api/queryKeys";
@@ -10,18 +10,6 @@ import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { ThoughtCard } from "src/components/ThoughtCard";
 import { fixOneToOne } from "src/utils";
-import { useDebug } from "src/utils/debug";
-
-import { useThought } from "./hooks";
-
-const useIsAiEmbeddingLoading = (thoughtId?: string) => {
-	const { data: thought } = useThought(thoughtId);
-
-	return useMemo(() => {
-		const signals = thought?.signals as string[] | null;
-		return signals?.includes(ThoughtSignals.EMBEDDING_UPDATE);
-	}, [thought?.signals]);
-};
 
 const useRelatedThoughts = (thoughtId?: string) => {
 	useEffect(() => {
@@ -242,14 +230,9 @@ const useRelatedThoughts = (thoughtId?: string) => {
 };
 
 export const RelatedNotes = ({ thoughtId }: { thoughtId?: string }) => {
-	const debug = useDebug();
-
-	const { data: thought } = useThought(thoughtId);
-	const isAiEmbeddingLoading = useIsAiEmbeddingLoading(thoughtId);
 	const { data: relatedThoughts, isLoading } = useRelatedThoughts(thoughtId);
 
 	const manuallyLinked = relatedThoughts?.linkedData ?? [];
-	const automaticallyLinked = relatedThoughts?.relatedData ?? [];
 
 	return (
 		<div className="flex w-full flex-col gap-2 rounded-md border border-border p-4">
@@ -258,31 +241,12 @@ export const RelatedNotes = ({ thoughtId }: { thoughtId?: string }) => {
 					<LoadingSpinner size="sm" />
 				</div>
 			) : (
-				<>
-					<RelatedNotesSection
-						title="Linked Notes"
-						thoughts={manuallyLinked}
-						icon={<LinkIcon className="mr-1 size-4 text-secondary" />}
-						emptyMessage="No linked notes"
-					/>
-					<RelatedNotesSection
-						title="Potentially Related Notes"
-						thoughts={automaticallyLinked}
-						icon={<SparklesIcon className="mr-1 size-4 text-secondary" />}
-						emptyMessage="No related notes (yet, keep typing!)"
-						isLoading={isAiEmbeddingLoading}
-					/>
-				</>
-			)}
-			{debug && (
-				<div className="mb-4 flex flex-col text-xs">
-					<span className="font-medium">Type:</span>
-					<span>{thought?.generated_type}</span>
-					<span className="font-medium">Intents:</span>
-					<span>{thought?.generated_intents.join(", ")}</span>
-					<span className="font-medium">Summary:</span>
-					<span>{thought?.generated_summary}</span>
-				</div>
+				<RelatedNotesSection
+					title="Linked Docs"
+					thoughts={manuallyLinked}
+					icon={<LinkIcon className="mr-1 size-4 text-secondary" />}
+					emptyMessage="No linked docs"
+				/>
 			)}
 		</div>
 	);

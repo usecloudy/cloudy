@@ -9,6 +9,7 @@ import { useWorkspaceStore } from "src/stores/workspace";
 
 import { LoadingView } from "../loading/LoadingView";
 import { SubscriptionModal } from "../pricing/PaymentGuard";
+import { useProject, useProjectStore } from "../projects/ProjectContext";
 
 const useWorkspaceSlug = (wsSlug: string) => {
 	const user = useUser();
@@ -42,15 +43,24 @@ const useWorkspaceSlug = (wsSlug: string) => {
 };
 
 export const WorkspaceLayout = () => {
-	const { wsSlug } = useParams();
+	const { wsSlug, projectSlug } = useParams();
 	const userOptions = useUserOptions();
 	const { isReady } = useWorkspaceSlug(wsSlug!);
+
+	const { setProject } = useProjectStore();
 
 	useEffect(() => {
 		if (wsSlug && wsSlug !== "undefined") {
 			userOptions.set("last_opened_workspace", wsSlug);
 		}
 	}, [wsSlug]);
+
+	useEffect(() => {
+		if (!projectSlug) {
+			// Clear project when leaving project view
+			setProject(null);
+		}
+	}, [projectSlug, setProject]);
 
 	if (!wsSlug || wsSlug === "undefined") {
 		return <Navigate to="/" />;
