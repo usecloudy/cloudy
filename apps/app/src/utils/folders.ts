@@ -5,6 +5,7 @@ import { produce } from "immer";
 import { queryClient } from "src/api/queryClient";
 import { projectQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
+import { useUser } from "src/stores/user";
 import { useWorkspace } from "src/stores/workspace";
 import { useProject } from "src/views/projects/ProjectContext";
 
@@ -59,6 +60,7 @@ export type PreFlattenedFolder = FlattenedItem & {
 
 export const useLibraryItems = () => {
 	const project = useProject();
+	const user = useUser();
 
 	return useQuery({
 		queryKey: projectQueryKeys.library(project?.id),
@@ -145,7 +147,7 @@ export const useLibraryItems = () => {
 
 			// Separate recent docs into categories
 			const sharedDocs = recentDocs
-				.filter(doc => doc.access_strategy === "shared")
+				.filter(doc => doc.access_strategy === AccessStrategies.PRIVATE && doc.author_id !== user.id)
 				.map(doc => ({
 					id: doc.id,
 					type: "document" as const,
@@ -157,7 +159,7 @@ export const useLibraryItems = () => {
 				}));
 
 			const privateDocs = recentDocs
-				.filter(doc => doc.access_strategy === "private")
+				.filter(doc => doc.access_strategy === AccessStrategies.PRIVATE && doc.author_id === user.id)
 				.map(doc => ({
 					id: doc.id,
 					type: "document" as const,
@@ -169,7 +171,7 @@ export const useLibraryItems = () => {
 				}));
 
 			const workspaceDocs = recentDocs
-				.filter(doc => doc.access_strategy === "workspace")
+				.filter(doc => doc.access_strategy !== AccessStrategies.PRIVATE)
 				.map(doc => ({
 					id: doc.id,
 					type: "document" as const,
@@ -283,7 +285,7 @@ export const useMoveOutOfLibrary = () => {
 	const project = useProject();
 	return useMutation({
 		mutationFn: async (docId: string) => {
-			await supabase.from("thoughts").update({ folder_id: null }).eq("id", docId);
+			handleSupabaseError(await supabase.from("thoughts").update({ folder_id: null }).eq("id", docId).select());
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(project?.id) });
@@ -297,13 +299,15 @@ export const useCreateFolder = () => {
 		mutationFn: async () => {
 			const rootFolder = await getRootFolder(project?.id);
 			if (!rootFolder) return;
-			await supabase.from("folders").insert({
-				project_id: project?.id,
-				name: "New Folder",
-				is_root: false,
-				parent_id: rootFolder.id,
-				index: await getFolderChildrenCount(rootFolder.id),
-			});
+			handleSupabaseError(
+				await supabase.from("folders").insert({
+					project_id: project?.id,
+					name: "New Folder",
+					is_root: false,
+					parent_id: rootFolder.id,
+					index: await getFolderChildrenCount(rootFolder.id),
+				}),
+			);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(project?.id) });
@@ -333,9 +337,9 @@ export const useRenameItem = () => {
 			const { id, name, type } = payload;
 
 			if (type === "document") {
-				await supabase.from("thoughts").update({ title: name }).eq("id", id);
+				handleSupabaseError(await supabase.from("thoughts").update({ title: name }).eq("id", id));
 			} else {
-				await supabase.from("folders").update({ name }).eq("id", id);
+				handleSupabaseError(await supabase.from("folders").update({ name }).eq("id", id));
 			}
 		},
 		onSuccess: (_, payload) => {
@@ -353,9 +357,9 @@ export const useDeleteItem = () => {
 		mutationFn: async (payload: { id: string; type: "document" | "folder" }) => {
 			const { id, type } = payload;
 			if (type === "document") {
-				await supabase.from("thoughts").delete().eq("id", id);
+				handleSupabaseError(await supabase.from("thoughts").delete().eq("id", id));
 			} else {
-				await supabase.from("folders").delete().eq("id", id);
+				handleSupabaseError(await supabase.from("folders").delete().eq("id", id));
 			}
 		},
 		onSuccess: (_, payload) => {

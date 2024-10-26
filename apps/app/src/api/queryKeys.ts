@@ -14,6 +14,7 @@ export const thoughtQueryKeys = {
 	workspaceSidebarLatestThoughts: (workspaceId?: string) => [workspaceId, "latestThoughts"] as const,
 	workspaceHomeThoughts: (workspaceId?: string) => [workspaceId, "homeThoughts"] as const,
 	relatedThoughts: (thoughtId?: string) => ["relatedThoughts", thoughtId] as const,
+	sharedWith: (thoughtId?: string) => ["thought", thoughtId, "sharedWith"] as const,
 };
 
 export const topicQueryKeys = {
@@ -43,3 +44,11 @@ export const workspaceQueryKeys = {
 export const projectQueryKeys = {
 	library: (projectId?: string) => ["project", projectId, "library"] as const,
 };
+
+export const thoughtKeys = {
+	all: ["thoughts"] as const,
+	lists: () => [...thoughtKeys.all, "list"] as const,
+	list: (filters: string) => [...thoughtKeys.lists(), { filters }] as const,
+	details: () => [...thoughtKeys.all, "detail"] as const,
+	detail: (id: string) => [...thoughtKeys.details(), id] as const,
+} as const;

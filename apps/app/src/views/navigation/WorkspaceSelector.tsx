@@ -45,7 +45,7 @@ export const WorkspaceSelector = () => {
 							</DropdownItem>
 						</Link>
 						<DropdownSeparator />
-						<span className="pl-3 pt-1 text-xs font-medium text-secondary">Your Workspaces</span>
+						<span className="pb-0.5 pl-3 pt-1 text-xs font-medium text-secondary">Your Workspaces</span>
 						{allUserWorkspaces?.map(workspace => (
 							<Link to={`/workspaces/${workspace.slug}`} key={workspace.id}>
 								<DropdownItem className={cn(workspace.id === currentWorkspace.id ? "bg-card/50" : "")}>

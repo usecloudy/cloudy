@@ -276,7 +276,7 @@ export const LibraryView = () => {
 						{workspaceItems.length > 0 && (
 							<>
 								<div className="flex items-center justify-between">
-									<CategoryHeader title="Workspace Docs" />
+									<CategoryHeader title="Recent" />
 									{workspaceItems.length > 5 && (
 										<Button
 											variant="ghost"
@@ -316,7 +316,7 @@ export const LibraryView = () => {
 						{sharedItems.length > 0 && (
 							<>
 								<div className="flex items-center justify-between">
-									<CategoryHeader title="Shared Docs" />
+									<CategoryHeader title="Shared With You" />
 									{sharedItems.length > 5 && (
 										<Button
 											variant="ghost"
@@ -354,7 +354,7 @@ export const LibraryView = () => {
 						{privateItems.length > 0 && (
 							<>
 								<div className="flex items-center justify-between">
-									<CategoryHeader title="Private Docs" />
+									<CategoryHeader title="Private" />
 									{privateItems.length > 5 && (
 										<Button
 											variant="ghost"

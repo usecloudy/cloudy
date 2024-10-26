@@ -1,5 +1,5 @@
 import { AccessStrategies } from "@cloudy/utils/common";
-import { ChevronDownIcon, GlobeIcon, LinkIcon, LockIcon, UsersIcon } from "lucide-react";
+import { ChevronDownIcon, GlobeIcon, LinkIcon, LockIcon, PlusIcon, UsersIcon, XIcon } from "lucide-react";
 import { useContext, useState } from "react";
 
 import { Button } from "src/components/Button";
@@ -8,9 +8,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "src/components/Input";
 import { SelectDropdown, SelectOption } from "src/components/SelectDropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip";
+import { Avatar } from "src/components/users/Avatar";
 import { useWorkspace } from "src/stores/workspace";
 
-import { useEditThought, useThought } from "./hooks";
+import { useAddDocumentUser, useDocumentAccessControl, useRemoveDocumentUser } from "./accessControl";
+import { useEditThought } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";
 
 const makeAccessStrategyInfo = (accessStrategy: AccessStrategies) => {
@@ -27,10 +29,14 @@ const makeAccessStrategyInfo = (accessStrategy: AccessStrategies) => {
 export const ShareDialog = () => {
 	const { id: workspaceId } = useWorkspace();
 	const { thoughtId } = useContext(ThoughtContext);
-	const { data: thought } = useThought(thoughtId);
+
+	const { accessStrategy, users } = useDocumentAccessControl(thoughtId);
 	const editThoughtMutation = useEditThought(thoughtId);
 
 	const [isOpen, setIsOpen] = useState(false);
+	const [email, setEmail] = useState("");
+	const addUserMutation = useAddDocumentUser(thoughtId);
+	const removeUserMutation = useRemoveDocumentUser(thoughtId);
 
 	const shareLink = `https://app.usecloudy.com/workspaces/${workspaceId}/thoughts/${thoughtId}`;
 
@@ -50,10 +56,26 @@ export const ShareDialog = () => {
 		await editThoughtMutation.mutateAsync({ accessStrategy, ts: new Date() });
 	};
 
-	console.log("access strategy", thought?.access_strategy);
-
-	const currentAccessStrategy = (thought?.access_strategy as AccessStrategies | undefined) ?? AccessStrategies.PRIVATE;
+	const currentAccessStrategy = accessStrategy ?? AccessStrategies.PRIVATE;
 	const { label, icon } = makeAccessStrategyInfo(currentAccessStrategy);
+
+	const handleInviteUser = async () => {
+		try {
+			await addUserMutation.mutateAsync(email);
+			setEmail(""); // Clear input on success
+		} catch (error) {
+			// You might want to show an error toast here
+			console.error("Failed to invite user:", error);
+		}
+	};
+
+	const handleRemoveUser = async (userId: string) => {
+		try {
+			await removeUserMutation.mutateAsync(userId);
+		} catch (error) {
+			console.error("Failed to remove user:", error);
+		}
+	};
 
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -93,11 +115,72 @@ export const ShareDialog = () => {
 						</label>
 						<SelectDropdown
 							options={accessControlOptions}
-							value={(thought?.access_strategy as AccessStrategies | undefined) ?? AccessStrategies.PRIVATE}
+							value={currentAccessStrategy}
 							onChange={value => handleUpdateAccessStrategy(value as AccessStrategies)}
 							placeholder="Select access control"
 							className="mt-1 w-full"
 						/>
+					</div>
+
+					{/* New user sharing section */}
+					<div>
+						<label htmlFor="invite-users" className="text-sm">
+							Invite Users
+						</label>
+						<div className="mt-1 flex gap-2">
+							<Input
+								id="invite-users"
+								placeholder="Enter email address"
+								className="flex-grow"
+								value={email}
+								onChange={e => setEmail(e.target.value)}
+								onKeyDown={e => {
+									if (e.key === "Enter" && email) {
+										handleInviteUser();
+									}
+								}}
+							/>
+							<Button variant="outline" onClick={handleInviteUser} disabled={!email || addUserMutation.isPending}>
+								{addUserMutation.isPending ? (
+									<span className="animate-spin">...</span>
+								) : (
+									<>
+										<PlusIcon className="size-4" />
+										Invite
+									</>
+								)}
+							</Button>
+						</div>
+					</div>
+					<div>
+						<label className="text-sm">People with access</label>
+						<div className="mt-2 space-y-2">
+							{users?.map(user => (
+								<div key={user.id} className="flex items-center justify-between rounded-md border p-2">
+									<div className="flex items-center gap-2">
+										<Avatar fallback={user.name} size="sm" />
+										<div>
+											<div className="text-sm font-medium">{user.name || user.email}</div>
+											<div className="text-xs text-secondary">{user.email}</div>
+										</div>
+									</div>
+									<div className="flex items-center gap-1">
+										{user.isExternal && <div className="text-xs text-secondary">External</div>}
+										<Button
+											variant="ghost"
+											size="icon-sm"
+											onClick={() => handleRemoveUser(user.id)}
+											disabled={removeUserMutation.isPending}>
+											{removeUserMutation.isPending ? (
+												<span className="animate-spin">...</span>
+											) : (
+												<XIcon className="size-4" />
+											)}
+										</Button>
+									</div>
+								</div>
+							))}
+						</div>
 					</div>
 				</div>
 			</DialogContent>
