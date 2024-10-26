@@ -3,3 +3,9 @@ export enum ThoughtSignals {
     AI_SUGGESTIONS = "ai_suggestions",
     EMBEDDING_UPDATE = "embedding_update",
 }
+
+export enum AccessStrategies {
+    PUBLIC = "public",
+    PRIVATE = "private",
+    WORKSPACE = "workspace",
+}

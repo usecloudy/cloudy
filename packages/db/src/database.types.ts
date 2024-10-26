@@ -1432,6 +1432,7 @@ export type Database = {
       }
       thoughts: {
         Row: {
+          access_strategy: string
           author_id: string
           collection_suggestions: Json | null
           content: string | null
@@ -1466,6 +1467,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          access_strategy?: string
           author_id?: string
           collection_suggestions?: Json | null
           content?: string | null
@@ -1500,6 +1502,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          access_strategy?: string
           author_id?: string
           collection_suggestions?: Json | null
           content?: string | null

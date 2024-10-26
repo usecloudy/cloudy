@@ -1,4 +1,4 @@
-import { handleSupabaseError } from "@cloudy/utils/common";
+import { AccessStrategies, handleSupabaseError } from "@cloudy/utils/common";
 import { useIsMutating, useMutation, useQuery } from "@tanstack/react-query";
 import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
@@ -58,6 +58,7 @@ export interface ThoughtEditPayload {
 	contentMd?: string;
 	contentPlainText?: string;
 	collectionId?: string;
+	accessStrategy?: AccessStrategies;
 	ts: Date;
 }
 
@@ -70,6 +71,10 @@ export const useEditThought = (thoughtId?: string) => {
 	return useMutation({
 		mutationKey: ["editThought"],
 		mutationFn: async (payload?: ThoughtEditPayload | void) => {
+			if (!thoughtId) {
+				throw new Error("No thought ID");
+			}
+
 			if (isMutating) {
 				return;
 			}
@@ -94,6 +99,12 @@ export const useEditThought = (thoughtId?: string) => {
 				contentPlainTextObj = { content_plaintext: payload.contentPlainText };
 			}
 
+			let accessStrategyObj = {};
+			if (payload?.accessStrategy !== undefined) {
+				accessStrategyObj = { access_strategy: payload.accessStrategy };
+				console.log("accessStrategyObj", accessStrategyObj);
+			}
+
 			const newThought = handleSupabaseError(
 				await supabase
 					.from("thoughts")
@@ -106,6 +117,7 @@ export const useEditThought = (thoughtId?: string) => {
 						...contentObj,
 						...contentMdObj,
 						...contentPlainTextObj,
+						...accessStrategyObj,
 					})
 					.select("*, collections:collection_thoughts(collection_id, collection:collections(id))")
 					.single(),

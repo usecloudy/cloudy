@@ -1,9 +1,11 @@
+import { AccessStrategies } from "@cloudy/utils/common";
 import { useDroppable } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import {
 	ChevronDownIcon,
 	ChevronRightIcon,
 	FileIcon,
+	FileLock2Icon,
 	FolderIcon,
 	FolderOpenIcon,
 	MoreHorizontalIcon,
@@ -29,6 +31,7 @@ type SortableItemProps = {
 	hasAfterDroppable?: boolean;
 	isInLibrary?: boolean;
 	navigateToDoc?: (id: string) => void;
+	accessStrategy?: AccessStrategies;
 };
 
 export const SortableItem = ({
@@ -39,6 +42,7 @@ export const SortableItem = ({
 	expanded,
 	toggleFolder,
 	navigateToDoc,
+	accessStrategy,
 	isOverlay = false,
 	isOverFolder = false,
 	hasAfterDroppable = false,
@@ -166,7 +170,15 @@ export const SortableItem = ({
 						)}
 					</>
 				)}
-				{type === "document" && <FileIcon className="size-4 shrink-0" />}
+				{type === "document" && (
+					<>
+						{accessStrategy === AccessStrategies.PRIVATE ? (
+							<FileLock2Icon className="size-4 shrink-0" />
+						) : (
+							<FileIcon className="size-4 shrink-0" />
+						)}
+					</>
+				)}
 				{isEditing ? (
 					<input
 						ref={inputRef}

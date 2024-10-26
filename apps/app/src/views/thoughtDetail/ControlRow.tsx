@@ -62,7 +62,7 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId: string; editor?: 
 						</div>
 					</TooltipContent>
 				</Tooltip>
-				<Dropdown
+				{/* <Dropdown
 					trigger={
 						<div>
 							<Tooltip durationPreset="short">
@@ -80,7 +80,7 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId: string; editor?: 
 						</div>
 					}>
 					{({ open, close }) => (open ? <GoalDropdown thoughtId={thoughtId} onClose={close} /> : null)}
-				</Dropdown>
+				</Dropdown> */}
 				<ShareDialog />
 				<Dropdown
 					trigger={

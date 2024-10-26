@@ -1,7 +1,6 @@
 import {
 	DndContext,
 	DragOverlay,
-	KeyboardSensor,
 	Over,
 	PointerSensor,
 	rectIntersection,
@@ -9,7 +8,7 @@ import {
 	useSensor,
 	useSensors,
 } from "@dnd-kit/core";
-import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -24,7 +23,6 @@ import {
 	useLibraryItems,
 	useMakeInitialLibrary,
 	useMoveOutOfLibrary,
-	useRenameItem,
 	useSetLibraryItems,
 } from "src/utils/folders";
 import { makeProjectDocUrl, makeThoughtUrl } from "src/utils/thought";
@@ -51,6 +49,13 @@ const findDescendantFolderIds = (items: FlattenedItem[], folderId: string): stri
 	return descendants;
 };
 
+// Add this helper component for the category headers
+const CategoryHeader = ({ title }: { title: string }) => (
+	<div className="flex flex-row items-center gap-1">
+		<h3 className="whitespace-nowrap text-sm font-semibold text-secondary">{title}</h3>
+	</div>
+);
+
 export const LibraryView = () => {
 	const navigate = useNavigate();
 	const workspace = useWorkspace();
@@ -65,6 +70,12 @@ export const LibraryView = () => {
 	const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
 	const [activeId, setActiveId] = useState<string | null>(null);
+
+	const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+		workspace: false,
+		shared: false,
+		private: false,
+	});
 
 	const setItems = useCallback(
 		(itemsSetter: (items: FlattenedItem[]) => FlattenedItem[]) => {
@@ -87,7 +98,10 @@ export const LibraryView = () => {
 		return item.parentId && expandedFolders.has(item.parentId);
 	});
 
-	const recentItems = items.filter(item => item.parentId === null);
+	// Separate recent items by category
+	const sharedItems = items.filter(item => item.parentId === null && item.category === "shared");
+	const privateItems = items.filter(item => item.parentId === null && item.category === "private");
+	const workspaceItems = items.filter(item => item.parentId === null && item.category === "workspace");
 
 	const handleDragStart = ({ active }: { active: any }) => {
 		setActiveId(active.id);
@@ -192,6 +206,13 @@ export const LibraryView = () => {
 		});
 	};
 
+	const toggleSection = (section: keyof typeof expandedSections) => {
+		setExpandedSections(prev => ({
+			...prev,
+			[section]: !prev[section],
+		}));
+	};
+
 	const activeItem = activeId ? items.find(item => item.id === activeId) : null;
 
 	return (
@@ -238,6 +259,7 @@ export const LibraryView = () => {
 											}}
 											hasAfterDroppable={index === arr.length - 1 || isLastItemWithParent}
 											isInLibrary
+											accessStrategy={item.accessStrategy}
 										/>
 									);
 								})}
@@ -245,31 +267,126 @@ export const LibraryView = () => {
 						) : (
 							<EmptyLibraryDroppable />
 						)}
-						<div className="flex flex-row items-center gap-1">
-							<h3 className="whitespace-nowrap text-sm font-semibold text-secondary">Recent Docs</h3>
-						</div>
-						<MoveOutOfLibraryDroppable hasRecentDocs={recentItems.length > 0} />
-						<ul className="flex flex-col gap-1">
-							{recentItems.map((item, index, arr) => {
-								return (
-									<SortableItem
-										key={item.id}
-										id={item.id}
-										depth={item.depth}
-										type={item.type}
-										name={item.name}
-										expanded={false}
-										toggleFolder={toggleFolder}
-										navigateToDoc={() => {
-											if (item.type === "document") {
-												navigate(makeProjectDocUrl(workspace.slug, project!.slug, item.id));
-											}
-										}}
-										hasAfterDroppable={index === arr.length - 1}
-									/>
-								);
-							})}
-						</ul>
+
+						<MoveOutOfLibraryDroppable
+							hasRecentDocs={sharedItems.length > 0 || privateItems.length > 0 || workspaceItems.length > 0}
+						/>
+
+						{/* Workspace Documents Section */}
+						{workspaceItems.length > 0 && (
+							<>
+								<div className="flex items-center justify-between">
+									<CategoryHeader title="Workspace Docs" />
+									{workspaceItems.length > 5 && (
+										<Button
+											variant="ghost"
+											size="xs"
+											className="text-xs text-tertiary"
+											onClick={() => toggleSection("workspace")}>
+											{expandedSections.workspace ? "Show less" : `+${workspaceItems.length - 5} more`}
+										</Button>
+									)}
+								</div>
+								<ul className="flex flex-col gap-1">
+									{workspaceItems
+										.slice(0, expandedSections.workspace ? undefined : 5)
+										.map((item, index, arr) => (
+											<SortableItem
+												key={item.id}
+												id={item.id}
+												depth={item.depth}
+												type={item.type}
+												name={item.name}
+												expanded={false}
+												toggleFolder={toggleFolder}
+												navigateToDoc={() => {
+													if (item.type === "document") {
+														navigate(makeProjectDocUrl(workspace.slug, project!.slug, item.id));
+													}
+												}}
+												hasAfterDroppable={index === arr.length - 1}
+												accessStrategy={item.accessStrategy}
+											/>
+										))}
+								</ul>
+							</>
+						)}
+
+						{/* Shared Documents Section */}
+						{sharedItems.length > 0 && (
+							<>
+								<div className="flex items-center justify-between">
+									<CategoryHeader title="Shared Docs" />
+									{sharedItems.length > 5 && (
+										<Button
+											variant="ghost"
+											size="xs"
+											className="text-xs text-tertiary"
+											onClick={() => toggleSection("shared")}>
+											{expandedSections.shared ? "Show less" : `+${sharedItems.length - 5} more`}
+										</Button>
+									)}
+								</div>
+								<ul className="flex flex-col gap-1">
+									{sharedItems.slice(0, expandedSections.shared ? undefined : 5).map((item, index, arr) => (
+										<SortableItem
+											key={item.id}
+											id={item.id}
+											depth={item.depth}
+											type={item.type}
+											name={item.name}
+											expanded={false}
+											toggleFolder={toggleFolder}
+											navigateToDoc={() => {
+												if (item.type === "document") {
+													navigate(makeProjectDocUrl(workspace.slug, project!.slug, item.id));
+												}
+											}}
+											hasAfterDroppable={index === arr.length - 1}
+											accessStrategy={item.accessStrategy}
+										/>
+									))}
+								</ul>
+							</>
+						)}
+
+						{/* Private Documents Section */}
+						{privateItems.length > 0 && (
+							<>
+								<div className="flex items-center justify-between">
+									<CategoryHeader title="Private Docs" />
+									{privateItems.length > 5 && (
+										<Button
+											variant="ghost"
+											size="xs"
+											className="text-xs text-tertiary"
+											onClick={() => toggleSection("private")}>
+											{expandedSections.private ? "Show less" : `+${privateItems.length - 5} more`}
+										</Button>
+									)}
+								</div>
+								<ul className="flex flex-col gap-1">
+									{privateItems.slice(0, expandedSections.private ? undefined : 5).map((item, index, arr) => (
+										<SortableItem
+											key={item.id}
+											id={item.id}
+											depth={item.depth}
+											type={item.type}
+											name={item.name}
+											expanded={false}
+											toggleFolder={toggleFolder}
+											navigateToDoc={() => {
+												if (item.type === "document") {
+													navigate(makeProjectDocUrl(workspace.slug, project!.slug, item.id));
+												}
+											}}
+											hasAfterDroppable={index === arr.length - 1}
+											accessStrategy={item.accessStrategy}
+										/>
+									))}
+								</ul>
+							</>
+						)}
 					</div>
 				</SortableContext>
 				<DragOverlay>

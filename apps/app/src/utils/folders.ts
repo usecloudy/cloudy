@@ -1,4 +1,4 @@
-import { handleSupabaseError } from "@cloudy/utils/common";
+import { AccessStrategies, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { produce } from "immer";
 
@@ -48,6 +48,8 @@ export type FlattenedItem = {
 	depth: number;
 	index: number;
 	parentId: string | null;
+	category?: "shared" | "private" | "workspace";
+	accessStrategy?: AccessStrategies;
 };
 
 export type PreFlattenedFolder = FlattenedItem & {
@@ -61,11 +63,14 @@ export const useLibraryItems = () => {
 	return useQuery({
 		queryKey: projectQueryKeys.library(project?.id),
 		queryFn: async () => {
-			let recentDocsQuery = supabase.from("thoughts").select("id, title").is("folder_id", null);
+			let recentDocsQuery = supabase
+				.from("thoughts")
+				.select("id, title, access_strategy, author_id")
+				.is("folder_id", null);
 
 			let docsQuery = supabase
 				.from("thoughts")
-				.select("id, title, index, folder:folders!inner(id, is_root)")
+				.select("id, title, index, folder:folders!inner(id, is_root), access_strategy")
 				.not("folder_id", "is", null);
 
 			let foldersQuery = supabase.from("folders").select("id, name, parent_id, is_root, index").eq("is_root", false);
@@ -101,6 +106,7 @@ export const useLibraryItems = () => {
 								depth,
 								index: doc.index!,
 								parentId,
+								accessStrategy: doc.access_strategy,
 							}) as FlattenedItem,
 					);
 
@@ -137,20 +143,46 @@ export const useLibraryItems = () => {
 
 			const rootItems = rootFolder ? getFolderChildren(rootFolder.id, 0) : [];
 
-			let items = [
-				...rootItems,
-				...recentDocs.map(doc => ({
+			// Separate recent docs into categories
+			const sharedDocs = recentDocs
+				.filter(doc => doc.access_strategy === "shared")
+				.map(doc => ({
 					id: doc.id,
-					type: "document",
+					type: "document" as const,
 					name: doc.title,
 					depth: 0,
 					parentId: null,
-				})),
-			];
+					category: "shared" as const,
+					accessStrategy: doc.access_strategy,
+				}));
 
-			console.log("items", items);
+			const privateDocs = recentDocs
+				.filter(doc => doc.access_strategy === "private")
+				.map(doc => ({
+					id: doc.id,
+					type: "document" as const,
+					name: doc.title,
+					depth: 0,
+					parentId: null,
+					category: "private" as const,
+					accessStrategy: doc.access_strategy,
+				}));
 
-			return items as FlattenedItem[];
+			const workspaceDocs = recentDocs
+				.filter(doc => doc.access_strategy === "workspace")
+				.map(doc => ({
+					id: doc.id,
+					type: "document" as const,
+					name: doc.title,
+					depth: 0,
+					parentId: null,
+					category: "workspace" as const,
+					accessStrategy: doc.access_strategy,
+				}));
+
+			let items = [...rootItems, ...sharedDocs, ...privateDocs, ...workspaceDocs];
+
+			return items as (FlattenedItem & { category?: "shared" | "private" | "workspace" })[];
 		},
 		initialData: [],
 	});
