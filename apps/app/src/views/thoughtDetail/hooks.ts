@@ -1,15 +1,16 @@
-import { handleSupabaseError } from "@cloudy/utils/common";
+import { AccessStrategies, handleSupabaseError } from "@cloudy/utils/common";
 import { useIsMutating, useMutation, useQuery } from "@tanstack/react-query";
 import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
 import { useContext, useEffect } from "react";
 
-import { collectionQueryKeys, commentThreadQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
+import { collectionQueryKeys, commentThreadQueryKeys, projectQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
 import { useWorkspace } from "src/stores/workspace";
 
 import { apiClient } from "../../api/client";
 import { queryClient } from "../../api/queryClient";
 import { supabase } from "../../clients/supabase";
+import { useProject } from "../projects/ProjectContext";
 import { handleSubmitChat } from "./chat";
 import { ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
@@ -57,11 +58,13 @@ export interface ThoughtEditPayload {
 	contentMd?: string;
 	contentPlainText?: string;
 	collectionId?: string;
+	accessStrategy?: AccessStrategies;
 	ts: Date;
 }
 
 export const useEditThought = (thoughtId?: string) => {
 	const workspace = useWorkspace();
+	const project = useProject();
 
 	const isMutating = Boolean(useIsMutating({ mutationKey: ["editThought"] }));
 
@@ -92,17 +95,24 @@ export const useEditThought = (thoughtId?: string) => {
 				contentPlainTextObj = { content_plaintext: payload.contentPlainText };
 			}
 
+			let accessStrategyObj = {};
+			if (payload?.accessStrategy !== undefined) {
+				accessStrategyObj = { access_strategy: payload.accessStrategy };
+			}
+
 			const newThought = handleSupabaseError(
 				await supabase
 					.from("thoughts")
 					.upsert({
 						id: thoughtId,
 						workspace_id: workspace.id,
+						project_id: project?.id ?? null,
 						updated_at: payload?.ts.toISOString() ?? new Date().toISOString(),
 						...titleObj,
 						...contentObj,
 						...contentMdObj,
 						...contentPlainTextObj,
+						...accessStrategyObj,
 					})
 					.select("*, collections:collection_thoughts(collection_id, collection:collections(id))")
 					.single(),
@@ -146,7 +156,7 @@ export const useEditThought = (thoughtId?: string) => {
 				});
 			}, 2500);
 			queryClient.invalidateQueries({
-				queryKey: thoughtQueryKeys.workspaceSidebarLatestThoughts(workspace.id),
+				queryKey: projectQueryKeys.library(workspace.id, project?.id),
 			});
 		},
 	});
@@ -525,6 +535,51 @@ export const useToggleDisableTitleSuggestions = () => {
 			queryClient.invalidateQueries({
 				queryKey: thoughtQueryKeys.thoughtDetail(payload.thoughtId),
 			});
+		},
+	});
+};
+
+export const useGenerateDocument = () => {
+	const { editor } = useContext(ThoughtContext);
+
+	return useMutation({
+		mutationFn: async (docId: string) => {
+			if (!editor) {
+				throw new Error("Editor not found");
+			}
+
+			const response = await fetch(apiClient.getUri({ url: "/api/ai/generate-document" }), {
+				method: "POST",
+				// @ts-ignore
+				headers: {
+					...apiClient.defaults.headers.common,
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ docId }),
+			});
+
+			const reader = response.body?.getReader();
+			if (!reader) {
+				throw new Error("Failed to get reader from response");
+			}
+
+			let fullText = "";
+			let title = "";
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				const chunk = new TextDecoder().decode(value);
+				fullText += chunk;
+
+				if (fullText.startsWith("```title:")) {
+					title = fullText.split("\n")[0].replace("```title:", "").trim();
+					fullText = fullText.split("\n").slice(1).join("\n");
+				}
+
+				editor.commands.setContent(fullText);
+			}
+
+			await supabase.from("thoughts").update({ title, generated_at: new Date().toISOString() }).eq("id", docId);
 		},
 	});
 };

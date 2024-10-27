@@ -3,8 +3,9 @@ import { handleSupabaseError } from "@cloudy/utils/common";
 import { useQuery } from "@tanstack/react-query";
 import { SuggestionProps } from "@tiptap/suggestion";
 import { ArrowRightIcon, NotebookTextIcon, PlusIcon } from "lucide-react";
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
 
+import { octokit } from "src/clients/github";
 import { supabase } from "src/clients/supabase";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { useWorkspace } from "src/stores/workspace";

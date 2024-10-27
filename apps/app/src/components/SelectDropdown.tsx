@@ -64,6 +64,7 @@ export const SelectDropdown = ({
 				</Button>
 			}
 			align="start"
+			className="max-h-[50dvh] overflow-y-auto overflow-x-hidden"
 			onClose={() => setIsOpen(false)}>
 			{options.map(option => (
 				<DropdownItem

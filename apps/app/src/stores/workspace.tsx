@@ -1,6 +1,8 @@
 import { WorkspaceRecord, WorkspaceRole, handleSupabaseError } from "@cloudy/utils/common";
+import { useQuery } from "@tanstack/react-query";
 import { create } from "zustand";
 
+import { workspaceQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 
 export const useWorkspaceStore = create<{
@@ -44,4 +46,19 @@ export const getAllUserWorkspaces = async (userId: string) => {
 	).flatMap(({ workspace }) => (workspace ? [workspace] : []));
 
 	return workspaces;
+};
+
+export const useWorkspaceGithubInstallations = () => {
+	const workspace = useWorkspace();
+
+	return useQuery({
+		queryKey: workspaceQueryKeys.workspaceGithubInstallations(workspace.slug),
+		queryFn: async () => {
+			const installations = handleSupabaseError(
+				await supabase.from("workspace_github_connections").select("*").eq("workspace_id", workspace.id),
+			);
+
+			return installations;
+		},
+	});
 };

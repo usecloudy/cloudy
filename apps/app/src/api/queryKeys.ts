@@ -14,6 +14,7 @@ export const thoughtQueryKeys = {
 	workspaceSidebarLatestThoughts: (workspaceId?: string) => [workspaceId, "latestThoughts"] as const,
 	workspaceHomeThoughts: (workspaceId?: string) => [workspaceId, "homeThoughts"] as const,
 	relatedThoughts: (thoughtId?: string) => ["relatedThoughts", thoughtId] as const,
+	sharedWith: (thoughtId?: string) => ["thought", thoughtId, "sharedWith"] as const,
 };
 
 export const topicQueryKeys = {
@@ -35,3 +36,21 @@ export const commentThreadQueryKeys = {
 	threadComments: (commentId?: string | null) => ["comment", commentId, "threadComments"] as const,
 	temporaryComment: (commentId?: string | null) => ["comment", commentId, "temporaryComment"] as const,
 };
+
+export const workspaceQueryKeys = {
+	allProjects: (workspaceId?: string) => ["workspace", workspaceId, "projects"] as const,
+	workspaceGithubInstallations: (workspaceId?: string) => ["workspace", workspaceId, "github", "installations"] as const,
+};
+
+export const projectQueryKeys = {
+	library: (workspaceId: string, projectId?: string) => ["workspace", workspaceId, "project", projectId, "library"] as const,
+	repos: (projectId?: string | null) => ["project", projectId, "repos"] as const,
+};
+
+export const thoughtKeys = {
+	all: ["thoughts"] as const,
+	lists: () => [...thoughtKeys.all, "list"] as const,
+	list: (filters: string) => [...thoughtKeys.lists(), { filters }] as const,
+	details: () => [...thoughtKeys.all, "detail"] as const,
+	detail: (id: string) => [...thoughtKeys.details(), id] as const,
+} as const;

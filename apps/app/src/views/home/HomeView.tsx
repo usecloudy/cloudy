@@ -1,87 +1,87 @@
-import { useQuery } from "@tanstack/react-query";
-import { FileIcon, MessageCircleWarningIcon } from "lucide-react";
+import { FolderGit2Icon, FolderIcon, FolderKanbanIcon, MessageCircleWarningIcon, PlusIcon } from "lucide-react";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 
-import { thoughtQueryKeys } from "src/api/queryKeys";
-import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { MainLayout } from "src/components/MainLayout";
-import { ThoughtList } from "src/components/ThoughtList";
-import { useWorkspace, useWorkspaceSlug } from "src/stores/workspace";
+import { useWorkspace } from "src/stores/workspace";
+import { makeNewProjectUrl, makeProjectHomeUrl } from "src/utils/projects";
 import { makeHeadTitle } from "src/utils/strings";
-import { useCustomerStatus } from "src/utils/useCustomerStatus";
-
-import { ThoughtsEmptyState } from "./ThoughtsEmptyState";
-
-const useThoughts = () => {
-	const workspace = useWorkspace();
-
-	return useQuery({
-		queryKey: thoughtQueryKeys.workspaceHomeThoughts(workspace.id),
-		queryFn: async () => {
-			const { data, error } = await supabase
-				.from("thoughts")
-				.select(
-					`*, 
-					collections:collection_thoughts(
-						collection_id,
-						collection:collections(
-							id,
-							title
-						)
-					)`,
-				)
-				.eq("workspace_id", workspace.id);
-
-			if (error) {
-				throw error;
-			}
-
-			return data?.map(thought => ({
-				...thought,
-				collections: thought.collections.flatMap(collection => (collection.collection ? [collection.collection] : [])),
-			}));
-		},
-		throwOnError: true,
-	});
-};
+import { useWorkspaceProjects } from "src/utils/workspaces";
 
 export const HomeView = () => {
-	const wsSlug = useWorkspaceSlug();
-	const { data: thoughts, isLoading } = useThoughts();
-	const { isLoading: isCustomerStatusLoading, data: customerStatus } = useCustomerStatus();
+	const workspace = useWorkspace();
+	const { data: projects, isLoading, error } = useWorkspaceProjects();
 
 	return (
-		<MainLayout isLoading={isLoading || isCustomerStatusLoading} className="no-scrollbar flex-1 overflow-y-scroll">
+		<MainLayout className="no-scrollbar flex-1 overflow-y-scroll">
 			<Helmet>
 				<title>{makeHeadTitle("Home")}</title>
 			</Helmet>
-			<div className="flex w-full flex-col-reverse gap-4 py-4 md:flex-row md:py-8">
-				<div className="h-8 md:hidden" />
-				<div className="mt-6 flex flex-1 flex-col gap-4">
-					<div className="flex flex-col gap-2">
-						<div className="flex flex-row items-center gap-1">
-							<FileIcon className="size-4 text-secondary" />
-							<h3 className="whitespace-nowrap font-semibold text-secondary">Notes</h3>
+
+			<div className="container mx-auto px-4 py-8">
+				<div className="flex items-center justify-between">
+					<h1 className="font-display text-3xl font-bold">Welcome to {workspace.name}</h1>
+					<Link to={makeNewProjectUrl(workspace.slug)}>
+						<Button variant="outline">
+							<PlusIcon className="size-4" />
+							New Project
+						</Button>
+					</Link>
+				</div>
+
+				{isLoading && (
+					<div className="mt-8 flex items-center justify-center">
+						<div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+					</div>
+				)}
+
+				{error && (
+					<div className="bg-destructive/10 text-destructive mt-8 rounded-lg p-4">
+						<div className="flex items-center">
+							<MessageCircleWarningIcon className="size-5" />
+							<p>Failed to load projects</p>
 						</div>
 					</div>
-					{!customerStatus?.customerStatus?.isActive && (
-						<div className="flex w-full flex-row items-center gap-2 rounded-md border border-red-400 p-4 text-red-600">
-							<MessageCircleWarningIcon className="size-5" />
-							<p className="flex-1">
-								Your subscription plan is inactive, you will not be able to create new notes.
-							</p>
-							<Link to={`/workspaces/${wsSlug}/settings`}>
-								<Button variant="default" className="text-background" size="sm">
-									{" "}
-									Go to workspace settings
+				)}
+
+				{projects && projects.length === 0 && (
+					<div className="mt-8 rounded-lg border border-dashed p-8">
+						<div className="text-center">
+							<FolderIcon className="mx-auto size-12 stroke-1 text-tertiary" />
+							<h3 className="mt-4 text-lg font-medium text-secondary">No projects yet</h3>
+							<p className="mt-1 text-sm text-tertiary">Get started by creating your first project</p>
+							<Link to={makeNewProjectUrl(workspace.slug)}>
+								<Button variant="default" className="mt-4">
+									<PlusIcon className="size-4" />
+									Create Project
 								</Button>
 							</Link>
 						</div>
-					)}
-					{thoughts && thoughts.length > 0 ? <ThoughtList thoughts={thoughts} /> : <ThoughtsEmptyState />}
-				</div>
+					</div>
+				)}
+
+				{projects && projects.length > 0 && (
+					<div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+						{projects.map(project => (
+							<Link
+								key={project.id}
+								to={makeProjectHomeUrl(workspace.slug, project.slug)}
+								className="group rounded-lg border bg-card p-6 transition-all hover:opacity-50">
+								<div className="flex items-center justify-between">
+									<div className="flex items-center">
+										{project.hasRepositoryConnection ? (
+											<FolderGit2Icon className="size-6 text-primary" />
+										) : (
+											<FolderKanbanIcon className="size-6 text-primary" />
+										)}
+										<h3 className="ml-3 font-medium">{project.name}</h3>
+									</div>
+								</div>
+							</Link>
+						))}
+					</div>
+				)}
 			</div>
 		</MainLayout>
 	);

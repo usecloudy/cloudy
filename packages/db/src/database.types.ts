@@ -814,6 +814,139 @@ export type Database = {
           },
         ]
       }
+      document_repo_links: {
+        Row: {
+          created_at: string
+          doc_id: string
+          id: string
+          path: string
+          repo_connection_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          doc_id: string
+          id?: string
+          path: string
+          repo_connection_id: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          doc_id?: string
+          id?: string
+          path?: string
+          repo_connection_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_file_links_doc_id_fkey"
+            columns: ["doc_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_file_links_repo_connection_id_fkey"
+            columns: ["repo_connection_id"]
+            isOneToOne: false
+            referencedRelation: "repository_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_shares: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_shares_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_shares_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folders: {
+        Row: {
+          created_at: string
+          id: string
+          index: number | null
+          is_root: boolean | null
+          name: string | null
+          parent_id: string | null
+          project_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          index?: number | null
+          is_root?: boolean | null
+          name?: string | null
+          parent_id?: string | null
+          project_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          index?: number | null
+          is_root?: boolean | null
+          name?: string | null
+          parent_id?: string | null
+          project_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folders_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       note_contents: {
         Row: {
           content: string | null
@@ -839,6 +972,82 @@ export type Database = {
             columns: ["id"]
             isOneToOne: true
             referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          connections: Json
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          workspace_id: string
+        }
+        Insert: {
+          connections?: Json
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          workspace_id: string
+        }
+        Update: {
+          connections?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      repository_connections: {
+        Row: {
+          created_at: string
+          external_id: string
+          id: string
+          installation_id: string
+          name: string
+          owner: string
+          project_id: string
+          provider: string
+        }
+        Insert: {
+          created_at?: string
+          external_id: string
+          id?: string
+          installation_id: string
+          name: string
+          owner: string
+          project_id: string
+          provider: string
+        }
+        Update: {
+          created_at?: string
+          external_id?: string
+          id?: string
+          installation_id?: string
+          name?: string
+          owner?: string
+          project_id?: string
+          provider?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repository_connections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -1269,6 +1478,7 @@ export type Database = {
       }
       thoughts: {
         Row: {
+          access_strategy: string
           author_id: string
           collection_suggestions: Json | null
           content: string | null
@@ -1278,14 +1488,19 @@ export type Database = {
           created_at: string
           disable_title_suggestions: boolean | null
           embeddings_version: number
+          folder_id: string | null
+          generated_at: string | null
           generated_intents: string[]
           generated_summary: string | null
           generated_summary_content_md: string | null
           generated_type: string | null
+          generation_prompt: string | null
           id: string
           ignored_collection_suggestions: Json | null
+          index: number | null
           is_suggestion_paused: boolean
           last_suggestion_content_md: string | null
+          project_id: string | null
           signals: Json | null
           suggestion_index: number
           suggestion_status: string
@@ -1298,6 +1513,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          access_strategy?: string
           author_id?: string
           collection_suggestions?: Json | null
           content?: string | null
@@ -1307,14 +1523,19 @@ export type Database = {
           created_at?: string
           disable_title_suggestions?: boolean | null
           embeddings_version?: number
+          folder_id?: string | null
+          generated_at?: string | null
           generated_intents?: string[]
           generated_summary?: string | null
           generated_summary_content_md?: string | null
           generated_type?: string | null
+          generation_prompt?: string | null
           id?: string
           ignored_collection_suggestions?: Json | null
+          index?: number | null
           is_suggestion_paused?: boolean
           last_suggestion_content_md?: string | null
+          project_id?: string | null
           signals?: Json | null
           suggestion_index?: number
           suggestion_status?: string
@@ -1327,6 +1548,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          access_strategy?: string
           author_id?: string
           collection_suggestions?: Json | null
           content?: string | null
@@ -1336,14 +1558,19 @@ export type Database = {
           created_at?: string
           disable_title_suggestions?: boolean | null
           embeddings_version?: number
+          folder_id?: string | null
+          generated_at?: string | null
           generated_intents?: string[]
           generated_summary?: string | null
           generated_summary_content_md?: string | null
           generated_type?: string | null
+          generation_prompt?: string | null
           id?: string
           ignored_collection_suggestions?: Json | null
+          index?: number | null
           is_suggestion_paused?: boolean
           last_suggestion_content_md?: string | null
+          project_id?: string | null
           signals?: Json | null
           suggestion_index?: number
           suggestion_status?: string
@@ -1364,88 +1591,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "thoughts_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "thoughts_organization_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      topic_thought_chunk_matches: {
-        Row: {
-          chunk_id: string
-          created_at: string
-          id: string
-          topic_id: string
-        }
-        Insert: {
-          chunk_id: string
-          created_at?: string
-          id?: string
-          topic_id: string
-        }
-        Update: {
-          chunk_id?: string
-          created_at?: string
-          id?: string
-          topic_id?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "topic_thought_chunk_matches_chunk_id_fkey"
-            columns: ["chunk_id"]
+            foreignKeyName: "thoughts_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "thought_chunks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "topic_thought_chunk_matches_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topics"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      topics: {
-        Row: {
-          created_at: string
-          id: string
-          latest_update: string | null
-          query: string
-          summary: string | null
-          workspace_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          latest_update?: string | null
-          query: string
-          summary?: string | null
-          workspace_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          latest_update?: string | null
-          query?: string
-          summary?: string | null
-          workspace_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "topics_organization_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "topics_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -1524,6 +1687,35 @@ export type Database = {
           },
         ]
       }
+      workspace_github_connections: {
+        Row: {
+          created_at: string
+          id: string
+          installation_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          installation_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          installation_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_github_connections_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_memories: {
         Row: {
           mission_blurb: string | null
@@ -1589,6 +1781,7 @@ export type Database = {
       workspaces: {
         Row: {
           created_at: string
+          folders_migrated_at: string | null
           id: string
           name: string
           onboarding_status: string
@@ -1597,6 +1790,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          folders_migrated_at?: string | null
           id?: string
           name: string
           onboarding_status?: string
@@ -1605,6 +1799,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          folders_migrated_at?: string | null
           id?: string
           name?: string
           onboarding_status?: string
@@ -1664,6 +1859,12 @@ export type Database = {
           id: string
           title: string
         }[]
+      }
+      get_folder_children_count: {
+        Args: {
+          p_folder_id: string
+        }
+        Returns: number
       }
       halfvec_avg: {
         Args: {
@@ -1907,6 +2108,22 @@ export type Database = {
               similarity_score: number
             }[]
           }
+      search_docs: {
+        Args: {
+          search_query: string
+          p_workspace_id: string
+        }
+        Returns: {
+          doc_id: string
+          doc_title: string
+          doc_content_md: string
+          doc_content_plaintext: string
+          doc_updated_at: string
+          doc_project_id: string
+          project_name: string
+          project_slug: string
+        }[]
+      }
       search_thoughts: {
         Args: {
           search_query: string

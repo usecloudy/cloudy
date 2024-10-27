@@ -1,11 +1,10 @@
-import { checkIfSlugIsAvailable, createNonConflictingSlug, handleSupabaseError } from "@cloudy/utils/common";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeftIcon, SparklesIcon } from "lucide-react";
+import { checkIfSlugIsAvailable, createNonConflictingSlug } from "@cloudy/utils/common";
+import { useMutation } from "@tanstack/react-query";
+import { ArrowLeftIcon } from "lucide-react";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
-import { useSearchParams } from "react-router-dom";
 import { useMount } from "react-use";
 
 import { supabase } from "src/clients/supabase";
@@ -13,6 +12,7 @@ import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { MainLayout } from "src/components/MainLayout";
 import { useUserRecord } from "src/stores/user";
+import { makeWorkspaceHomeUrl } from "src/utils/workspaces";
 
 import { NameAndSlugFields } from "./Fields";
 import { useCreateWorkspace, useUserWorkspaces } from "./hooks";
@@ -41,12 +41,10 @@ const useCheckSlugAvailability = () => {
 
 export const NewWorkspaceView = () => {
 	const userRecord = useUserRecord();
-	const [searchParams] = useSearchParams();
 	const { data: userWorkspaces } = useUserWorkspaces();
 
-	const nameFromParams = searchParams.get("name");
-
-	const shouldSetDefaults = !!nameFromParams;
+	// const nameFromParams = searchParams.get("name");
+	const shouldSetDefaults = !userWorkspaces;
 
 	const [isSlugAvailable, setIsSlugAvailable] = useState<boolean | null>(null);
 
@@ -58,7 +56,7 @@ export const NewWorkspaceView = () => {
 		formState: { errors },
 	} = useForm<FormData>({
 		defaultValues: {
-			name: shouldSetDefaults ? nameFromParams || (userRecord.name ? `${userRecord.name}'s Space` : "") : "",
+			name: shouldSetDefaults ? (userRecord.name ? `${userRecord.name}'s Space` : "") : "",
 		},
 	});
 
@@ -72,7 +70,7 @@ export const NewWorkspaceView = () => {
 
 	useMount(async () => {
 		if (shouldSetDefaults) {
-			const defaultName = nameFromParams || userRecord.name;
+			const defaultName = userRecord.name;
 			if (defaultName) {
 				const defaultSlug = await slugMutation.mutateAsync(defaultName);
 				setValue("slug", defaultSlug);
@@ -90,7 +88,7 @@ export const NewWorkspaceView = () => {
 			is_setup: !userHasWorkspaces,
 		});
 
-		navigate(`/onboarding/workspaces/${wsSlug}/initial-collections`);
+		navigate(makeWorkspaceHomeUrl(wsSlug));
 	};
 
 	const watchSlug = watch("slug");
@@ -110,9 +108,9 @@ export const NewWorkspaceView = () => {
 		}
 	};
 
-	const handleCreateWithWebsite = () => {
-		navigate("/onboarding/workspaces/new/website-onboarding");
-	};
+	// const handleCreateWithWebsite = () => {
+	// 	navigate("/onboarding/workspaces/new/website-onboarding");
+	// };
 
 	return (
 		<MainLayout className="flex h-screen flex-col items-center justify-center">
@@ -138,17 +136,19 @@ export const NewWorkspaceView = () => {
 							"Create Workspace"
 						)}
 					</Button>
-					<Button variant="secondary" onClick={handleCreateWithWebsite} className="text-accent">
+					{/* <Button variant="secondary" onClick={handleCreateWithWebsite} className="text-accent">
 						<SparklesIcon className="size-4" />
 						<span>Create with website</span>
-					</Button>
+					</Button> */}
 				</form>
-				<Link to="/">
-					<Button variant="ghost" className="w-full text-secondary">
-						<ArrowLeftIcon className="size-4" />
-						<span>Cancel workspace creation</span>
-					</Button>
-				</Link>
+				{userHasWorkspaces && (
+					<Link to="/">
+						<Button variant="ghost" className="w-full text-secondary">
+							<ArrowLeftIcon className="size-4" />
+							<span>Cancel workspace creation</span>
+						</Button>
+					</Link>
+				)}
 			</div>
 		</MainLayout>
 	);

@@ -30,12 +30,12 @@ export const DeleteDialog = ({ thoughtId }: { thoughtId: string }) => {
 			<DialogTrigger asChild>
 				<Button variant="ghost" className="justify-start text-red-600 hover:bg-red-600 hover:text-white" size="sm">
 					<TrashIcon className="h-4 w-4" />
-					<span>Delete note</span>
+					<span>Delete doc</span>
 				</Button>
 			</DialogTrigger>
 			<DialogContent>
-				<DialogTitle>Delete Note</DialogTitle>
-				<DialogDescription>Are you sure you want to delete this note? This action cannot be undone.</DialogDescription>
+				<DialogTitle>Delete Doc</DialogTitle>
+				<DialogDescription>Are you sure you want to delete this doc? This action cannot be undone.</DialogDescription>
 				<DialogFooter>
 					<DialogCancel>Cancel</DialogCancel>
 					<DialogAction destructive onClick={handleDelete}>

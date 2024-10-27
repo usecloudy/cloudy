@@ -1,3 +1,4 @@
+import { RepoReference } from "./docs";
 import { Product } from "./pricing";
 
 export interface PaymentsProductsGetResponse {
@@ -69,9 +70,37 @@ export interface ApplyChangePostRequestBody {
 export interface CollectionSummaryPostRequestBody {
     collectionId: string;
 }
+
 export interface ScrapeSiteGetResponse {
     name: string | null;
     welcomeMessage: string | null;
     missionBlurb: string | null;
     collectionNames: string[];
+}
+
+export interface RepoFilesGetResponse {
+    paths: RepoReference[];
+}
+
+export interface GithubVerifyInstallationResponse {
+    success: boolean;
+    account: {
+        id: string;
+        login: string;
+    };
+    accessToken: string;
+}
+
+export interface GithubRepository {
+    id: number;
+    name: string;
+    fullName: string;
+    private: boolean;
+    description: string | null;
+    defaultBranch: string;
+    installationId: number;
+}
+
+export interface GithubAllWorkspaceReposGetResponse {
+    repositories: GithubRepository[];
 }

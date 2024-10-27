@@ -1,18 +1,19 @@
 import { Hotkey } from "@cloudy/ui";
 import { MoreHorizontalIcon, XIcon } from "lucide-react";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 
 import { Button } from "src/components/Button";
 import { Dropdown, DropdownItem } from "src/components/Dropdown";
 
-import { CollectionCarousel } from "./CollectionCarousel";
 import { useThought, useToggleDisableTitleSuggestions } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";
 
 export const TitleArea = ({ title, onChange }: { title?: string | null; onChange: (title: string) => void }) => {
 	const { thoughtId } = useContext(ThoughtContext);
 	const { data: thought } = useThought(thoughtId);
+
+	const [isFocused, setIsFocused] = useState(false);
 
 	const toggleDisableTitleSuggestionsMutation = useToggleDisableTitleSuggestions();
 
@@ -30,6 +31,8 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 					contentEditable={true}
 					placeholder={thought?.title_suggestion || "Untitled"}
 					value={title || ""}
+					onFocus={() => setIsFocused(true)}
+					onBlur={() => setIsFocused(false)}
 					onChange={e => {
 						onChange(e.target.value);
 					}}
@@ -45,7 +48,7 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 				{thought?.title_suggestion && !title && (
 					<div className="mt-1.5 flex gap-1">
 						<Button size="sm" variant="outline" onClick={handleAcceptTitleSuggestion}>
-							<Hotkey keys={["tab"]} />
+							{isFocused && <Hotkey keys={["tab"]} />}
 							<span>Accept</span>
 						</Button>
 						<Dropdown
@@ -59,14 +62,11 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 									toggleDisableTitleSuggestionsMutation.mutate({ thoughtId, disableTitleSuggestions: true })
 								}>
 								<XIcon className="size-4" />
-								<span>Disable title suggestions for this note</span>
+								<span>Disable title suggestions for this doc</span>
 							</DropdownItem>
 						</Dropdown>
 					</div>
 				)}
-			</div>
-			<div className="pr-4">
-				<CollectionCarousel />
 			</div>
 		</div>
 	);
