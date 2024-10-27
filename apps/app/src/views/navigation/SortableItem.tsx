@@ -115,8 +115,8 @@ export const SortableItem = ({
 	};
 
 	const handleSubmit = () => {
-		if (editedName.trim() && editedName !== name) {
-			renameItemMutation.mutate({ id, name: editedName, type });
+		if (editedName !== name) {
+			renameItemMutation.mutate({ id, name: editedName.trim(), type });
 		}
 		setIsEditing(false);
 	};
@@ -198,7 +198,7 @@ export const SortableItem = ({
 						autoFocus
 					/>
 				) : (
-					<span className="flex-1 truncate" onDoubleClick={handleDoubleClick}>
+					<span className={cn("flex-1 truncate", !name && "text-secondary")} onDoubleClick={handleDoubleClick}>
 						{name || "Untitled"}
 					</span>
 				)}

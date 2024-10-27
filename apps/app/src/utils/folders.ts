@@ -79,7 +79,11 @@ export const useLibraryItems = () => {
 				.eq("workspace_id", workspace.id)
 				.not("folder_id", "is", null);
 
-			let foldersQuery = supabase.from("folders").select("id, name, parent_id, is_root, index").eq("is_root", false);
+			let foldersQuery = supabase
+				.from("folders")
+				.select("id, name, parent_id, is_root, index")
+				.eq("workspace_id", workspace.id)
+				.eq("is_root", false);
 
 			if (project) {
 				recentDocsQuery = recentDocsQuery.eq("project_id", project.id);
@@ -98,6 +102,7 @@ export const useLibraryItems = () => {
 
 			console.log("docs", docs);
 			console.log("root", rootFolder);
+			console.log("folders", folders);
 			const getFolderChildren = (folderId: string, depth: number): FlattenedItem[] => {
 				console.log("getFolderChildren", folderId, depth);
 				const parentId = folderId === rootFolder!.id ? "<ROOT>" : folderId;
@@ -129,6 +134,8 @@ export const useLibraryItems = () => {
 								parentId,
 							}) as FlattenedItem,
 					);
+
+				console.log("childFolders", childFolders);
 
 				const combinedItems = [...childDocs, ...childFolders];
 
@@ -329,16 +336,45 @@ export const useCreateFolder = () => {
 
 export const syncItemIndices = (items: FlattenedItem[]) =>
 	produce(items, draft => {
-		let currentFolder: string | null = "<ROOT>";
-		let currentFolderIndex = 0;
-		for (const item of draft) {
-			if (item.parentId !== currentFolder) {
-				currentFolder = item.parentId;
-				currentFolderIndex = 0;
+	  // Create a map to store indices for each folder level
+	  const folderIndices = new Map<string, number>();
+	  
+	  // Helper to get the current index for a parent and increment it
+	  const getNextIndex = (parentId: string | null) => {
+		const key = parentId ?? "<ROOT>";
+		const currentIndex = folderIndices.get(key) ?? 0;
+		folderIndices.set(key, currentIndex + 1);
+		return currentIndex;
+	  };
+  
+	  // Process items in order, maintaining hierarchy
+	  for (let i = 0; i < draft.length; i++) {
+		const item = draft[i];
+		const parentId = item.parentId;
+		
+		// Set the index for this item
+		item.index = getNextIndex(parentId);
+  
+		// If this is a folder, ensure all its immediate children come next
+		if (item.type === "folder") {
+		  // Find all immediate children of this folder
+		  let insertPosition = i + 1;
+		  let j = insertPosition;
+		  
+		  // Collect and move all immediate children right after their parent
+		  while (j < draft.length) {
+			if (draft[j].parentId === item.id) {
+			  // If not already in the right position, move it
+			  if (j !== insertPosition) {
+				const [child] = draft.splice(j, 1);
+				draft.splice(insertPosition, 0, child);
+			  }
+			  insertPosition++;
 			}
-			item.index = currentFolderIndex;
-			currentFolderIndex++;
+			j++;
+		  }
 		}
+	  }
 	});
 
 export const useRenameItem = () => {

@@ -254,7 +254,7 @@ export const LibraryView = () => {
 							<ul className="flex flex-col gap-1">
 								{visibleItems.map((item, index, arr) => {
 									const nextItem = arr[index + 1];
-									const isLastItemWithParent = Boolean(item.parentId && !nextItem?.parentId);
+									const isLastItemWithParent = Boolean(item.parentId && nextItem?.parentId !== item.parentId);
 									return (
 										<SortableItem
 											key={item.id}

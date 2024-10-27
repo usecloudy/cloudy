@@ -1781,6 +1781,7 @@ export type Database = {
       workspaces: {
         Row: {
           created_at: string
+          folders_migrated_at: string | null
           id: string
           name: string
           onboarding_status: string
@@ -1789,6 +1790,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          folders_migrated_at?: string | null
           id?: string
           name: string
           onboarding_status?: string
@@ -1797,6 +1799,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          folders_migrated_at?: string | null
           id?: string
           name?: string
           onboarding_status?: string
