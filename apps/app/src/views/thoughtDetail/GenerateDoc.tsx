@@ -1,8 +1,8 @@
 import { RepoReference, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { SparklesIcon } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
@@ -53,11 +53,16 @@ const useCreateNoteWithGeneration = () => {
 
 export const GenerateDoc = () => {
 	const [isOpen, setIsOpen] = useState(false);
-	const isMdBreakpoint = useBreakpoint("md");
 	const createNoteWithGeneration = useCreateNoteWithGeneration();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const workspace = useWorkspace();
 	const project = useProject();
+
+	// Add effect to close dialog on location change
+	useEffect(() => {
+		setIsOpen(false);
+	}, [location]);
 
 	const handleSubmit = async (prompt: string, references: RepoReference[]) => {
 		if (!project) {

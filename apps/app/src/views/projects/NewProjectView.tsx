@@ -25,7 +25,7 @@ import LoadingSpinner from "src/components/LoadingSpinner";
 import { MainLayout } from "src/components/MainLayout";
 import { SelectDropdown } from "src/components/SelectDropdown";
 import { useUserRecord } from "src/stores/user";
-import { useWorkspace } from "src/stores/workspace";
+import { useWorkspace, useWorkspaceGithubInstallations } from "src/stores/workspace";
 import { makeProjectHomeUrl } from "src/utils/projects";
 
 import { ConnectGithubCard } from "../github/ConnectGithubCard";
@@ -75,7 +75,9 @@ export const NewProjectView = () => {
 	const workspace = useWorkspace();
 	const userRecord = useUserRecord();
 	const [searchParams] = useSearchParams();
+
 	const { data: userProjects } = useUserProjects();
+	const { data: installations } = useWorkspaceGithubInstallations();
 
 	const nameFromParams = searchParams.get("name");
 
@@ -212,10 +214,6 @@ export const NewProjectView = () => {
 		<MainLayout className="flex h-screen flex-col items-center justify-center">
 			<div className="flex w-full max-w-md flex-col gap-4 rounded-md border border-border p-6">
 				<h1 className="font-display text-2xl font-bold">Create a project</h1>
-				<p className="text-sm text-secondary">
-					A project is where you'll manage your code, tasks, and documentation. You can optionally connect it to a
-					GitHub repository.
-				</p>
 				<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
 					<div className="flex flex-col gap-1">
 						<label htmlFor="name" className="font-medium">
@@ -254,27 +252,35 @@ export const NewProjectView = () => {
 						{isSlugAvailable === false && <p className="mt-1 text-xs text-red-600">This slug is already taken</p>}
 					</div>
 					<div className="flex flex-col gap-2">
-						<label htmlFor="githubRepo" className="font-medium">
-							Connect GitHub Repository (optional)
-						</label>
-						<ConnectGithubCard />
-						<div className="flex flex-col gap-2">
-							<SelectDropdown
-								options={ownerOptions}
-								value={selectedOwner}
-								onChange={handleOwnerChange}
-								placeholder="Select organization/owner"
-								className="w-full"
-							/>
-							<SelectDropdown
-								options={repoOptions}
-								value={watch("githubRepo") || ""}
-								onChange={value => setValue("githubRepo", value)}
-								placeholder="Select repository"
-								className="w-full"
-								disabled={!selectedOwner}
-							/>
+						<div className="flex flex-col gap-1">
+							<label htmlFor="githubRepo" className="font-medium">
+								Connect GitHub Repository (optional)
+							</label>
+							<span className="text-xs text-secondary">
+								Connect a GitHub repository to your project to create & link documents with code. Soon, we will
+								keep your documents up to date with the latest code.
+							</span>
 						</div>
+						<ConnectGithubCard />
+						{installations && installations.length > 0 && (
+							<div className="flex flex-col gap-2">
+								<SelectDropdown
+									options={ownerOptions}
+									value={selectedOwner}
+									onChange={handleOwnerChange}
+									placeholder="Select organization/owner"
+									className="w-full"
+								/>
+								<SelectDropdown
+									options={repoOptions}
+									value={watch("githubRepo") || ""}
+									onChange={value => setValue("githubRepo", value)}
+									placeholder="Select repository"
+									className="w-full"
+									disabled={!selectedOwner}
+								/>
+							</div>
+						)}
 					</div>
 					<Button
 						type="submit"

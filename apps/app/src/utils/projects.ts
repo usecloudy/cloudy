@@ -43,10 +43,11 @@ export const useEditProject = () => {
 	});
 };
 
-export const useProjectRepos = (projectId: string) => {
+export const useProjectRepos = (projectId?: string | null) => {
 	return useQuery({
 		queryKey: projectQueryKeys.repos(projectId),
 		queryFn: async () => {
+			if (!projectId) return [];
 			return handleSupabaseError(await supabase.from("repository_connections").select("*").eq("project_id", projectId));
 		},
 	});

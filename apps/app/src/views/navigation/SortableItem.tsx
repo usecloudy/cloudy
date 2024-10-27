@@ -13,6 +13,7 @@ import {
 	TrashIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 import { Button } from "src/components/Button";
 import { cn } from "src/utils";
@@ -48,6 +49,8 @@ export const SortableItem = ({
 	hasAfterDroppable = false,
 	isInLibrary = false,
 }: SortableItemProps) => {
+	const location = useLocation();
+
 	const renameItemMutation = useRenameItem();
 	const deleteItemMutation = useDeleteItem();
 
@@ -127,6 +130,8 @@ export const SortableItem = ({
 		}
 	};
 
+	const isCurrentlyOpen = location.pathname.includes(id);
+
 	return (
 		<li style={style} className="list-none">
 			{isInLibrary && (
@@ -141,6 +146,7 @@ export const SortableItem = ({
 					isDragging ? "bg-transparent" : "hover:bg-card",
 					isOver ? "bg-card" : undefined,
 					isEditing ? "cursor-text" : undefined, // Add cursor-text when editing
+					isCurrentlyOpen ? "bg-card" : undefined,
 				)}
 				style={{ paddingLeft: `${depth * 1.33 + 0.5}rem` }}
 				onClick={() => {

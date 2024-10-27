@@ -39,11 +39,12 @@ export const commentThreadQueryKeys = {
 
 export const workspaceQueryKeys = {
 	allProjects: (workspaceId?: string) => ["workspace", workspaceId, "projects"] as const,
+	workspaceGithubInstallations: (workspaceId?: string) => ["workspace", workspaceId, "github", "installations"] as const,
 };
 
 export const projectQueryKeys = {
 	library: (workspaceId: string, projectId?: string) => ["workspace", workspaceId, "project", projectId, "library"] as const,
-	repos: (projectId?: string) => ["project", projectId, "repos"] as const,
+	repos: (projectId?: string | null) => ["project", projectId, "repos"] as const,
 };
 
 export const thoughtKeys = {
