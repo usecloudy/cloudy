@@ -1,6 +1,6 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useQuery } from "@tanstack/react-query";
-import { CheckIcon, ChevronDownIcon, LayoutDashboardIcon, PlusIcon, SettingsIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, HomeIcon, LayoutDashboardIcon, PlusIcon, SettingsIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { workspaceQueryKeys } from "src/api/queryKeys";
@@ -10,6 +10,7 @@ import { Dropdown, DropdownItem, DropdownSeparator } from "src/components/Dropdo
 import { useAllUserWorkspaces } from "src/stores/user";
 import { useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
+import { makeProjectHomeUrl, makeProjectSettingsUrl } from "src/utils/projects";
 
 import { useProject } from "../projects/ProjectContext";
 
@@ -32,7 +33,7 @@ const useWorkspaceProjects = () => {
 export const ProjectSelector = () => {
 	const currentWorkspace = useWorkspaceStore(s => s.workspace);
 	const { data: projects } = useWorkspaceProjects();
-	const project = useProject();
+	const currentProject = useProject();
 
 	if (!currentWorkspace) {
 		return null;
@@ -48,8 +49,8 @@ export const ProjectSelector = () => {
 							className="flex h-12 flex-1 items-center justify-between overflow-hidden pl-4 pr-2">
 							<div className="flex flex-1 flex-col items-start overflow-hidden">
 								<span className="text-xs text-secondary">Project</span>
-								{project ? (
-									<span className="truncate">{project.name}</span>
+								{currentProject ? (
+									<span className="truncate">{currentProject.name}</span>
 								) : (
 									<span className="truncate">No project selected</span>
 								)}
@@ -58,10 +59,23 @@ export const ProjectSelector = () => {
 						</Button>
 					}>
 					<div className="flex flex-col">
+						<Link to={makeProjectHomeUrl(currentWorkspace.slug, currentProject?.slug ?? "")}>
+							<DropdownItem>
+								<HomeIcon className="size-4" />
+								Project home
+							</DropdownItem>
+						</Link>
+						<Link to={makeProjectSettingsUrl(currentWorkspace.slug, currentProject?.slug ?? "")}>
+							<DropdownItem>
+								<SettingsIcon className="size-4" />
+								Project settings
+							</DropdownItem>
+						</Link>
+						<DropdownSeparator />
 						{projects?.map(project => (
 							<Link to={`/workspaces/${currentWorkspace.slug}/projects/${project.slug}`} key={project.id}>
-								<DropdownItem className={cn(project.id === currentWorkspace.id ? "bg-card/50" : "")}>
-									{project.id === currentWorkspace.id ? (
+								<DropdownItem className={cn(project.id === currentProject?.id ? "bg-card/50" : "")}>
+									{project.id === currentProject?.id ? (
 										<CheckIcon className="h-4 w-4" />
 									) : (
 										<span className="w-4" />

@@ -5,7 +5,7 @@ import { streamText } from "ai";
 import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
 
-import { getOctokitAppClient } from "app/api/utils/github";
+import { __getOctokitDevTokenClient, getOctokitAppClient } from "app/api/utils/github";
 import { heliconeOpenAI } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
 
@@ -41,7 +41,8 @@ const getFileContents = async (docId: string, supabase: SupabaseClient<Database>
 						.eq("id", repoReference.repo_connection_id)
 						.single(),
 				);
-				const octokit = await getOctokitAppClient(installation_id);
+				const octokit =
+					installation_id === "<TOKEN>" ? __getOctokitDevTokenClient() : getOctokitAppClient(installation_id);
 
 				if (repoReference.type === "file") {
 					const { data: file } = await octokit.rest.repos.getContent({

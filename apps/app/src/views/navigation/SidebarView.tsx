@@ -117,25 +117,27 @@ export const SidebarView = () => {
 							</div>
 						)}
 						{workspace && (
-							<div className="flex items-center gap-1 px-4">
-								<NewNote />
-								<GenerateDoc />
-							</div>
+							<>
+								<div className="flex items-center gap-1 px-4">
+									<NewNote />
+									<GenerateDoc />
+								</div>
+								<div className="no-scrollbar mt-4 flex flex-1 flex-col gap-4 overflow-y-auto px-4">
+									<Button
+										variant="secondary"
+										className="w-full justify-start border border-border text-sm font-medium text-secondary hover:bg-card/50 hover:text-secondary"
+										onClick={() => setIsSearchBarOpen(true)}>
+										<SearchIcon className="size-4" />
+										<span>Search</span>
+									</Button>
+									{!project && <ProjectsList />}
+									<LibraryView />
+									{/* <LatestThoughts /> */}
+									{/* <Collections /> */}
+									<div className="h-4" />
+								</div>
+							</>
 						)}
-						<div className="no-scrollbar mt-4 flex flex-1 flex-col gap-4 overflow-y-auto px-4">
-							<Button
-								variant="secondary"
-								className="w-full justify-start border border-border text-sm font-medium text-secondary hover:bg-card/50 hover:text-secondary"
-								onClick={() => setIsSearchBarOpen(true)}>
-								<SearchIcon className="size-4" />
-								<span>Search</span>
-							</Button>
-							{!project && <ProjectsList />}
-							<LibraryView />
-							{/* <LatestThoughts /> */}
-							{/* <Collections /> */}
-							<div className="h-4" />
-						</div>
 					</>
 				)}
 				{debug && <div className="mb-4 px-4 text-xs text-secondary">Debug is enabled</div>}

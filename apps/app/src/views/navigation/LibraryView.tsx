@@ -25,7 +25,7 @@ import {
 	useMoveOutOfLibrary,
 	useSetLibraryItems,
 } from "src/utils/folders";
-import { makeProjectDocUrl, makeThoughtUrl } from "src/utils/thought";
+import { makeDocUrl, makeProjectDocUrl, makeThoughtUrl } from "src/utils/thought";
 
 import { useProject } from "../projects/ProjectContext";
 import { SortableItem } from "./SortableItem";
@@ -215,6 +215,22 @@ export const LibraryView = () => {
 
 	const activeItem = activeId ? items.find(item => item.id === activeId) : null;
 
+	// Add the navigateToDocument callback near other hooks
+	const navigateToDocument = useCallback(
+		(item: FlattenedItem) => {
+			if (item.type === "document") {
+				navigate(
+					makeDocUrl({
+						workspaceSlug: workspace.slug,
+						projectSlug: project?.slug,
+						docId: item.id,
+					}),
+				);
+			}
+		},
+		[navigate, workspace.slug, project?.slug],
+	);
+
 	return (
 		<div className="flex w-full flex-col">
 			<DndContext
@@ -248,15 +264,7 @@ export const LibraryView = () => {
 											name={item.name}
 											expanded={expandedFolders.has(item.id)}
 											toggleFolder={toggleFolder}
-											navigateToDoc={() => {
-												if (item.type === "document") {
-													navigate(
-														project
-															? makeProjectDocUrl(workspace.slug, project.slug, item.id)
-															: makeThoughtUrl(workspace.slug, item.id),
-													);
-												}
-											}}
+											navigateToDoc={() => navigateToDocument(item)}
 											hasAfterDroppable={index === arr.length - 1 || isLastItemWithParent}
 											isInLibrary
 											accessStrategy={item.accessStrategy}
@@ -299,11 +307,7 @@ export const LibraryView = () => {
 												name={item.name}
 												expanded={false}
 												toggleFolder={toggleFolder}
-												navigateToDoc={() => {
-													if (item.type === "document") {
-														navigate(makeProjectDocUrl(workspace.slug, project!.slug, item.id));
-													}
-												}}
+												navigateToDoc={() => navigateToDocument(item)}
 												hasAfterDroppable={index === arr.length - 1}
 												accessStrategy={item.accessStrategy}
 											/>
@@ -337,11 +341,7 @@ export const LibraryView = () => {
 											name={item.name}
 											expanded={false}
 											toggleFolder={toggleFolder}
-											navigateToDoc={() => {
-												if (item.type === "document") {
-													navigate(makeProjectDocUrl(workspace.slug, project!.slug, item.id));
-												}
-											}}
+											navigateToDoc={() => navigateToDocument(item)}
 											hasAfterDroppable={index === arr.length - 1}
 											accessStrategy={item.accessStrategy}
 										/>
@@ -375,11 +375,7 @@ export const LibraryView = () => {
 											name={item.name}
 											expanded={false}
 											toggleFolder={toggleFolder}
-											navigateToDoc={() => {
-												if (item.type === "document") {
-													navigate(makeProjectDocUrl(workspace.slug, project!.slug, item.id));
-												}
-											}}
+											navigateToDoc={() => navigateToDocument(item)}
 											hasAfterDroppable={index === arr.length - 1}
 											accessStrategy={item.accessStrategy}
 										/>

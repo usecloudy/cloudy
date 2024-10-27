@@ -18,21 +18,21 @@ export const assignDocumentToFolder = async (docId: string, folderId: string) =>
 		.eq("id", docId);
 };
 
-export const getRootFolder = async (projectId?: string) => {
+export const getRootFolder = async (workspaceId: string, projectId?: string) => {
 	let rootFolderQuery = supabase.from("folders").select("id").eq("is_root", true);
 	if (projectId) {
 		rootFolderQuery = rootFolderQuery.eq("project_id", projectId);
 	} else {
-		rootFolderQuery = rootFolderQuery.is("project_id", null);
+		rootFolderQuery = rootFolderQuery.eq("workspace_id", workspaceId).is("project_id", null);
 	}
 	return handleSupabaseError(await rootFolderQuery.maybeSingle());
 };
 
-export const createRootFolder = async (projectId?: string) => {
+export const createRootFolder = async (workspaceId: string, projectId?: string) => {
 	return handleSupabaseError(
 		await supabase
 			.from("folders")
-			.insert({ project_id: projectId ?? null, name: "<ROOT>", is_root: true })
+			.insert({ project_id: projectId ?? null, name: "<ROOT>", is_root: true, workspace_id: workspaceId })
 			.select()
 			.single(),
 	);
@@ -59,20 +59,24 @@ export type PreFlattenedFolder = FlattenedItem & {
 };
 
 export const useLibraryItems = () => {
+	const workspace = useWorkspace();
 	const project = useProject();
 	const user = useUser();
 
 	return useQuery({
-		queryKey: projectQueryKeys.library(project?.id),
+		queryKey: projectQueryKeys.library(workspace.id, project?.id),
 		queryFn: async () => {
 			let recentDocsQuery = supabase
 				.from("thoughts")
-				.select("id, title, access_strategy, author_id")
+				.select("id, title, access_strategy, author_id, updated_at")
+				.order("updated_at", { ascending: false })
+				.eq("workspace_id", workspace.id)
 				.is("folder_id", null);
 
 			let docsQuery = supabase
 				.from("thoughts")
 				.select("id, title, index, folder:folders!inner(id, is_root), access_strategy")
+				.eq("workspace_id", workspace.id)
 				.not("folder_id", "is", null);
 
 			let foldersQuery = supabase.from("folders").select("id, name, parent_id, is_root, index").eq("is_root", false);
@@ -89,7 +93,7 @@ export const useLibraryItems = () => {
 
 			const recentDocs = handleSupabaseError(await recentDocsQuery);
 			const docs = handleSupabaseError(await docsQuery);
-			const rootFolder = await getRootFolder(project?.id);
+			const rootFolder = await getRootFolder(workspace.id, project?.id);
 			const folders = handleSupabaseError(await foldersQuery);
 
 			console.log("docs", docs);
@@ -201,7 +205,7 @@ export const useSetLibraryItems = () => {
 			console.log("prevItems", prevItems);
 			console.log("newItems", newItems);
 
-			const rootFolder = await getRootFolder(project?.id);
+			const rootFolder = await getRootFolder(workspace.id, project?.id);
 
 			if (!rootFolder) {
 				return;
@@ -252,23 +256,26 @@ export const useSetLibraryItems = () => {
 						index: folder.index,
 						parent_id: folder.parentId,
 						project_id: project?.id,
+						workspace_id: workspace.id,
 					})),
 				),
 			);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(project?.id) });
+			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(workspace.id, project?.id) });
 		},
 	});
 };
 
 export const useMakeInitialLibrary = () => {
+	const workspace = useWorkspace();
 	const project = useProject();
+
 	return useMutation({
 		mutationFn: async (initialDocId?: string) => {
-			let rootFolder = await getRootFolder(project?.id);
+			let rootFolder = await getRootFolder(workspace.id, project?.id);
 			if (!rootFolder) {
-				rootFolder = await createRootFolder(project?.id);
+				rootFolder = await createRootFolder(workspace.id, project?.id);
 			}
 
 			if (initialDocId) {
@@ -276,28 +283,32 @@ export const useMakeInitialLibrary = () => {
 			}
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(project?.id) });
+			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(workspace.id, project?.id) });
 		},
 	});
 };
 
 export const useMoveOutOfLibrary = () => {
+	const workspace = useWorkspace();
 	const project = useProject();
+
 	return useMutation({
 		mutationFn: async (docId: string) => {
 			handleSupabaseError(await supabase.from("thoughts").update({ folder_id: null }).eq("id", docId).select());
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(project?.id) });
+			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(workspace.id, project?.id) });
 		},
 	});
 };
 
 export const useCreateFolder = () => {
+	const workspace = useWorkspace();
 	const project = useProject();
+
 	return useMutation({
 		mutationFn: async () => {
-			const rootFolder = await getRootFolder(project?.id);
+			const rootFolder = await getRootFolder(workspace.id, project?.id);
 			if (!rootFolder) return;
 			handleSupabaseError(
 				await supabase.from("folders").insert({
@@ -306,11 +317,12 @@ export const useCreateFolder = () => {
 					is_root: false,
 					parent_id: rootFolder.id,
 					index: await getFolderChildrenCount(rootFolder.id),
+					workspace_id: workspace.id,
 				}),
 			);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(project?.id) });
+			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(workspace.id, project?.id) });
 		},
 	});
 };
@@ -330,6 +342,7 @@ export const syncItemIndices = (items: FlattenedItem[]) =>
 	});
 
 export const useRenameItem = () => {
+	const workspace = useWorkspace();
 	const project = useProject();
 
 	return useMutation({
@@ -343,7 +356,7 @@ export const useRenameItem = () => {
 			}
 		},
 		onSuccess: (_, payload) => {
-			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(project?.id) });
+			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(workspace.id, project?.id) });
 			if (payload.type === "document") {
 				queryClient.invalidateQueries({ queryKey: thoughtQueryKeys.thoughtDetail(payload.id) });
 			}
@@ -352,7 +365,9 @@ export const useRenameItem = () => {
 };
 
 export const useDeleteItem = () => {
+	const workspace = useWorkspace();
 	const project = useProject();
+
 	return useMutation({
 		mutationFn: async (payload: { id: string; type: "document" | "folder" }) => {
 			const { id, type } = payload;
@@ -363,7 +378,7 @@ export const useDeleteItem = () => {
 			}
 		},
 		onSuccess: (_, payload) => {
-			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(project?.id) });
+			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(workspace.id, project?.id) });
 			if (payload.type === "document") {
 				queryClient.invalidateQueries({ queryKey: thoughtQueryKeys.thoughtDetail(payload.id) });
 			}

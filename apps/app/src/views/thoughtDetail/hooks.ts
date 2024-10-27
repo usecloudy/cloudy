@@ -4,7 +4,7 @@ import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
 import { useContext, useEffect } from "react";
 
-import { collectionQueryKeys, commentThreadQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
+import { collectionQueryKeys, commentThreadQueryKeys, projectQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
 import { useWorkspace } from "src/stores/workspace";
 
 import { apiClient } from "../../api/client";
@@ -71,10 +71,6 @@ export const useEditThought = (thoughtId?: string) => {
 	return useMutation({
 		mutationKey: ["editThought"],
 		mutationFn: async (payload?: ThoughtEditPayload | void) => {
-			if (!thoughtId) {
-				throw new Error("No thought ID");
-			}
-
 			if (isMutating) {
 				return;
 			}
@@ -102,7 +98,6 @@ export const useEditThought = (thoughtId?: string) => {
 			let accessStrategyObj = {};
 			if (payload?.accessStrategy !== undefined) {
 				accessStrategyObj = { access_strategy: payload.accessStrategy };
-				console.log("accessStrategyObj", accessStrategyObj);
 			}
 
 			const newThought = handleSupabaseError(
@@ -161,7 +156,7 @@ export const useEditThought = (thoughtId?: string) => {
 				});
 			}, 2500);
 			queryClient.invalidateQueries({
-				queryKey: thoughtQueryKeys.workspaceSidebarLatestThoughts(workspace.id),
+				queryKey: projectQueryKeys.library(workspace.id, project?.id),
 			});
 		},
 	});

@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import { useWorkspaceStore } from "src/stores/workspace";
 import { useProject } from "src/views/projects/ProjectContext";
@@ -13,6 +14,13 @@ export const makeThoughtUrl = (wsSlug: string, thoughtId: string) => {
 
 export const makeProjectDocUrl = (wsSlug: string, projectSlug: string, docId: string) => {
 	return `/workspaces/${wsSlug}/projects/${projectSlug}/docs/${docId}`;
+};
+
+export const makeDocUrl = (components: { workspaceSlug: string; projectSlug?: string; docId: string }) => {
+	if (components.projectSlug) {
+		return makeProjectDocUrl(components.workspaceSlug, components.projectSlug, components.docId);
+	}
+	return makeThoughtUrl(components.workspaceSlug, components.docId);
 };
 
 export const makeThoughtLabel = (thought: {
@@ -41,12 +49,15 @@ export const useCreateThought = () => {
 				ts: new Date(),
 			});
 
-			if (newThought) {
-				if (project) {
-					navigate(makeProjectDocUrl(workspace.slug, project.slug, newThought.id));
-				} else {
-					navigate(makeThoughtUrl(workspace.slug, newThought.id));
-				}
+			return newThought;
+		},
+		onError: e => {
+			console.error(e);
+			toast.error("Failed to create thought");
+		},
+		onSuccess: newThought => {
+			if (workspace && newThought) {
+				navigate(makeDocUrl({ workspaceSlug: workspace.slug, projectSlug: project?.slug, docId: newThought.id }));
 			}
 		},
 	});

@@ -1,7 +1,7 @@
 import { RepoReference, handleSupabaseError } from "@cloudy/utils/common";
 import { NextRequest, NextResponse } from "next/server";
 
-import { getOctokitAppClient } from "app/api/utils/github";
+import { __getOctokitDevTokenClient, getOctokitAppClient } from "app/api/utils/github";
 import { getSupabase } from "app/api/utils/supabase";
 
 export const GET = async (request: NextRequest) => {
@@ -24,7 +24,10 @@ export const GET = async (request: NextRequest) => {
 	const allRepoPaths = (
 		await Promise.all(
 			connections.map(async repoConnection => {
-				const octokit = await getOctokitAppClient(repoConnection.installation_id);
+				const octokit =
+					repoConnection.installation_id === "<TOKEN>"
+						? __getOctokitDevTokenClient()
+						: getOctokitAppClient(repoConnection.installation_id);
 
 				const repoData = await octokit.rest.repos.get({
 					owner: repoConnection.owner,

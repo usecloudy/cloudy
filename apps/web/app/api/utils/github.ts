@@ -27,3 +27,8 @@ export const getAccessTokenFromOauthCode = async (code: string) => {
 
 	return data.access_token;
 };
+
+export const __getOctokitDevTokenClient = () => {
+	console.warn("USING DEV TOKEN!");
+	return new Octokit({ auth: process.env.GITHUB_DEV_TOKEN! });
+};

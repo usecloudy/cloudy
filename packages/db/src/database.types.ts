@@ -901,6 +901,7 @@ export type Database = {
           name: string | null
           parent_id: string | null
           project_id: string | null
+          workspace_id: string
         }
         Insert: {
           created_at?: string
@@ -910,6 +911,7 @@ export type Database = {
           name?: string | null
           parent_id?: string | null
           project_id?: string | null
+          workspace_id: string
         }
         Update: {
           created_at?: string
@@ -919,6 +921,7 @@ export type Database = {
           name?: string | null
           parent_id?: string | null
           project_id?: string | null
+          workspace_id?: string
         }
         Relationships: [
           {
@@ -933,6 +936,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folders_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]

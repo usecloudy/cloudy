@@ -24,6 +24,7 @@ import { NotFoundView } from "./views/notFound/NotFoundView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { NewProjectView } from "./views/projects/NewProjectView";
 import { ProjectOutlet } from "./views/projects/ProjectContext";
+import { ProjectSettingsView } from "./views/projects/ProjectSettingsView";
 import { ProjectView } from "./views/projects/ProjectView";
 import { SearchBarControl } from "./views/search/SearchBar";
 import { ThoughtDetailView } from "./views/thoughtDetail/ThoughtDetailView";
@@ -102,6 +103,10 @@ export const Router: FC = () => {
 								<Route
 									path="/workspaces/:wsSlug/projects/:projectSlug/docs/:thoughtId"
 									element={<ThoughtDetailView />}
+								/>
+								<Route
+									path="/workspaces/:wsSlug/projects/:projectSlug/settings"
+									element={<ProjectSettingsView />}
 								/>
 							</Route>
 						</Route>

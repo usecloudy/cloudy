@@ -42,7 +42,8 @@ export const workspaceQueryKeys = {
 };
 
 export const projectQueryKeys = {
-	library: (projectId?: string) => ["project", projectId, "library"] as const,
+	library: (workspaceId: string, projectId?: string) => ["workspace", workspaceId, "project", projectId, "library"] as const,
+	repos: (projectId?: string) => ["project", projectId, "repos"] as const,
 };
 
 export const thoughtKeys = {

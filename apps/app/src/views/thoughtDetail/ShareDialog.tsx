@@ -124,9 +124,7 @@ export const ShareDialog = () => {
 
 					{/* New user sharing section */}
 					<div>
-						<label htmlFor="invite-users" className="text-sm">
-							Invite Users
-						</label>
+						<label className="text-sm">People with access</label>
 						<div className="mt-1 flex gap-2">
 							<Input
 								id="invite-users"
@@ -151,9 +149,6 @@ export const ShareDialog = () => {
 								)}
 							</Button>
 						</div>
-					</div>
-					<div>
-						<label className="text-sm">People with access</label>
 						<div className="mt-2 space-y-2">
 							{users?.map(user => (
 								<div key={user.id} className="flex items-center justify-between rounded-md border p-2">
