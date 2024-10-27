@@ -427,19 +427,7 @@ const MoveOutOfLibraryDroppable = ({ hasRecentDocs }: { hasRecentDocs: boolean }
 		id: "out-of-library",
 	});
 
-	if (!active) {
-		if (hasRecentDocs) {
-			return null;
-		}
-		return (
-			<Button variant="outline" size="sm" className="my-1 text-tertiary">
-				<PlusIcon className="size-4" />
-				<span>No recent docs, create one</span>
-			</Button>
-		);
-	}
-
-	if (!active.data.current?.isInLibrary || active.data.current.type === "folder") {
+	if (!active || !active.data.current?.isInLibrary || active.data.current.type === "folder") {
 		return null;
 	}
 

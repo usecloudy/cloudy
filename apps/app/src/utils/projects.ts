@@ -14,6 +14,10 @@ export const makeProjectSettingsUrl = (wsSlug: string, projectSlug: string) => {
 	return `/workspaces/${wsSlug}/projects/${projectSlug}/settings`;
 };
 
+export const makeNewProjectUrl = (wsSlug: string) => {
+	return `/workspaces/${wsSlug}/projects/new`;
+};
+
 export const useEditProject = () => {
 	const workspace = useWorkspace();
 

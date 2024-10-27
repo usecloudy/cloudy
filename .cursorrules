@@ -8,4 +8,8 @@ We also do not use `React.FC` and instead define the type of the function compon
 
 We use tailwind css for styling and you can find the config in `tailwind.config.ts` in all the app repos.
 
+For classNames, if the width and height are the same, we use `size-` classes such as `size-4` instead of `w-4 h-4`.
 
+Prefer using `gap` such as `gap-y` and `gap-x` over `space-x` or `space-y` for spacing.
+
+Inside the `Button` component, there is a gap specified already, do not need to add margin classes to the icons.

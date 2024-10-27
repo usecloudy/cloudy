@@ -9,7 +9,7 @@ import {
 import { GithubAllWorkspaceReposGetResponse } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeftIcon, GitBranchIcon } from "lucide-react";
+import { ArrowLeftIcon } from "lucide-react";
 import posthog from "posthog-js";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,9 +26,9 @@ import { MainLayout } from "src/components/MainLayout";
 import { SelectDropdown } from "src/components/SelectDropdown";
 import { useUserRecord } from "src/stores/user";
 import { useWorkspace } from "src/stores/workspace";
+import { makeProjectHomeUrl } from "src/utils/projects";
 
 import { ConnectGithubCard } from "../github/ConnectGithubCard";
-import { NameAndSlugFields } from "../workspaces/Fields";
 import { useCreateProject, useUserProjects } from "./hooks";
 
 type FormData = {
@@ -141,7 +141,7 @@ export const NewProjectView = () => {
 			has_github_repo: !!data.githubRepo,
 		});
 
-		navigate(`/projects/${projectSlug}`);
+		navigate(makeProjectHomeUrl(workspace.slug, projectSlug));
 	};
 
 	const watchSlug = watch("slug");
@@ -282,12 +282,6 @@ export const NewProjectView = () => {
 						{createProjectMutation.isPending ? <LoadingSpinner size="xs" variant="background" /> : "Create Project"}
 					</Button>
 				</form>
-				<Link to="/projects">
-					<Button variant="ghost" className="w-full text-secondary">
-						<ArrowLeftIcon className="size-4" />
-						<span>Cancel project creation</span>
-					</Button>
-				</Link>
 			</div>
 		</MainLayout>
 	);

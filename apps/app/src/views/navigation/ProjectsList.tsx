@@ -1,20 +1,10 @@
-import { handleSupabaseError } from "@cloudy/utils/common";
-import { useQuery } from "@tanstack/react-query";
+import { PlusIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { supabase } from "src/clients/supabase";
+import { Button } from "src/components/Button";
 import { useWorkspace } from "src/stores/workspace";
-
-const useWorkspaceProjects = () => {
-	const workspace = useWorkspace();
-
-	return useQuery({
-		queryKey: ["workspace", workspace?.id, "projects"],
-		queryFn: async () => {
-			return handleSupabaseError(await supabase.from("projects").select("*").eq("workspace_id", workspace?.id));
-		},
-	});
-};
+import { makeNewProjectUrl } from "src/utils/projects";
+import { useWorkspaceProjects } from "src/utils/workspaces";
 
 export const ProjectsList = () => {
 	const workspace = useWorkspace();
@@ -22,12 +12,25 @@ export const ProjectsList = () => {
 
 	return (
 		<div className="flex flex-col">
-			<span className="mb-1 text-sm font-medium text-secondary">Projects</span>
-			{workspaceProjects?.map(project => (
-				<Link to={`/workspaces/${workspace.slug}/projects/${project.slug}`} key={project.id}>
-					<div className="w-full rounded px-4 py-1 text-sm hover:bg-card">{project.name}</div>
+			<div className="flex items-center justify-between gap-1">
+				<span className="mb-1 text-sm font-medium text-secondary">Projects</span>
+				<Link to={makeNewProjectUrl(workspace.slug)}>
+					<Button variant="ghost" size="icon-sm" className="text-secondary">
+						<PlusIcon className="size-4" />
+					</Button>
 				</Link>
-			))}
+			</div>
+			{workspaceProjects && workspaceProjects.length > 0 ? (
+				workspaceProjects.map(project => (
+					<Link to={`/workspaces/${workspace.slug}/projects/${project.slug}`} key={project.id}>
+						<div className="w-full rounded px-4 py-1 text-sm hover:bg-card">{project.name}</div>
+					</Link>
+				))
+			) : (
+				<div className="mt-1 w-full rounded border border-dashed border-border px-4 py-1 text-center text-xs text-tertiary">
+					No projects yet
+				</div>
+			)}
 		</div>
 	);
 };
