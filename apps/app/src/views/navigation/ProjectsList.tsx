@@ -1,4 +1,4 @@
-import { PlusIcon } from "lucide-react";
+import { FolderGit2Icon, FolderKanbanIcon, PlusIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Button } from "src/components/Button";
@@ -23,7 +23,14 @@ export const ProjectsList = () => {
 			{workspaceProjects && workspaceProjects.length > 0 ? (
 				workspaceProjects.map(project => (
 					<Link to={`/workspaces/${workspace.slug}/projects/${project.slug}`} key={project.id}>
-						<div className="w-full rounded px-4 py-1 text-sm hover:bg-card">{project.name}</div>
+						<div className="flex w-full items-center gap-2 rounded px-2 py-1 text-sm hover:bg-card">
+							{project.hasRepositoryConnection ? (
+								<FolderGit2Icon className="size-4" />
+							) : (
+								<FolderKanbanIcon className="size-4" />
+							)}
+							<span>{project.name}</span>
+						</div>
 					</Link>
 				))
 			) : (

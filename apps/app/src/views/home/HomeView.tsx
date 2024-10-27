@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { Button } from "src/components/Button";
 import { MainLayout } from "src/components/MainLayout";
 import { useWorkspace } from "src/stores/workspace";
-import { makeProjectHomeUrl } from "src/utils/projects";
+import { makeNewProjectUrl, makeProjectHomeUrl } from "src/utils/projects";
 import { makeHeadTitle } from "src/utils/strings";
 import { useWorkspaceProjects } from "src/utils/workspaces";
 
@@ -22,7 +22,7 @@ export const HomeView = () => {
 			<div className="container mx-auto px-4 py-8">
 				<div className="flex items-center justify-between">
 					<h1 className="font-display text-3xl font-bold">Welcome to {workspace.name}</h1>
-					<Link to="/projects/new">
+					<Link to={makeNewProjectUrl(workspace.slug)}>
 						<Button variant="outline">
 							<PlusIcon className="size-4" />
 							New Project
@@ -51,7 +51,7 @@ export const HomeView = () => {
 							<FolderIcon className="mx-auto size-12 stroke-1 text-tertiary" />
 							<h3 className="mt-4 text-lg font-medium text-secondary">No projects yet</h3>
 							<p className="mt-1 text-sm text-tertiary">Get started by creating your first project</p>
-							<Link to="/projects/new">
+							<Link to={makeNewProjectUrl(workspace.slug)}>
 								<Button variant="default" className="mt-4">
 									<PlusIcon className="size-4" />
 									Create Project
@@ -67,7 +67,7 @@ export const HomeView = () => {
 							<Link
 								key={project.id}
 								to={makeProjectHomeUrl(workspace.slug, project.slug)}
-								className="group rounded-lg border bg-card p-6 transition-all hover:shadow-lg">
+								className="group rounded-lg border bg-card p-6 transition-all hover:opacity-50">
 								<div className="flex items-center justify-between">
 									<div className="flex items-center">
 										{project.hasRepositoryConnection ? (

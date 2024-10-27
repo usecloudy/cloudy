@@ -2105,6 +2105,22 @@ export type Database = {
               similarity_score: number
             }[]
           }
+      search_docs: {
+        Args: {
+          search_query: string
+          p_workspace_id: string
+        }
+        Returns: {
+          doc_id: string
+          doc_title: string
+          doc_content_md: string
+          doc_content_plaintext: string
+          doc_updated_at: string
+          doc_project_id: string
+          project_name: string
+          project_slug: string
+        }[]
+      }
       search_thoughts: {
         Args: {
           search_query: string

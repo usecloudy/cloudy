@@ -16,7 +16,7 @@ export const makeProjectDocUrl = (wsSlug: string, projectSlug: string, docId: st
 	return `/workspaces/${wsSlug}/projects/${projectSlug}/docs/${docId}`;
 };
 
-export const makeDocUrl = (components: { workspaceSlug: string; projectSlug?: string; docId: string }) => {
+export const makeDocUrl = (components: { workspaceSlug: string; projectSlug?: string | null; docId: string }) => {
 	if (components.projectSlug) {
 		return makeProjectDocUrl(components.workspaceSlug, components.projectSlug, components.docId);
 	}

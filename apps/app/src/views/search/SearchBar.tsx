@@ -1,18 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
-import { NotebookTextIcon, SearchIcon, XCircleIcon, XIcon } from "lucide-react";
+import { FileIcon, SearchIcon, TriangleAlertIcon, XCircleIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
 
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Dialog, DialogContent } from "src/components/Dialog";
 import LoadingSpinner from "src/components/LoadingSpinner";
-import { useWorkspace, useWorkspaceSlug, useWorkspaceStore } from "src/stores/workspace";
+import { useWorkspace, useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
 import { useBreakpoint } from "src/utils/tailwind";
-import { makeThoughtUrl } from "src/utils/thought";
+import { makeDocUrl, makeThoughtUrl } from "src/utils/thought";
 
 import { useSearchBarStore } from "./searchBarStore";
 
@@ -29,44 +29,53 @@ const useSearchThoughts = (query: string) => {
 		queryKey: ["thoughts", query],
 		queryFn: async () => {
 			const { data, error } = await supabase
-				.rpc("search_thoughts", {
+				.rpc("search_docs", {
 					search_query: query.replaceAll(" ", "+"),
 					p_workspace_id: workspace.id,
 				})
-				.order("thought_updated_at", { ascending: false });
+				.order("doc_updated_at", { ascending: false });
 
 			if (error) throw error;
 
-			return data.map((t: any) => ({
-				id: t.thought_id,
-				title: t.thought_title,
-				content_md: t.thought_content_md,
-				content_plaintext: t.thought_content_plaintext,
-				updated_at: t.thought_updated_at,
+			return data.map(t => ({
+				id: t.doc_id,
+				title: t.doc_title,
+				content_md: t.doc_content_md,
+				content_plaintext: t.doc_content_plaintext,
+				updated_at: t.doc_updated_at,
+				project_id: t.doc_project_id,
+				project_name: t.project_name,
+				project_slug: t.project_slug,
 			}));
 		},
-		staleTime: 1000,
+		retry: false,
 	});
 };
 
 const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
 	const [query, setQuery] = useState("");
 	const navigate = useNavigate();
-	const wsSlug = useWorkspaceStore(({ workspace }) => workspace?.slug);
+	const workspace = useWorkspaceStore(({ workspace }) => workspace);
 	const isMdBreakpoint = useBreakpoint("md");
 
 	const listRef = useRef<Array<HTMLElement | null>>([]);
 	const listContainerRef = useRef<HTMLDivElement>(null);
 
-	const { data, isFetching } = useSearchThoughts(query);
+	const { data, isFetching, isError } = useSearchThoughts(query);
 	const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setQuery(e.target.value);
 	};
 
+	const handleResultClick = (docId: string, projectSlug?: string | null) => {
+		if (!workspace?.slug) return;
+		navigate(makeDocUrl({ workspaceSlug: workspace.slug, docId, projectSlug }));
+		handleClose();
+	};
+
 	const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-		if (!wsSlug) {
+		if (!workspace?.slug) {
 			return;
 		}
 
@@ -75,7 +84,7 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
 			if (activeIndex !== null && data) {
 				const thought = data[activeIndex];
 				if (thought) {
-					navigate(makeThoughtUrl(wsSlug, thought.id));
+					handleResultClick(thought.id, thought.project_slug);
 					onClose();
 				}
 			}
@@ -98,12 +107,6 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
 		setActiveIndex(null);
 	};
 
-	const handleResultClick = (thoughtId: string) => {
-		if (!wsSlug) return;
-		navigate(makeThoughtUrl(wsSlug, thoughtId));
-		handleClose();
-	};
-
 	const handleClearQuery = () => {
 		setQuery("");
 		setActiveIndex(null);
@@ -119,8 +122,17 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
 	}, [activeIndex]);
 
 	const renderSearchResults = () => {
-		if (!wsSlug) {
+		if (!workspace) {
 			return;
+		}
+
+		if (isError) {
+			return (
+				<div className="flex items-center gap-2 p-3 text-sm text-red-600">
+					<TriangleAlertIcon className="size-4" />
+					<span>Something went wrong. Please try again.</span>
+				</div>
+			);
 		}
 
 		if (!data || data.length === 0) {
@@ -139,14 +151,17 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
 						ref={node => {
 							listRef.current[index] = node;
 						}}
-						onClick={() => handleResultClick(thought.id)}
+						onClick={() => handleResultClick(thought.id, thought.project_slug)}
 						className={cn(
 							"flex cursor-pointer items-center gap-2 rounded px-3 py-1 hover:bg-card",
 							activeIndex === index && "bg-accent/10",
 						)}>
-						<NotebookTextIcon className="h-4 w-4 flex-shrink-0 text-secondary" />
+						<FileIcon className="h-4 w-4 flex-shrink-0 text-secondary" />
 						<div className="flex min-w-0 flex-1 flex-col">
-							<span className="text-xs text-secondary">{makeHumanizedTime(thought.updated_at)}</span>
+							<span className="text-xs text-secondary">
+								{thought.project_name ? `Project: ${thought.project_name}` : `Workspace: ${workspace.name}`}
+							</span>
+
 							<span className={cn("truncate text-sm", thought.title ? "font-medium" : "text-primary/80")}>
 								{thought.title || thought.content_plaintext || thought.content_md}
 							</span>
