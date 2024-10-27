@@ -62,7 +62,7 @@ export const ExportDialog = ({ thoughtId, title }: { thoughtId: string; title?: 
 			<DialogTrigger>
 				<Button variant="ghost" className="w-full justify-start" size="sm">
 					<ShareIcon className="size-4" />
-					<span>Export note</span>
+					<span>Export to PDF</span>
 				</Button>
 			</DialogTrigger>
 			{isOpen && <ExportDialogInner thoughtId={thoughtId} title={title} onClose={handleOnClose} />}

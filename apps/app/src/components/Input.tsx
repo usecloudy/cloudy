@@ -16,7 +16,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({ className, erro
 				error && "border-red-500 focus-within:ring-red-500",
 				className,
 			)}>
-			{prefix && <div className="flex items-center pl-3 text-sm text-secondary">{prefix}</div>}
+			{prefix && <div className="flex items-center text-nowrap pl-3 text-sm text-secondary">{prefix}</div>}
 			<input
 				className={cn(
 					"h-full w-full bg-transparent px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-placeholder focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
