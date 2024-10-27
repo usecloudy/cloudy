@@ -65,7 +65,7 @@ export const WorkspaceSelector = () => {
 							</Link>
 						))}
 						<DropdownSeparator />
-						<Link to="/onboarding/workspaces/new/website-onboarding">
+						<Link to="/onboarding/workspaces/new">
 							<DropdownItem className="text-accent hover:bg-accent/10">
 								<PlusIcon className="size-4" />
 								Create new workspace
