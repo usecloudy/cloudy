@@ -9,11 +9,13 @@ import {
 	useSensors,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { FolderPlusIcon, PlusIcon } from "lucide-react";
+import { CircleHelpIcon, FolderPlusIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "src/components/Button";
+import { HelpTooltip } from "src/components/HelpTooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip";
 import { useWorkspace } from "src/stores/workspace";
 import { cn } from "src/utils";
 import {
@@ -25,7 +27,7 @@ import {
 	useMoveOutOfLibrary,
 	useSetLibraryItems,
 } from "src/utils/folders";
-import { makeDocUrl, makeProjectDocUrl, makeThoughtUrl } from "src/utils/thought";
+import { makeDocUrl } from "src/utils/thought";
 
 import { useProject } from "../projects/ProjectContext";
 import { SortableItem } from "./SortableItem";
@@ -241,7 +243,14 @@ export const LibraryView = () => {
 				<SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
 					<div className="flex w-full flex-col gap-1">
 						<div className="flex flex-row items-center justify-between gap-1">
-							<h3 className="whitespace-nowrap text-sm font-semibold text-secondary">Library</h3>
+							<div className="flex flex-row items-center gap-1">
+								<h3 className="whitespace-nowrap text-sm font-semibold text-secondary">Library</h3>
+								<HelpTooltip
+									content={`Drag files and folders around to build this ${
+										project?.name ? `project's` : "workspace's"
+									} library. This is where you can structure your knowledgebase.`}
+								/>
+							</div>
 							<Button
 								variant="ghost"
 								size="icon-sm"
