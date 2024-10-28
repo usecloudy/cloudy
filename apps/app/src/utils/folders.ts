@@ -235,29 +235,33 @@ export const useSetLibraryItems = () => {
 			const docsToUpdate = itemsToUpdate.filter(item => item.type === "document");
 			const foldersToUpdate = itemsToUpdate.filter(item => item.type === "folder");
 
-			handleSupabaseError(
-				await supabase.from("thoughts").upsert(
-					docsToUpdate.map(doc => ({
-						id: doc.id,
-						folder_id: doc.parentId,
-						index: doc.index,
-						workspace_id: workspace.id,
-						project_id: project?.id,
-					})),
+			await Promise.all([
+				handleSupabaseError(
+					await supabase.from("thoughts").upsert(
+						docsToUpdate.map(doc => ({
+							id: doc.id,
+							folder_id: doc.parentId,
+							index: doc.index,
+							workspace_id: workspace.id,
+							project_id: project?.id,
+						})),
+					),
 				),
-			);
-
-			handleSupabaseError(
-				await supabase.from("folders").upsert(
-					foldersToUpdate.map(folder => ({
-						id: folder.id,
-						index: folder.index,
-						parent_id: folder.parentId,
-						project_id: project?.id,
-						workspace_id: workspace.id,
-					})),
+				handleSupabaseError(
+					await supabase.from("folders").upsert(
+						foldersToUpdate.map(folder => ({
+							id: folder.id,
+							index: folder.index,
+							parent_id: folder.parentId,
+							project_id: project?.id,
+							workspace_id: workspace.id,
+						})),
+					),
 				),
-			);
+			]);
+		},
+		onMutate: ({ newItems }) => {
+			queryClient.setQueryData(projectQueryKeys.library(workspace.id, project?.id), newItems);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(workspace.id, project?.id) });

@@ -1,13 +1,12 @@
 import { handleSupabaseError } from "@cloudy/utils/common";
 import { useQuery } from "@tanstack/react-query";
-import { CheckIcon, ChevronDownIcon, HomeIcon, LayoutDashboardIcon, PlusIcon, SettingsIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, HomeIcon, PlusIcon, SettingsIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { workspaceQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Dropdown, DropdownItem, DropdownSeparator } from "src/components/Dropdown";
-import { useAllUserWorkspaces } from "src/stores/user";
 import { useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { makeProjectHomeUrl, makeProjectSettingsUrl } from "src/utils/projects";
