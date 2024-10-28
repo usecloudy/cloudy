@@ -28,7 +28,6 @@ const useRelatedThoughts = (thoughtId?: string) => {
 					filter: `matches=eq.${thoughtId}`,
 				},
 				() => {
-					console.log("thoughtSummaryMatchesChannel", thoughtId);
 					queryClient.invalidateQueries({
 						queryKey: thoughtQueryKeys.relatedThoughts(thoughtId),
 					});
@@ -47,7 +46,6 @@ const useRelatedThoughts = (thoughtId?: string) => {
 					filter: `matched_by=eq.${thoughtId}`,
 				},
 				() => {
-					console.log("thoughtSummaryMatchedByChannel", thoughtId);
 					queryClient.invalidateQueries({
 						queryKey: thoughtQueryKeys.relatedThoughts(thoughtId),
 					});

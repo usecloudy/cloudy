@@ -51,7 +51,6 @@ const ThoughtDetailInner = ({ thoughtId }: { thoughtId?: string }) => {
 	const headTitle = title ? makeHeadTitle(ellipsizeText(title, 16)) : makeHeadTitle("New Thought");
 
 	if ((!thought && previousThought) || (!isLoading && !thought)) {
-		console.log("im going back", thought, previousThought, isLoading, thought);
 		return <Navigate to="/" />;
 	}
 
@@ -274,7 +273,6 @@ const AiDocumentGeneration = ({ thought }: { thought: Thought }) => {
 		if (!hasGenerated.current && thought.generation_prompt && !thought.generated_at) {
 			hasGenerated.current = true;
 			onStartAiEdits();
-			console.log("generating document", thought);
 			await generateDocumentMutation.mutateAsync(thought.id);
 			onFinishAiEdits();
 		}

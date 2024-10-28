@@ -23,7 +23,6 @@ const useWorkspaceProjects = () => {
 			if (!currentWorkspace) {
 				return [];
 			}
-			console.log("currentWorkspace", currentWorkspace);
 
 			return handleSupabaseError(await supabase.from("projects").select("*").eq("workspace_id", currentWorkspace.id));
 		},

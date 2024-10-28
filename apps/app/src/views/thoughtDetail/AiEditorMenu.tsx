@@ -247,7 +247,6 @@ const AiEditorMenuContent = () => {
 	useEffect(() => {
 		// For some reason, autofocus doesn't work and we have to manually focus the text area
 		textAreaRef.current?.focus();
-		console.log("focus");
 	}, []);
 
 	useEffect(() => {
