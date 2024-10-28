@@ -7,7 +7,7 @@ import { GripVertical } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { Navigate, useParams } from "react-router-dom";
-import { useAsync, useEffectOnce, useLocalStorage, useMount, usePrevious, useUnmount, useUpdateEffect } from "react-use";
+import { useAsync, useLocalStorage, useMount, usePrevious, useUnmount, useUpdateEffect } from "react-use";
 
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { MainLayout } from "src/components/MainLayout";
@@ -18,7 +18,6 @@ import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
 import { AiEditorMenu } from "./AiEditorMenu";
-import { CommentColumn } from "./CommentColumn";
 import { ControlColumn } from "./ControlColumn";
 import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
@@ -28,7 +27,7 @@ import { TitleArea } from "./TitleArea";
 import { createFileHandlerExtension } from "./fileHandlerExtension";
 import { ThoughtEditPayload, useEditThought, useGenerateDocument, useThought, useThoughtChannelListeners } from "./hooks";
 import { updateMentionNodeNames } from "./mention";
-import { ThoughtContext } from "./thoughtContext";
+import { AiGenerationContext, ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
 import { clearAllApplyMarks, clearAllEditMarks, tiptapExtensions, wrapSelectionAroundWords } from "./tiptap";
 import { useYProvider } from "./yProvider";
@@ -124,7 +123,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				// Ignore y-sync updates
 				return;
 			}
-			onUpdate(true);
+			onUpdate();
 		},
 		autofocus: !thoughtId,
 		editable: !isEditingDisabled,
@@ -141,8 +140,8 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	}, [isConnected]);
 
 	const onUpdate = useCallback(
-		(isUserUpdate: boolean) => {
-			if (isConnected && !disableUpdatesRef.current) {
+		({ force = false }: { force?: boolean } = {}) => {
+			if (force || (isConnected && !disableUpdatesRef.current)) {
 				const content = editor?.getHTML();
 				const contentMd = editor?.storage.markdown.getMarkdown();
 				const contentPlainText = editor?.getText();
@@ -199,7 +198,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		clearStoredContent();
 		onFinishAiEdits();
 		disableUpdatesRef.current = false;
-		onUpdate(false);
+		onUpdate();
 	}, [editor, clearStoredContent, onFinishAiEdits, onUpdate]);
 
 	const hideAiEditor = useCallback(() => {
@@ -250,21 +249,22 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				onFinishAiEdits,
 			}}>
 			<div className="no-scrollbar relative flex w-full flex-grow flex-col overflow-hidden lg:flex-row">
-				<AiDocumentGeneration thought={thought} />
-				<EditorView
-					thoughtId={thoughtId!}
-					remoteTitle={thought?.title ?? undefined}
-					latestRemoteTitleTs={thought?.title_ts ?? undefined}
-					onChange={onChange}
-				/>
-				<ControlColumn thoughtId={thoughtId} />
+				<AiDocumentGeneration thought={thought}>
+					<EditorView
+						thoughtId={thoughtId!}
+						remoteTitle={thought?.title ?? undefined}
+						latestRemoteTitleTs={thought?.title_ts ?? undefined}
+						onChange={onChange}
+					/>
+					<ControlColumn thoughtId={thoughtId} />
+				</AiDocumentGeneration>
 			</div>
 		</ThoughtContext.Provider>
 	);
 };
 
-const AiDocumentGeneration = ({ thought }: { thought: Thought }) => {
-	const { onStartAiEdits, onFinishAiEdits } = useContext(ThoughtContext);
+const AiDocumentGeneration = ({ thought, children }: { thought: Thought; children: React.ReactNode }) => {
+	const { onStartAiEdits, onFinishAiEdits, isAiWriting, onUpdate } = useContext(ThoughtContext);
 	const generateDocumentMutation = useGenerateDocument();
 
 	const hasGenerated = useRef(false);
@@ -275,10 +275,16 @@ const AiDocumentGeneration = ({ thought }: { thought: Thought }) => {
 			onStartAiEdits();
 			await generateDocumentMutation.mutateAsync(thought.id);
 			onFinishAiEdits();
+			onUpdate({ force: true });
 		}
 	}, [thought?.id]);
 
-	return null;
+	return (
+		<AiGenerationContext.Provider
+			value={{ isGenerating: isAiWriting && !generateDocumentMutation.hasStarted && !thought.generated_at }}>
+			{children}
+		</AiGenerationContext.Provider>
+	);
 };
 
 const EditorView = ({
@@ -292,7 +298,9 @@ const EditorView = ({
 	latestRemoteTitleTs?: string;
 	onChange: (payload: ThoughtEditPayload) => void;
 }) => {
-	const { editor, disableUpdatesRef, isConnected, hideControlColumn, isAiWriting } = useContext(ThoughtContext);
+	const { editor, isConnected, hideControlColumn, isAiWriting } = useContext(ThoughtContext);
+	const { isGenerating } = useContext(AiGenerationContext);
+
 	const { lastLocalThoughtTitleTs, setCurrentContent, setLastLocalThoughtContentTs, setLastLocalThoughtTitleTs } =
 		useThoughtStore();
 	const { title, setTitle, saveTitleKey } = useTitleStore();
@@ -346,7 +354,7 @@ const EditorView = ({
 				<TitleArea title={title} onChange={handleChangeTitle} />
 				<div
 					// On larger screens, we need left padding to avoid some characters being cut off
-					className="flex flex-row md:pl-[2px]">
+					className="relative flex flex-row md:pl-[2px]">
 					{editor && thoughtId && <EditorBubbleMenu />}
 					{editor && thoughtId && (
 						<div>
@@ -358,10 +366,19 @@ const EditorView = ({
 						</div>
 					)}
 					{isConnected ? (
-						<EditorContent
-							editor={editor}
-							className={cn("main-editor w-full", isAiWriting && "pointer-events-none opacity-70")}
-						/>
+						<>
+							<EditorContent
+								editor={editor}
+								className={cn(
+									"main-editor w-full",
+									isAiWriting && "pointer-events-none opacity-70",
+									isGenerating && "opacity-0",
+								)}
+							/>
+							{isGenerating && (
+								<div className="absolute left-8 top-0 animate-pulse text-tertiary">Generating...</div>
+							)}
+						</>
 					) : (
 						<div className="flex h-full w-full items-center justify-center">
 							<LoadingSpinner size="sm" />

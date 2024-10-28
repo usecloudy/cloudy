@@ -11,7 +11,7 @@ export interface ThoughtContextType {
 	hideControlColumn?: boolean;
 	isShowingAiEditorMenu?: boolean;
 	isAiWriting: boolean;
-	onUpdate: (isUserUpdate: boolean) => void;
+	onUpdate: (payload?: { force?: boolean }) => void;
 	setPreviewingKey: (previewingKey: string | null) => void;
 	setIsEditingDisabled: (isEditingDisabled: boolean) => void;
 	storeContentIfNeeded: () => void;
@@ -51,4 +51,10 @@ export const ThoughtContext = createContext<ThoughtContextType>({
 	applySuggestedChanges: () => {},
 	onStartAiEdits: () => {},
 	onFinishAiEdits: () => {},
+});
+
+export const AiGenerationContext = createContext<{
+	isGenerating: boolean;
+}>({
+	isGenerating: false,
 });

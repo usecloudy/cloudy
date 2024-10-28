@@ -2,7 +2,7 @@ import { AccessStrategies, handleSupabaseError } from "@cloudy/utils/common";
 import { useIsMutating, useMutation, useQuery } from "@tanstack/react-query";
 import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import { collectionQueryKeys, commentThreadQueryKeys, projectQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
 import { useWorkspace } from "src/stores/workspace";
@@ -14,6 +14,7 @@ import { useProject } from "../projects/ProjectContext";
 import { handleSubmitChat } from "./chat";
 import { ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
+import { useTitleStore } from "./titleStore";
 
 const MINIMUM_CONTENT_LENGTH = 3;
 const MINIMUM_EDIT_DISTANCE = 64;
@@ -72,6 +73,7 @@ export const useEditThought = (thoughtId?: string) => {
 		mutationKey: ["editThought"],
 		mutationFn: async (payload?: ThoughtEditPayload | void) => {
 			if (isMutating) {
+				console.log("Return on edit thought to prevent race conditions");
 				return;
 			}
 
@@ -146,6 +148,9 @@ export const useEditThought = (thoughtId?: string) => {
 
 			return newThought;
 		},
+		onError: e => {
+			console.error(e);
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["thoughtEmbeddings"],
@@ -155,6 +160,7 @@ export const useEditThought = (thoughtId?: string) => {
 					queryKey: ["thoughtEmbeddings"],
 				});
 			}, 2500);
+			console.log("Will update library");
 			queryClient.invalidateQueries({
 				queryKey: projectQueryKeys.library(workspace.id, project?.id),
 			});
@@ -541,8 +547,11 @@ export const useToggleDisableTitleSuggestions = () => {
 
 export const useGenerateDocument = () => {
 	const { editor } = useContext(ThoughtContext);
+	const { setTitle } = useTitleStore();
 
-	return useMutation({
+	const [hasStarted, setHasStarted] = useState(false);
+
+	const mutation = useMutation({
 		mutationFn: async (docId: string) => {
 			if (!editor) {
 				throw new Error("Editor not found");
@@ -563,6 +572,8 @@ export const useGenerateDocument = () => {
 				throw new Error("Failed to get reader from response");
 			}
 
+			setHasStarted(true);
+
 			let fullText = "";
 			let title = "";
 			while (true) {
@@ -571,15 +582,29 @@ export const useGenerateDocument = () => {
 				const chunk = new TextDecoder().decode(value);
 				fullText += chunk;
 
-				if (fullText.startsWith("```title:")) {
+				if (fullText.startsWith("```title:") && fullText.includes("\n")) {
 					title = fullText.split("\n")[0].replace("```title:", "").trim();
 					fullText = fullText.split("\n").slice(1).join("\n");
 				}
 
+				setTitle(title);
 				editor.commands.setContent(fullText);
 			}
 
+			if (fullText.split("\n").at(-1)?.trim() === "```") {
+				fullText = fullText.split("\n").slice(0, -1).join("\n");
+			}
+
+			editor.commands.setContent(fullText);
+
+			setHasStarted(false);
+
 			await supabase.from("thoughts").update({ title, generated_at: new Date().toISOString() }).eq("id", docId);
 		},
+		onSettled: () => {
+			setHasStarted(false);
+		},
 	});
+
+	return { ...mutation, hasStarted };
 };

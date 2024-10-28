@@ -5,12 +5,14 @@ import TextareaAutosize from "react-textarea-autosize";
 
 import { Button } from "src/components/Button";
 import { Dropdown, DropdownItem } from "src/components/Dropdown";
+import { cn } from "src/utils";
 
 import { useThought, useToggleDisableTitleSuggestions } from "./hooks";
-import { ThoughtContext } from "./thoughtContext";
+import { AiGenerationContext, ThoughtContext } from "./thoughtContext";
 
 export const TitleArea = ({ title, onChange }: { title?: string | null; onChange: (title: string) => void }) => {
-	const { thoughtId } = useContext(ThoughtContext);
+	const { thoughtId, isAiWriting } = useContext(ThoughtContext);
+	const { isGenerating } = useContext(AiGenerationContext);
 	const { data: thought } = useThought(thoughtId);
 
 	const [isFocused, setIsFocused] = useState(false);
@@ -24,8 +26,8 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 	};
 
 	return (
-		<div className="ml-8 flex flex-col gap-3 pb-4">
-			<div className="flex-start flex">
+		<div className={cn("relative ml-8 flex flex-col gap-3 pb-4", (isGenerating || isAiWriting) && "animate-pulse")}>
+			<div className={cn("flex-start flex", isGenerating && "opacity-0")}>
 				<TextareaAutosize
 					className="no-scrollbar w-full resize-none appearance-none border-none bg-transparent text-2xl font-bold leading-8 outline-none md:text-3xl md:leading-10"
 					contentEditable={true}
@@ -68,6 +70,7 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 					</div>
 				)}
 			</div>
+			{isGenerating && <div className="absolute left-0 top-0 h-10 w-1/2 animate-pulse rounded bg-card md:w-1/3" />}
 		</div>
 	);
 };
