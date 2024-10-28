@@ -9,10 +9,11 @@ import { Input } from "src/components/Input";
 import { SelectDropdown, SelectOption } from "src/components/SelectDropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip";
 import { Avatar } from "src/components/users/Avatar";
+import { useUser } from "src/stores/user";
 import { useWorkspace } from "src/stores/workspace";
 
 import { useAddDocumentUser, useDocumentAccessControl, useRemoveDocumentUser } from "./accessControl";
-import { useEditThought } from "./hooks";
+import { useEditThought, useThought } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";
 
 const makeAccessStrategyInfo = (accessStrategy: AccessStrategies) => {
@@ -28,7 +29,11 @@ const makeAccessStrategyInfo = (accessStrategy: AccessStrategies) => {
 
 export const ShareDialog = () => {
 	const { id: workspaceId } = useWorkspace();
+	const user = useUser();
+
 	const { thoughtId } = useContext(ThoughtContext);
+
+	const { data: thought } = useThought(thoughtId);
 
 	const { accessStrategy, users } = useDocumentAccessControl(thoughtId);
 	const editThoughtMutation = useEditThought(thoughtId);
@@ -40,8 +45,15 @@ export const ShareDialog = () => {
 
 	const shareLink = `https://app.usecloudy.com/workspaces/${workspaceId}/thoughts/${thoughtId}`;
 
+	const isAuthor = thought?.author_id === user.id;
+
 	const accessControlOptions: SelectOption[] = [
-		{ value: AccessStrategies.PRIVATE, label: "Invite only", icon: <LockIcon className="mr-2 size-4" /> },
+		{
+			value: AccessStrategies.PRIVATE,
+			label: isAuthor ? "Invite only" : "Invite only (only the author can set it to this)",
+			icon: <LockIcon className="mr-2 size-4" />,
+			disabled: !isAuthor,
+		},
 		{ value: AccessStrategies.WORKSPACE, label: "Anyone in the workspace", icon: <UsersIcon className="mr-2 size-4" /> },
 		{
 			value: AccessStrategies.PUBLIC,
@@ -52,7 +64,10 @@ export const ShareDialog = () => {
 	];
 
 	const handleUpdateAccessStrategy = async (accessStrategy: AccessStrategies) => {
-		console.log("updating access strat", accessStrategy);
+		// Prevent non-authors from setting private access
+		if (accessStrategy === AccessStrategies.PRIVATE && !isAuthor) {
+			return;
+		}
 		await editThoughtMutation.mutateAsync({ accessStrategy, ts: new Date() });
 	};
 
@@ -161,17 +176,21 @@ export const ShareDialog = () => {
 									</div>
 									<div className="flex items-center gap-1">
 										{user.isExternal && <div className="text-xs text-secondary">External</div>}
-										<Button
-											variant="ghost"
-											size="icon-sm"
-											onClick={() => handleRemoveUser(user.id)}
-											disabled={removeUserMutation.isPending}>
-											{removeUserMutation.isPending ? (
-												<span className="animate-spin">...</span>
-											) : (
-												<XIcon className="size-4" />
-											)}
-										</Button>
+										{user.isAuthor ? (
+											<div className="text-xs text-secondary">Author</div>
+										) : (
+											<Button
+												variant="ghost"
+												size="icon-sm"
+												onClick={() => handleRemoveUser(user.id)}
+												disabled={removeUserMutation.isPending}>
+												{removeUserMutation.isPending ? (
+													<span className="animate-spin">...</span>
+												) : (
+													<XIcon className="size-4" />
+												)}
+											</Button>
+										)}
 									</div>
 								</div>
 							))}

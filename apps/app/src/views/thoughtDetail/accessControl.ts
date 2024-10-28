@@ -13,6 +13,7 @@ export interface DocumentAccessControlUser {
 	name?: string | null;
 	email?: string | null;
 	isExternal?: boolean;
+	isAuthor?: boolean;
 }
 
 export interface DocumentAccessControl {
@@ -71,6 +72,11 @@ export const useDocumentAccessControl = (docId: string): DocumentAccessControl =
 				return [];
 			}
 
+			// Get the document's author
+			const author = handleSupabaseError(
+				await supabase.from("users").select("id, name, email").eq("id", doc.author_id).single(),
+			);
+
 			// Get document shares with users and their workspace membership in a single query
 			const documentShares = handleSupabaseError(
 				await supabase
@@ -100,12 +106,19 @@ export const useDocumentAccessControl = (docId: string): DocumentAccessControl =
 			);
 
 			// Map all users and mark them as external if not in workspace
-			const usersWithAccess = documentShares?.map(share => ({
-				...fixOneToOne(share.user)!,
-				isExternal: !workspaceUsers.has(fixOneToOne(share.user)?.id),
-			}));
+			const usersWithAccess = [
+				{
+					...author,
+					isExternal: false,
+					isAuthor: true,
+				},
+				...documentShares?.map(share => ({
+					...fixOneToOne(share.user)!,
+					isExternal: !workspaceUsers.has(fixOneToOne(share.user)?.id),
+				})),
+			];
 
-			return usersWithAccess ?? [];
+			return usersWithAccess;
 		},
 	});
 
