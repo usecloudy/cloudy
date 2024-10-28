@@ -92,6 +92,7 @@
 
 .tiptap ul,
 .tiptap ol {
+	@apply space-y-1;
 	padding: 0 1rem;
 	margin: 0;
 }
@@ -146,6 +147,7 @@
 .tiptap h6 {
 	line-height: 1.1;
 	margin-top: 1rem;
+	margin-bottom: 0.34rem;
 	font-weight: 600;
 	text-wrap: pretty;
 }
@@ -153,7 +155,7 @@
 .tiptap h1,
 .tiptap h2 {
 	margin-top: 1.5rem;
-	margin-bottom: 1.5rem;
+	margin-bottom: 0.67rem;
 }
 
 .tiptap h1 {
