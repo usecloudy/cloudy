@@ -1,4 +1,4 @@
-import { ThreadRespondPostRequestBody, handleSupabaseError } from "@cloudy/utils/common";
+import { RepoReference, ThreadRespondPostRequestBody, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CoreMessage, streamText } from "ai";
@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 
 import { heliconeOpenAI } from "app/api/utils/helicone";
 import { makeHeliconeHeaders } from "app/api/utils/helicone";
+import { getFileContentsPrompt } from "app/api/utils/repoContext";
 import { getSupabase } from "app/api/utils/supabase";
 import { getContextForThought } from "app/api/utils/thoughts";
 
@@ -19,11 +20,13 @@ export const POST = async (req: Request) => {
 };
 
 const makeSelectionRespondPrompts = ({
+	filesPrompt,
 	contextText,
 	content,
 	hasSelection,
 	title,
 }: {
+	filesPrompt?: string;
 	contextText: string;
 	content: string;
 	hasSelection?: boolean;
@@ -31,9 +34,14 @@ const makeSelectionRespondPrompts = ({
 }): CoreMessage[] => [
 	{
 		role: "system",
-		content: `You are Cloudy, an amazing ideation tool that helps users think through problems and ideas, asks the right questions, and makes actionable suggestions.
+		content: `You are Cloudy, an amazing ideation tool that helps users write technical documents.
 
-You must answer in a friendly, helpful, and short & concise manner.
+${
+	filesPrompt
+		? `Below are the contents of the files referenced in the note, use this as context:
+${filesPrompt}`
+		: ""
+}
 
 ${contextText}
 The user is in the process of writing the below note${
@@ -42,6 +50,8 @@ The user is in the process of writing the below note${
 				: ""
 		}
 You are able to suggest edits to the note as needed, to suggest an edit, you MUST wrap your suggestion in a <suggestion></suggestion> tag, and provide the original content and your new suggestion, for example:
+
+# EXAMPLE SUGGESTION:
 <suggestion>
 <original_content>
 - Wow this is a great idea!
@@ -51,7 +61,9 @@ You are able to suggest edits to the note as needed, to suggest an edit, you MUS
 Wow this is not a bad idea. We can expand it further.
 </replacement_content>
 </suggestion>
+
 If the user asks you to make a change, you MUST wrap the original content and your new suggestion in a <suggestion></suggestion> tag.
+If the user asks you to write something, you MUST wrap your suggestion in a <suggestion></suggestion> tag, following the same format as above.
 
 Below is the note the user is writing${hasSelection ? `, and the selection they have made:` : ":"}
 ${title ? `Title: ${title}` : ""}
@@ -130,12 +142,14 @@ const respond = async (payload: ThreadRespondPostRequestBody, supabase: Supabase
 			contentMd.slice(0, selectionStart) + `[[[${comment.related_chunks![0]!}]]]` + contentMd.slice(selectionEnd);
 	}
 
+	const filesPrompt = await getFileContentsPrompt(payload.thoughtId, supabase);
+
 	const contextText = await getContextForThought(payload.thoughtId, workspaceId, supabase, {
 		...heliconeHeaders,
 		"Helicone-Session-Path": "respond-to-selection/context",
 	});
 
-	const messages = makeSelectionRespondPrompts({ contextText, content: contentToSend, hasSelection, title });
+	const messages = makeSelectionRespondPrompts({ filesPrompt, contextText, content: contentToSend, hasSelection, title });
 	threadCommentHistory.forEach(comment => {
 		messages.push({
 			role: comment.role,
@@ -145,6 +159,7 @@ const respond = async (payload: ThreadRespondPostRequestBody, supabase: Supabase
 
 	const stream = await streamText({
 		model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
+		// model: heliconeOpenAI.languageModel("gpt-4o-mini"),
 		messages,
 		temperature: 0.0,
 		experimental_telemetry: {

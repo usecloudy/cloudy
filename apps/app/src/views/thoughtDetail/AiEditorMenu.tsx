@@ -1,5 +1,5 @@
 import { Hotkey } from "@cloudy/ui";
-import { handleSupabaseError } from "@cloudy/utils/common";
+import { RepoReference, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { CheckCircle2Icon, SparklesIcon, XCircleIcon, XIcon } from "lucide-react";
 import { useContext, useEffect, useRef, useState } from "react";
@@ -13,16 +13,25 @@ import LoadingSpinner from "src/components/LoadingSpinner";
 import { cn } from "src/utils";
 import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
+import { AiTextArea } from "../aiTextArea/AiTextArea";
 import { AiCommentThreadInner } from "./AiCommentThread";
 import { handleSubmitChat } from "./chat";
-import { useComment, useTemporaryComment, useThreadComments } from "./hooks";
+import { useComment, useExistingLinkedFiles, useTemporaryComment, useThreadComments } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";
 
 const useSelectionRespond = (commentId?: string | null) => {
 	const { thoughtId } = useContext(ThoughtContext);
 
 	return useMutation({
-		mutationFn: async ({ message, content }: { message: string; content: string }) => {
+		mutationFn: async ({
+			message,
+			content,
+			fileReferences,
+		}: {
+			message: string;
+			content: string;
+			fileReferences?: RepoReference[];
+		}) => {
 			const firstEditStart = content.indexOf("<edit>");
 			const lastEditEnd = content.lastIndexOf("</edit>") + 7; // 7 is the length of '</edit>'
 
@@ -36,10 +45,11 @@ const useSelectionRespond = (commentId?: string | null) => {
 						.insert({
 							thought_id: thoughtId,
 							content: message,
-							related_chunks: [selection],
+							related_chunks: selection ? [selection] : [],
 							role: "user",
 							is_seen: true,
 							is_thread_loading: true,
+							file_references: fileReferences ? JSON.stringify(fileReferences) : null,
 						})
 						.select("id")
 						.single(),
@@ -188,11 +198,12 @@ export const AiEditorMenu = () => {
 };
 
 const AiEditorMenuContent = () => {
-	const { editor, disableUpdatesRef, storeContentIfNeeded, hideAiEditor, applySuggestedChanges, onStartAiEdits } =
+	const { editor, disableUpdatesRef, storeContentIfNeeded, hideAiEditor, applySuggestedChanges, onStartAiEdits, thoughtId } =
 		useContext(ThoughtContext);
 
+	const { data: existingLinkedFiles } = useExistingLinkedFiles(thoughtId);
+
 	const [commentId, setCommentId] = useState<string | null>(null);
-	const [editingText, setEditingText] = useState("");
 	const [readyToApply, setReadyToApply] = useState(false);
 	const [showOutline, setShowOutline] = useState(true);
 
@@ -209,29 +220,28 @@ const AiEditorMenuContent = () => {
 		hideAiEditor();
 	};
 
-	const handleEditSelection = async () => {
+	// const handleEditSelection = async () => {
+	// 	if (!editor) {
+	// 		throw new Error("Editor is not initialized");
+	// 	}
+
+	// 	const content = editor.getHTML();
+	// 	setEditingText("");
+	// 	disableUpdatesRef.current = true;
+	// 	storeContentIfNeeded();
+	// 	onStartAiEdits();
+	// 	await editSelectionMutation.mutateAsync({ instruction: editingText, content });
+
+	// 	setReadyToApply(true);
+	// };
+
+	const handleSubmitQuestion = (text: string, fileReferences: RepoReference[]) => {
 		if (!editor) {
 			throw new Error("Editor is not initialized");
 		}
 
-		const content = editor.getHTML();
-		setEditingText("");
-		disableUpdatesRef.current = true;
-		storeContentIfNeeded();
-		onStartAiEdits();
-		await editSelectionMutation.mutateAsync({ instruction: editingText, content });
-
-		setReadyToApply(true);
-	};
-
-	const handleSubmitQuestion = () => {
-		if (!editor) {
-			throw new Error("Editor is not initialized");
-		}
-
-		setEditingText("");
 		selectionRespondMutation
-			.mutateAsync({ message: editingText, content: editor.storage.markdown.getMarkdown() })
+			.mutateAsync({ message: text, content: editor.storage.markdown.getMarkdown(), fileReferences })
 			.then(commentId => {
 				setCommentId(commentId!);
 			});
@@ -312,10 +322,10 @@ const AiEditorMenuContent = () => {
 					)}
 					<div
 						className={cn(
-							"w-full px-4 pb-4",
+							"w-full px-4 py-4",
 							commentQuery.data?.is_thread_loading && "pointer-events-none opacity-70",
 						)}>
-						<TextareaAutosize
+						{/* <TextareaAutosize
 							ref={textAreaRef}
 							className="no-scrollbar w-full resize-none appearance-none border-none bg-transparent px-2 py-3 text-sm outline-none"
 							contentEditable={true}
@@ -356,7 +366,15 @@ const AiEditorMenuContent = () => {
 									<span>Ask question</span>
 								</Button>
 							</div>
-						)}
+						)} */}
+						<AiTextArea
+							onSubmit={handleSubmitQuestion}
+							onCancel={handleOnCancel}
+							existingLinkedFiles={existingLinkedFiles}
+							disableNewFileReference
+							placeholder="Ask a question or describe the change you want to make"
+							submitButtonText="Send"
+						/>
 					</div>
 				</>
 			)}

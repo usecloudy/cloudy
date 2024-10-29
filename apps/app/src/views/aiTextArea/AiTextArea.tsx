@@ -23,6 +23,8 @@ interface AiTextAreaProps {
 	submitButtonText?: string;
 	showEditButton?: boolean;
 	onEdit?: () => void;
+	existingLinkedFiles?: { path: string }[];
+	disableNewFileReference?: boolean;
 }
 
 const useHasGitRepoConnected = () => {
@@ -38,6 +40,8 @@ export const AiTextArea = ({
 	placeholder = "Ask a question or describe what you want to do",
 	submitButtonText = "Submit",
 	onEdit,
+	existingLinkedFiles,
+	disableNewFileReference,
 }: AiTextAreaProps) => {
 	const workspace = useWorkspace();
 	const project = useProject();
@@ -74,6 +78,7 @@ export const AiTextArea = ({
 	const handleSubmit = useCallback(() => {
 		if (editor) {
 			onSubmit(editor.getText(), fileReferences);
+			editor.commands.clearContent();
 		}
 	}, [editor, onSubmit, fileReferences]);
 
@@ -94,7 +99,12 @@ export const AiTextArea = ({
 			<EditorContent editor={editor} onKeyDown={handleKeyDown} />
 			<div className="flex flex-row items-start justify-between gap-1">
 				{hasGitRepoConnected ? (
-					<FileReferenceRow fileReferences={fileReferences} setFileReferences={setFileReferences} />
+					<FileReferenceRow
+						fileReferences={fileReferences}
+						setFileReferences={setFileReferences}
+						existingLinkedFiles={existingLinkedFiles}
+						disableAdd={disableNewFileReference}
+					/>
 				) : project ? (
 					<Link to={makeProjectSettingsUrl(workspace.slug, project.slug)}>
 						<Button size="xs" variant="outline">

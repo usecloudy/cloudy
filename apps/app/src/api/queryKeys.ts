@@ -15,6 +15,7 @@ export const thoughtQueryKeys = {
 	workspaceHomeThoughts: (workspaceId?: string) => [workspaceId, "homeThoughts"] as const,
 	relatedThoughts: (thoughtId?: string) => ["relatedThoughts", thoughtId] as const,
 	sharedWith: (thoughtId?: string) => ["thought", thoughtId, "sharedWith"] as const,
+	existingLinkedFiles: (thoughtId?: string) => ["thought", thoughtId, "existingLinkedFiles"] as const,
 };
 
 export const topicQueryKeys = {

@@ -6,6 +6,7 @@ import { EditorContent, Extension, useEditor } from "@tiptap/react";
 import { GripVertical } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
+import { useHotkeys } from "react-hotkeys-hook";
 import { Navigate, useParams } from "react-router-dom";
 import { useAsync, useLocalStorage, useMount, usePrevious, useUnmount, useUpdateEffect } from "react-use";
 
@@ -172,8 +173,12 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const showAiEditor = useCallback(() => {
 		if (!editor) return;
 		disableUpdatesRef.current = true;
-		const selection = wrapSelectionAroundWords(editor);
-		editor.chain().setTextSelection(selection).setMark("editHighlight").run();
+
+		if (editor.isFocused) {
+			const selection = wrapSelectionAroundWords(editor);
+			editor.chain().setTextSelection(selection).setMark("editHighlight").run();
+		}
+
 		setShowAiEditorMenu(true);
 	}, [editor]);
 
@@ -220,6 +225,8 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 			setIsAiSuggestionLoading(false);
 		}
 	}, [setIsAiSuggestionLoading, thought?.signals]);
+
+	useHotkeys("mod+k", () => showAiEditor());
 
 	return (
 		<ThoughtContext.Provider

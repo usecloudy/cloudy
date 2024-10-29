@@ -1,4 +1,4 @@
-import { AccessStrategies, handleSupabaseError } from "@cloudy/utils/common";
+import { AccessStrategies, RepoReference, handleSupabaseError } from "@cloudy/utils/common";
 import { useIsMutating, useMutation, useQuery } from "@tanstack/react-query";
 import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
@@ -607,4 +607,21 @@ export const useGenerateDocument = () => {
 	});
 
 	return { ...mutation, hasStarted };
+};
+
+export const useExistingLinkedFiles = (docId: string) => {
+	return useQuery({
+		queryKey: thoughtQueryKeys.existingLinkedFiles(docId),
+		queryFn: async () => {
+			const repoReferences = handleSupabaseError(
+				await supabase.from("document_repo_links").select("*").eq("doc_id", docId),
+			);
+
+			return repoReferences.map(repoReference => ({
+				...repoReference,
+				repoConnectionId: repoReference.repo_connection_id,
+				fileName: repoReference.path.split("/").pop(),
+			}));
+		},
+	});
 };

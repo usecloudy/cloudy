@@ -161,9 +161,16 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 	const parseSuggestionContent = (content: string) => {
 		const originalMatch = content.match(/<original_content>([\s\S]*?)<\/original_content>/);
 		const replacementMatch = content.match(/<replacement_content>([\s\S]*?)<\/replacement_content>/);
+
+		let originalContent = originalMatch ? originalMatch[1] : "";
+		let replacementContent = replacementMatch ? replacementMatch[1] : "";
+
+		originalContent = originalContent.replaceAll("\\`\\`\\`", "```");
+		replacementContent = replacementContent = replacementContent.replaceAll("\\`\\`\\`", "```");
+
 		return {
-			original: originalMatch ? originalMatch[1] : "",
-			replacement: replacementMatch ? replacementMatch[1] : "",
+			original: originalContent,
+			replacement: replacementContent,
 		};
 	};
 

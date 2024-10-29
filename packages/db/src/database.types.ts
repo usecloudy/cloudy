@@ -897,7 +897,7 @@ export type Database = {
           created_at: string
           id: string
           index: number | null
-          is_root: boolean | null
+          is_root: boolean
           name: string | null
           parent_id: string | null
           project_id: string | null
@@ -907,7 +907,7 @@ export type Database = {
           created_at?: string
           id?: string
           index?: number | null
-          is_root?: boolean | null
+          is_root?: boolean
           name?: string | null
           parent_id?: string | null
           project_id?: string | null
@@ -917,7 +917,7 @@ export type Database = {
           created_at?: string
           id?: string
           index?: number | null
-          is_root?: boolean | null
+          is_root?: boolean
           name?: string | null
           parent_id?: string | null
           project_id?: string | null
@@ -1137,6 +1137,7 @@ export type Database = {
           content: string | null
           created_at: string
           embedding: string | null
+          file_references: Json | null
           id: string
           is_archived: boolean
           is_pinned: boolean
@@ -1153,6 +1154,7 @@ export type Database = {
           content?: string | null
           created_at?: string
           embedding?: string | null
+          file_references?: Json | null
           id?: string
           is_archived?: boolean
           is_pinned?: boolean
@@ -1169,6 +1171,7 @@ export type Database = {
           content?: string | null
           created_at?: string
           embedding?: string | null
+          file_references?: Json | null
           id?: string
           is_archived?: boolean
           is_pinned?: boolean
@@ -1991,6 +1994,7 @@ export type Database = {
           content: string | null
           created_at: string
           embedding: string | null
+          file_references: Json | null
           id: string
           is_archived: boolean
           is_pinned: boolean

@@ -40,7 +40,12 @@ export const handleSubmitChat = async (commentId: string, thoughtId: string) => 
 		// Remove lines that start with ```
 		fullText = fullText
 			.split("\n")
-			.filter(line => !line.trim().startsWith("```"))
+			.map(line => {
+				if (line.trim().startsWith("```")) {
+					return line.replace("```", "\\`\\`\\`");
+				}
+				return line;
+			})
 			.join("\n");
 
 		mdContent = fullText;
