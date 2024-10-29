@@ -49,7 +49,7 @@ const useSelectionRespond = (commentId?: string | null) => {
 							role: "user",
 							is_seen: true,
 							is_thread_loading: true,
-							file_references: fileReferences ? JSON.stringify(fileReferences) : null,
+							// file_references: fileReferences ? JSON.stringify(fileReferences) : null,
 						})
 						.select("id")
 						.single(),
