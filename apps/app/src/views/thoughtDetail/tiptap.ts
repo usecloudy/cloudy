@@ -1,5 +1,6 @@
 import { Mark, mergeAttributes } from "@tiptap/core";
 import { Extension, Node } from "@tiptap/core";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Link from "@tiptap/extension-link";
 import ListKeymap from "@tiptap/extension-list-keymap";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -9,6 +10,7 @@ import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
 import { Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { common, createLowlight } from "lowlight";
 import { Markdown } from "tiptap-markdown";
 
 import { PendingAttachmentNode } from "./PendingAttachment";
@@ -133,6 +135,8 @@ export const wrapSelectionAroundWords = (editor: Editor) => {
 	};
 };
 
+const lowlight = createLowlight(common);
+
 export const tiptapExtensions = [
 	StarterKit.configure({
 		dropcursor: {
@@ -140,6 +144,7 @@ export const tiptapExtensions = [
 			width: 4,
 		},
 		history: false,
+		codeBlock: false,
 	}),
 	Placeholder.configure({
 		placeholder: "What are you thinking about?",
@@ -173,6 +178,9 @@ export const tiptapExtensions = [
 		autolink: true,
 		linkOnPaste: true,
 		protocols: ["http", "https", "mailto"],
+	}),
+	CodeBlockLowlight.configure({
+		lowlight,
 	}),
 ];
 

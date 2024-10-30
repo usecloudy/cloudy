@@ -31,7 +31,6 @@
         "packages/*"
     ],
     "dependencies": {
-        "@simplepdf/react-embed-pdf": "^1.8.0",
         "date-fns": "^3.6.0"
     }
 }
