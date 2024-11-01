@@ -21,7 +21,7 @@
 		"db:sync:local": "supabase gen types typescript --db-url postgresql://postgres:postgres@127.0.0.1:54322/postgres > app/db/database.types.ts"
 	},
 	"dependencies": {
-		"@ai-sdk/anthropic": "^0.0.51",
+		"@ai-sdk/anthropic": "^0.0.53",
 		"@ai-sdk/openai": "^0.0.54",
 		"@cloudy/utils": "*",
 		"@next/bundle-analyzer": "^14.2.3",
@@ -61,7 +61,7 @@
 		"@vercel/blob": "^0.23.4",
 		"@vercel/kv": "^2.0.0",
 		"@vercel/otel": "^1.10.0",
-		"ai": "^3.4.9",
+		"ai": "^3.4.31",
 		"class-variance-authority": "^0.7.0",
 		"date-fns": "^3.6.0",
 		"diff": "^6.0.0-beta",

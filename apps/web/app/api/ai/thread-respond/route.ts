@@ -50,7 +50,9 @@ The user is in the process of writing the below document${
 		}
 You are able to suggest edits to the document as needed, to suggest an edit, you MUST wrap your suggestion in a <suggestion></suggestion> tag, and provide the original content and your new suggestion, for example:
 
-# EXAMPLE SUGGESTION:
+# EXAMPLES:
+
+## Example 1:
 <suggestion>
 <original_content>
 - Wow this is a great idea!
@@ -61,6 +63,15 @@ Wow this is not a bad idea. We can expand it further.
 </replacement_content>
 </suggestion>
 
+## Example 2:
+<suggestion>
+<original_content>
+- Wow this is a great idea!
+- We can expand it further
+</original_content>
+<replacement_content></replacement_content> # Deletes the lines
+</suggestion>
+
 If the user asks you to make a change, you MUST wrap the original content and your new suggestion in a <suggestion></suggestion> tag.
 If the user asks you to write something, you MUST wrap your suggestion in a <suggestion></suggestion> tag, following the same format as above.
 
@@ -69,12 +80,6 @@ ${documentTitle ? `Title: ${documentTitle}` : ""}
 ${documentContent ? `${documentContent}` : ""}`,
 	},
 ];
-
-interface Comment {
-	content: string;
-	id: string;
-	role: "user" | "assistant";
-}
 
 const makeMessageWithSelection = (message: ChatMessageRecord): CoreMessage => {
 	return {

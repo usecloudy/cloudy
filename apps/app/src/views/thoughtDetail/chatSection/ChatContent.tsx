@@ -42,6 +42,8 @@ type ChatMessageProps = {
 };
 
 const ChatMessage = ({ message }: ChatMessageProps) => {
+	const isLoading = message.role === ChatRole.Assistant && !message.completed_at && !message.content;
+
 	return (
 		<div className="flex flex-col gap-2 rounded bg-background p-3 text-sm outline-offset-2 animate-in fade-in slide-in-from-top-4 fill-mode-forwards hover:outline-accent/40">
 			<div className="flex flex-row items-center justify-between gap-1">
@@ -51,9 +53,9 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 					<div className="flex flex-row items-center gap-1">
 						<SparklesIcon className="h-4 w-4 text-accent" />
 						<span className="text-xs font-medium text-secondary">Cloudy</span>
+						{isLoading && <LoadingSpinner size="xs" />}
 					</div>
 				)}
-
 				<div className="text-xs text-secondary">{makeHumanizedTime(message.created_at)}</div>
 			</div>
 			<div>
