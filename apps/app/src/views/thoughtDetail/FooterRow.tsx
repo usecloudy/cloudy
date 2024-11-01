@@ -13,8 +13,16 @@ export const FooterRow = () => {
 	const isMdBreakpoint = useBreakpoint("md");
 
 	return (
-		<div className="pointer-events-none sticky bottom-0 z-10 flex w-full items-center justify-center p-4 md:justify-end">
+		<div className="pointer-events-none sticky bottom-0 z-10 flex w-full items-center justify-center p-4 md:justify-between">
 			<div className="pointer-events-auto">
+				<div>
+					{!isShowingAiEditorMenu && (
+						<Button size="sm" onClick={showAiEditor}>
+							{isMdBreakpoint && <Hotkey keys={["Command", "K"]} />}
+							<span>Chat</span>
+						</Button>
+					)}
+				</div>
 				<div className="block lg:hidden">
 					{hideControlColumn ? (
 						<Button
@@ -36,12 +44,6 @@ export const FooterRow = () => {
 						</Button>
 					)}
 				</div>
-				{!isShowingAiEditorMenu && (
-					<Button size="sm" onClick={showAiEditor}>
-						{isMdBreakpoint && <Hotkey keys={["Command", "K"]} />}
-						<span>Ask Cloudy</span>
-					</Button>
-				)}
 			</div>
 		</div>
 	);

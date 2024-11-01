@@ -17,3 +17,7 @@ export const handleSupabaseError = <T>(
     }
     return response.data;
 };
+
+export function fixOneToOne<T>(objectOrNull: T[]): T | null {
+    return (objectOrNull as T) || null;
+}

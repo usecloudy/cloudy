@@ -12,6 +12,12 @@ export type CollectionThoughtRecord =
 
 export type ProjectRecord = Database["public"]["Tables"]["projects"]["Row"];
 
+export type ChatThreadRecord =
+    Database["public"]["Tables"]["chat_threads"]["Row"];
+
+export type ChatMessageRecord =
+    Database["public"]["Tables"]["chat_messages"]["Row"];
+
 export enum RepositoryProvider {
     GITHUB = "github",
 }

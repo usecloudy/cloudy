@@ -1,9 +1,8 @@
-import { RepoReference, ThreadRespondPostRequestBody, handleSupabaseError } from "@cloudy/utils/common";
+import { ChatMessageRecord, ThreadRespondPostRequestBody, fixOneToOne, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CoreMessage, streamText } from "ai";
 import { randomUUID } from "crypto";
-import { NextResponse } from "next/server";
 
 import { heliconeOpenAI } from "app/api/utils/helicone";
 import { makeHeliconeHeaders } from "app/api/utils/helicone";
@@ -20,36 +19,36 @@ export const POST = async (req: Request) => {
 };
 
 const makeSelectionRespondPrompts = ({
-	filesPrompt,
+	filesText,
 	contextText,
-	content,
+	documentContent,
 	hasSelection,
-	title,
+	documentTitle,
 }: {
-	filesPrompt?: string;
-	contextText: string;
-	content: string;
+	filesText?: string;
+	contextText?: string;
+	documentContent?: string | null;
 	hasSelection?: boolean;
-	title?: string | null;
+	documentTitle?: string | null;
 }): CoreMessage[] => [
 	{
 		role: "system",
 		content: `You are Cloudy, an amazing ideation tool that helps users write technical documents.
 
 ${
-	filesPrompt
-		? `Below are the contents of the files referenced in the note, use this as context:
-${filesPrompt}`
+	filesText
+		? `Below are the contents of the files referenced in the document, use this as context:
+${filesText}`
 		: ""
 }
 
 ${contextText}
-The user is in the process of writing the below note${
+The user is in the process of writing the below document${
 			hasSelection
 				? `  and has also selected a specific part of the text to talk to you about, the selection is marked with the [[[ and ]]] tags, for example, in the following text: "Hi [[[user]]] I'm doing well", the selection is "user".`
 				: ""
 		}
-You are able to suggest edits to the note as needed, to suggest an edit, you MUST wrap your suggestion in a <suggestion></suggestion> tag, and provide the original content and your new suggestion, for example:
+You are able to suggest edits to the document as needed, to suggest an edit, you MUST wrap your suggestion in a <suggestion></suggestion> tag, and provide the original content and your new suggestion, for example:
 
 # EXAMPLE SUGGESTION:
 <suggestion>
@@ -66,31 +65,27 @@ If the user asks you to make a change, you MUST wrap the original content and yo
 If the user asks you to write something, you MUST wrap your suggestion in a <suggestion></suggestion> tag, following the same format as above.
 
 Below is the note the user is writing${hasSelection ? `, and the selection they have made:` : ":"}
-${title ? `Title: ${title}` : ""}
-${content}`,
+${documentTitle ? `Title: ${documentTitle}` : ""}
+${documentContent ? `${documentContent}` : ""}`,
 	},
 ];
 
 interface Comment {
 	content: string;
 	id: string;
-	isOriginal: boolean;
 	role: "user" | "assistant";
 }
 
+const makeMessageWithSelection = (message: ChatMessageRecord): CoreMessage => {
+	return {
+		role: message.role as "user" | "assistant",
+		content:
+			(message.selection_text ? `\`\`\`user selected the text:"${message.selection_text}"\`\`\`\n\n` : "") +
+			message.content,
+	};
+};
+
 const respond = async (payload: ThreadRespondPostRequestBody, supabase: SupabaseClient<Database>) => {
-	const {
-		title,
-		content_md: contentMd,
-		workspace_id: workspaceId,
-	} = handleSupabaseError(
-		await supabase.from("thoughts").select("title, content_md, workspace_id").eq("id", payload.thoughtId).single(),
-	);
-
-	if (!contentMd) {
-		throw new Error("Content not found");
-	}
-
 	const userId = (await supabase.auth.getUser()).data?.user?.id;
 
 	if (!userId) {
@@ -103,82 +98,71 @@ const respond = async (payload: ThreadRespondPostRequestBody, supabase: Supabase
 		sessionId: `respond-to-thread/${randomUUID()}`,
 	});
 
-	const comment = handleSupabaseError(await supabase.from("thought_chats").select("*").eq("id", payload.commentId).single());
-	const existingThread = handleSupabaseError(
+	const chatThread = handleSupabaseError(
 		await supabase
-			.from("thought_chat_threads")
-			.select("*")
-			.eq("comment_id", comment.id)
-			.order("created_at", { ascending: true }),
+			.from("chat_threads")
+			.select("*, workspace_id, document:thoughts!document_id(id, title, content_md), messages:chat_messages(*)")
+			.eq("id", payload.threadId)
+			.single(),
 	);
 
-	let threadCommentHistory: Comment[] =
-		existingThread?.map(c => ({
-			content: c.content,
-			id: c.id,
-			isOriginal: false,
-			role: c.role as "assistant" | "user",
-		})) ?? [];
+	const document = fixOneToOne(chatThread.document);
 
-	threadCommentHistory = [
-		{
-			content: comment.content!,
-			id: comment.id,
-			isOriginal: true,
-			role: comment.role === "user" ? "user" : "assistant",
-		},
-		...threadCommentHistory,
-	];
+	const threadMessages = chatThread.messages
+		.filter(m => m.id !== payload.messageId)
+		.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
-	const hasSelection = (comment.related_chunks && comment.related_chunks.length > 0) ?? false;
+	// const hasSelection = (comment.related_chunks && comment.related_chunks.length > 0) ?? false;
 
-	let contentToSend = contentMd;
+	// if (hasSelection) {
+	// 	const selectionStart = contentMd.indexOf(comment.related_chunks![0]!);
+	// 	const selectionEnd = selectionStart + comment.related_chunks![0]!.length;
 
-	if (hasSelection) {
-		const selectionStart = contentMd.indexOf(comment.related_chunks![0]!);
-		const selectionEnd = selectionStart + comment.related_chunks![0]!.length;
+	// 	contentToSend =
+	// 		contentMd.slice(0, selectionStart) + `[[[${comment.related_chunks![0]!}]]]` + contentMd.slice(selectionEnd);
+	// }
+	const hasSelection = false;
 
-		contentToSend =
-			contentMd.slice(0, selectionStart) + `[[[${comment.related_chunks![0]!}]]]` + contentMd.slice(selectionEnd);
+	let filesText: string | undefined;
+	let contextText: string | undefined;
+	if (document) {
+		filesText = await getFileContentsPrompt(document.id, supabase);
+
+		contextText = await getContextForThought(document.id, chatThread.workspace_id, supabase, {
+			...heliconeHeaders,
+			"Helicone-Session-Path": "respond-to-selection/context",
+		});
 	}
 
-	const filesPrompt = await getFileContentsPrompt(payload.thoughtId, supabase);
-
-	const contextText = await getContextForThought(payload.thoughtId, workspaceId, supabase, {
-		...heliconeHeaders,
-		"Helicone-Session-Path": "respond-to-selection/context",
+	const llmMessages = makeSelectionRespondPrompts({
+		filesText,
+		contextText,
+		documentContent: document?.content_md,
+		hasSelection,
+		documentTitle: document?.title,
 	});
 
-	const messages = makeSelectionRespondPrompts({ filesPrompt, contextText, content: contentToSend, hasSelection, title });
-	threadCommentHistory.forEach(comment => {
-		messages.push({
-			role: comment.role,
-			content: comment.content,
-		});
+	threadMessages.forEach(message => {
+		llmMessages.push(makeMessageWithSelection(message));
 	});
+
+	if (threadMessages.at(-1)?.role !== "user") {
+		throw new Error("Last message is not a user message");
+	}
 
 	const stream = await streamText({
-		model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
-		// model: heliconeOpenAI.languageModel("gpt-4o-mini"),
-		messages,
+		// model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
+		model: heliconeOpenAI.languageModel("gpt-4o-mini"),
+		messages: llmMessages,
 		temperature: 0.0,
 		experimental_telemetry: {
 			isEnabled: true,
 		},
 		headers: {
 			...heliconeHeaders,
-			"Helicone-Session-Path": "respond-to-selection",
+			"Helicone-Session-Path": "thread-respond",
 		},
 	});
-
-	handleSupabaseError(
-		await supabase
-			.from("thought_chats")
-			.update({
-				is_thread_loading: false,
-			})
-			.eq("id", comment.id),
-	);
 
 	return stream.toTextStreamResponse();
 

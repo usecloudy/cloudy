@@ -58,8 +58,8 @@ export interface FileHandlerClientPayload {
 }
 
 export interface ThreadRespondPostRequestBody {
-    thoughtId: string;
-    commentId: string;
+    threadId: string;
+    messageId: string;
 }
 
 export interface ApplyChangePostRequestBody {

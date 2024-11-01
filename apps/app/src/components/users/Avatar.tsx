@@ -1,51 +1,71 @@
+import { type VariantProps, cva } from "class-variance-authority";
 import { UserIcon } from "lucide-react";
 
 import { cn } from "src/utils";
 
-interface AvatarProps {
+const avatarVariants = cva("flex items-center justify-center rounded-full", {
+	variants: {
+		size: {
+			xs: "size-5",
+			sm: "size-6",
+			md: "size-8",
+			lg: "size-10",
+		},
+	},
+	defaultVariants: {
+		size: "md",
+	},
+});
+
+const iconVariants = cva("", {
+	variants: {
+		size: {
+			xs: "size-4",
+			sm: "size-5",
+			md: "size-6",
+			lg: "size-7",
+		},
+	},
+	defaultVariants: {
+		size: "md",
+	},
+});
+
+const textVariants = cva("text-sm font-medium text-secondary", {
+	variants: {
+		size: {
+			xs: "text-[0.57rem] border border-border",
+			sm: "text-xs",
+			md: "text-sm",
+			lg: "text-base",
+		},
+	},
+	defaultVariants: {
+		size: "md",
+	},
+});
+
+interface AvatarProps extends VariantProps<typeof avatarVariants> {
 	src?: string | null;
 	fallback?: string | null;
-	size?: "sm" | "md" | "lg";
 	className?: string;
 }
 
-const sizeClasses = {
-	sm: "size-8",
-	md: "size-10",
-	lg: "size-12",
-} as const;
-
-const iconSizeClasses = {
-	sm: "size-4",
-	md: "size-5",
-	lg: "size-6",
-} as const;
-
-export const Avatar = ({ src, fallback, size = "md", className }: AvatarProps) => {
-	const sizeClass = sizeClasses[size];
-	const iconSizeClass = iconSizeClasses[size];
-
+export const Avatar = ({ src, fallback, size, className }: AvatarProps) => {
 	if (src) {
-		return <img src={src} alt="Avatar" className={cn("rounded-full object-cover", sizeClass, className)} />;
+		return <img src={src} alt="Avatar" className={cn("object-cover", avatarVariants({ size, className }))} />;
 	}
 
 	if (!fallback) {
 		return (
-			<div
-				className={cn("flex items-center justify-center rounded-full bg-card", "text-secondary", sizeClass, className)}>
-				<UserIcon className={iconSizeClass} />
+			<div className={cn("bg-card text-secondary", avatarVariants({ size, className }))}>
+				<UserIcon className={iconVariants({ size })} />
 			</div>
 		);
 	}
 
 	return (
-		<div
-			className={cn(
-				"flex items-center justify-center rounded-full bg-card",
-				"text-sm font-medium text-secondary",
-				sizeClass,
-				className,
-			)}>
+		<div className={cn("bg-card", textVariants({ size, className }), avatarVariants({ size, className }))}>
 			{fallback.slice(0, 2).toUpperCase()}
 		</div>
 	);

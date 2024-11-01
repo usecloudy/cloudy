@@ -5,8 +5,10 @@ import {
 	CircleFadingArrowUp,
 	FilePlusIcon,
 	HomeIcon,
+	PanelLeftCloseIcon,
 	SearchIcon,
 } from "lucide-react";
+import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import { Button } from "src/components/Button";
@@ -14,6 +16,7 @@ import { FeedbackDropdown } from "src/components/Feedback";
 import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip";
 import { useUserRecord } from "src/stores/user";
 import { useWorkspaceStore } from "src/stores/workspace";
+import { cn } from "src/utils";
 import { useDebug } from "src/utils/debug";
 import { pluralize } from "src/utils/strings";
 import { useBreakpoint } from "src/utils/tailwind";
@@ -46,98 +49,67 @@ export const SidebarView = () => {
 	const { data } = useCustomerStatus();
 	const customerStatus = data?.customerStatus;
 
-	const createThoughtMutation = useCreateThought();
-
 	const location = useLocation();
 	const isMinimalSidebar = minimalSidebarRoutePaths.includes(location.pathname);
 
-	const { isSidebarCollapsed, setIsSidebarCollapsed, isMobileSidebarOpen } = useSidebarContext();
+	const { isSidebarCollapsed, setIsSidebarCollapsed, isMobileSidebarOpen, isSidebarFixed } = useSidebarContext();
+
+	useEffect(() => {
+		const handleEscPress = (e: KeyboardEvent) => {
+			if (e.key === "Escape" && isSidebarFixed) {
+				setIsSidebarCollapsed(true);
+			}
+		};
+
+		window.addEventListener("keydown", handleEscPress);
+		return () => window.removeEventListener("keydown", handleEscPress);
+	}, [isSidebarFixed, setIsSidebarCollapsed]);
 
 	if (isMobile && !isMobileSidebarOpen) {
 		return null;
 	}
 
-	if (isSidebarCollapsed) {
-		return (
-			<div className="sticky top-0 hidden h-screen w-16 flex-col items-center justify-between gap-2 border-r border-border py-2 md:flex">
-				{!isMinimalSidebar && (
-					<div className="flex w-full flex-col items-center gap-2">
-						<Button
-							onClick={() => setIsSidebarCollapsed(false)}
-							variant="ghost"
-							size="icon"
-							aria-label="Expand sidebar">
-							<ChevronsRightIcon className="size-6" />
-						</Button>
-						<div className="hidden md:block">
-							<Link to="/">
-								<Button aria-label="Home" variant="ghost" size="icon">
-									<HomeIcon className="size-5" />
-								</Button>
-							</Link>
-						</div>
-						{workspace && (
-							<Tooltip>
-								<TooltipTrigger>
-									<Button onClick={() => createThoughtMutation.mutate({})} variant="ghost" size="icon">
-										<FilePlusIcon className="size-5" />
-									</Button>
-								</TooltipTrigger>
-								<TooltipContent>New doc</TooltipContent>
-							</Tooltip>
-						)}
-						{workspace && (
-							<Tooltip>
-								<TooltipTrigger>
-									<Button onClick={() => setIsSearchBarOpen(true)} variant="ghost" size="icon">
-										<SearchIcon className="size-5" />
-									</Button>
-								</TooltipTrigger>
-								<TooltipContent>Search for notes</TooltipContent>
-							</Tooltip>
-						)}
-					</div>
-				)}
-				<SidebarDropdown />
-			</div>
-		);
-	}
-
 	return (
 		<div className="relative h-full">
-			<div className="absolute top-0 z-50 flex h-full w-screen flex-col overflow-hidden border-r border-border bg-background py-2 pt-4 md:sticky md:h-screen md:w-64 md:pt-2">
-				{isMinimalSidebar ? (
-					<div className="flex-1"></div>
-				) : (
+			<div
+				className={cn(
+					"absolute top-0 z-50 flex h-full w-screen flex-col overflow-hidden border-r border-border bg-background py-2 pt-4 transition-transform duration-200 ease-in-out md:sticky md:h-screen md:w-64 md:pt-2",
+					isSidebarFixed && "md:absolute",
+					isSidebarFixed && isSidebarCollapsed ? "-translate-x-full" : "translate-x-0",
+				)}>
+				<div className="px-4 pb-2">
+					{isSidebarFixed && (
+						<Button variant="ghost" size="icon-sm" onClick={() => setIsSidebarCollapsed(true)}>
+							<PanelLeftCloseIcon className="size-5" />
+						</Button>
+					)}
+				</div>
+				<WorkspaceSelector />
+				{project && (
+					<div className="mb-4">
+						<ProjectSelector />
+					</div>
+				)}
+				{workspace && (
 					<>
-						<WorkspaceSelector />
-						{project && (
-							<div className="mb-4">
-								<ProjectSelector />
-							</div>
-						)}
-						{workspace && (
-							<>
-								<div className="flex items-center gap-1 px-4">
-									<NewNote />
-									<GenerateDoc />
-								</div>
-								<div className="no-scrollbar mt-4 flex flex-1 flex-col gap-4 overflow-y-auto px-4">
-									<Button
-										variant="secondary"
-										className="w-full justify-start border border-border text-sm font-medium text-secondary hover:bg-card/50 hover:text-secondary"
-										onClick={() => setIsSearchBarOpen(true)}>
-										<SearchIcon className="size-4" />
-										<span>Search</span>
-									</Button>
-									{!project && <ProjectsList />}
-									<LibraryView />
-									{/* <LatestThoughts /> */}
-									{/* <Collections /> */}
-									<div className="h-4" />
-								</div>
-							</>
-						)}
+						<div className="flex items-center gap-1 px-4">
+							<NewNote />
+							<GenerateDoc />
+						</div>
+						<div className="no-scrollbar mt-4 flex flex-1 flex-col gap-4 overflow-y-auto px-4">
+							<Button
+								variant="secondary"
+								className="w-full justify-start border border-border text-sm font-medium text-secondary hover:bg-card/50 hover:text-secondary"
+								onClick={() => setIsSearchBarOpen(true)}>
+								<SearchIcon className="size-4" />
+								<span>Search</span>
+							</Button>
+							{!project && <ProjectsList />}
+							<LibraryView />
+							{/* <LatestThoughts /> */}
+							{/* <Collections /> */}
+							<div className="h-4" />
+						</div>
 					</>
 				)}
 				{debug && <div className="mb-4 px-4 text-xs text-secondary">Debug is enabled</div>}
@@ -176,6 +148,15 @@ export const SidebarView = () => {
 					<SidebarDropdown />
 				</div>
 			</div>
+			{isSidebarFixed && (
+				<div
+					className={cn(
+						"absolute bottom-0 left-0 right-0 top-0 z-40 h-screen w-screen bg-black/5 backdrop-blur-sm transition-opacity duration-200 ease-in-out",
+						isSidebarCollapsed ? "pointer-events-none opacity-0" : "pointer-events-auto opacity-100",
+					)}
+					onClick={() => setIsSidebarCollapsed(true)}
+				/>
+			)}
 		</div>
 	);
 };

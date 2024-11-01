@@ -5,8 +5,8 @@ import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
-import { EditorContent, useEditor } from "@tiptap/react";
-import { useCallback, useEffect, useState } from "react";
+import { EditorContent, Extension, useEditor } from "@tiptap/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { Button } from "src/components/Button";
@@ -50,6 +50,8 @@ export const AiTextArea = ({
 
 	const [fileReferences, setFileReferences] = useState<RepoReference[]>([]);
 
+	const handleSubmitRef = useRef<(() => void) | null>(null);
+
 	const editor = useEditor({
 		extensions: [
 			Document,
@@ -57,6 +59,29 @@ export const AiTextArea = ({
 			Paragraph,
 			Placeholder.configure({
 				placeholder: placeholder,
+			}),
+			Extension.create({
+				name: "hotkeys",
+				addKeyboardShortcuts() {
+					return {
+						Enter: () => {
+							console.log("enter");
+							handleSubmitRef.current?.();
+							return true;
+						},
+						"Shift-Enter": ({ editor }) =>
+							editor.commands.first(({ commands }) => [
+								() => commands.newlineInCode(),
+								() => commands.createParagraphNear(),
+								() => commands.liftEmptyBlock(),
+								() => commands.splitBlock(),
+							]),
+						Escape: () => {
+							onCancel();
+							return true;
+						},
+					};
+				},
 			}),
 		],
 		content: "",
@@ -75,28 +100,20 @@ export const AiTextArea = ({
 		}
 	}, [editor]);
 
+	const hasContent = (editor?.getText().trim().length ?? 0) > 0;
+
 	const handleSubmit = useCallback(() => {
-		if (editor) {
+		if (editor && editor?.getText().trim()) {
 			onSubmit(editor.getText(), fileReferences);
 			editor.commands.clearContent();
 		}
-	}, [editor, onSubmit, fileReferences]);
+	}, [editor, onSubmit, fileReferences, hasContent]);
 
-	const handleKeyDown = useCallback(
-		(e: React.KeyboardEvent) => {
-			if (e.key === "Enter" && !e.shiftKey) {
-				e.preventDefault();
-				handleSubmit();
-			} else if (e.key === "Escape") {
-				onCancel();
-			}
-		},
-		[handleSubmit, onCancel],
-	);
+	handleSubmitRef.current = handleSubmit;
 
 	return (
 		<div className="relative flex w-full flex-col gap-4">
-			<EditorContent editor={editor} onKeyDown={handleKeyDown} />
+			<EditorContent editor={editor} />
 			<div className="flex flex-row items-start justify-between gap-1">
 				{hasGitRepoConnected ? (
 					<FileReferenceRow
@@ -120,7 +137,7 @@ export const AiTextArea = ({
 						</Button>
 					</Link>
 				)}
-				<Button size="sm" variant="default" onClick={handleSubmit}>
+				<Button size="sm" variant="default" onClick={handleSubmit} disabled={!hasContent}>
 					<Hotkey keys={["Enter"]} />
 					<span>{submitButtonText}</span>
 				</Button>

@@ -4,7 +4,7 @@ import { useContext } from "react";
 import { Button } from "src/components/Button";
 import { cn } from "src/utils";
 
-import { AiFeed } from "./AiFeed";
+// import { AiFeed } from "./AiFeed";
 import { RelatedNotes } from "./RelatedNotes";
 import { ThoughtContext } from "./thoughtContext";
 

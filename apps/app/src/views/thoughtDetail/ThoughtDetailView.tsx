@@ -18,15 +18,24 @@ import { ellipsizeText, makeHeadTitle } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
-import { AiEditorMenu } from "./AiEditorMenu";
+import { useSidebarContext } from "../navigation/SidebarProvider";
+// import { AiEditorMenu } from "./AiEditorMenu";
 import { ControlColumn } from "./ControlColumn";
 import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { FooterRow } from "./FooterRow";
 import { TitleArea } from "./TitleArea";
+import { ChatSectionView } from "./chatSection/ChatSectionView";
 import { createFileHandlerExtension } from "./fileHandlerExtension";
-import { ThoughtEditPayload, useEditThought, useGenerateDocument, useThought, useThoughtChannelListeners } from "./hooks";
+import {
+	ThoughtEditPayload,
+	useDefaultThreadId,
+	useEditThought,
+	useGenerateDocument,
+	useThought,
+	useThoughtChannelListeners,
+} from "./hooks";
 import { updateMentionNodeNames } from "./mention";
 import { AiGenerationContext, ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
@@ -78,6 +87,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const [isEditingDisabled, setIsEditingDisabled] = useState(false);
 	const [previewingKey, setPreviewingKey] = useState<string | null>(null);
 	const [isShowingAiEditorMenu, setShowAiEditorMenu] = useState(false);
+	const [threadId, setThreadId] = useState<string | null>(null);
 
 	const { onChange } = useSave(editThought, { debounceDurationMs: thoughtId ? 500 : 0 });
 
@@ -85,6 +95,8 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const storedContentRef = useRef<string | null>(null);
 
 	const { setIsAiSuggestionLoading } = useThoughtStore();
+
+	useSidebarContext({ isFixed: isShowingAiEditorMenu });
 
 	const { isConnected, ydoc, provider } = useYProvider(thoughtId!, disableUpdatesRef);
 
@@ -254,37 +266,49 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				setIsAiWriting,
 				onStartAiEdits,
 				onFinishAiEdits,
+				threadId,
+				setThreadId,
 			}}>
-			<div className="no-scrollbar relative flex w-full flex-grow flex-col overflow-hidden lg:flex-row">
-				<AiDocumentGeneration thought={thought}>
-					<EditorView
-						thoughtId={thoughtId!}
-						remoteTitle={thought?.title ?? undefined}
-						latestRemoteTitleTs={thought?.title_ts ?? undefined}
-						onChange={onChange}
-					/>
-					<ControlColumn thoughtId={thoughtId} />
-				</AiDocumentGeneration>
+			<div className="flex h-full flex-row">
+				{isShowingAiEditorMenu && <ChatSectionView />}
+				<div className="no-scrollbar relative flex w-full flex-grow flex-col overflow-hidden lg:flex-row">
+					<AiDocumentGeneration thought={thought}>
+						<EditorView
+							thoughtId={thoughtId!}
+							remoteTitle={thought?.title ?? undefined}
+							latestRemoteTitleTs={thought?.title_ts ?? undefined}
+							onChange={onChange}
+						/>
+						<ControlColumn thoughtId={thoughtId} />
+					</AiDocumentGeneration>
+				</div>
 			</div>
 		</ThoughtContext.Provider>
 	);
 };
 
 const AiDocumentGeneration = ({ thought, children }: { thought: Thought; children: React.ReactNode }) => {
-	const { onStartAiEdits, onFinishAiEdits, isAiWriting, onUpdate } = useContext(ThoughtContext);
+	const { onStartAiEdits, onFinishAiEdits, isAiWriting, onUpdate, showAiEditor, setThreadId } = useContext(ThoughtContext);
+
+	const { data: defaultThreadId } = useDefaultThreadId();
 	const generateDocumentMutation = useGenerateDocument();
 
 	const hasGenerated = useRef(false);
 
 	useAsync(async () => {
-		if (!hasGenerated.current && thought.generation_prompt && !thought.generated_at) {
+		if (!hasGenerated.current && thought.generation_prompt && !thought.generated_at && defaultThreadId) {
 			hasGenerated.current = true;
+
+			showAiEditor();
+			setThreadId(defaultThreadId);
+
 			onStartAiEdits();
 			await generateDocumentMutation.mutateAsync(thought.id);
 			onFinishAiEdits();
+
 			onUpdate({ force: true });
 		}
-	}, [thought?.id]);
+	}, [thought?.id, defaultThreadId]);
 
 	return (
 		<AiGenerationContext.Provider
@@ -396,7 +420,7 @@ const EditorView = ({
 				<div className="h-[75dvh]" />
 			</div>
 			<FooterRow />
-			{editor && <AiEditorMenu />}
+			{/* {editor && <AiEditorMenu />} */}
 		</div>
 	);
 };

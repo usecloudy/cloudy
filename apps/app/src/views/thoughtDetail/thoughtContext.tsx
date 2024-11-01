@@ -11,6 +11,7 @@ export interface ThoughtContextType {
 	hideControlColumn?: boolean;
 	isShowingAiEditorMenu?: boolean;
 	isAiWriting: boolean;
+	threadId: string | null;
 	onUpdate: (payload?: { force?: boolean }) => void;
 	setPreviewingKey: (previewingKey: string | null) => void;
 	setIsEditingDisabled: (isEditingDisabled: boolean) => void;
@@ -25,6 +26,7 @@ export interface ThoughtContextType {
 	setIsAiWriting: (isAiWriting: boolean) => void;
 	onStartAiEdits: () => void;
 	onFinishAiEdits: () => void;
+	setThreadId: (threadId: string | null) => void;
 }
 
 export const ThoughtContext = createContext<ThoughtContextType>({
@@ -37,6 +39,7 @@ export const ThoughtContext = createContext<ThoughtContextType>({
 	hideControlColumn: false,
 	isShowingAiEditorMenu: false,
 	isAiWriting: false,
+	threadId: null,
 	onUpdate: () => {},
 	setIsAiWriting: () => {},
 	setIsEditingDisabled: () => {},
@@ -51,6 +54,7 @@ export const ThoughtContext = createContext<ThoughtContextType>({
 	applySuggestedChanges: () => {},
 	onStartAiEdits: () => {},
 	onFinishAiEdits: () => {},
+	setThreadId: () => {},
 });
 
 export const AiGenerationContext = createContext<{
