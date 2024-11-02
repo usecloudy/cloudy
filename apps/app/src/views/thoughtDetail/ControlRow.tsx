@@ -1,6 +1,15 @@
 import { Hotkey } from "@cloudy/ui";
 import { Editor } from "@tiptap/react";
-import { ChevronsLeftIcon, GoalIcon, MoreHorizontalIcon, PenIcon, PenOffIcon, RedoIcon, UndoIcon } from "lucide-react";
+import {
+	ChevronsLeftIcon,
+	GoalIcon,
+	MessageCircleIcon,
+	MoreHorizontalIcon,
+	PenIcon,
+	PenOffIcon,
+	RedoIcon,
+	UndoIcon,
+} from "lucide-react";
 import { useContext } from "react";
 
 import { Button } from "src/components/Button";
@@ -24,8 +33,10 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId: string; editor?: 
 
 	return (
 		<div className="flex w-full flex-row items-center justify-between gap-2">
-			<div className="text-xs text-tertiary">
-				{thought && <span>Last edited {makeHumanizedTime(thought.updated_at)}</span>}
+			<div className="flex items-center gap-3">
+				<div className="text-xs text-tertiary">
+					{thought && <span>Last edited {makeHumanizedTime(thought.updated_at)}</span>}
+				</div>
 			</div>
 			<div className="flex items-center gap-1 text-secondary">
 				<Tooltip durationPreset="short">

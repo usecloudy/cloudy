@@ -704,6 +704,106 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          applied_suggestion_hashes: string[]
+          completed_at: string | null
+          content: string
+          created_at: string
+          id: string
+          role: string
+          selection_text: string | null
+          thread_id: string
+          user_id: string | null
+        }
+        Insert: {
+          applied_suggestion_hashes?: string[]
+          completed_at?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          role?: string
+          selection_text?: string | null
+          thread_id: string
+          user_id?: string | null
+        }
+        Update: {
+          applied_suggestion_hashes?: string[]
+          completed_at?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          selection_text?: string | null
+          thread_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_threads: {
+        Row: {
+          created_at: string
+          document_id: string | null
+          id: string
+          is_default: boolean
+          parent_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          is_default?: boolean
+          parent_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          is_default?: boolean
+          parent_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_threads_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_threads_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_threads_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collection_thoughts: {
         Row: {
           collection_id: string

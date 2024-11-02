@@ -12,5 +12,8 @@ export const queryClient = new QueryClient({
 		queries: {
 			queryFn: defaultQueryFn,
 		},
+		mutations: {
+			throwOnError: true,
+		},
 	},
 });

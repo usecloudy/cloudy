@@ -18,19 +18,33 @@ import { ellipsizeText, makeHeadTitle } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
-import { AiEditorMenu } from "./AiEditorMenu";
+import { useSidebarContext } from "../navigation/SidebarProvider";
 import { ControlColumn } from "./ControlColumn";
 import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { FooterRow } from "./FooterRow";
 import { TitleArea } from "./TitleArea";
+import { ChatSectionView } from "./chatSection/ChatSectionView";
 import { createFileHandlerExtension } from "./fileHandlerExtension";
-import { ThoughtEditPayload, useEditThought, useGenerateDocument, useThought, useThoughtChannelListeners } from "./hooks";
+import {
+	ThoughtEditPayload,
+	useDefaultThreadId,
+	useEditThought,
+	useGenerateDocument,
+	useThought,
+	useThoughtChannelListeners,
+} from "./hooks";
 import { updateMentionNodeNames } from "./mention";
 import { AiGenerationContext, ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
-import { clearAllApplyMarks, clearAllEditMarks, tiptapExtensions, wrapSelectionAroundWords } from "./tiptap";
+import {
+	backtickInputRegex,
+	clearAllApplyMarks,
+	clearAllEditMarks,
+	tiptapExtensions,
+	wrapSelectionAroundWords,
+} from "./tiptap";
 import { useYProvider } from "./yProvider";
 
 type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
@@ -78,6 +92,8 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const [isEditingDisabled, setIsEditingDisabled] = useState(false);
 	const [previewingKey, setPreviewingKey] = useState<string | null>(null);
 	const [isShowingAiEditorMenu, setShowAiEditorMenu] = useState(false);
+	const [isShowingAiSelectionMenu, setIsShowingAiSelectionMenu] = useState(false);
+	const [threadId, setThreadId] = useState<string | null>(null);
 
 	const { onChange } = useSave(editThought, { debounceDurationMs: thoughtId ? 500 : 0 });
 
@@ -85,6 +101,8 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const storedContentRef = useRef<string | null>(null);
 
 	const { setIsAiSuggestionLoading } = useThoughtStore();
+
+	const { setIsSidebarCollapsed } = useSidebarContext({ isFixed: isShowingAiEditorMenu });
 
 	const { isConnected, ydoc, provider } = useYProvider(thoughtId!, disableUpdatesRef);
 
@@ -106,8 +124,12 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				name: "hotkeys",
 				addKeyboardShortcuts() {
 					return {
-						"Mod-k": () => {
+						"Mod-i": () => {
 							showAiEditor();
+							return true;
+						},
+						"Mod-k": () => {
+							showAiSelectionMenu();
 							return true;
 						},
 						Escape: () => {
@@ -146,6 +168,9 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				const content = editor?.getHTML();
 				const contentMd = editor?.storage.markdown.getMarkdown();
 				const contentPlainText = editor?.getText();
+
+				const matchAttempt = backtickInputRegex.exec(contentMd ?? "");
+
 				const ts = new Date();
 				onChange({ content, contentMd, contentPlainText, ts });
 			}
@@ -170,21 +195,34 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		storedContentRef.current = null;
 	}, []);
 
+	const convertSelectionToEditMark = useCallback(() => {
+		if (!editor) return;
+		const selection = wrapSelectionAroundWords(editor);
+		editor.chain().setTextSelection(selection).setMark("editHighlight").run();
+	}, [editor]);
+
+	const showAiSelectionMenu = useCallback(() => {
+		if (!editor) return;
+		disableUpdatesRef.current = true;
+
+		if (editor.view.state.selection.content().size > 0) {
+			convertSelectionToEditMark();
+			setIsShowingAiSelectionMenu(true);
+		}
+	}, [editor, convertSelectionToEditMark]);
+
 	const showAiEditor = useCallback(() => {
 		if (!editor) return;
 		disableUpdatesRef.current = true;
 
-		if (editor.isFocused) {
-			const selection = wrapSelectionAroundWords(editor);
-			editor.chain().setTextSelection(selection).setMark("editHighlight").run();
-		}
-
+		setIsSidebarCollapsed(true);
 		setShowAiEditorMenu(true);
-	}, [editor]);
+	}, [editor, setIsSidebarCollapsed]);
 
 	const onStartAiEdits = useCallback(() => {
 		if (!editor) return;
 		setIsAiWriting(true);
+		setIsEditingDisabled(true);
 	}, [editor, setIsAiWriting]);
 
 	const onFinishAiEdits = useCallback(() => {
@@ -217,6 +255,17 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		disableUpdatesRef.current = false;
 	}, [editor, restoreFromLastContent, clearStoredContent, onFinishAiEdits]);
 
+	const hideAiSelectionMenu = useCallback(() => {
+		if (!editor) return;
+
+		setIsShowingAiSelectionMenu(false);
+		restoreFromLastContent();
+		clearStoredContent();
+		clearAllEditMarks(editor);
+		onFinishAiEdits();
+		disableUpdatesRef.current = false;
+	}, [editor, restoreFromLastContent, clearStoredContent, onFinishAiEdits]);
+
 	useEffect(() => {
 		const signals = (thought?.signals as string[] | null) ?? [];
 		if (signals.includes(ThoughtSignals.AI_SUGGESTIONS)) {
@@ -226,7 +275,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		}
 	}, [setIsAiSuggestionLoading, thought?.signals]);
 
-	useHotkeys("mod+k", () => showAiEditor());
+	useHotkeys("mod+i", () => showAiEditor());
 
 	return (
 		<ThoughtContext.Provider
@@ -254,37 +303,59 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				setIsAiWriting,
 				onStartAiEdits,
 				onFinishAiEdits,
+				threadId,
+				setThreadId,
+				convertSelectionToEditMark,
+				isShowingAiSelectionMenu,
+				hideAiSelectionMenu,
+				showAiSelectionMenu,
 			}}>
-			<div className="no-scrollbar relative flex w-full flex-grow flex-col overflow-hidden lg:flex-row">
-				<AiDocumentGeneration thought={thought}>
-					<EditorView
-						thoughtId={thoughtId!}
-						remoteTitle={thought?.title ?? undefined}
-						latestRemoteTitleTs={thought?.title_ts ?? undefined}
-						onChange={onChange}
-					/>
-					<ControlColumn thoughtId={thoughtId} />
-				</AiDocumentGeneration>
+			<div className="flex h-full flex-row">
+				<div
+					className={cn(
+						"relative w-[33vw] shrink-0 transition-[width] duration-300 ease-in-out",
+						!isShowingAiEditorMenu && "w-0",
+					)}>
+					{isShowingAiEditorMenu && <ChatSectionView />}
+				</div>
+				<div className="no-scrollbar relative flex w-full flex-grow flex-col lg:flex-row">
+					<AiDocumentGeneration thought={thought}>
+						<EditorView
+							thoughtId={thoughtId!}
+							remoteTitle={thought?.title ?? undefined}
+							latestRemoteTitleTs={thought?.title_ts ?? undefined}
+							onChange={onChange}
+						/>
+						<ControlColumn thoughtId={thoughtId} />
+					</AiDocumentGeneration>
+				</div>
 			</div>
 		</ThoughtContext.Provider>
 	);
 };
 
 const AiDocumentGeneration = ({ thought, children }: { thought: Thought; children: React.ReactNode }) => {
-	const { onStartAiEdits, onFinishAiEdits, isAiWriting, onUpdate } = useContext(ThoughtContext);
+	const { onStartAiEdits, onFinishAiEdits, isAiWriting, onUpdate, showAiEditor, setThreadId } = useContext(ThoughtContext);
+
+	const { data: defaultThreadId } = useDefaultThreadId();
 	const generateDocumentMutation = useGenerateDocument();
 
 	const hasGenerated = useRef(false);
 
 	useAsync(async () => {
-		if (!hasGenerated.current && thought.generation_prompt && !thought.generated_at) {
+		if (!hasGenerated.current && thought.generation_prompt && !thought.generated_at && defaultThreadId) {
 			hasGenerated.current = true;
+
+			showAiEditor();
+			setThreadId(defaultThreadId);
+
 			onStartAiEdits();
 			await generateDocumentMutation.mutateAsync(thought.id);
 			onFinishAiEdits();
+
 			onUpdate({ force: true });
 		}
-	}, [thought?.id]);
+	}, [thought?.id, defaultThreadId]);
 
 	return (
 		<AiGenerationContext.Provider
@@ -349,7 +420,7 @@ const EditorView = ({
 	};
 
 	return (
-		<div className="no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-x-hidden overflow-y-scroll">
+		<div className="no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-y-scroll">
 			<nav className="sticky top-[-1px] z-30 -mr-2 w-full bg-background px-6 py-2 md:top-0 md:py-3">
 				<ControlRow thoughtId={thoughtId} editor={editor} />
 			</nav>
@@ -396,7 +467,7 @@ const EditorView = ({
 				<div className="h-[75dvh]" />
 			</div>
 			<FooterRow />
-			{editor && <AiEditorMenu />}
+			{/* {editor && <AiEditorMenu />} */}
 		</div>
 	);
 };

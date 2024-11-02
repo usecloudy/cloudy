@@ -1,5 +1,5 @@
 import { Hotkey } from "@cloudy/ui";
-import { BubbleMenu, Editor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react";
 import {
 	BoldIcon,
 	CodeIcon,
@@ -17,10 +17,11 @@ import { useContext, useRef } from "react";
 import { Button } from "src/components/Button";
 import { useBreakpoint } from "src/utils/tailwind";
 
+import { AiSelectionMenu } from "./AiSelectionMenu";
 import { ThoughtContext } from "./thoughtContext";
 
 export const EditorBubbleMenu = () => {
-	const { editor, showAiEditor } = useContext(ThoughtContext);
+	const { editor, isShowingAiSelectionMenu, hideAiSelectionMenu, showAiSelectionMenu } = useContext(ThoughtContext);
 
 	const isMdBreakpoint = useBreakpoint("md");
 
@@ -35,7 +36,7 @@ export const EditorBubbleMenu = () => {
 					ref={bubbleMenuRef}
 					className="flex max-w-[100vw] flex-row flex-wrap items-center gap-0.5 rounded-md border border-border bg-background px-2 py-2">
 					<div className="pr-2">
-						<Button variant="secondary" size="sm" className="text-accent" onClick={showAiEditor}>
+						<Button variant="secondary" size="sm" className="text-accent" onClick={() => showAiSelectionMenu()}>
 							{isMdBreakpoint && <Hotkey keys={["Command", "K"]} />}
 							<span>Ask Cloudy</span>
 							<SparklesIcon className="h-3.5 w-3.5" />
@@ -104,6 +105,7 @@ export const EditorBubbleMenu = () => {
 					)}
 				</div>
 			</BubbleMenu>
+			{isShowingAiSelectionMenu && <AiSelectionMenu onCancel={hideAiSelectionMenu} onClose={hideAiSelectionMenu} />}
 		</div>
 	);
 };

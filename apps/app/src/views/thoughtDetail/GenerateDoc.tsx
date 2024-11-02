@@ -1,4 +1,4 @@
-import { RepoReference, handleSupabaseError } from "@cloudy/utils/common";
+import { ChatRole, RepoReference, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { SparklesIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -7,8 +7,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Dialog, DialogContent } from "src/components/Dialog";
+import { useUser } from "src/stores/user";
 import { useWorkspace } from "src/stores/workspace";
-import { useBreakpoint } from "src/utils/tailwind";
 import { makeProjectDocUrl } from "src/utils/thought";
 import { AiTextArea } from "src/views/aiTextArea/AiTextArea";
 
@@ -17,6 +17,8 @@ import { useProject } from "../projects/ProjectContext";
 const useCreateNoteWithGeneration = () => {
 	const workspace = useWorkspace();
 	const project = useProject();
+	const user = useUser();
+
 	return useMutation({
 		mutationFn: async (payload: { prompt: string; references: RepoReference[] }) => {
 			if (!project) {
@@ -30,6 +32,7 @@ const useCreateNoteWithGeneration = () => {
 						generation_prompt: payload.prompt,
 						workspace_id: workspace.id,
 						project_id: project.id,
+						author_id: user.id,
 					})
 					.select()
 					.single(),
@@ -44,6 +47,35 @@ const useCreateNoteWithGeneration = () => {
 						type: ref.type,
 					})),
 				),
+			);
+
+			const thread = handleSupabaseError(
+				await supabase
+					.from("chat_threads")
+					.insert({
+						document_id: doc.id,
+						workspace_id: workspace.id,
+						is_default: true,
+					})
+					.select("id")
+					.single(),
+			);
+
+			handleSupabaseError(
+				await supabase.from("chat_messages").insert([
+					{
+						thread_id: thread.id,
+						role: ChatRole.User,
+						user_id: user.id,
+						content: payload.prompt,
+					},
+					{
+						thread_id: thread.id,
+						role: ChatRole.Assistant,
+						content: "I've created your document. You can edit it now.",
+						completed_at: new Date().toISOString(),
+					},
+				]),
 			);
 
 			return doc;

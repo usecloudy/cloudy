@@ -16,6 +16,8 @@ export const thoughtQueryKeys = {
 	relatedThoughts: (thoughtId?: string) => ["relatedThoughts", thoughtId] as const,
 	sharedWith: (thoughtId?: string) => ["thought", thoughtId, "sharedWith"] as const,
 	existingLinkedFiles: (thoughtId?: string) => ["thought", thoughtId, "existingLinkedFiles"] as const,
+	threadsForDoc: (docId: string) => ["threadsForDoc", docId] as const,
+	defaultThreadId: (docId: string) => ["defaultThreadId", docId] as const,
 };
 
 export const topicQueryKeys = {
@@ -25,6 +27,7 @@ export const topicQueryKeys = {
 
 export const userQueryKeys = {
 	userRecord: (userId?: string) => (userId ? (["userRecord", userId] as const) : (["userRecord"] as const)),
+	userProfile: (userId?: string) => (userId ? (["userProfile", userId] as const) : (["userProfile"] as const)),
 };
 
 export const paymentsQueryKeys = {
@@ -36,6 +39,10 @@ export const commentThreadQueryKeys = {
 	comment: (commentId?: string | null) => ["comment", commentId, "comment"] as const,
 	threadComments: (commentId?: string | null) => ["comment", commentId, "threadComments"] as const,
 	temporaryComment: (commentId?: string | null) => ["comment", commentId, "temporaryComment"] as const,
+};
+
+export const chatThreadQueryKeys = {
+	thread: (threadId?: string | null) => ["chatThread", threadId] as const,
 };
 
 export const workspaceQueryKeys = {

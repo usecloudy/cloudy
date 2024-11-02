@@ -1,68 +1,104 @@
-import { handleSupabaseError } from "@cloudy/utils/common";
+import { ChatRole, extractInnerTextFromXml, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { diffLines, diffWords } from "diff";
-import { CheckCircle2Icon, ChevronsLeftIcon, ClipboardCheckIcon, CopyIcon, XCircleIcon } from "lucide-react";
+import { CheckCircle2Icon, ChevronsLeftIcon, XCircleIcon } from "lucide-react";
+import posthog from "posthog-js";
 import React, { useContext, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
-import { apiClient } from "src/api/client";
+import { queryClient } from "src/api/queryClient";
+import { chatThreadQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { CopyButton } from "src/components/CopyButton";
 import LoadingSpinner from "src/components/LoadingSpinner";
+import { useWorkspace } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { simpleHash } from "src/utils/hash";
 import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
-import { ThreadCommentContext } from "./AiCommentThread";
-import { ThoughtContext } from "./thoughtContext";
+import { ThoughtContext } from "../thoughtContext";
+import { ChatMessageContext } from "./chat";
 
 const useApplySuggestion = () => {
-	const { thoughtId, editor } = useContext(ThoughtContext);
+	const workspace = useWorkspace();
+	const { editor } = useContext(ThoughtContext);
 
 	return useMutation({
 		mutationFn: async ({ suggestionContent }: { suggestionContent: string }) => {
-			const {
-				data: { originalSnippet, replacementSnippet },
-			} = await apiClient.post<{ originalSnippet: string; replacementSnippet: string }>("/api/ai/apply-change", {
-				thoughtId,
-				suggestionContent,
-			});
+			// const {
+			// 	data: { originalSnippet, replacementSnippet },
+			// } = await apiClient.post<{ originalSnippet: string; replacementSnippet: string | null }>("/api/ai/apply-change", {
+			// 	thoughtId,
+			// 	suggestionContent,
+			// });
 
-			const currentHtml = editor?.getHTML();
-			if (!currentHtml) {
-				throw new Error("No current HTML");
+			// const currentHtml = editor?.getHTML();
+			// if (!currentHtml) {
+			// 	throw new Error("No current HTML");
+			// }
+			// const currentHtmlWithoutEditTags = currentHtml.replace(/<\/?edit>/g, "");
+
+			// if (!currentHtmlWithoutEditTags.includes(originalSnippet)) {
+			// 	throw new Error("Original snippet not found");
+			// }
+
+			// console.log("replacing", originalSnippet, "with", replacementSnippet);
+
+			// if (!replacementSnippet) {
+			// 	throw new Error("Replacement snippet not found");
+			// }
+
+			// const newHtml = currentHtmlWithoutEditTags.replace(originalSnippet, replacementSnippet);
+
+			// console.log("newHtml", newHtml);
+
+			// editor?.commands.setContent(newHtml ?? currentHtml ?? "", false, { preserveWhitespace: false });
+
+			let originalSnippet = extractInnerTextFromXml(suggestionContent, "original_content").trim();
+			let replacementSnippet = extractInnerTextFromXml(suggestionContent, "replacement_content").trim();
+			const contentMd = editor!.storage.markdown.getMarkdown() as string;
+
+			originalSnippet = originalSnippet.replaceAll("\\`\\`\\`", "```");
+			replacementSnippet = replacementSnippet.replaceAll("\\`\\`\\`", "```");
+
+			if (contentMd.includes(originalSnippet)) {
+				editor?.commands.setContent(contentMd.replace(originalSnippet, replacementSnippet));
+			} else {
+				console.log("Will need advanced replace.", contentMd, originalSnippet);
+				posthog.capture("advanced_replace_needed", {
+					workspace_id: workspace.id,
+					workspace_slug: workspace.slug,
+				});
+				throw new Error("Advanced replace not implemented yet.");
 			}
-			const currentHtmlWithoutEditTags = currentHtml.replace(/<\/?edit>/g, "");
-
-			if (!currentHtmlWithoutEditTags.includes(originalSnippet)) {
-				throw new Error("Original snippet not found");
-			}
-
-			const newHtml = currentHtmlWithoutEditTags.replace(originalSnippet, replacementSnippet);
-
-			editor?.commands.setContent(newHtml ?? currentHtml ?? "");
 		},
+		throwOnError: false,
 	});
 };
 
 const useMarkAsApplied = () => {
 	return useMutation({
-		mutationFn: async ({ threadCommentId, suggestionHash }: { threadCommentId: string; suggestionHash: string }) => {
+		mutationFn: async ({ messageId, suggestionHash }: { messageId: string; suggestionHash: string }) => {
 			const { applied_suggestion_hashes: appliedSuggestionHashes } = handleSupabaseError(
+				await supabase.from("chat_messages").select("applied_suggestion_hashes").eq("id", messageId).single(),
+			);
+
+			const { thread_id: threadId } = handleSupabaseError(
 				await supabase
-					.from("thought_chat_threads")
-					.select("applied_suggestion_hashes")
-					.eq("id", threadCommentId)
+					.from("chat_messages")
+					.update({
+						applied_suggestion_hashes: [...appliedSuggestionHashes, suggestionHash],
+					})
+					.eq("id", messageId)
+					.select("thread_id")
 					.single(),
 			);
 
-			await supabase
-				.from("thought_chat_threads")
-				.update({
-					applied_suggestion_hashes: [...appliedSuggestionHashes, suggestionHash],
-				})
-				.eq("id", threadCommentId);
+			return threadId;
+		},
+		onSuccess: threadId => {
+			queryClient.invalidateQueries({ queryKey: chatThreadQueryKeys.thread(threadId) });
 		},
 	});
 };
@@ -72,7 +108,7 @@ const makeSuggestionHash = (suggestionContent?: string) => {
 };
 
 export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) => {
-	const { status, threadCommentId, appliedSuggestionHashes } = useContext(ThreadCommentContext);
+	const { message } = useContext(ChatMessageContext);
 	const {
 		previewingKey,
 		storeContentIfNeeded,
@@ -98,7 +134,8 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 	const suggestionContent = content?.at(0)?.trim();
 
 	const suggestionHash = useMemo(() => makeSuggestionHash(suggestionContent), [suggestionContent]);
-	const isApplied = appliedSuggestionHashes.includes(suggestionHash);
+	const isApplied = message.applied_suggestion_hashes.includes(suggestionHash);
+	const isGenerating = message.role === ChatRole.Assistant && !message.completed_at;
 
 	const currentIsPreviewing = previewingKey === suggestionHash;
 
@@ -119,6 +156,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 				await applySuggestionMutation.mutateAsync({ suggestionContent });
 			} catch (error) {
 				toast.error("Failed to apply suggestion");
+				setPreviewingKey(null);
 			}
 
 			const newContentText = editor?.getText() ?? "";
@@ -139,6 +177,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 					});
 				}
 			});
+
 			onFinishAiEdits();
 		}
 	};
@@ -146,7 +185,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 	const confirmSuggestion = async () => {
 		applySuggestedChanges();
 
-		await markAsAppliedMutation.mutateAsync({ threadCommentId, suggestionHash });
+		await markAsAppliedMutation.mutateAsync({ messageId: message.id, suggestionHash });
 	};
 
 	const revertSuggestion = () => {
@@ -217,7 +256,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 
 			{/* ... existing UI elements ... */}
 			<div className="mt-2 flex w-full flex-row items-center gap-1.5">
-				{applySuggestionMutation.isPending || status === "pending" ? (
+				{applySuggestionMutation.isPending || isGenerating ? (
 					<LoadingSpinner size="xs" />
 				) : currentIsPreviewing ? (
 					<>

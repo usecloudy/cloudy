@@ -11,7 +11,7 @@ import { apiClient } from "../../api/client";
 import { queryClient } from "../../api/queryClient";
 import { supabase } from "../../clients/supabase";
 import { useProject } from "../projects/ProjectContext";
-import { handleSubmitChat } from "./chat";
+// import { handleSubmitChat } from "./chat";
 import { ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
 import { useTitleStore } from "./titleStore";
@@ -160,7 +160,6 @@ export const useEditThought = (thoughtId?: string) => {
 					queryKey: ["thoughtEmbeddings"],
 				});
 			}, 2500);
-			console.log("Will update library");
 			queryClient.invalidateQueries({
 				queryKey: projectQueryKeys.library(workspace.id, project?.id),
 			});
@@ -401,7 +400,7 @@ export const useRespond = () => {
 				throw new Error("Comment ID is not set");
 			}
 
-			handleSubmitChat(commentIdToSend, thoughtId);
+			// handleSubmitChat(commentIdToSend, thoughtId);
 		},
 		onMutate: ({ commentId }) => {
 			queryClient.setQueryData(["aiCommentThread", commentId], (data: any) => {
@@ -607,6 +606,21 @@ export const useGenerateDocument = () => {
 	});
 
 	return { ...mutation, hasStarted };
+};
+
+export const useDefaultThreadId = () => {
+	const { thoughtId } = useContext(ThoughtContext);
+
+	return useQuery({
+		queryKey: thoughtQueryKeys.defaultThreadId(thoughtId),
+		queryFn: async () => {
+			const { id: threadId } = handleSupabaseError(
+				await supabase.from("chat_threads").select("id").eq("document_id", thoughtId).eq("is_default", true).single(),
+			);
+
+			return threadId;
+		},
+	});
 };
 
 export const useExistingLinkedFiles = (docId: string) => {

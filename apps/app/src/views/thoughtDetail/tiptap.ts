@@ -13,6 +13,8 @@ import StarterKit from "@tiptap/starter-kit";
 import { common, createLowlight } from "lowlight";
 import { Markdown } from "tiptap-markdown";
 
+import { createCodeBlockPasteRule } from "src/utils/tiptapCodeBlockPasteRule";
+
 import { PendingAttachmentNode } from "./PendingAttachment";
 import { Mention, mention } from "./mention";
 import ResizableImageExtension from "./resizableImageExtension";
@@ -110,11 +112,39 @@ const AdditionHighlight = Mark.create({
 
 const EditHighlight = Mark.create({
 	name: "editHighlight",
+	inclusive: true,
+	spanning: true,
 	renderHTML({ HTMLAttributes }) {
 		return ["edit", HTMLAttributes, 0];
 	},
 	parseHTML() {
 		return [{ tag: "edit" }];
+	},
+});
+
+/**
+ * Matches a code block with backticks.
+ */
+export const backtickInputRegex = /```([a-z]+)?\s*(.*?)```/;
+
+/**
+ * Matches a code block with tildes.
+ */
+export const tildeInputRegex = /^~~~([a-z]+)?[\s\n]$/;
+
+const ExtendedCodeBlockLowlight = CodeBlockLowlight.extend({
+	priority: 1000,
+	addPasteRules() {
+		return [
+			createCodeBlockPasteRule({
+				find: (text, event) => {
+					const rawMatch = text.match(backtickInputRegex);
+
+					return rawMatch ? [{ index: 0, text: rawMatch[0], match: rawMatch }] : null;
+				},
+				type: this.type,
+			}),
+		];
 	},
 });
 
@@ -149,7 +179,9 @@ export const tiptapExtensions = [
 	Placeholder.configure({
 		placeholder: "What are you thinking about?",
 	}),
-	Markdown,
+	Markdown.configure({
+		transformPastedText: true,
+	}),
 	CommentHighlight,
 	AdditionHighlight,
 	EditHighlight,
@@ -179,7 +211,7 @@ export const tiptapExtensions = [
 		linkOnPaste: true,
 		protocols: ["http", "https", "mailto"],
 	}),
-	CodeBlockLowlight.configure({
+	ExtendedCodeBlockLowlight.configure({
 		lowlight,
 	}),
 ];

@@ -17,7 +17,7 @@ export const WorkspaceSelector = () => {
 	}
 
 	return (
-		<div className="mb-2 flex max-w-full items-center justify-between gap-1 overflow-hidden border-b border-border px-4 pb-2">
+		<div className="mb-2 flex max-w-full items-center justify-between gap-1 overflow-hidden border-y border-border px-4 py-2">
 			<div className="flex flex-1 overflow-hidden">
 				<Dropdown
 					trigger={
