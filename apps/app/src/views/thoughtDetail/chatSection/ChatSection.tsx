@@ -1,223 +1,26 @@
-import { ChatRole, RepoReference, handleSupabaseError, makeHumanizedTime } from "@cloudy/utils/common";
-import { useMutation } from "@tanstack/react-query";
-import { Editor } from "@tiptap/react";
+import { ChatRole, RepoReference, makeHumanizedTime } from "@cloudy/utils/common";
 import { ArrowUpIcon, MoreHorizontalIcon, TrashIcon } from "lucide-react";
 import { useContext, useEffect, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import { queryClient } from "src/api/queryClient";
-import { chatThreadQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
-import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { Dropdown, DropdownItem } from "src/components/Dropdown";
 import LoadingSpinner from "src/components/LoadingSpinner";
-import { useUser } from "src/stores/user";
-import { useWorkspace } from "src/stores/workspace";
 import { cn } from "src/utils";
 
 import { AiTextArea } from "../../aiTextArea/AiTextArea";
 import { useExistingLinkedFiles } from "../hooks";
 import { ThoughtContext } from "../thoughtContext";
 import { ChatContent } from "./ChatContent";
-import { UseThreadsForDocReturnType, triggerThread, useChatThread, useDeleteThread, useThreadsForDoc } from "./chat";
-
-const getSelection = (editor: Editor) => {
-	const currentMd = editor.storage.markdown.getMarkdown() as string;
-	const firstEditStart = currentMd.indexOf("<edit>");
-	const lastEditEnd = currentMd.lastIndexOf("</edit>") + 7; // 7 is the length of '</edit>'
-
-	if (firstEditStart === -1 || lastEditEnd === -1) {
-		return null;
-	}
-
-	return currentMd.substring(firstEditStart, lastEditEnd).replace(/<\/?edit>/g, "");
-};
-
-const useStartThread = () => {
-	const workspace = useWorkspace();
-	const user = useUser();
-
-	const { thoughtId, editor } = useContext(ThoughtContext);
-
-	return useMutation({
-		mutationFn: async ({ content }: { content: string; fileReferences?: RepoReference[] }) => {
-			const selection = getSelection(editor!);
-
-			const thread = handleSupabaseError(
-				await supabase
-					.from("chat_threads")
-					.insert({
-						workspace_id: workspace.id,
-						document_id: thoughtId,
-					})
-					.select("*")
-					.single(),
-			);
-
-			handleSupabaseError(
-				await supabase
-					.from("chat_messages")
-					.insert({
-						thread_id: thread.id,
-						content,
-						role: ChatRole.User,
-						user_id: user.id,
-						selection_text: selection,
-					})
-					.select("*")
-					.single(),
-			);
-
-			triggerThread(thread.id);
-
-			return thread;
-		},
-		onSuccess: thread => {
-			if (thread.document_id) {
-				queryClient.invalidateQueries({ queryKey: thoughtQueryKeys.threadsForDoc(thread.document_id) });
-			}
-		},
-	});
-};
-
-const useReplyToThread = () => {
-	const user = useUser();
-
-	const { editor } = useContext(ThoughtContext);
-
-	return useMutation({
-		mutationFn: async ({ threadId, content }: { threadId: string; content: string; fileReferences?: RepoReference[] }) => {
-			const selection = getSelection(editor!);
-
-			const message = handleSupabaseError(
-				await supabase
-					.from("chat_messages")
-					.insert({
-						thread_id: threadId,
-						content,
-						role: ChatRole.User,
-						user_id: user.id,
-						selection_text: selection,
-					})
-					.select("*")
-					.single(),
-			);
-
-			triggerThread(threadId);
-
-			return message;
-		},
-		onSuccess: (_, { threadId }) => {
-			queryClient.invalidateQueries({ queryKey: chatThreadQueryKeys.thread(threadId) });
-		},
-	});
-};
-
-// const useEditSelection = () => {
-// 	const { editor, thoughtId } = useContext(ThoughtContext);
-
-// 	return useMutation({
-// 		mutationFn: async ({ instruction, content }: { instruction: string; content: string }) => {
-// 			if (!editor) {
-// 				throw new Error("Editor is not initialized");
-// 			}
-
-// 			const firstEditStart = content.indexOf("<edit>");
-// 			const lastEditEnd = content.lastIndexOf("</edit>") + 7; // 7 is the length of '</edit>'
-
-// 			const preppedContent =
-// 				content.substring(0, firstEditStart) +
-// 				"[[[" +
-// 				content.substring(firstEditStart, lastEditEnd).replace(/<\/?edit>/g, "") +
-// 				"]]]" +
-// 				content.substring(lastEditEnd);
-
-// 			const response = await fetch(apiClient.getUri({ url: "/api/ai/edit-selection" }), {
-// 				method: "POST",
-// 				// @ts-ignore
-// 				headers: {
-// 					...apiClient.defaults.headers.common,
-// 					"Content-Type": "application/json",
-// 				},
-// 				body: JSON.stringify({
-// 					thoughtId,
-// 					instruction,
-// 					content: preppedContent,
-// 				}),
-// 			});
-
-// 			if (!response.ok) {
-// 				throw new Error(`HTTP error! status: ${response.status}`);
-// 			}
-
-// 			const reader = response.body?.getReader();
-// 			if (!reader) {
-// 				throw new Error("Failed to get reader from response");
-// 			}
-
-// 			let newEditingContent = "";
-// 			let contentToSave = content;
-
-// 			editor.commands.blur();
-
-// 			const formContent = () => {
-// 				// Remove leading and trailing backticks if present
-// 				if (newEditingContent.startsWith("```html") || newEditingContent.startsWith("```")) {
-// 					const startIndex = newEditingContent.indexOf("\n") + 1;
-// 					newEditingContent = newEditingContent.substring(startIndex);
-// 				}
-
-// 				let suffix = "";
-// 				if (!newEditingContent.endsWith("]]]")) {
-// 					suffix = "]]]";
-// 				}
-
-// 				contentToSave =
-// 					content.substring(0, firstEditStart) + newEditingContent + suffix + content.substring(lastEditEnd);
-// 			};
-
-// 			const replaceTokens = () => {
-// 				const openingTokens = processSearches(editor.view.state.doc, "[[[", 0.99);
-// 				const closingTokens = processSearches(editor.view.state.doc, "]]]", 0.99);
-
-// 				if (openingTokens.length > 0 && closingTokens.length > 0) {
-// 					editor
-// 						.chain()
-// 						.setTextSelection({
-// 							from: openingTokens[0].from,
-// 							to: closingTokens[0].to,
-// 						})
-// 						.setMark("additionHighlight")
-// 						.deleteRange(closingTokens[0])
-// 						.deleteRange(openingTokens[0])
-// 						.run();
-// 				}
-// 			};
-
-// 			const processChunks = async () => {
-// 				while (true) {
-// 					const { done, value } = await reader.read();
-// 					if (done) break;
-// 					const chunk = new TextDecoder().decode(value);
-// 					newEditingContent += chunk;
-// 					formContent();
-// 					// Use requestAnimationFrame to schedule content updates
-// 					editor.commands.setContent(contentToSave);
-// 					replaceTokens();
-// 				}
-// 			};
-
-// 			await processChunks();
-
-// 			newEditingContent += "]]]";
-
-// 			const finalContent = content.substring(0, firstEditStart) + newEditingContent + content.substring(lastEditEnd);
-// 			editor.commands.setContent(finalContent);
-
-// 			replaceTokens();
-// 		},
-// 	});
-// };
+import { ChatMessageUserHeader } from "./ChatMessageUserHeader";
+import {
+	UseThreadsForDocReturnType,
+	useChatThread,
+	useDeleteThread,
+	useReplyToThread,
+	useStartThread,
+	useThreadsForDoc,
+} from "./chat";
 
 export const ChatSection = () => {
 	const { editor, hideAiEditor, thoughtId, threadId, setThreadId } = useContext(ThoughtContext);
@@ -235,21 +38,6 @@ export const ChatSection = () => {
 	const handleOnCancel = () => {
 		hideAiEditor();
 	};
-
-	// const handleEditSelection = async () => {
-	// 	if (!editor) {
-	// 		throw new Error("Editor is not initialized");
-	// 	}
-
-	// 	const content = editor.getHTML();
-	// 	setEditingText("");
-	// 	disableUpdatesRef.current = true;
-	// 	storeContentIfNeeded();
-	// 	onStartAiEdits();
-	// 	await editSelectionMutation.mutateAsync({ instruction: editingText, content });
-
-	// 	setReadyToApply(true);
-	// };
 
 	const handleSubmit = async (text: string, fileReferences: RepoReference[]) => {
 		if (threadId) {
@@ -333,6 +121,8 @@ const ThreadButton = ({
 }) => {
 	const deleteThreadMutation = useDeleteThread(thread.id);
 
+	const firstMessage = thread.first_message[0];
+
 	return (
 		<button
 			key={thread.id}
@@ -342,26 +132,33 @@ const ThreadButton = ({
 					setThreadId(thread.id);
 				}
 			}}
-			className="flex w-full flex-row items-center justify-between gap-x-2 rounded-lg border border-border p-4 text-left hover:bg-card">
-			<div className="flex flex-col">
-				<div className="text-xs text-secondary">{makeHumanizedTime(thread.created_at)}</div>
-				<div className="line-clamp-2 text-sm">{thread.first_message[0]?.content || "Empty thread"}</div>
+			className="flex w-full flex-row items-start justify-between gap-x-2 rounded-lg border border-border p-4 text-left hover:bg-card">
+			{firstMessage && (
+				<div className="flex flex-1 flex-col pt-0.5">
+					{firstMessage.role === ChatRole.User && firstMessage.user_id && (
+						<ChatMessageUserHeader userId={firstMessage.user_id} />
+					)}
+					<div className="line-clamp-2 text-sm">{firstMessage.content || "Empty thread"}</div>
+				</div>
+			)}
+			<div className="flex flex-row items-center justify-between gap-x-2">
+				<div className="shrink-0 text-xs text-secondary">{makeHumanizedTime(thread.created_at)}</div>
+				<Dropdown
+					trigger={
+						<Button variant="ghost" size="icon-xs" className="text-secondary">
+							<MoreHorizontalIcon className="size-4" />
+						</Button>
+					}>
+					<DropdownItem
+						className="dropdown-item"
+						onSelect={() => {
+							deleteThreadMutation.mutate();
+						}}>
+						<TrashIcon className="size-4" />
+						<span>Delete thread</span>
+					</DropdownItem>
+				</Dropdown>
 			</div>
-			<Dropdown
-				trigger={
-					<Button variant="ghost" size="icon-sm">
-						<MoreHorizontalIcon className="size-5" />
-					</Button>
-				}>
-				<DropdownItem
-					className="dropdown-item"
-					onSelect={() => {
-						deleteThreadMutation.mutate();
-					}}>
-					<TrashIcon className="size-4" />
-					<span>Delete thread</span>
-				</DropdownItem>
-			</Dropdown>
 		</button>
 	);
 };

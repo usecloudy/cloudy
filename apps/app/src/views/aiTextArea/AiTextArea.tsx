@@ -18,8 +18,10 @@ import { FileReferenceRow } from "./FileReferenceRow";
 
 interface AiTextAreaProps {
 	onSubmit: (text: string, references: RepoReference[]) => void;
+	onSecondaryAction?: (text: string, references: RepoReference[]) => void;
 	onCancel: () => void;
 	placeholder?: string;
+	secondaryButtonText?: string;
 	submitButtonText?: string;
 	showEditButton?: boolean;
 	onEdit?: () => void;
@@ -36,12 +38,14 @@ const useHasGitRepoConnected = () => {
 
 export const AiTextArea = ({
 	onSubmit,
+	onSecondaryAction,
 	onCancel,
 	placeholder = "Ask a question or describe what you want to do",
 	submitButtonText = "Submit",
 	onEdit,
 	existingLinkedFiles,
 	disableNewFileReference,
+	secondaryButtonText,
 }: AiTextAreaProps) => {
 	const workspace = useWorkspace();
 	const project = useProject();
@@ -50,7 +54,7 @@ export const AiTextArea = ({
 
 	const [fileReferences, setFileReferences] = useState<RepoReference[]>([]);
 
-	const handleSubmitRef = useRef<(() => void) | null>(null);
+	const handleSubmitRef = useRef<((isSecondaryAction?: boolean) => void) | null>(null);
 
 	const editor = useEditor({
 		extensions: [
@@ -67,6 +71,11 @@ export const AiTextArea = ({
 						Enter: () => {
 							console.log("enter");
 							handleSubmitRef.current?.();
+							return true;
+						},
+						"Mod-Enter": () => {
+							console.log("mod-enter");
+							handleSubmitRef.current?.(true);
 							return true;
 						},
 						"Shift-Enter": ({ editor }) =>
@@ -102,12 +111,20 @@ export const AiTextArea = ({
 
 	const hasContent = (editor?.getText().trim().length ?? 0) > 0;
 
-	const handleSubmit = useCallback(() => {
-		if (editor && editor?.getText().trim()) {
-			onSubmit(editor.getText(), fileReferences);
-			editor.commands.clearContent();
-		}
-	}, [editor, onSubmit, fileReferences, hasContent]);
+	const handleSubmit = useCallback(
+		(isSecondaryAction = false) => {
+			console.log("handleSubmit", isSecondaryAction);
+			if (editor && editor?.getText().trim()) {
+				if (isSecondaryAction) {
+					onSecondaryAction?.(editor.getText(), fileReferences);
+				} else {
+					onSubmit(editor.getText(), fileReferences);
+				}
+				editor.commands.clearContent();
+			}
+		},
+		[editor, onSubmit, fileReferences, hasContent],
+	);
 
 	handleSubmitRef.current = handleSubmit;
 
@@ -137,10 +154,23 @@ export const AiTextArea = ({
 						</Button>
 					</Link>
 				)}
-				<Button size="sm" variant="default" onClick={handleSubmit} disabled={!hasContent}>
-					<Hotkey keys={["Enter"]} />
-					<span>{submitButtonText}</span>
-				</Button>
+				<div className="flex flex-row gap-1">
+					{onSecondaryAction && (
+						<Button
+							size="sm"
+							variant="ghost"
+							className="text-accent"
+							onClick={() => handleSubmit(true)}
+							disabled={!hasContent}>
+							<Hotkey keys={["cmd", "Enter"]} />
+							<span>{secondaryButtonText}</span>
+						</Button>
+					)}
+					<Button size="sm" variant="default" onClick={() => handleSubmit()} disabled={!hasContent}>
+						<Hotkey keys={["Enter"]} />
+						<span>{submitButtonText}</span>
+					</Button>
+				</div>
 			</div>
 		</div>
 	);

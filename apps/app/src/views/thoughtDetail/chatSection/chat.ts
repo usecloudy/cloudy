@@ -1,5 +1,6 @@
-import { ChatRole, handleSupabaseError } from "@cloudy/utils/common";
+import { ChatRole, RepoReference, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { Editor } from "@tiptap/react";
 import { produce } from "immer";
 import { createContext, useContext } from "react";
 
@@ -7,6 +8,8 @@ import { apiClient } from "src/api/client";
 import { queryClient } from "src/api/queryClient";
 import { chatThreadQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
+import { useUser } from "src/stores/user";
+import { useWorkspace } from "src/stores/workspace";
 
 import { ThoughtContext } from "../thoughtContext";
 
@@ -162,6 +165,7 @@ export const useThreadsForDoc = (docId: string) => {
 					.from("chat_threads")
 					.select("*, first_message:chat_messages!chat_messages_thread_id_fkey(*)")
 					.eq("document_id", docId)
+					.order("created_at", { ascending: false })
 					.order("created_at", { referencedTable: "first_message", ascending: true })
 					.limit(1, { referencedTable: "first_message" }),
 			);
@@ -185,6 +189,100 @@ export const useDeleteThread = (threadId: string) => {
 			queryClient.invalidateQueries({
 				queryKey: thoughtQueryKeys.threadsForDoc(docId),
 			});
+		},
+	});
+};
+
+export const getSelection = (editor: Editor) => {
+	const currentMd = editor.storage.markdown.getMarkdown() as string;
+	const firstEditStart = currentMd.indexOf("<edit>");
+	const lastEditEnd = currentMd.lastIndexOf("</edit>") + 7; // 7 is the length of '</edit>'
+
+	if (firstEditStart === -1 || lastEditEnd === -1) {
+		return null;
+	}
+
+	return currentMd.substring(firstEditStart, lastEditEnd).replace(/<\/?edit>/g, "");
+};
+
+export const useStartThread = () => {
+	const workspace = useWorkspace();
+	const user = useUser();
+
+	const { thoughtId, editor } = useContext(ThoughtContext);
+
+	return useMutation({
+		mutationFn: async ({ content }: { content: string; fileReferences?: RepoReference[] }) => {
+			const selection = getSelection(editor!);
+
+			console.log("selection", selection);
+
+			const thread = handleSupabaseError(
+				await supabase
+					.from("chat_threads")
+					.insert({
+						workspace_id: workspace.id,
+						document_id: thoughtId,
+					})
+					.select("*")
+					.single(),
+			);
+
+			handleSupabaseError(
+				await supabase
+					.from("chat_messages")
+					.insert({
+						thread_id: thread.id,
+						content,
+						role: ChatRole.User,
+						user_id: user.id,
+						selection_text: selection,
+					})
+					.select("*")
+					.single(),
+			);
+
+			triggerThread(thread.id);
+
+			return thread;
+		},
+		onSuccess: thread => {
+			if (thread.document_id) {
+				queryClient.invalidateQueries({ queryKey: thoughtQueryKeys.threadsForDoc(thread.document_id) });
+			}
+		},
+	});
+};
+
+export const useReplyToThread = () => {
+	const user = useUser();
+
+	const { editor } = useContext(ThoughtContext);
+
+	return useMutation({
+		mutationFn: async ({ threadId, content }: { threadId: string; content: string; fileReferences?: RepoReference[] }) => {
+			const selection = getSelection(editor!);
+
+			const message = handleSupabaseError(
+				await supabase
+					.from("chat_messages")
+					.insert({
+						thread_id: threadId,
+						content,
+						role: ChatRole.User,
+						user_id: user.id,
+						selection_text: selection,
+					})
+					.select("*")
+					.single(),
+			);
+
+			triggerThread(threadId);
+
+			return message;
+		},
+		onSuccess: (_, { threadId }) => {
+			queryClient.invalidateQueries({ queryKey: chatThreadQueryKeys.thread(threadId) });
 		},
 	});
 };

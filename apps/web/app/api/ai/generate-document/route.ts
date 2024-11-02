@@ -6,7 +6,7 @@ import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
 
 import { __getOctokitDevTokenClient, getOctokitAppClient } from "app/api/utils/github";
-import { heliconeOpenAI } from "app/api/utils/helicone";
+import { heliconeAnthropic, heliconeOpenAI } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
 
 interface Payload {
@@ -96,7 +96,7 @@ const generateDocument = async (payload: Payload, supabase: SupabaseClient<Datab
 	const files = await getFileContents(payload.docId, supabase);
 
 	const stream = await streamText({
-		model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18"),
+		model: heliconeAnthropic.languageModel("claude-3-5-sonnet-20241022"),
 		system: "You are an excellent technical documentation writer. You are given a set of files and a user instruction. You need to write documentation for the files.",
 		prompt: `Follow this output format exactly:
 \`\`\`title:The title of the document

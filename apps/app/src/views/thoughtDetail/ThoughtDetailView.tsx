@@ -19,7 +19,6 @@ import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
 import { useSidebarContext } from "../navigation/SidebarProvider";
-// import { AiEditorMenu } from "./AiEditorMenu";
 import { ControlColumn } from "./ControlColumn";
 import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
@@ -87,6 +86,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const [isEditingDisabled, setIsEditingDisabled] = useState(false);
 	const [previewingKey, setPreviewingKey] = useState<string | null>(null);
 	const [isShowingAiEditorMenu, setShowAiEditorMenu] = useState(false);
+	const [isShowingAiSelectionMenu, setIsShowingAiSelectionMenu] = useState(false);
 	const [threadId, setThreadId] = useState<string | null>(null);
 
 	const { onChange } = useSave(editThought, { debounceDurationMs: thoughtId ? 500 : 0 });
@@ -96,7 +96,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 
 	const { setIsAiSuggestionLoading } = useThoughtStore();
 
-	useSidebarContext({ isFixed: isShowingAiEditorMenu });
+	const { setIsSidebarCollapsed } = useSidebarContext({ isFixed: isShowingAiEditorMenu });
 
 	const { isConnected, ydoc, provider } = useYProvider(thoughtId!, disableUpdatesRef);
 
@@ -118,8 +118,12 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				name: "hotkeys",
 				addKeyboardShortcuts() {
 					return {
-						"Mod-k": () => {
+						"Mod-i": () => {
 							showAiEditor();
+							return true;
+						},
+						"Mod-k": () => {
+							showAiSelectionMenu();
 							return true;
 						},
 						Escape: () => {
@@ -182,17 +186,29 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		storedContentRef.current = null;
 	}, []);
 
+	const convertSelectionToEditMark = useCallback(() => {
+		if (!editor) return;
+		const selection = wrapSelectionAroundWords(editor);
+		editor.chain().setTextSelection(selection).setMark("editHighlight").run();
+	}, [editor]);
+
+	const showAiSelectionMenu = useCallback(() => {
+		if (!editor) return;
+		disableUpdatesRef.current = true;
+
+		if (editor.isFocused && editor.view.state.selection.content().size > 0) {
+			convertSelectionToEditMark();
+			setIsShowingAiSelectionMenu(true);
+		}
+	}, [editor, convertSelectionToEditMark]);
+
 	const showAiEditor = useCallback(() => {
 		if (!editor) return;
 		disableUpdatesRef.current = true;
 
-		if (editor.isFocused) {
-			const selection = wrapSelectionAroundWords(editor);
-			editor.chain().setTextSelection(selection).setMark("editHighlight").run();
-		}
-
+		setIsSidebarCollapsed(true);
 		setShowAiEditorMenu(true);
-	}, [editor]);
+	}, [editor, setIsSidebarCollapsed]);
 
 	const onStartAiEdits = useCallback(() => {
 		if (!editor) return;
@@ -229,6 +245,17 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		disableUpdatesRef.current = false;
 	}, [editor, restoreFromLastContent, clearStoredContent, onFinishAiEdits]);
 
+	const hideAiSelectionMenu = useCallback(() => {
+		if (!editor) return;
+
+		setIsShowingAiSelectionMenu(false);
+		restoreFromLastContent();
+		clearStoredContent();
+		clearAllEditMarks(editor);
+		onFinishAiEdits();
+		disableUpdatesRef.current = false;
+	}, [editor, restoreFromLastContent, clearStoredContent, onFinishAiEdits]);
+
 	useEffect(() => {
 		const signals = (thought?.signals as string[] | null) ?? [];
 		if (signals.includes(ThoughtSignals.AI_SUGGESTIONS)) {
@@ -238,7 +265,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		}
 	}, [setIsAiSuggestionLoading, thought?.signals]);
 
-	useHotkeys("mod+k", () => showAiEditor());
+	useHotkeys("mod+i", () => showAiEditor());
 
 	return (
 		<ThoughtContext.Provider
@@ -268,6 +295,10 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				onFinishAiEdits,
 				threadId,
 				setThreadId,
+				convertSelectionToEditMark,
+				isShowingAiSelectionMenu,
+				hideAiSelectionMenu,
+				showAiSelectionMenu,
 			}}>
 			<div className="flex h-full flex-row">
 				{isShowingAiEditorMenu && <ChatSectionView />}

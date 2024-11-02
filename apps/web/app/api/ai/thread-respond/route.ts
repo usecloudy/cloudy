@@ -1,10 +1,11 @@
+import { anthropic } from "@ai-sdk/anthropic";
 import { ChatMessageRecord, ThreadRespondPostRequestBody, fixOneToOne, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CoreMessage, streamText } from "ai";
 import { randomUUID } from "crypto";
 
-import { heliconeOpenAI } from "app/api/utils/helicone";
+import { heliconeAnthropic, heliconeOpenAI } from "app/api/utils/helicone";
 import { makeHeliconeHeaders } from "app/api/utils/helicone";
 import { getFileContentsPrompt } from "app/api/utils/repoContext";
 import { getSupabase } from "app/api/utils/supabase";
@@ -74,10 +75,15 @@ Wow this is not a bad idea. We can expand it further.
 
 If the user asks you to make a change, you MUST wrap the original content and your new suggestion in a <suggestion></suggestion> tag.
 If the user asks you to write something, you MUST wrap your suggestion in a <suggestion></suggestion> tag, following the same format as above.
+When making large edits, prefer to use multiple <suggestion></suggestion> tags, rather than one large suggestion.
 
-Below is the note the user is writing${hasSelection ? `, and the selection they have made:` : ":"}
-${documentTitle ? `Title: ${documentTitle}` : ""}
-${documentContent ? `${documentContent}` : ""}`,
+Below is the document the user is writing${hasSelection ? `, and the selection they have made:` : ":"}
+<document${documentTitle ? ` title="${documentTitle}"` : ""}>
+${documentContent}
+</document>`,
+		experimental_providerMetadata: {
+			anthropic: { cacheControl: { type: "ephemeral" } },
+		},
 	},
 ];
 
@@ -157,7 +163,8 @@ const respond = async (payload: ThreadRespondPostRequestBody, supabase: Supabase
 
 	const stream = await streamText({
 		// model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
-		model: heliconeOpenAI.languageModel("gpt-4o-mini"),
+		// model: heliconeOpenAI.languageModel("gpt-4o-mini"),
+		model: heliconeAnthropic.languageModel("claude-3-5-sonnet-20241022", { cacheControl: true }),
 		messages: llmMessages,
 		temperature: 0.0,
 		experimental_telemetry: {

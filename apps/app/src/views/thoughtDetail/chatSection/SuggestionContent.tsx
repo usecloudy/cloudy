@@ -1,4 +1,4 @@
-import { handleSupabaseError } from "@cloudy/utils/common";
+import { ChatRole, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { diffLines, diffWords } from "diff";
 import { CheckCircle2Icon, ChevronsLeftIcon, XCircleIcon } from "lucide-react";
@@ -26,7 +26,7 @@ const useApplySuggestion = () => {
 		mutationFn: async ({ suggestionContent }: { suggestionContent: string }) => {
 			const {
 				data: { originalSnippet, replacementSnippet },
-			} = await apiClient.post<{ originalSnippet: string; replacementSnippet: string }>("/api/ai/apply-change", {
+			} = await apiClient.post<{ originalSnippet: string; replacementSnippet: string | null }>("/api/ai/apply-change", {
 				thoughtId,
 				suggestionContent,
 			});
@@ -41,9 +41,17 @@ const useApplySuggestion = () => {
 				throw new Error("Original snippet not found");
 			}
 
+			console.log("replacing", originalSnippet, "with", replacementSnippet);
+
+			if (!replacementSnippet) {
+				throw new Error("Replacement snippet not found");
+			}
+
 			const newHtml = currentHtmlWithoutEditTags.replace(originalSnippet, replacementSnippet);
 
-			editor?.commands.setContent(newHtml ?? currentHtml ?? "");
+			console.log("newHtml", newHtml);
+
+			editor?.commands.setContent(newHtml ?? currentHtml ?? "", false, { preserveWhitespace: false });
 		},
 		throwOnError: false,
 	});
@@ -107,6 +115,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 
 	const suggestionHash = useMemo(() => makeSuggestionHash(suggestionContent), [suggestionContent]);
 	const isApplied = message.applied_suggestion_hashes.includes(suggestionHash);
+	const isGenerating = message.role === ChatRole.Assistant && !message.completed_at;
 
 	const currentIsPreviewing = previewingKey === suggestionHash;
 
@@ -227,7 +236,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 
 			{/* ... existing UI elements ... */}
 			<div className="mt-2 flex w-full flex-row items-center gap-1.5">
-				{applySuggestionMutation.isPending ? (
+				{applySuggestionMutation.isPending || isGenerating ? (
 					<LoadingSpinner size="xs" />
 				) : currentIsPreviewing ? (
 					<>

@@ -118,6 +118,10 @@ const EditHighlight = Mark.create({
 	},
 });
 
+const ExtendedCodeBlockLowlight = CodeBlockLowlight.extend({
+	priority: 1000,
+});
+
 export const wrapSelectionAroundWords = (editor: Editor) => {
 	const selection = editor.state.selection;
 
@@ -179,7 +183,7 @@ export const tiptapExtensions = [
 		linkOnPaste: true,
 		protocols: ["http", "https", "mailto"],
 	}),
-	CodeBlockLowlight.configure({
+	ExtendedCodeBlockLowlight.configure({
 		lowlight,
 	}),
 ];

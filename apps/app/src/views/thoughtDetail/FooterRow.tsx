@@ -18,7 +18,7 @@ export const FooterRow = () => {
 				<div>
 					{!isShowingAiEditorMenu && (
 						<Button size="sm" onClick={showAiEditor}>
-							{isMdBreakpoint && <Hotkey keys={["Command", "K"]} />}
+							{isMdBreakpoint && <Hotkey keys={["Command", "i"]} />}
 							<span>Chat</span>
 						</Button>
 					)}
