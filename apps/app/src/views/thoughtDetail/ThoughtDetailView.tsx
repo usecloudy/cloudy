@@ -38,7 +38,13 @@ import {
 import { updateMentionNodeNames } from "./mention";
 import { AiGenerationContext, ThoughtContext } from "./thoughtContext";
 import { useThoughtStore } from "./thoughtStore";
-import { clearAllApplyMarks, clearAllEditMarks, tiptapExtensions, wrapSelectionAroundWords } from "./tiptap";
+import {
+	backtickInputRegex,
+	clearAllApplyMarks,
+	clearAllEditMarks,
+	tiptapExtensions,
+	wrapSelectionAroundWords,
+} from "./tiptap";
 import { useYProvider } from "./yProvider";
 
 type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
@@ -162,6 +168,10 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				const content = editor?.getHTML();
 				const contentMd = editor?.storage.markdown.getMarkdown();
 				const contentPlainText = editor?.getText();
+
+				const matchAttempt = backtickInputRegex.exec(contentMd ?? "");
+				console.log("matchAttempt", matchAttempt);
+
 				const ts = new Date();
 				onChange({ content, contentMd, contentPlainText, ts });
 			}
@@ -196,7 +206,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		if (!editor) return;
 		disableUpdatesRef.current = true;
 
-		if (editor.isFocused && editor.view.state.selection.content().size > 0) {
+		if (editor.view.state.selection.content().size > 0) {
 			convertSelectionToEditMark();
 			setIsShowingAiSelectionMenu(true);
 		}
@@ -213,6 +223,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const onStartAiEdits = useCallback(() => {
 		if (!editor) return;
 		setIsAiWriting(true);
+		setIsEditingDisabled(true);
 	}, [editor, setIsAiWriting]);
 
 	const onFinishAiEdits = useCallback(() => {
@@ -301,8 +312,14 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				showAiSelectionMenu,
 			}}>
 			<div className="flex h-full flex-row">
-				{isShowingAiEditorMenu && <ChatSectionView />}
-				<div className="no-scrollbar relative flex w-full flex-grow flex-col overflow-hidden lg:flex-row">
+				<div
+					className={cn(
+						"relative w-[33vw] shrink-0 transition-[width] duration-300 ease-in-out",
+						!isShowingAiEditorMenu && "w-0",
+					)}>
+					{isShowingAiEditorMenu && <ChatSectionView />}
+				</div>
+				<div className="no-scrollbar relative flex w-full flex-grow flex-col lg:flex-row">
 					<AiDocumentGeneration thought={thought}>
 						<EditorView
 							thoughtId={thoughtId!}
@@ -404,7 +421,7 @@ const EditorView = ({
 	};
 
 	return (
-		<div className="no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-x-hidden overflow-y-scroll">
+		<div className="no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-y-scroll">
 			<nav className="sticky top-[-1px] z-30 -mr-2 w-full bg-background px-6 py-2 md:top-0 md:py-3">
 				<ControlRow thoughtId={thoughtId} editor={editor} />
 			</nav>

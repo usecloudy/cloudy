@@ -8,3 +8,4 @@ export * from "./pricing";
 export * from "./supabase";
 export * from "./thought";
 export * from "./workspaces";
+export * from "./xml";

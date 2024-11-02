@@ -1,7 +1,7 @@
 import { RepoReference } from "@cloudy/utils/common";
 import { FloatingFocusManager, offset, shift, useFloating } from "@floating-ui/react";
 import { SparklesIcon } from "lucide-react";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useContext, useRef } from "react";
 import { useMount } from "react-use";
 
@@ -56,6 +56,25 @@ export const AiSelectionMenu = ({
 		};
 	}, [editor, onCancel]);
 
+	// useEffect(() => {
+	// 	const floating = refs.floating.current;
+	// 	if (!floating) return;
+
+	// 	const isElementInViewport = (el: HTMLElement) => {
+	// 		const rect = el.getBoundingClientRect();
+	// 		return (
+	// 			rect.top >= 0 &&
+	// 			rect.left >= 0 &&
+	// 			rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+	// 			rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+	// 		);
+	// 	};
+
+	// 	if (!isElementInViewport(floating)) {
+	// 		floating.scrollIntoView({ behavior: "smooth", block: "nearest" });
+	// 	}
+	// }, [refs.floating]);
+
 	const handleSubmit = async (text: string, fileReferences: RepoReference[]) => {
 		const thread = await startThreadMutation.mutateAsync({ content: text, fileReferences });
 
@@ -80,7 +99,7 @@ export const AiSelectionMenu = ({
 			<div
 				ref={refs.setFloating}
 				style={floatingStyles}
-				className="z-50 flex w-[28rem] flex-col gap-0.5 rounded-md border border-border bg-background px-2 py-2">
+				className="z-50 flex w-[32rem] flex-col gap-0.5 rounded-md border border-border bg-background px-2 py-2">
 				<div className="flex flex-row items-center gap-1 pb-1 pl-2 pt-1">
 					<SparklesIcon className="h-4 w-4 text-accent" />
 					<span className="text-sm font-medium">Ask Cloudy</span>

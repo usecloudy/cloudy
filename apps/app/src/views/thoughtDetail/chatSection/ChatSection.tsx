@@ -67,14 +67,6 @@ export const ChatSection = () => {
 
 	return (
 		<div className="flex w-full flex-1 flex-col overflow-hidden">
-			{thread && (
-				<div className="flex flex-row items-center justify-center px-4 py-2">
-					<Button variant="outline" size="sm" onClick={() => setThreadId(null)}>
-						<ArrowUpIcon className="size-4" />
-						<span>Exit thread</span>
-					</Button>
-				</div>
-			)}
 			<div className="flex flex-1 items-center justify-center overflow-hidden px-4">
 				{thread ? (
 					<ChatContent chatThread={thread} />

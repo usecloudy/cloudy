@@ -1,20 +1,24 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { ChatRole, makeHumanizedTime } from "@cloudy/utils/common";
-import { SparklesIcon, UserIcon } from "lucide-react";
-import { useRef } from "react";
+import { ArrowUpIcon, SparklesIcon, UserIcon } from "lucide-react";
+import { useContext, useRef } from "react";
 import { useEffect } from "react";
 import Markdown from "react-markdown";
 import { usePrevious } from "react-use";
 
+import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { Avatar } from "src/components/users/Avatar";
 import { useUserProfile } from "src/utils/users";
 
+import { ThoughtContext } from "../thoughtContext";
 import { ChatMessageUserHeader } from "./ChatMessageUserHeader";
 import { SuggestionContent } from "./SuggestionContent";
 import { ChatMessageContext, UseChatThreadReturnType } from "./chat";
 
 export const ChatContent = ({ chatThread, isAnyLoading }: { chatThread: UseChatThreadReturnType; isAnyLoading?: boolean }) => {
+	const { setThreadId } = useContext(ThoughtContext);
+
 	const threadRef = useRef<HTMLDivElement>(null);
 
 	const prevNumOfMessages = usePrevious(chatThread.messages.length ?? 0);
@@ -30,7 +34,13 @@ export const ChatContent = ({ chatThread, isAnyLoading }: { chatThread: UseChatT
 	}, [chatThread?.messages, prevNumOfMessages]);
 
 	return (
-		<div ref={threadRef} className="no-scrollbar flex h-full w-full flex-col gap-2 overflow-y-auto">
+		<div ref={threadRef} className="no-scrollbar relative flex h-full w-full flex-col gap-2 overflow-y-auto">
+			<div className="sticky top-0 z-40 flex flex-row items-center justify-center px-4 py-2">
+				<Button variant="outline" size="sm" onClick={() => setThreadId(null)} className="bg-background">
+					<ArrowUpIcon className="size-4" />
+					<span>Exit thread</span>
+				</Button>
+			</div>
 			{chatThread.messages?.map(message => <ChatMessage key={message.id} message={message} />)}
 			{isAnyLoading && (
 				<div className="flex size-12 items-center justify-center rounded bg-background p-3">

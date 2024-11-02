@@ -112,3 +112,46 @@ export const processSearches = (doc: PMNode, searchTerm: string, threshold: numb
 
 	return results;
 };
+
+export const processExactSearches = (doc: PMNode, searchTerm: string) => {
+	const results: { pos: number; from: number; to: number }[] = [];
+	let textNodesWithPosition: { text: string; pos: number }[] = [];
+
+	let index = 0;
+
+	doc.descendants((node, pos) => {
+		if (node.isText) {
+			if (textNodesWithPosition[index]) {
+				textNodesWithPosition[index] = {
+					text: textNodesWithPosition[index].text + node.text,
+					pos: textNodesWithPosition[index].pos,
+				};
+			} else {
+				textNodesWithPosition[index] = {
+					text: `${node.text}`,
+					pos,
+				};
+			}
+		} else {
+			index += 1;
+		}
+	});
+
+	textNodesWithPosition = textNodesWithPosition.filter(Boolean);
+
+	for (const element of textNodesWithPosition) {
+		const { text, pos } = element;
+		const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		const matches = Array.from(text.matchAll(new RegExp(escapedSearchTerm, "g")));
+
+		for (const match of matches) {
+			results.push({
+				pos,
+				from: pos + match.index!,
+				to: pos + match.index! + searchTerm.length,
+			});
+		}
+	}
+
+	return results;
+};

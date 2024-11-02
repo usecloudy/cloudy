@@ -14,7 +14,7 @@ export const ChatSectionView = () => {
 	const { setIsSidebarCollapsed } = useSidebarContext();
 
 	return (
-		<div className="flex h-dvh w-1/3 shrink-0 flex-col border-r border-border">
+		<div className="absolute right-0 top-0 flex h-dvh w-[33vw] shrink-0 flex-col overflow-hidden border-r border-border">
 			<div className="flex flex-row items-center justify-between px-4 py-3">
 				<Button onClick={() => setIsSidebarCollapsed(false)} variant="ghost" size="icon-sm">
 					<PanelLeftOpenIcon className="size-5" />

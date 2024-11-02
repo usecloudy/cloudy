@@ -1,17 +1,18 @@
-import { ChatRole, handleSupabaseError } from "@cloudy/utils/common";
+import { ChatRole, extractInnerTextFromXml, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { diffLines, diffWords } from "diff";
 import { CheckCircle2Icon, ChevronsLeftIcon, XCircleIcon } from "lucide-react";
+import posthog from "posthog-js";
 import React, { useContext, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
-import { apiClient } from "src/api/client";
 import { queryClient } from "src/api/queryClient";
 import { chatThreadQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import { CopyButton } from "src/components/CopyButton";
 import LoadingSpinner from "src/components/LoadingSpinner";
+import { useWorkspace } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { simpleHash } from "src/utils/hash";
 import { processSearches } from "src/utils/tiptapSearchAndReplace";
@@ -20,38 +21,57 @@ import { ThoughtContext } from "../thoughtContext";
 import { ChatMessageContext } from "./chat";
 
 const useApplySuggestion = () => {
-	const { thoughtId, editor } = useContext(ThoughtContext);
+	const workspace = useWorkspace();
+	const { editor } = useContext(ThoughtContext);
 
 	return useMutation({
 		mutationFn: async ({ suggestionContent }: { suggestionContent: string }) => {
-			const {
-				data: { originalSnippet, replacementSnippet },
-			} = await apiClient.post<{ originalSnippet: string; replacementSnippet: string | null }>("/api/ai/apply-change", {
-				thoughtId,
-				suggestionContent,
-			});
+			// const {
+			// 	data: { originalSnippet, replacementSnippet },
+			// } = await apiClient.post<{ originalSnippet: string; replacementSnippet: string | null }>("/api/ai/apply-change", {
+			// 	thoughtId,
+			// 	suggestionContent,
+			// });
 
-			const currentHtml = editor?.getHTML();
-			if (!currentHtml) {
-				throw new Error("No current HTML");
+			// const currentHtml = editor?.getHTML();
+			// if (!currentHtml) {
+			// 	throw new Error("No current HTML");
+			// }
+			// const currentHtmlWithoutEditTags = currentHtml.replace(/<\/?edit>/g, "");
+
+			// if (!currentHtmlWithoutEditTags.includes(originalSnippet)) {
+			// 	throw new Error("Original snippet not found");
+			// }
+
+			// console.log("replacing", originalSnippet, "with", replacementSnippet);
+
+			// if (!replacementSnippet) {
+			// 	throw new Error("Replacement snippet not found");
+			// }
+
+			// const newHtml = currentHtmlWithoutEditTags.replace(originalSnippet, replacementSnippet);
+
+			// console.log("newHtml", newHtml);
+
+			// editor?.commands.setContent(newHtml ?? currentHtml ?? "", false, { preserveWhitespace: false });
+
+			let originalSnippet = extractInnerTextFromXml(suggestionContent, "original_content").trim();
+			let replacementSnippet = extractInnerTextFromXml(suggestionContent, "replacement_content").trim();
+			const contentMd = editor!.storage.markdown.getMarkdown() as string;
+
+			originalSnippet = originalSnippet.replaceAll("\\`\\`\\`", "```");
+			replacementSnippet = replacementSnippet.replaceAll("\\`\\`\\`", "```");
+
+			if (contentMd.includes(originalSnippet)) {
+				editor?.commands.setContent(contentMd.replace(originalSnippet, replacementSnippet));
+			} else {
+				console.log("Will need advanced replace.", contentMd, originalSnippet);
+				posthog.capture("advanced_replace_needed", {
+					workspace_id: workspace.id,
+					workspace_slug: workspace.slug,
+				});
+				throw new Error("Advanced replace not implemented yet.");
 			}
-			const currentHtmlWithoutEditTags = currentHtml.replace(/<\/?edit>/g, "");
-
-			if (!currentHtmlWithoutEditTags.includes(originalSnippet)) {
-				throw new Error("Original snippet not found");
-			}
-
-			console.log("replacing", originalSnippet, "with", replacementSnippet);
-
-			if (!replacementSnippet) {
-				throw new Error("Replacement snippet not found");
-			}
-
-			const newHtml = currentHtmlWithoutEditTags.replace(originalSnippet, replacementSnippet);
-
-			console.log("newHtml", newHtml);
-
-			editor?.commands.setContent(newHtml ?? currentHtml ?? "", false, { preserveWhitespace: false });
 		},
 		throwOnError: false,
 	});
