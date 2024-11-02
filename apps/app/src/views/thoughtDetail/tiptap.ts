@@ -135,13 +135,10 @@ export const tildeInputRegex = /^~~~([a-z]+)?[\s\n]$/;
 const ExtendedCodeBlockLowlight = CodeBlockLowlight.extend({
 	priority: 1000,
 	addPasteRules() {
-		console.log("addPasteRules");
 		return [
 			createCodeBlockPasteRule({
 				find: (text, event) => {
 					const rawMatch = text.match(backtickInputRegex);
-
-					console.log("find", rawMatch);
 
 					return rawMatch ? [{ index: 0, text: rawMatch[0], match: rawMatch }] : null;
 				},

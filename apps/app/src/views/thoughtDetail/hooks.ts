@@ -160,7 +160,6 @@ export const useEditThought = (thoughtId?: string) => {
 					queryKey: ["thoughtEmbeddings"],
 				});
 			}, 2500);
-			console.log("Will update library");
 			queryClient.invalidateQueries({
 				queryKey: projectQueryKeys.library(workspace.id, project?.id),
 			});

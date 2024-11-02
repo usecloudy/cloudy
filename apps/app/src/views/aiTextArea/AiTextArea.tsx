@@ -69,12 +69,10 @@ export const AiTextArea = ({
 				addKeyboardShortcuts() {
 					return {
 						Enter: () => {
-							console.log("enter");
 							handleSubmitRef.current?.();
 							return true;
 						},
 						"Mod-Enter": () => {
-							console.log("mod-enter");
 							handleSubmitRef.current?.(true);
 							return true;
 						},

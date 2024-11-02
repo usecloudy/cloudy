@@ -215,8 +215,6 @@ export const useStartThread = () => {
 		mutationFn: async ({ content }: { content: string; fileReferences?: RepoReference[] }) => {
 			const selection = getSelection(editor!);
 
-			console.log("selection", selection);
-
 			const thread = handleSupabaseError(
 				await supabase
 					.from("chat_threads")

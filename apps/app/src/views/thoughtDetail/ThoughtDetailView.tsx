@@ -170,7 +170,6 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				const contentPlainText = editor?.getText();
 
 				const matchAttempt = backtickInputRegex.exec(contentMd ?? "");
-				console.log("matchAttempt", matchAttempt);
 
 				const ts = new Date();
 				onChange({ content, contentMd, contentPlainText, ts });
