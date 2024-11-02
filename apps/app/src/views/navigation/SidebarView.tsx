@@ -70,10 +70,10 @@ export const SidebarView = () => {
 	}
 
 	return (
-		<div className="relative h-full">
+		<div className={cn("relative h-full md:h-dvh md:w-64", isSidebarFixed && "transition-transform duration-200 md:w-0")}>
 			<div
 				className={cn(
-					"absolute top-0 z-50 flex h-full w-screen flex-col overflow-hidden border-r border-border bg-background py-2 pt-4 transition-transform duration-200 ease-in-out md:sticky md:h-screen md:w-64 md:pt-2",
+					"absolute top-0 z-50 flex h-full w-screen flex-col overflow-hidden border-r border-border bg-background py-2 pt-4 transition-transform duration-200 ease-in-out md:sticky md:h-dvh md:w-64 md:pt-2",
 					isSidebarFixed && "md:absolute",
 					isSidebarFixed && isSidebarCollapsed ? "-translate-x-full" : "translate-x-0",
 				)}>
