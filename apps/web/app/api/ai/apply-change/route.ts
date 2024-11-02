@@ -1,4 +1,4 @@
-import { ApplyChangePostRequestBody, handleSupabaseError } from "@cloudy/utils/common";
+import { ApplyChangePostRequestBody, extractInnerTextFromXml, handleSupabaseError } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CoreMessage, streamText } from "ai";
@@ -7,7 +7,6 @@ import { NextResponse } from "next/server";
 
 import { heliconeAnthropic } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
-import { extractInnerTextFromXml } from "app/api/utils/xml";
 
 export const POST = async (req: Request) => {
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
