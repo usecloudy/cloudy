@@ -31,6 +31,7 @@ type DeletePayload = {
 type Payload = InsertPayload | UpdatePayload | DeletePayload;
 
 export async function POST(req: NextRequest) {
+	console.log("Handling auth user", req.headers);
 	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "service" });
 
 	const payload = (await req.json()) as Payload;
