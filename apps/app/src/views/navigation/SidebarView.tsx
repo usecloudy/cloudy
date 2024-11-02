@@ -77,13 +77,13 @@ export const SidebarView = () => {
 					isSidebarFixed && "md:absolute",
 					isSidebarFixed && isSidebarCollapsed ? "-translate-x-full" : "translate-x-0",
 				)}>
-				<div className="px-4 pb-2">
-					{isSidebarFixed && (
+				{isSidebarFixed && (
+					<div className="border-b border-border px-4 pb-2">
 						<Button variant="ghost" size="icon-sm" onClick={() => setIsSidebarCollapsed(true)}>
 							<PanelLeftCloseIcon className="size-5" />
 						</Button>
-					)}
-				</div>
+					</div>
+				)}
 				<WorkspaceSelector />
 				{project && (
 					<div className="mb-4">

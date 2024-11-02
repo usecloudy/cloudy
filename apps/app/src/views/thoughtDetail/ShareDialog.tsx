@@ -11,7 +11,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip"
 import { Avatar } from "src/components/users/Avatar";
 import { useUser } from "src/stores/user";
 import { useWorkspace } from "src/stores/workspace";
+import { makeDocUrl } from "src/utils/thought";
 
+import { useProject } from "../projects/ProjectContext";
 import { useAddDocumentUser, useDocumentAccessControl, useRemoveDocumentUser } from "./accessControl";
 import { useEditThought, useThought } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";
@@ -28,7 +30,8 @@ const makeAccessStrategyInfo = (accessStrategy: AccessStrategies) => {
 };
 
 export const ShareDialog = () => {
-	const { id: workspaceId } = useWorkspace();
+	const workspace = useWorkspace();
+	const project = useProject();
 	const user = useUser();
 
 	const { thoughtId } = useContext(ThoughtContext);
@@ -43,7 +46,11 @@ export const ShareDialog = () => {
 	const addUserMutation = useAddDocumentUser(thoughtId);
 	const removeUserMutation = useRemoveDocumentUser(thoughtId);
 
-	const shareLink = `https://app.usecloudy.com/workspaces/${workspaceId}/thoughts/${thoughtId}`;
+	const shareLink = `https://app.usecloudy.com${makeDocUrl({
+		workspaceSlug: workspace.slug,
+		docId: thoughtId,
+		projectSlug: project?.slug,
+	})}`;
 
 	const isAuthor = thought?.author_id === user.id;
 
