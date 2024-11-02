@@ -191,7 +191,7 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
 						</div>
 						<TextareaAutosize
 							className="min-h-10 w-full resize-none bg-white/30 py-4 pl-11 pr-16 font-sans outline-none hover:outline-none focus:outline-none"
-							placeholder="Search for notes..."
+							placeholder="Search for docs..."
 							value={query}
 							onChange={handleInputChange}
 							onKeyDown={handleInputKeyDown}
