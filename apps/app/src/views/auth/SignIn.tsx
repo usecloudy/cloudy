@@ -39,6 +39,7 @@ export const SignIn = () => {
 				setLoginError("An error occurred");
 			}
 		},
+		throwOnError: false,
 	});
 
 	const onSubmit = (data: LoginFormData) => {

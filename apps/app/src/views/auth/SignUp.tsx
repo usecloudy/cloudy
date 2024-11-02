@@ -49,6 +49,7 @@ export const SignUp = () => {
 				setSignUpError("An error occurred during sign-up");
 			}
 		},
+		throwOnError: false,
 	});
 
 	const onSubmit = (data: SignUpFormData) => {
