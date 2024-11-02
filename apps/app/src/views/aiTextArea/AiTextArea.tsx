@@ -129,7 +129,7 @@ export const AiTextArea = ({
 	return (
 		<div className="relative flex w-full flex-col gap-4">
 			<EditorContent editor={editor} />
-			<div className="flex flex-row items-start justify-between gap-1">
+			<div className="flex flex-row items-start justify-between gap-2">
 				{hasGitRepoConnected ? (
 					<FileReferenceRow
 						fileReferences={fileReferences}
@@ -145,14 +145,16 @@ export const AiTextArea = ({
 						</Button>
 					</Link>
 				) : (
-					<Link to={makeNewProjectUrl(workspace.slug)}>
-						<Button size="xs" variant="outline">
-							<SiGithub className="size-3" />
-							<span>Create a project with a git repo to reference files</span>
-						</Button>
-					</Link>
+					<div className="flex-1 overflow-hidden">
+						<Link to={makeNewProjectUrl(workspace.slug)} className="block">
+							<Button size="xs" variant="outline" className="mt-0.5 w-full">
+								<SiGithub className="size-3 shrink-0" />
+								<span className="truncate">Create a project with a git repo to reference files</span>
+							</Button>
+						</Link>
+					</div>
 				)}
-				<div className="flex flex-row gap-1">
+				<div className="flex shrink-0 flex-row gap-1">
 					{onSecondaryAction && (
 						<Button
 							size="sm"
