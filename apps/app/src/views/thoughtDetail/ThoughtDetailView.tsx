@@ -275,7 +275,10 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		}
 	}, [setIsAiSuggestionLoading, thought?.signals]);
 
-	useHotkeys("mod+i", () => showAiEditor());
+	useHotkeys("mod+i", e => {
+		e.preventDefault();
+		showAiEditor();
+	});
 
 	return (
 		<ThoughtContext.Provider
