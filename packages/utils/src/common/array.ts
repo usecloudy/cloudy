@@ -3,5 +3,5 @@ export const zip = <T, U>(arr1: T[], arr2: U[]): [T, U][] => {
         throw new Error("Arrays must be of equal length to zip");
     }
 
-    return arr1.map((item, index) => [item, arr2[index]]);
+    return arr1.map((item, index) => [item, arr2[index]!]);
 };
