@@ -55,3 +55,17 @@ export const getFileContentsPrompt = async (docId: string, supabase: SupabaseCli
 
 	return fileContents.map(file => `<file path="${file.path}">\n${file.content.trimEnd()}\n</file>`).join("\n\n");
 };
+
+export const getCommitPrompt = async (commitSha: string, repoOwner: string, repoName: string, installationId: string) => {
+	const octokit = installationId === "<TOKEN>" ? __getOctokitDevTokenClient() : getOctokitAppClient(installationId);
+
+	const { data: commit } = await octokit.rest.repos.getCommit({
+		owner: repoOwner,
+		repo: repoName,
+		ref: commitSha,
+	});
+
+	const diffText = commit.files?.map(file => file.patch).join("\n\n");
+
+	return `${commit.commit.message}\n\n${diffText}`;
+};

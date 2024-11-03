@@ -24,6 +24,7 @@ export const heliconeAnthropic = createAnthropic({
 });
 
 export interface HeliconeHeaderRequest {
+	workspaceId?: string;
 	userId?: string;
 	sessionName?: string;
 	sessionId?: string;
@@ -34,6 +35,7 @@ export const makeHeliconeHeaders = (request: HeliconeHeaderRequest) => {
 	const sessionId = request.sessionId || (request.sessionName ? `${request.sessionName}-${randomUUID()}` : randomUUID());
 	return {
 		...(request.userId && { "Helicone-User-Id": request.userId }),
+		...(request.workspaceId && { "Helicone-User-Id": request.workspaceId }),
 		...(request.sessionName && { "Helicone-Session-Name": request.sessionName }),
 		"Helicone-Session-Id": sessionId,
 		...(request.sessionPath && { "Helicone-Session-Path": request.sessionPath }),

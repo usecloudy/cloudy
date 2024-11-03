@@ -672,6 +672,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      generate_hmac: {
+        Args: {
+          secret_key: string
+          message: string
+        }
+        Returns: string
+      }
       jwt: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -759,25 +766,31 @@ export type Database = {
         Row: {
           created_at: string
           document_id: string | null
+          document_update_id: string | null
           id: string
           is_default: boolean
           parent_id: string | null
+          type: string
           workspace_id: string
         }
         Insert: {
           created_at?: string
           document_id?: string | null
+          document_update_id?: string | null
           id?: string
           is_default?: boolean
           parent_id?: string | null
+          type?: string
           workspace_id: string
         }
         Update: {
           created_at?: string
           document_id?: string | null
+          document_update_id?: string | null
           id?: string
           is_default?: boolean
           parent_id?: string | null
+          type?: string
           workspace_id?: string
         }
         Relationships: [
@@ -786,6 +799,13 @@ export type Database = {
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_threads_document_update_id_fkey"
+            columns: ["document_update_id"]
+            isOneToOne: false
+            referencedRelation: "document_updates"
             referencedColumns: ["id"]
           },
           {
@@ -988,6 +1008,84 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_update_links: {
+        Row: {
+          created_at: string
+          document_update_id: string
+          id: string
+          repo_link_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_update_id: string
+          id?: string
+          repo_link_id: string
+        }
+        Update: {
+          created_at?: string
+          document_update_id?: string
+          id?: string
+          repo_link_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_update_links_document_update_id_fkey"
+            columns: ["document_update_id"]
+            isOneToOne: false
+            referencedRelation: "document_updates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_update_links_repo_link_id_fkey"
+            columns: ["repo_link_id"]
+            isOneToOne: false
+            referencedRelation: "document_repo_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_updates: {
+        Row: {
+          commit_sha: string
+          document_id: string
+          generation_completed_at: string | null
+          id: string
+          repo_connection_id: string
+          triggered_at: string
+        }
+        Insert: {
+          commit_sha: string
+          document_id: string
+          generation_completed_at?: string | null
+          id?: string
+          repo_connection_id: string
+          triggered_at?: string
+        }
+        Update: {
+          commit_sha?: string
+          document_id?: string
+          generation_completed_at?: string | null
+          id?: string
+          repo_connection_id?: string
+          triggered_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_updates_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_updates_repo_connection_id_fkey"
+            columns: ["repo_connection_id"]
+            isOneToOne: false
+            referencedRelation: "repository_connections"
             referencedColumns: ["id"]
           },
         ]
@@ -1953,6 +2051,13 @@ export type Database = {
           thought_id: string
           similarity_score: number
         }[]
+      }
+      generate_hmac: {
+        Args: {
+          secret_key: string
+          message: string
+        }
+        Returns: string
       }
       get_collection_parents: {
         Args: {

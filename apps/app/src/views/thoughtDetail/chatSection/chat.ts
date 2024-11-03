@@ -1,8 +1,8 @@
-import { ChatRole, RepoReference, handleSupabaseError } from "@cloudy/utils/common";
+import { ChatRole, ChatThreadType, RepoReference, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Editor } from "@tiptap/react";
 import { produce } from "immer";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 
 import { apiClient } from "src/api/client";
 import { queryClient } from "src/api/queryClient";
@@ -119,6 +119,30 @@ export const triggerThread = async (threadId: string) => {
 };
 
 export const useChatThread = (threadId?: string | null) => {
+	useEffect(() => {
+		const channel = supabase
+			.channel("chat_thread")
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "chat_threads",
+					filter: `id=eq.${threadId}`,
+				},
+				() => {
+					queryClient.invalidateQueries({
+						queryKey: chatThreadQueryKeys.thread(threadId),
+					});
+				},
+			)
+			.subscribe();
+
+		return () => {
+			channel.unsubscribe();
+		};
+	}, [threadId]);
+
 	return useQuery({
 		queryKey: chatThreadQueryKeys.thread(threadId),
 		queryFn: async () => {
@@ -165,6 +189,7 @@ export const useThreadsForDoc = (docId: string) => {
 					.from("chat_threads")
 					.select("*, first_message:chat_messages!chat_messages_thread_id_fkey(*)")
 					.eq("document_id", docId)
+					.eq("type", ChatThreadType.Default)
 					.order("created_at", { ascending: false })
 					.order("created_at", { referencedTable: "first_message", ascending: true })
 					.limit(1, { referencedTable: "first_message" }),

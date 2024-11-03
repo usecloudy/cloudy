@@ -1,4 +1,5 @@
 export * from "./api";
+export * from "./array";
 export * from "./chat";
 export * from "./collections";
 export * from "./datetime";

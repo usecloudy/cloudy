@@ -18,6 +18,7 @@ export const thoughtQueryKeys = {
 	existingLinkedFiles: (thoughtId?: string) => ["thought", thoughtId, "existingLinkedFiles"] as const,
 	threadsForDoc: (docId: string) => ["threadsForDoc", docId] as const,
 	defaultThreadId: (docId: string) => ["defaultThreadId", docId] as const,
+	recentChanges: (thoughtId: string) => ["recentChanges", thoughtId] as const,
 };
 
 export const topicQueryKeys = {

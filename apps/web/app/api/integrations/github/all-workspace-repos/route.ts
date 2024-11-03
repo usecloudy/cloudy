@@ -1,4 +1,4 @@
-import { RepoReference, handleSupabaseError } from "@cloudy/utils/common";
+import { handleSupabaseError } from "@cloudy/utils/common";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getOctokitAppClient } from "app/api/utils/github";
@@ -22,19 +22,24 @@ export const GET = async (request: NextRequest) => {
 	const allRepos = (
 		await Promise.all(
 			appInstallations.map(async installation => {
-				const octokit = getOctokitAppClient(installation.installation_id);
+				try {
+					const octokit = getOctokitAppClient(installation.installation_id);
 
-				const { data } = await octokit.rest.apps.listReposAccessibleToInstallation();
+					const { data } = await octokit.rest.apps.listReposAccessibleToInstallation();
 
-				return data.repositories.map(repo => ({
-					id: repo.id,
-					name: repo.name,
-					fullName: repo.full_name,
-					private: repo.private,
-					description: repo.description,
-					defaultBranch: repo.default_branch,
-					installationId: installation.installation_id,
-				}));
+					return data.repositories.map(repo => ({
+						id: repo.id,
+						name: repo.name,
+						fullName: repo.full_name,
+						private: repo.private,
+						description: repo.description,
+						defaultBranch: repo.default_branch,
+						installationId: installation.installation_id,
+					}));
+				} catch (error) {
+					console.error(error);
+					return [];
+				}
 			}),
 		)
 	).flat();

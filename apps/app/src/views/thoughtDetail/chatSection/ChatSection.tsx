@@ -1,26 +1,15 @@
-import { ChatRole, RepoReference, makeHumanizedTime } from "@cloudy/utils/common";
-import { ArrowUpIcon, MoreHorizontalIcon, TrashIcon } from "lucide-react";
+import { ChatRole, RepoReference } from "@cloudy/utils/common";
 import { useContext, useEffect, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import { Button } from "src/components/Button";
-import { Dropdown, DropdownItem } from "src/components/Dropdown";
-import LoadingSpinner from "src/components/LoadingSpinner";
 import { cn } from "src/utils";
 
 import { AiTextArea } from "../../aiTextArea/AiTextArea";
 import { useExistingLinkedFiles } from "../hooks";
 import { ThoughtContext } from "../thoughtContext";
 import { ChatContent } from "./ChatContent";
-import { ChatMessageUserHeader } from "./ChatMessageUserHeader";
-import {
-	UseThreadsForDocReturnType,
-	useChatThread,
-	useDeleteThread,
-	useReplyToThread,
-	useStartThread,
-	useThreadsForDoc,
-} from "./chat";
+import { ChatHomeView } from "./ChatHomeView";
+import { useChatThread, useReplyToThread, useStartThread } from "./chat";
 
 export const ChatSection = () => {
 	const { editor, hideAiEditor, thoughtId, threadId, setThreadId } = useContext(ThoughtContext);
@@ -30,7 +19,6 @@ export const ChatSection = () => {
 	const startThreadMutation = useStartThread();
 	const replyToThreadMutation = useReplyToThread();
 
-	const { data: threadsForDoc } = useThreadsForDoc(thoughtId);
 	const { data: thread } = useChatThread(threadId);
 
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -68,27 +56,7 @@ export const ChatSection = () => {
 	return (
 		<div className="flex w-full flex-1 flex-col overflow-hidden">
 			<div className="flex flex-1 items-center justify-center overflow-hidden px-4">
-				{thread ? (
-					<ChatContent chatThread={thread} />
-				) : threadsForDoc ? (
-					<div className="no-scrollbar flex h-full w-full flex-col gap-2 overflow-y-auto py-4">
-						<div className="flex flex-row items-center justify-between">
-							<h3 className="text-lg font-semibold">Recent Threads</h3>
-						</div>
-						{threadsForDoc.length === 0 ? (
-							<div className="flex flex-col items-center justify-center gap-y-2 text-secondary">
-								<p>No chat threads yet</p>
-								<p>Start a new conversation below</p>
-							</div>
-						) : (
-							threadsForDoc.map(thread => (
-								<ThreadButton key={thread.id} thread={thread} setThreadId={setThreadId} />
-							))
-						)}
-					</div>
-				) : (
-					<LoadingSpinner />
-				)}
+				{thread ? <ChatContent chatThread={thread} /> : <ChatHomeView />}
 			</div>
 			<div className={cn("w-full border-t border-border px-4 py-4", isThreadLoading && "pointer-events-none opacity-70")}>
 				<AiTextArea
@@ -101,56 +69,5 @@ export const ChatSection = () => {
 				/>
 			</div>
 		</div>
-	);
-};
-
-const ThreadButton = ({
-	thread,
-	setThreadId,
-}: {
-	thread: UseThreadsForDocReturnType[number];
-	setThreadId: (id: string) => void;
-}) => {
-	const deleteThreadMutation = useDeleteThread(thread.id);
-
-	const firstMessage = thread.first_message[0];
-
-	return (
-		<button
-			key={thread.id}
-			onClick={e => {
-				// Only set thread ID if not clicking dropdown item
-				if (!(e.target as HTMLElement).closest(".dropdown-item")) {
-					setThreadId(thread.id);
-				}
-			}}
-			className="flex w-full flex-row items-start justify-between gap-x-2 rounded-lg border border-border p-4 text-left hover:bg-card">
-			{firstMessage && (
-				<div className="flex flex-1 flex-col pt-0.5">
-					{firstMessage.role === ChatRole.User && firstMessage.user_id && (
-						<ChatMessageUserHeader userId={firstMessage.user_id} />
-					)}
-					<div className="line-clamp-2 text-sm">{firstMessage.content || "Empty thread"}</div>
-				</div>
-			)}
-			<div className="flex flex-row items-center justify-between gap-x-2">
-				<div className="shrink-0 text-xs text-secondary">{makeHumanizedTime(thread.created_at)}</div>
-				<Dropdown
-					trigger={
-						<Button variant="ghost" size="icon-xs" className="text-secondary">
-							<MoreHorizontalIcon className="size-4" />
-						</Button>
-					}>
-					<DropdownItem
-						className="dropdown-item"
-						onSelect={() => {
-							deleteThreadMutation.mutate();
-						}}>
-						<TrashIcon className="size-4" />
-						<span>Delete thread</span>
-					</DropdownItem>
-				</Dropdown>
-			</div>
-		</button>
 	);
 };

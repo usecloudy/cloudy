@@ -234,6 +234,54 @@ export const useThoughtChannelListeners = (thoughtId: string) => {
 			channel.unsubscribe();
 		};
 	}, [thoughtId]);
+
+	useEffect(() => {
+		const channel = supabase
+			.channel("document_updates")
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "document_updates",
+					filter: `document_id=eq.${thoughtId}`,
+				},
+				() => {
+					queryClient.invalidateQueries({
+						queryKey: thoughtQueryKeys.recentChanges(thoughtId),
+					});
+				},
+			)
+			.subscribe();
+
+		return () => {
+			channel.unsubscribe();
+		};
+	}, [thoughtId]);
+
+	useEffect(() => {
+		const channel = supabase
+			.channel("document_chat_threads")
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "chat_threads",
+					filter: `document_id=eq.${thoughtId}`,
+				},
+				() => {
+					queryClient.invalidateQueries({
+						queryKey: thoughtQueryKeys.threadsForDoc(thoughtId),
+					});
+				},
+			)
+			.subscribe();
+
+		return () => {
+			channel.unsubscribe();
+		};
+	}, [thoughtId]);
 };
 
 export const useThought = (thoughtId?: string) => {
