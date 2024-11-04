@@ -936,6 +936,7 @@ export type Database = {
       }
       document_repo_links: {
         Row: {
+          branch: string | null
           created_at: string
           doc_id: string
           id: string
@@ -944,6 +945,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          branch?: string | null
           created_at?: string
           doc_id: string
           id?: string
@@ -952,6 +954,7 @@ export type Database = {
           type: string
         }
         Update: {
+          branch?: string | null
           created_at?: string
           doc_id?: string
           id?: string
@@ -1212,6 +1215,7 @@ export type Database = {
       repository_connections: {
         Row: {
           created_at: string
+          default_branch: string
           external_id: string
           id: string
           installation_id: string
@@ -1222,6 +1226,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_branch?: string
           external_id: string
           id?: string
           installation_id: string
@@ -1232,6 +1237,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_branch?: string
           external_id?: string
           id?: string
           installation_id?: string

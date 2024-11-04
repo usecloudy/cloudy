@@ -3,4 +3,5 @@ export interface RepoReference {
     repoFullName: string;
     path: string;
     type: "file" | "directory";
+    fileUrl: string;
 }

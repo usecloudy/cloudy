@@ -188,7 +188,7 @@ export const FileReferenceRow = ({
 	disableAdd,
 }: {
 	fileReferences: RepoReference[];
-	existingLinkedFiles?: { path: string }[];
+	existingLinkedFiles?: { path: string; repoFullName: string; fileUrl: string }[];
 	setFileReferences: (files: RepoReference[]) => void;
 	disableAdd?: boolean;
 }) => {
@@ -302,10 +302,14 @@ export const FileReferenceRow = ({
 				<FileReferencePill
 					key={file.path}
 					path={file.path}
+					repoFullName={file.repoFullName}
+					fileUrl={file.fileUrl}
 					onRemove={() => setFileReferences(fileReferences.filter(f => f.path !== file.path))}
 				/>
 			))}
-			{existingLinkedFiles?.map(file => <FileReferencePill key={file.path} path={file.path} />)}
+			{existingLinkedFiles?.map(file => (
+				<FileReferencePill key={file.path} path={file.path} repoFullName={file.repoFullName} fileUrl={file.fileUrl} />
+			))}
 			{isAtFileLimit && <span className="text-xs text-red-600">Maximum of 8 files reached</span>}
 		</div>
 	);

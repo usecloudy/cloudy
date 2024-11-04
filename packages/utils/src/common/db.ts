@@ -32,4 +32,5 @@ export interface RepositoryConnection {
     installation_id: string;
     owner: string;
     name: string;
+    default_branch: string;
 }

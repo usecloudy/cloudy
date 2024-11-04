@@ -158,6 +158,7 @@ export const ProjectSettingsView = () => {
 					name: repo.name,
 					owner: repo.fullName.split("/")[0],
 					installation_id: String(repo.installationId),
+					default_branch: repo.defaultBranch,
 				}),
 			);
 		},

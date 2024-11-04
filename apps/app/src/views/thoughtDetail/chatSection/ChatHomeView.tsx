@@ -74,9 +74,9 @@ export const ChatHomeView = () => {
 				<h3 className="text-lg font-semibold">Recent Threads</h3>
 			</div>
 			{isLoadingThreads ? (
-				<LoadingSpinner size="md" />
+				<LoadingSpinner size="sm" />
 			) : !threadsForDoc || threadsForDoc?.length === 0 ? (
-				<div className="flex flex-col items-center justify-center gap-y-2 text-secondary">
+				<div className="flex flex-col items-center justify-center gap-y-2 py-2 text-sm text-tertiary">
 					<p>No chat threads yet</p>
 					<p>Start a new conversation below</p>
 				</div>

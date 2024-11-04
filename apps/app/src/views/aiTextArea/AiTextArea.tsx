@@ -25,7 +25,7 @@ interface AiTextAreaProps {
 	submitButtonText?: string;
 	showEditButton?: boolean;
 	onEdit?: () => void;
-	existingLinkedFiles?: { path: string }[];
+	existingLinkedFiles?: { path: string; repoFullName: string; fileUrl: string }[];
 	disableNewFileReference?: boolean;
 }
 

@@ -6,6 +6,7 @@ import { cn } from "src/utils";
 
 // import { AiFeed } from "./AiFeed";
 import { RelatedNotes } from "./RelatedNotes";
+import { LinkedFiles } from "./rightSidebar/LinkedFiles";
 import { ThoughtContext } from "./thoughtContext";
 
 export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
@@ -28,6 +29,7 @@ export const ControlColumn = ({ thoughtId }: { thoughtId?: string }) => {
 					</Button>
 				</div>
 				<div className="flex w-full flex-col gap-4 md:flex-row lg:flex-col">
+					<LinkedFiles />
 					<div className="flex w-full flex-col gap-4 md:w-1/2 lg:w-full">
 						<RelatedNotes thoughtId={thoughtId} />
 					</div>

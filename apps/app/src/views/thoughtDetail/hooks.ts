@@ -676,14 +676,23 @@ export const useExistingLinkedFiles = (docId: string) => {
 		queryKey: thoughtQueryKeys.existingLinkedFiles(docId),
 		queryFn: async () => {
 			const repoReferences = handleSupabaseError(
-				await supabase.from("document_repo_links").select("*").eq("doc_id", docId),
+				await supabase
+					.from("document_repo_links")
+					.select("*, repository_connections(owner, name, default_branch)")
+					.eq("doc_id", docId),
 			);
 
-			return repoReferences.map(repoReference => ({
-				...repoReference,
-				repoConnectionId: repoReference.repo_connection_id,
-				fileName: repoReference.path.split("/").pop(),
-			}));
+			return repoReferences.map(repoReference => {
+				const branch = repoReference.branch ?? repoReference.repository_connections!.default_branch;
+				return {
+					...repoReference,
+					repoConnectionId: repoReference.repo_connection_id,
+					fileName: repoReference.path.split("/").pop(),
+					repoFullName: `${repoReference.repository_connections!.owner}/${repoReference.repository_connections!.name}`,
+					branch,
+					fileUrl: `https://github.com/${repoReference.repository_connections!.owner}/${repoReference.repository_connections!.name}/blob/${branch}/${repoReference.path}`,
+				};
+			});
 		},
 	});
 };
