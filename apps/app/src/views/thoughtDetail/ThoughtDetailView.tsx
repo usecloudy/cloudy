@@ -465,12 +465,10 @@ const EditorView = ({
 							<LoadingSpinner size="sm" />
 						</div>
 					)}
-					{/* <CommentColumn editor={editor} thoughtId={thoughtId} disableUpdatesRef={disableUpdatesRef} /> */}
 				</div>
 				<div className="h-[75dvh]" />
 			</div>
 			<FooterRow />
-			{/* {editor && <AiEditorMenu />} */}
 		</div>
 	);
 };
