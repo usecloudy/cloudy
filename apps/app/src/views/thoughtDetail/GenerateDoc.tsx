@@ -41,7 +41,7 @@ const useCreateNoteWithGeneration = () => {
 			handleSupabaseError(
 				await supabase.from("document_repo_links").insert(
 					payload.references.map(ref => ({
-						doc_id: doc.id,
+						document_id: doc.id,
 						path: ref.path,
 						repo_connection_id: ref.repoConnectionId,
 						type: ref.type,

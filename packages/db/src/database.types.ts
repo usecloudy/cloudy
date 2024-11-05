@@ -717,6 +717,7 @@ export type Database = {
           completed_at: string | null
           content: string
           created_at: string
+          file_references: Json | null
           id: string
           role: string
           selection_text: string | null
@@ -728,6 +729,7 @@ export type Database = {
           completed_at?: string | null
           content: string
           created_at?: string
+          file_references?: Json | null
           id?: string
           role?: string
           selection_text?: string | null
@@ -739,6 +741,7 @@ export type Database = {
           completed_at?: string | null
           content?: string
           created_at?: string
+          file_references?: Json | null
           id?: string
           role?: string
           selection_text?: string | null
@@ -938,7 +941,7 @@ export type Database = {
         Row: {
           branch: string | null
           created_at: string
-          doc_id: string
+          document_id: string
           id: string
           path: string
           repo_connection_id: string
@@ -947,7 +950,7 @@ export type Database = {
         Insert: {
           branch?: string | null
           created_at?: string
-          doc_id: string
+          document_id: string
           id?: string
           path: string
           repo_connection_id: string
@@ -956,7 +959,7 @@ export type Database = {
         Update: {
           branch?: string | null
           created_at?: string
-          doc_id?: string
+          document_id?: string
           id?: string
           path?: string
           repo_connection_id?: string
@@ -965,7 +968,7 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "document_file_links_doc_id_fkey"
-            columns: ["doc_id"]
+            columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "thoughts"
             referencedColumns: ["id"]

@@ -679,7 +679,7 @@ export const useExistingLinkedFiles = (docId: string) => {
 				await supabase
 					.from("document_repo_links")
 					.select("*, repository_connections(owner, name, default_branch)")
-					.eq("doc_id", docId),
+					.eq("document_id", docId),
 			);
 
 			return repoReferences.map(repoReference => {

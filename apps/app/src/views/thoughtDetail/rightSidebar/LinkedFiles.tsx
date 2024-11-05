@@ -36,7 +36,7 @@ const useSetFileReferences = () => {
 		mutationFn: async (fileReferences: RepoReference[]) => {
 			// Get existing links
 			const existingLinks = handleSupabaseError(
-				await supabase.from("document_repo_links").select("*").eq("doc_id", thoughtId),
+				await supabase.from("document_repo_links").select("*").eq("document_id", thoughtId),
 			);
 
 			// Find links to delete (ones that exist but aren't in new fileReferences)
@@ -51,7 +51,7 @@ const useSetFileReferences = () => {
 					await supabase
 						.from("document_repo_links")
 						.delete()
-						.eq("doc_id", thoughtId)
+						.eq("document_id", thoughtId)
 						.in(
 							"path",
 							linksToDelete.map(link => link.path),
@@ -64,7 +64,7 @@ const useSetFileReferences = () => {
 				handleSupabaseError(
 					await supabase.from("document_repo_links").insert(
 						linksToAdd.map(file => ({
-							doc_id: thoughtId,
+							document_id: thoughtId,
 							repo_connection_id: file.repoConnectionId,
 							path: file.path,
 							type: "file" as const,

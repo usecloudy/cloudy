@@ -28,7 +28,7 @@ export const POST = async (req: NextRequest) => {
 
 const getFileContents = async (docId: string, supabase: SupabaseClient<Database>) => {
 	const repoReferences = handleSupabaseError(
-		await supabase.from("document_repo_links").select("path, repo_connection_id, type").eq("doc_id", docId),
+		await supabase.from("document_repo_links").select("path, repo_connection_id, type").eq("document_id", docId),
 	);
 
 	const results = (

@@ -90,7 +90,7 @@ export const POST = async (request: NextRequest) => {
 				// Get all document links for these repositories
 				const { data: docLinks } = await supabase
 					.from("document_repo_links")
-					.select("repo_link_id:id, doc_id, path, repo_connection_id")
+					.select("repo_link_id:id, document_id, path, repo_connection_id")
 					.in(
 						"repo_connection_id",
 						repoConnections.map(rc => rc.id),
@@ -137,7 +137,7 @@ export const POST = async (request: NextRequest) => {
 						(acc, doc) => {
 							if (!acc[doc.commit_sha]) {
 								acc[doc.commit_sha] = {
-									doc_id: doc.doc_id,
+									document_id: doc.document_id,
 									timestamp: doc.commit_timestamp,
 									repo_connection_id: doc.repo_connection_id,
 									docs: [],
@@ -148,7 +148,7 @@ export const POST = async (request: NextRequest) => {
 						},
 						{} as Record<
 							string,
-							{ timestamp: string; doc_id: string; repo_connection_id: string; docs: typeof affectedDocs }
+							{ timestamp: string; document_id: string; repo_connection_id: string; docs: typeof affectedDocs }
 						>,
 					);
 
@@ -161,7 +161,7 @@ export const POST = async (request: NextRequest) => {
 									docs.map(doc => ({
 										triggered_at: doc.commit_timestamp,
 										commit_sha: commitSha,
-										document_id: doc.doc_id,
+										document_id: doc.document_id,
 										repo_connection_id,
 									})),
 								),
