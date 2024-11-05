@@ -1,5 +1,11 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { ChatMessageRecord, ThreadRespondPostRequestBody, fixOneToOne, handleSupabaseError } from "@cloudy/utils/common";
+import {
+	ChatMessageRecord,
+	RepoReference,
+	ThreadRespondPostRequestBody,
+	fixOneToOne,
+	handleSupabaseError,
+} from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CoreMessage, streamText } from "ai";
@@ -8,7 +14,7 @@ import { NextRequest } from "next/server";
 
 import { heliconeAnthropic, heliconeOpenAI } from "app/api/utils/helicone";
 import { makeHeliconeHeaders } from "app/api/utils/helicone";
-import { getFileContentsPrompt } from "app/api/utils/repoContext";
+import { getContextForFileReferences, getFileContentsPrompt } from "app/api/utils/repoContext";
 import { getSupabase } from "app/api/utils/supabase";
 import { getContextForThought } from "app/api/utils/thoughts";
 
@@ -135,16 +141,18 @@ const respond = async (payload: ThreadRespondPostRequestBody, supabase: Supabase
 	// }
 	const hasSelection = false;
 
-	let filesText: string | undefined;
-	let contextText: string | undefined;
-	if (document) {
-		filesText = await getFileContentsPrompt(document.id, supabase);
-
-		contextText = await getContextForThought(document.id, chatThread.workspace_id, supabase, {
-			...heliconeHeaders,
-			"Helicone-Session-Path": "respond-to-selection/context",
-		});
+	if (!document) {
+		throw new Error("Document not found");
 	}
+
+	const filesText = await getFileContentsPrompt(document.id, supabase);
+	const contextText = await getContextForThought(document.id, chatThread.workspace_id, supabase, {
+		...heliconeHeaders,
+		"Helicone-Session-Path": "respond-to-selection/context",
+	});
+	const messageContexts = threadMessages.map(message =>
+		message.file_references ? getContextForFileReferences(message.file_references as RepoReference[], supabase) : null,
+	);
 
 	const llmMessages = makeSelectionRespondPrompts({
 		filesText,

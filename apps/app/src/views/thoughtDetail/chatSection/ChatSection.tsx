@@ -63,9 +63,9 @@ export const ChatSection = () => {
 					onSubmit={handleSubmit}
 					onCancel={handleOnCancel}
 					existingLinkedFiles={existingLinkedFiles}
-					disableNewFileReference
 					placeholder="Ask a question or describe the change you want to make"
 					submitButtonText={threadId ? "Reply in thread" : "Start new thread"}
+					addButtonText="Files"
 				/>
 			</div>
 		</div>

@@ -186,11 +186,13 @@ export const FileReferenceRow = ({
 	fileReferences,
 	setFileReferences,
 	disableAdd,
+	addButtonText = "Link files",
 }: {
 	fileReferences: RepoReference[];
 	existingLinkedFiles?: { path: string; repoFullName: string; fileUrl: string }[];
 	setFileReferences: (files: RepoReference[]) => void;
 	disableAdd?: boolean;
+	addButtonText?: string;
 }) => {
 	const [query, setQuery] = useState("");
 	const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
@@ -251,7 +253,7 @@ export const FileReferenceRow = ({
 					trigger={
 						<Button size={fileReferences.length === 0 ? "xs" : "icon-xs"} variant="outline">
 							<PlusIcon className="size-4" />
-							{fileReferences.length === 0 && <span>Link files</span>}
+							{fileReferences.length === 0 && <span>{addButtonText}</span>}
 						</Button>
 					}>
 					<div className="w-[32rem]">

@@ -27,6 +27,7 @@ interface AiTextAreaProps {
 	onEdit?: () => void;
 	existingLinkedFiles?: { path: string; repoFullName: string; fileUrl: string }[];
 	disableNewFileReference?: boolean;
+	addButtonText?: string;
 }
 
 const useHasGitRepoConnected = () => {
@@ -46,6 +47,7 @@ export const AiTextArea = ({
 	existingLinkedFiles,
 	disableNewFileReference,
 	secondaryButtonText,
+	addButtonText,
 }: AiTextAreaProps) => {
 	const workspace = useWorkspace();
 	const project = useProject();
@@ -136,6 +138,7 @@ export const AiTextArea = ({
 						setFileReferences={setFileReferences}
 						existingLinkedFiles={existingLinkedFiles}
 						disableAdd={disableNewFileReference}
+						addButtonText={addButtonText}
 					/>
 				) : project ? (
 					<Link to={makeProjectSettingsUrl(workspace.slug, project.slug)}>
