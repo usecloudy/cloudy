@@ -6,7 +6,7 @@ import { subSeconds } from "date-fns";
 import { JSDOM } from "jsdom";
 import { NextRequest, NextResponse } from "next/server";
 
-import { getSupabase } from "app/api/utils/supabase";
+import { withProtectedRoute } from "app/api/utils/supabase";
 
 type ThoughtRecord = Database["public"]["Tables"]["thoughts"]["Row"];
 
@@ -43,10 +43,8 @@ const makeCacheKey = (thoughtId: string) => `thoughts:${thoughtId}:link-generati
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-export const POST = async (req: NextRequest) => {
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "service" });
-
-	const payload = (await req.json()) as Payload;
+export const POST = withProtectedRoute(async ({ request, supabase }) => {
+	const payload = (await request.json()) as Payload;
 
 	if (payload.type === "DELETE") {
 		return NextResponse.json(
@@ -74,7 +72,7 @@ export const POST = async (req: NextRequest) => {
 	return NextResponse.json({
 		message: "Link generation status updated",
 	});
-};
+}, "service");
 
 const handleCreateLinks = async (payload: InsertPayload | UpdatePayload, supabase: SupabaseClient<Database>) => {
 	const mentionTags = findMentionTags(payload.record.content ?? "");

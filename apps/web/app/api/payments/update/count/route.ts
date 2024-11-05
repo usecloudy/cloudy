@@ -3,7 +3,7 @@ import { Database } from "@repo/db";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getCustomerSubscriptionStatus, stripe } from "app/api/utils/stripe";
-import { getSupabase } from "app/api/utils/supabase";
+import { withProtectedRoute } from "app/api/utils/supabase";
 import { getWorkspaceUserCount } from "app/api/utils/workspaces";
 
 export const dynamic = "force-dynamic";
@@ -35,10 +35,8 @@ type DeletePayload = {
 
 type Payload = InsertPayload | UpdatePayload | DeletePayload;
 
-export const POST = async (req: NextRequest) => {
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "service" });
-
-	const payload = (await req.json()) as Payload;
+export const POST = withProtectedRoute(async ({ request, supabase }) => {
+	const payload = (await request.json()) as Payload;
 
 	const workspaceId = payload.record?.workspace_id ?? payload.old_record?.workspace_id;
 
@@ -98,4 +96,4 @@ export const POST = async (req: NextRequest) => {
 		console.error("Error updating subscription:", error);
 		return NextResponse.json({ error: "Failed to update subscription" }, { status: 500 });
 	}
-};
+}, "service");

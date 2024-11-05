@@ -73,7 +73,7 @@ export const POST = async (request: NextRequest) => {
 					);
 				}
 
-				const supabase = getSupabase({ mode: "service", bypassAuth: true });
+				const supabase = await getSupabase({ mode: "service", bypassAuth: true });
 
 				// Find all repository connections for this repo
 				const { data: repoConnections } = await supabase

@@ -4,7 +4,7 @@ import { getAccessTokenFromOauthCode, getOctokitUserClient } from "app/api/utils
 import { getSupabase } from "app/api/utils/supabase";
 
 export const GET = async (request: NextRequest) => {
-	getSupabase({ authHeader: request.headers.get("Authorization"), mode: "client" });
+	await getSupabase({ authHeader: request.headers.get("Authorization"), mode: "client" });
 
 	const oauthCode = request.nextUrl.searchParams.get("code");
 	const installationId = request.nextUrl.searchParams.get("installationId");

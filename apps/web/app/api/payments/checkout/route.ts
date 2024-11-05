@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 export const GET = async (req: NextRequest) => {
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
+	const supabase = await getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
 	const { searchParams } = new URL(req.url);
 	const wsSlug = searchParams.get("wsSlug");

@@ -135,7 +135,7 @@ ${missionBlurb}
 export const maxDuration = 45;
 
 export async function GET(req: NextRequest) {
-	getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
+	await getSupabase({ request: req, mode: "client" });
 	const url = req.nextUrl.searchParams.get("url");
 
 	if (!url) {

@@ -5,7 +5,7 @@ import { __getOctokitDevTokenClient, getOctokitAppClient } from "app/api/utils/g
 import { getSupabase } from "app/api/utils/supabase";
 
 export const GET = async (request: NextRequest) => {
-	const supabase = getSupabase({ authHeader: request.headers.get("Authorization"), mode: "client" });
+	const supabase = await getSupabase({ authHeader: request.headers.get("Authorization"), mode: "client" });
 
 	const { searchParams } = request.nextUrl;
 

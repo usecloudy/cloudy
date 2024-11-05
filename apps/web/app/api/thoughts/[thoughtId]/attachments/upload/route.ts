@@ -27,7 +27,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 				}
 
 				// This checks and ensures the user is authenticated and authorized to upload a file
-				getSupabase({ authHeader, mode: "client" });
+				await getSupabase({ authHeader, mode: "client" });
 
 				return {
 					allowedContentTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
@@ -44,7 +44,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 					throw new Error("Unauthorized");
 				}
 
-				const supabase = getSupabase({ authHeader: parsedClientPayload.Authorization, mode: "client" });
+				const supabase = await getSupabase({ authHeader: parsedClientPayload.Authorization, mode: "client" });
 
 				handleSupabaseError(
 					await supabase.from("thought_attachments").insert({

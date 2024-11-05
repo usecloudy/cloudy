@@ -4,6 +4,7 @@ import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CoreMessage, streamText } from "ai";
 import { randomUUID } from "crypto";
+import { NextRequest } from "next/server";
 
 import { heliconeAnthropic, heliconeOpenAI } from "app/api/utils/helicone";
 import { makeHeliconeHeaders } from "app/api/utils/helicone";
@@ -11,8 +12,8 @@ import { getFileContentsPrompt } from "app/api/utils/repoContext";
 import { getSupabase } from "app/api/utils/supabase";
 import { getContextForThought } from "app/api/utils/thoughts";
 
-export const POST = async (req: Request) => {
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
+export const POST = async (req: NextRequest) => {
+	const supabase = await getSupabase({ request: req, mode: "client" });
 
 	const payload = (await req.json()) as ThreadRespondPostRequestBody;
 

@@ -3,13 +3,13 @@ import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CoreMessage, streamText } from "ai";
 import { randomUUID } from "crypto";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { heliconeAnthropic } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
 
-export const POST = async (req: Request) => {
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
+export const POST = async (req: NextRequest) => {
+	const supabase = await getSupabase({ request: req, mode: "client" });
 
 	const payload = (await req.json()) as ApplyChangePostRequestBody;
 

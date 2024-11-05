@@ -20,7 +20,7 @@ interface Payload {
 }
 
 export const POST = async (req: NextRequest) => {
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
+	const supabase = await getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
 	const payload = (await req.json()) as Payload;
 

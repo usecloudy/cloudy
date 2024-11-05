@@ -11,7 +11,7 @@ interface Payload {
 }
 
 export const POST = async (request: NextRequest) => {
-	getSupabase({ authHeader: request.headers.get("Authorization"), mode: "client" });
+	await getSupabase({ authHeader: request.headers.get("Authorization"), mode: "client" });
 
 	const payload = await request.json();
 	const { workspaceId, installationId, accessToken } = payload as Payload;
@@ -34,7 +34,7 @@ export const POST = async (request: NextRequest) => {
 		}
 
 		// Authorize a temporary service role supabase client to create the integration record
-		const serviceSupabase = getSupabase({ mode: "service", bypassAuth: true });
+		const serviceSupabase = await getSupabase({ mode: "service", bypassAuth: true });
 
 		handleSupabaseError(
 			await serviceSupabase.from("workspace_github_connections").insert({

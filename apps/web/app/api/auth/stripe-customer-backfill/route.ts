@@ -10,7 +10,7 @@ export const fetchCache = "force-no-store";
 export const POST = async (req: NextRequest) => {
 	console.log("Starting stripe customer backfill");
 
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "service" });
+	const supabase = await getSupabase({ authHeader: req.headers.get("Authorization"), mode: "service" });
 
 	const postgresUsersWithoutStripeCustomerId = handleSupabaseError(
 		await supabase.from("users").select("*").is("stripe_customer_id", null),

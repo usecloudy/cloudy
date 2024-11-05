@@ -9,7 +9,7 @@ export const fetchCache = "force-no-store";
 export const maxDuration = 30;
 
 export const GET = async (req: NextRequest, { params: { thoughtId } }: { params: { thoughtId: string } }) => {
-	const supabase = getSupabase({ authHeader: "Bearer labu-labu-labubu", mode: "service" });
+	const supabase = await getSupabase({ request: req, mode: "client" });
 
 	const thought = handleSupabaseError(await supabase.from("thoughts").select("title, content").eq("id", thoughtId).single());
 

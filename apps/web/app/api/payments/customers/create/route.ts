@@ -9,7 +9,7 @@ export const fetchCache = "force-no-store";
 
 // @deprecated, to be fully handled in handle-user
 export const POST = async (req: NextRequest) => {
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
+	const supabase = await getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
 	const {
 		data: { user },

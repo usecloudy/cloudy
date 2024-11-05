@@ -6,7 +6,7 @@ import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
 
 import { __getOctokitDevTokenClient, getOctokitAppClient } from "app/api/utils/github";
-import { heliconeAnthropic, heliconeOpenAI } from "app/api/utils/helicone";
+import { heliconeAnthropic } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
 
 interface Payload {
@@ -19,7 +19,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic"; // always run dynamically
 
 export const POST = async (req: NextRequest) => {
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
+	const supabase = await getSupabase({ request: req, mode: "client" });
 
 	const payload = (await req.json()) as Payload;
 

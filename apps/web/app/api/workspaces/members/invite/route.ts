@@ -13,7 +13,7 @@ type Payload = {
 };
 
 export const POST = async (req: NextRequest) => {
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
+	const supabase = await getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
 	// Extract data from request body
 	const { email, workspaceId } = (await req.json()) as Payload;
@@ -30,7 +30,7 @@ export const POST = async (req: NextRequest) => {
 	const workspace = handleSupabaseError(await supabase.from("workspaces").select("*").eq("id", workspaceId).single());
 
 	// Generate invitation link (you may want to create a separate API for handling invitations)
-	const supabaseAdmin = getSupabase({ mode: "service", bypassAuth: true });
+	const supabaseAdmin = await getSupabase({ mode: "service", bypassAuth: true });
 	const { data, error } = await supabaseAdmin.auth.admin.generateLink({
 		type: "invite",
 		email,

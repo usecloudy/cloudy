@@ -10,7 +10,7 @@ export const fetchCache = "force-no-store";
 
 export const GET = async (req: NextRequest) => {
 	console.log("GET /api/payments/customers/status");
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
+	const supabase = await getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
 	const wsSlug = req.nextUrl.searchParams.get("wsSlug");
 

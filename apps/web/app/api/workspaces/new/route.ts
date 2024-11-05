@@ -12,7 +12,7 @@ type RequestBody = {
 export const POST = async (req: NextRequest) => {
 	const { name, slug } = (await req.json()) as RequestBody;
 
-	const supabase = getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
+	const supabase = await getSupabase({ authHeader: req.headers.get("Authorization"), mode: "client" });
 
 	const {
 		data: { user },
