@@ -9,49 +9,12 @@ import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { ThoughtCard } from "src/components/ThoughtCard";
-import { fixOneToOne } from "src/utils";
 
 const useRelatedThoughts = (thoughtId?: string) => {
 	useEffect(() => {
 		if (!thoughtId) {
 			return;
 		}
-
-		const thoughtSummaryMatchesChannel = supabase
-			.channel("thoughtSummaryMatches")
-			.on(
-				"postgres_changes",
-				{
-					event: "*",
-					schema: "public",
-					table: "thought_relations",
-					filter: `matches=eq.${thoughtId}`,
-				},
-				() => {
-					queryClient.invalidateQueries({
-						queryKey: thoughtQueryKeys.relatedThoughts(thoughtId),
-					});
-				},
-			)
-			.subscribe();
-
-		const thoughtSummaryMatchedByChannel = supabase
-			.channel("thoughtSummaryMatchedBy")
-			.on(
-				"postgres_changes",
-				{
-					event: "*",
-					schema: "public",
-					table: "thought_relations",
-					filter: `matched_by=eq.${thoughtId}`,
-				},
-				() => {
-					queryClient.invalidateQueries({
-						queryKey: thoughtQueryKeys.relatedThoughts(thoughtId),
-					});
-				},
-			)
-			.subscribe();
 
 		const thoughtLinksChannel = supabase
 			.channel("thoughtLinks")
@@ -72,8 +35,6 @@ const useRelatedThoughts = (thoughtId?: string) => {
 			.subscribe();
 
 		return () => {
-			thoughtSummaryMatchesChannel.unsubscribe();
-			thoughtSummaryMatchedByChannel.unsubscribe();
 			thoughtLinksChannel.unsubscribe();
 		};
 	}, [thoughtId]);
@@ -87,59 +48,6 @@ const useRelatedThoughts = (thoughtId?: string) => {
 					relatedData: [],
 				};
 			}
-
-			const data = handleSupabaseError(
-				await supabase
-					.from("thought_relations")
-					.select(
-						`
-                        matches:thoughts!matches (
-								id,
-								title,
-								content_md,
-								content_plaintext,
-								created_at,
-								updated_at,
-								collection_thoughts (
-									collections (
-										id,
-										title
-									)
-								)
-							),
-						matched_by:thoughts!matched_by (
-							id,
-							title,
-							content_md,
-							content_plaintext,
-							created_at,
-							updated_at,
-							collection_thoughts (
-								collections (
-									id,
-									title
-								)
-							)
-						),
-						similarity_score
-                    `,
-					)
-					.or(`matched_by.eq.${thoughtId},matches.eq.${thoughtId}`)
-					.order("similarity_score", { ascending: false }),
-			).flatMap(d => {
-				if (fixOneToOne(d.matched_by)?.id === thoughtId) {
-					const matches = fixOneToOne(d.matches);
-					if (matches) {
-						return [matches];
-					}
-					return [];
-				}
-				const matchedBy = fixOneToOne(d.matched_by);
-				if (matchedBy) {
-					return [matchedBy];
-				}
-				return [];
-			});
 
 			const linkedFromData = handleSupabaseError(
 				await supabase
@@ -207,20 +115,8 @@ const useRelatedThoughts = (thoughtId?: string) => {
 					return b.updated_at.localeCompare(a.updated_at);
 				});
 
-			const relatedData = data.map(thought => ({
-				...thought,
-				isLinkedManually: false,
-				collections: thought.collection_thoughts
-					?.map(c => ({
-						id: c.collections?.id!,
-						title: c.collections?.title ?? null,
-					}))
-					.filter(c => c.id),
-			}));
-
 			return {
 				linkedData,
-				relatedData,
 			};
 		},
 		throwOnError: true,

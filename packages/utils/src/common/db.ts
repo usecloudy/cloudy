@@ -4,9 +4,6 @@ export type WorkspaceRecord = Database["public"]["Tables"]["workspaces"]["Row"];
 
 export type UserRecord = Database["public"]["Tables"]["users"]["Row"];
 
-export type ThoughtChatThreadRecord =
-    Database["public"]["Tables"]["thought_chat_threads"]["Row"];
-
 export type CollectionThoughtRecord =
     Database["public"]["Tables"]["collection_thoughts"]["Row"];
 
