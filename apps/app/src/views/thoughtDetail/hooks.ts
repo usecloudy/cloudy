@@ -662,11 +662,16 @@ export const useDefaultThreadId = () => {
 	return useQuery({
 		queryKey: thoughtQueryKeys.defaultThreadId(thoughtId),
 		queryFn: async () => {
-			const { id: threadId } = handleSupabaseError(
-				await supabase.from("chat_threads").select("id").eq("document_id", thoughtId).eq("is_default", true).single(),
+			const result = handleSupabaseError(
+				await supabase
+					.from("chat_threads")
+					.select("id")
+					.eq("document_id", thoughtId)
+					.eq("is_default", true)
+					.maybeSingle(),
 			);
 
-			return threadId;
+			return result?.id ?? null;
 		},
 	});
 };
