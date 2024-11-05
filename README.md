@@ -1,8 +1,18 @@
-# Cloudy
+# ☁️ Cloudy
 
-This is the monorepo for Cloudy.
+The monorepo for Cloudy, the AI technical document writing tool. You can access the live product at [usecloudy.com](https://usecloudy.com).
+
+> ⚠️ Although this repo is open source, we are currently not ready for self hosting or have a clear guide on how to run it locally. This is a WIP and we will update this README with instructions on how to run it locally when we are ready.
+
+This monorepo contains the following apps:
+
+- [app](./apps/app) - The SPA React app that runs the main Cloudy frontend.
+- [supabase](./apps/supabase) - The database and Postgres functions.
+- [web](./apps/web) - The Next.js app that contains the marketing site and the serverless functions hosted on Vercel for the API.
 
 ## Getting Started
+
+> ⚠️ Attempt running Cloudy locally or self hosting at your own risk for the time being.
 
 ### Prerequisites
 
