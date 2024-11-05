@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { heliconeOpenAI, makeHeliconeHeaders } from "app/api/utils/helicone";
 import { setupPuppeteer } from "app/api/utils/puppeteer";
-import { getSupabase } from "app/api/utils/supabase";
+import { getSupabase, withProtectedRoute } from "app/api/utils/supabase";
 
 dotenv.config();
 
@@ -134,9 +134,10 @@ ${missionBlurb}
 
 export const maxDuration = 45;
 
-export async function GET(req: NextRequest) {
-	await getSupabase({ request: req, mode: "client" });
-	const url = req.nextUrl.searchParams.get("url");
+export const dynamic = "force-dynamic";
+
+export const GET = withProtectedRoute(async ({ request }) => {
+	const url = request.nextUrl.searchParams.get("url");
 
 	if (!url) {
 		return NextResponse.json({ error: "No URL provided" }, { status: 400 });
@@ -155,4 +156,4 @@ export async function GET(req: NextRequest) {
 	console.log("AI Response:", aiResponse);
 
 	return NextResponse.json(aiResponse);
-}
+}, "client");
