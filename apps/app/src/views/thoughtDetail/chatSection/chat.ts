@@ -94,6 +94,7 @@ export const triggerThread = async (threadId: string) => {
 				if (draft) {
 					const newMessages = draft.messages.filter(message => message.id !== newMessage.id);
 
+					// @ts-ignore
 					newMessages.push({
 						...newMessage,
 						content: mdContent,
@@ -177,6 +178,7 @@ export const ChatMessageContext = createContext<{
 		thread_id: "",
 		user_id: null,
 		selection_text: null,
+		file_references: [],
 	},
 });
 
