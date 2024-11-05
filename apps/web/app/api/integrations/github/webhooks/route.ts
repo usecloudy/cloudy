@@ -26,6 +26,23 @@ interface WebhookPushEvent {
 	}>;
 }
 
+interface WebhookInstallationEvent {
+	action: "created" | "deleted";
+	installation: {
+		id: number;
+		account: {
+			id: number;
+			login: string;
+			type: string;
+		};
+	};
+	repositories?: Array<{
+		id: number;
+		name: string;
+		full_name: string;
+	}>;
+}
+
 export const maxDuration = 60;
 
 // Verify that the webhook is actually from GitHub
@@ -51,11 +68,32 @@ export const POST = async (request: NextRequest) => {
 		return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
 	}
 
-	const data = JSON.parse(payload) as WebhookPushEvent;
-
 	try {
 		switch (event) {
+			case "installation": {
+				const data = JSON.parse(payload) as WebhookInstallationEvent;
+
+				if (data.action === "created") {
+					const supabase = await getSupabase({ mode: "service", bypassAuth: true });
+
+					// Store the new installation in the pending installations table
+					handleSupabaseError(
+						await supabase.from("_github_pending_installations").insert({
+							payload,
+						}),
+					);
+
+					return NextResponse.json({
+						success: true,
+						message: "Installation pending",
+					});
+				}
+				break;
+			}
+
 			case "push": {
+				const data = JSON.parse(payload) as WebhookPushEvent;
+
 				// Only process pushes to the default branch
 				const branchName = data.ref.replace("refs/heads/", "");
 				if (branchName !== data.repository.default_branch) {

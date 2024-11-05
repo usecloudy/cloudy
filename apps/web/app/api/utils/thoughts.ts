@@ -5,7 +5,6 @@ import { generateText } from "ai";
 
 import { heliconeOpenAI } from "./helicone";
 import { getWorkspaceMemoryPromptDump } from "./memory";
-import { getRelatedThoughts } from "./relatedChunks";
 
 export const checkForSignal = async (signal: string, thoughtId: string, supabase: SupabaseClient) => {
 	const thought = handleSupabaseError(await supabase.from("thoughts").select("id, signals").eq("id", thoughtId).single());
@@ -91,17 +90,6 @@ ${linkedThoughts.map(thought => thoughtToPrompt(thought)).join("\n")}
 		: "";
 };
 
-export const getRelatedThoughtsPromptDump = async (thoughtId: string, supabase: SupabaseClient<Database>) => {
-	const relatedThoughts = await getRelatedThoughts(thoughtId, supabase);
-
-	return relatedThoughts.length > 0
-		? `Below are some related notes to the current note, use this as context:
-${relatedThoughts.map(thought => thoughtToPrompt(thought)).join("\n")}
-
-`
-		: "";
-};
-
 export const getContextForThought = async (
 	thoughtId: string,
 	workspaceId: string,
@@ -110,16 +98,15 @@ export const getContextForThought = async (
 ) => {
 	const workspaceMemoryText = await getWorkspaceMemoryPromptDump(workspaceId, supabase);
 	const linkedThoughtsText = await getLinkedThoughtsPromptDump(thoughtId, supabase);
-	const relatedThoughtsText = await getRelatedThoughtsPromptDump(thoughtId, supabase);
 
-	if ((linkedThoughtsText + relatedThoughtsText).length > 2048) {
-		return condenseContext(linkedThoughtsText, relatedThoughtsText, headers);
+	if (linkedThoughtsText.length > 2048) {
+		return condenseContext(linkedThoughtsText, headers);
 	}
 
-	return workspaceMemoryText + linkedThoughtsText + relatedThoughtsText;
+	return workspaceMemoryText + linkedThoughtsText;
 };
 
-const condenseContext = async (linkedThoughtsText: string, relatedThoughtsText: string, headers: Record<string, string>) => {
+const condenseContext = async (linkedThoughtsText: string, headers: Record<string, string>) => {
 	const { text: condensedText } = await generateText({
 		model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18"),
 		temperature: 0.0,
@@ -127,8 +114,7 @@ const condenseContext = async (linkedThoughtsText: string, relatedThoughtsText: 
 			{
 				role: "user",
 				content: `Given the below relevant notes, provide a 1-2 paragraph summary of the most important information:
-${linkedThoughtsText}
-${relatedThoughtsText}`,
+${linkedThoughtsText}`,
 			},
 		],
 		headers,
