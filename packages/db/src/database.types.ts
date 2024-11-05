@@ -672,13 +672,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      generate_hmac: {
-        Args: {
-          secret_key: string
-          message: string
-        }
-        Returns: string
-      }
       jwt: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -711,6 +704,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      _github_pending_installations: {
+        Row: {
+          created_at: string
+          id: number
+          payload: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          payload: Json
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          payload?: Json
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           applied_suggestion_hashes: string[]
@@ -1291,303 +1302,6 @@ export type Database = {
           },
         ]
       }
-      thought_chat_threads: {
-        Row: {
-          applied_suggestion_hashes: string[]
-          comment_id: string
-          content: string
-          created_at: string
-          id: string
-          is_applied: boolean
-          is_loading_suggestion: boolean | null
-          role: string
-          status: string
-          suggestion: string | null
-        }
-        Insert: {
-          applied_suggestion_hashes?: string[]
-          comment_id: string
-          content: string
-          created_at?: string
-          id?: string
-          is_applied?: boolean
-          is_loading_suggestion?: boolean | null
-          role?: string
-          status?: string
-          suggestion?: string | null
-        }
-        Update: {
-          applied_suggestion_hashes?: string[]
-          comment_id?: string
-          content?: string
-          created_at?: string
-          id?: string
-          is_applied?: boolean
-          is_loading_suggestion?: boolean | null
-          role?: string
-          status?: string
-          suggestion?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "thought_chat_threads_comment_id_fkey"
-            columns: ["comment_id"]
-            isOneToOne: false
-            referencedRelation: "thought_chats"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      thought_chats: {
-        Row: {
-          action_prompt: string | null
-          content: string | null
-          created_at: string
-          embedding: string | null
-          file_references: Json | null
-          id: string
-          is_archived: boolean
-          is_pinned: boolean
-          is_seen: boolean
-          is_thread_loading: boolean
-          related_chunks: string[] | null
-          role: string
-          suggestion_index: number
-          thought_id: string | null
-          type: string
-        }
-        Insert: {
-          action_prompt?: string | null
-          content?: string | null
-          created_at?: string
-          embedding?: string | null
-          file_references?: Json | null
-          id?: string
-          is_archived?: boolean
-          is_pinned?: boolean
-          is_seen?: boolean
-          is_thread_loading?: boolean
-          related_chunks?: string[] | null
-          role?: string
-          suggestion_index?: number
-          thought_id?: string | null
-          type?: string
-        }
-        Update: {
-          action_prompt?: string | null
-          content?: string | null
-          created_at?: string
-          embedding?: string | null
-          file_references?: Json | null
-          id?: string
-          is_archived?: boolean
-          is_pinned?: boolean
-          is_seen?: boolean
-          is_thread_loading?: boolean
-          related_chunks?: string[] | null
-          role?: string
-          suggestion_index?: number
-          thought_id?: string | null
-          type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "thought_chats_thought_id_fkey"
-            columns: ["thought_id"]
-            isOneToOne: false
-            referencedRelation: "thoughts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      thought_chunk_matches: {
-        Row: {
-          created_at: string
-          id: string
-          matched_by: string
-          matches: string
-          matches_thought_id: string
-          similarity: number
-          thought_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          matched_by: string
-          matches: string
-          matches_thought_id: string
-          similarity: number
-          thought_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          matched_by?: string
-          matches?: string
-          matches_thought_id?: string
-          similarity?: number
-          thought_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "thought_chunk_matches_matched_by_fkey"
-            columns: ["matched_by"]
-            isOneToOne: false
-            referencedRelation: "thought_chunks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "thought_chunk_matches_matches_fkey"
-            columns: ["matches"]
-            isOneToOne: false
-            referencedRelation: "thought_chunks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "thought_chunk_matches_matches_thought_id_fkey"
-            columns: ["matches_thought_id"]
-            isOneToOne: false
-            referencedRelation: "thoughts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "thought_chunk_matches_thought_id_fkey"
-            columns: ["thought_id"]
-            isOneToOne: false
-            referencedRelation: "thoughts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      thought_chunks: {
-        Row: {
-          content: string
-          context: string
-          created_at: string
-          hash: string
-          id: string
-          thought_id: string
-        }
-        Insert: {
-          content: string
-          context: string
-          created_at?: string
-          hash: string
-          id?: string
-          thought_id: string
-        }
-        Update: {
-          content?: string
-          context?: string
-          created_at?: string
-          hash?: string
-          id?: string
-          thought_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "thought_chunks_thought_id_fkey"
-            columns: ["thought_id"]
-            isOneToOne: false
-            referencedRelation: "thoughts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      thought_embedding_matches: {
-        Row: {
-          created_at: string
-          id: string
-          matched_by: string
-          matches: string
-          matches_thought_id: string
-          similarity: number
-          thought_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          matched_by: string
-          matches: string
-          matches_thought_id: string
-          similarity?: number
-          thought_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          matched_by?: string
-          matches?: string
-          matches_thought_id?: string
-          similarity?: number
-          thought_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "thought_embedding_matches_matched_by_fkey"
-            columns: ["matched_by"]
-            isOneToOne: false
-            referencedRelation: "thought_embeddings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "thought_embedding_matches_matches_fkey"
-            columns: ["matches"]
-            isOneToOne: false
-            referencedRelation: "thought_embeddings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "thought_embedding_matches_matches_thought_id_fkey"
-            columns: ["matches_thought_id"]
-            isOneToOne: false
-            referencedRelation: "thoughts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "thought_embedding_matches_thought_id_fkey"
-            columns: ["thought_id"]
-            isOneToOne: false
-            referencedRelation: "thoughts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      thought_embeddings: {
-        Row: {
-          created_at: string
-          embedding: string
-          hash: string
-          id: string
-          index: number
-          thought_id: string
-        }
-        Insert: {
-          created_at?: string
-          embedding: string
-          hash: string
-          id?: string
-          index: number
-          thought_id: string
-        }
-        Update: {
-          created_at?: string
-          embedding?: string
-          hash?: string
-          id?: string
-          index?: number
-          thought_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "thought_embeddings_thought_id_fkey"
-            columns: ["thought_id"]
-            isOneToOne: false
-            referencedRelation: "thoughts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       thought_links: {
         Row: {
           created_at: string
@@ -1619,68 +1333,6 @@ export type Database = {
             foreignKeyName: "thought_links_linked_to_fkey"
             columns: ["linked_to"]
             isOneToOne: false
-            referencedRelation: "thoughts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      thought_relations: {
-        Row: {
-          created_at: string
-          matched_by: string
-          matches: string
-          similarity_score: number
-        }
-        Insert: {
-          created_at?: string
-          matched_by: string
-          matches: string
-          similarity_score: number
-        }
-        Update: {
-          created_at?: string
-          matched_by?: string
-          matches?: string
-          similarity_score?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "thought_summary_matches_matched_by_fkey"
-            columns: ["matched_by"]
-            isOneToOne: false
-            referencedRelation: "thoughts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "thought_summary_matches_matches_fkey"
-            columns: ["matches"]
-            isOneToOne: false
-            referencedRelation: "thoughts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      thought_summary_embeddings: {
-        Row: {
-          created_at: string
-          embedding: string
-          thought_id: string
-        }
-        Insert: {
-          created_at?: string
-          embedding: string
-          thought_id?: string
-        }
-        Update: {
-          created_at?: string
-          embedding?: string
-          thought_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "thought_summary_embeddings_thought_id_fkey"
-            columns: ["thought_id"]
-            isOneToOne: true
             referencedRelation: "thoughts"
             referencedColumns: ["id"]
           },
@@ -2036,35 +1688,24 @@ export type Database = {
             }
             Returns: unknown
           }
-      embedding_collection_intent_search: {
+      check_thought_access: {
         Args: {
-          query_embedding: string
-          match_threshold: number
-          max_results: number
-          p_workspace_id: string
-        }
-        Returns: {
-          collection_id: string
-          similarity_score: number
-        }[]
-      }
-      embedding_thought_summary_search: {
-        Args: {
-          query_embedding: string
-          match_threshold: number
-          max_results: number
-          p_workspace_id: string
-          ignore_thought_ids?: string[]
-        }
-        Returns: {
           thought_id: string
-          similarity_score: number
-        }[]
+          user_id: string
+        }
+        Returns: boolean
+      }
+      check_workspace_membership: {
+        Args: {
+          workspace_id: string
+          user_id: string
+        }
+        Returns: boolean
       }
       generate_hmac: {
         Args: {
           secret_key: string
-          message: string
+          payload: string
         }
         Returns: string
       }
@@ -2131,21 +1772,6 @@ export type Database = {
         }
         Returns: unknown
       }
-      insert_thought_chunk_matches: {
-        Args: {
-          p_thought_id: string
-          p_match_pairs: Json
-        }
-        Returns: {
-          created_at: string
-          id: string
-          matched_by: string
-          matches: string
-          matches_thought_id: string
-          similarity: number
-          thought_id: string
-        }[]
-      }
       ivfflat_bit_support: {
         Args: {
           "": unknown
@@ -2196,136 +1822,6 @@ export type Database = {
             }
             Returns: unknown
           }
-      match_thought_chats: {
-        Args: {
-          query_embedding: string
-          match_threshold: number
-          match_count: number
-          thought_id: string
-        }
-        Returns: {
-          action_prompt: string | null
-          content: string | null
-          created_at: string
-          embedding: string | null
-          file_references: Json | null
-          id: string
-          is_archived: boolean
-          is_pinned: boolean
-          is_seen: boolean
-          is_thread_loading: boolean
-          related_chunks: string[] | null
-          role: string
-          suggestion_index: number
-          thought_id: string | null
-          type: string
-        }[]
-      }
-      match_thought_chunks: {
-        Args: {
-          query_embedding: string
-          match_threshold: number
-          match_count: number
-          exclude_thought_id: string
-          input_workspace_id: string
-        }
-        Returns: {
-          id: string
-          thought_id: string
-          similarity: number
-        }[]
-      }
-      match_thoughts:
-        | {
-            Args: {
-              query_embedding: string
-              match_threshold: number
-              match_count: number
-              author_id: string
-            }
-            Returns: {
-              thought_id: string
-              similarity: number
-            }[]
-          }
-        | {
-            Args: {
-              query_embedding: string
-              match_threshold: number
-              match_count: number
-              author_id: string
-              collection_id: string
-            }
-            Returns: {
-              thought_id: string
-              similarity: number
-            }[]
-          }
-      multi_embedding_search: {
-        Args: {
-          query_embeddings: string[]
-          match_threshold: number
-          max_results: number
-        }
-        Returns: {
-          message_id: string
-          similarity_score: number
-        }[]
-      }
-      multi_embedding_thought_chunk_search:
-        | {
-            Args: {
-              query_embeddings: string[]
-              match_threshold: number
-              max_results: number
-              workspace_id: string
-            }
-            Returns: {
-              chunk_id: string
-              thought_id: string
-              similarity_score: number
-            }[]
-          }
-        | {
-            Args: {
-              query_embeddings: string[]
-              match_threshold: number
-              max_results: number
-              workspace_id: string
-              ignore_thought_ids?: string[]
-            }
-            Returns: {
-              chunk_id: string
-              thought_id: string
-              similarity_score: number
-            }[]
-          }
-      multi_embedding_thought_summary_search:
-        | {
-            Args: {
-              query_embeddings: string[]
-              match_threshold: number
-              max_results: number
-              workspace_id: string
-              ignore_thought_ids?: string[]
-            }
-            Returns: {
-              thought_id: string
-              similarity_score: number
-            }[]
-          }
-        | {
-            Args: {
-              query_embeddings: string[]
-              max_results: number
-              workspace_id: string
-              ignore_thought_ids?: string[]
-            }
-            Returns: {
-              thought_id: string
-              similarity_score: number
-            }[]
-          }
       search_docs: {
         Args: {
           search_query: string
@@ -2372,21 +1868,6 @@ export type Database = {
           "": unknown[]
         }
         Returns: number
-      }
-      update_thought_embedding_matches: {
-        Args: {
-          p_thought_id: string
-          p_match_pairs: Json
-        }
-        Returns: {
-          created_at: string
-          id: string
-          matched_by: string
-          matches: string
-          matches_thought_id: string
-          similarity: number
-          thought_id: string
-        }[]
       }
       vector_avg: {
         Args: {
