@@ -1,16 +1,9 @@
 import { Hotkey } from "@cloudy/ui";
 import { Editor } from "@tiptap/react";
-import {
-	ChevronsLeftIcon,
-	GoalIcon,
-	MessageCircleIcon,
-	MoreHorizontalIcon,
-	PenIcon,
-	PenOffIcon,
-	RedoIcon,
-	UndoIcon,
-} from "lucide-react";
+import { ChevronsLeftIcon, CopyIcon, MoreHorizontalIcon, PenIcon, PenOffIcon, RedoIcon, UndoIcon } from "lucide-react";
 import { useContext } from "react";
+import { toast } from "react-toastify";
+import { useCopyToClipboard } from "react-use";
 
 import { Button } from "src/components/Button";
 import { Dropdown } from "src/components/Dropdown";
@@ -19,7 +12,6 @@ import { makeHumanizedTime } from "src/utils/strings";
 
 import { DeleteDialog } from "./DeleteDialog";
 import { ExportDialog } from "./ExportDialog";
-import { GoalDropdown } from "./GoalDropdown";
 import { MoveWorkspaceDialog } from "./MoveWorkspaceDialog";
 import { ShareDialog } from "./ShareDialog";
 import { useThought, useToggleDisableTitleSuggestions } from "./hooks";
@@ -28,6 +20,7 @@ import { ThoughtContext } from "./thoughtContext";
 export const ControlRow = ({ thoughtId, editor }: { thoughtId: string; editor?: Editor | null }) => {
 	const { data: thought } = useThought(thoughtId);
 	const { hideControlColumn, setHideControlColumn } = useContext(ThoughtContext);
+	const [, copyToClipboard] = useCopyToClipboard();
 
 	const toggleDisableTitleSuggestionsMutation = useToggleDisableTitleSuggestions();
 
@@ -73,25 +66,6 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId: string; editor?: 
 						</div>
 					</TooltipContent>
 				</Tooltip>
-				{/* <Dropdown
-					trigger={
-						<div>
-							<Tooltip durationPreset="short">
-								<TooltipTrigger asChild>
-									<span>
-										<Button variant="ghost" size="icon-sm">
-											<GoalIcon className="size-5" />
-										</Button>
-									</span>
-								</TooltipTrigger>
-								<TooltipContent>
-									<span>Set a goal</span>
-								</TooltipContent>
-							</Tooltip>
-						</div>
-					}>
-					{({ open, close }) => (open ? <GoalDropdown thoughtId={thoughtId} onClose={close} /> : null)}
-				</Dropdown> */}
 				<ShareDialog />
 				<Dropdown
 					trigger={
@@ -118,6 +92,21 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId: string; editor?: 
 							)}
 						</Button>
 						<MoveWorkspaceDialog />
+						<Button
+							variant="ghost"
+							size="sm"
+							className="w-full justify-start"
+							onClick={() => {
+								if (thought?.content_md) {
+									copyToClipboard(thought?.content_md ?? "");
+									toast.success("Copied to clipboard");
+								} else {
+									toast.error("No content to copy");
+								}
+							}}>
+							<CopyIcon className="size-4" />
+							<span>Copy as Markdown</span>
+						</Button>
 						<ExportDialog thoughtId={thoughtId} title={thought?.title ?? undefined} />
 						<DeleteDialog thoughtId={thoughtId} />
 					</div>
