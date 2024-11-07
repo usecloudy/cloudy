@@ -1,5 +1,5 @@
 import { AccessStrategies } from "@cloudy/utils/common";
-import { ChevronDownIcon, GlobeIcon, LinkIcon, LockIcon, PlusIcon, UsersIcon, XIcon } from "lucide-react";
+import { ChevronDownIcon, GlobeIcon, LockIcon, PlusIcon, UsersIcon, XIcon } from "lucide-react";
 import { useContext, useState } from "react";
 
 import { Button } from "src/components/Button";
@@ -52,6 +52,8 @@ export const ShareDialog = () => {
 		projectSlug: project?.slug,
 	})}`;
 
+	const publicLink = `https://usecloudy.com/pages/document/${thoughtId}`;
+
 	const isAuthor = thought?.author_id === user.id;
 
 	const accessControlOptions: SelectOption[] = [
@@ -64,9 +66,8 @@ export const ShareDialog = () => {
 		{ value: AccessStrategies.WORKSPACE, label: "Anyone in the workspace", icon: <UsersIcon className="mr-2 size-4" /> },
 		{
 			value: AccessStrategies.PUBLIC,
-			label: "Public (Coming soon)",
+			label: "Public",
 			icon: <GlobeIcon className="mr-2 size-4" />,
-			disabled: true,
 		},
 	];
 
@@ -124,13 +125,26 @@ export const ShareDialog = () => {
 				<div className="space-y-4">
 					<div>
 						<label htmlFor="share-link" className="text-sm">
-							Share link
+							Internal link
 						</label>
 						<div className="mt-1 flex gap-2">
 							<Input id="share-link" value={shareLink} readOnly className="flex-grow" />
 							<CopyButton textToCopy={shareLink} />
 						</div>
 					</div>
+
+					{currentAccessStrategy === AccessStrategies.PUBLIC && (
+						<div>
+							<label htmlFor="public-link" className="text-sm">
+								Public link
+							</label>
+							<div className="mt-1 flex gap-2">
+								<Input id="public-link" value={publicLink} readOnly className="flex-grow" />
+								<CopyButton textToCopy={publicLink} />
+							</div>
+						</div>
+					)}
+
 					<div>
 						<label htmlFor="access-control" className="text-sm">
 							Access Control

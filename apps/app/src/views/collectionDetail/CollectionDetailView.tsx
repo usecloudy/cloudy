@@ -1,4 +1,4 @@
-import { CollectionSummary } from "@cloudy/utils/common";
+import { CollectionSummary, ellipsizeText } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
 import { PostHogFeature } from "posthog-js/react";
@@ -17,7 +17,7 @@ import { MainLayout } from "src/components/MainLayout";
 import { ThoughtList } from "src/components/ThoughtList";
 import { useWorkspace } from "src/stores/workspace";
 import { makeCollectionUrl, useCreateCollection } from "src/utils/collection";
-import { ellipsizeText, makeHeadTitle, pluralize } from "src/utils/strings";
+import { makeHeadTitle, pluralize } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
 
 import { NewNote } from "../navigation/NewNote";

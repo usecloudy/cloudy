@@ -1,4 +1,4 @@
-import { ThoughtSignals } from "@cloudy/utils/common";
+import { ThoughtSignals, ellipsizeText } from "@cloudy/utils/common";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
@@ -14,7 +14,7 @@ import LoadingSpinner from "src/components/LoadingSpinner";
 import { MainLayout } from "src/components/MainLayout";
 import { useUserRecord } from "src/stores/user";
 import { cn } from "src/utils";
-import { ellipsizeText, makeHeadTitle } from "src/utils/strings";
+import { makeHeadTitle } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 

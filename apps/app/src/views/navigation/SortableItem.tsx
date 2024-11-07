@@ -8,6 +8,7 @@ import {
 	FileLock2Icon,
 	FolderIcon,
 	FolderOpenIcon,
+	GlobeIcon,
 	MoreHorizontalIcon,
 	PencilIcon,
 	TrashIcon,
@@ -180,6 +181,8 @@ export const SortableItem = ({
 					<>
 						{accessStrategy === AccessStrategies.PRIVATE ? (
 							<FileLock2Icon className="size-4 shrink-0" />
+						) : accessStrategy === AccessStrategies.PUBLIC ? (
+							<GlobeIcon className="size-4 shrink-0" />
 						) : (
 							<FileIcon className="size-4 shrink-0" />
 						)}

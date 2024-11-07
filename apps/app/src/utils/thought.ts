@@ -1,3 +1,4 @@
+import { ellipsizeText } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -5,8 +6,6 @@ import { toast } from "react-toastify";
 import { useWorkspaceStore } from "src/stores/workspace";
 import { useProject } from "src/views/projects/ProjectContext";
 import { useEditThought } from "src/views/thoughtDetail/hooks";
-
-import { ellipsizeText } from "./strings";
 
 export const makeThoughtUrl = (wsSlug: string, thoughtId: string) => {
 	return `/workspaces/${wsSlug}/thoughts/${thoughtId}`;

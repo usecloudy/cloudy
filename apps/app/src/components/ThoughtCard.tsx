@@ -4,12 +4,13 @@ import { Link } from "react-router-dom";
 
 import { useWorkspaceSlug } from "src/stores/workspace";
 import { cn } from "src/utils";
-import { ellipsizeText, makeHumanizedTime } from "src/utils/strings";
+import { makeHumanizedTime } from "src/utils/strings";
 import { makeThoughtUrl } from "src/utils/thought";
 import { useDeleteThought } from "src/views/thoughtDetail/hooks";
 
 import { Button } from "./Button";
 import { Dropdown, DropdownItem } from "./Dropdown";
+import { ellipsizeText } from "@cloudy/utils/common";
 
 interface Collection {
 	id: string;
