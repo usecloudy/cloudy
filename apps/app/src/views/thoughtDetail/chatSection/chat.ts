@@ -239,7 +239,7 @@ export const useStartThread = () => {
 	const { thoughtId, editor } = useContext(ThoughtContext);
 
 	return useMutation({
-		mutationFn: async ({ content }: { content: string; fileReferences?: RepoReference[] }) => {
+		mutationFn: async ({ content, fileReferences }: { content: string; fileReferences?: RepoReference[] }) => {
 			const selection = getSelection(editor!);
 
 			const thread = handleSupabaseError(
@@ -262,6 +262,7 @@ export const useStartThread = () => {
 						role: ChatRole.User,
 						user_id: user.id,
 						selection_text: selection,
+						file_references: JSON.stringify(fileReferences),
 					})
 					.select("*")
 					.single(),
@@ -285,7 +286,15 @@ export const useReplyToThread = () => {
 	const { editor } = useContext(ThoughtContext);
 
 	return useMutation({
-		mutationFn: async ({ threadId, content }: { threadId: string; content: string; fileReferences?: RepoReference[] }) => {
+		mutationFn: async ({
+			threadId,
+			content,
+			fileReferences,
+		}: {
+			threadId: string;
+			content: string;
+			fileReferences?: RepoReference[];
+		}) => {
 			const selection = getSelection(editor!);
 
 			const message = handleSupabaseError(
@@ -297,6 +306,7 @@ export const useReplyToThread = () => {
 						role: ChatRole.User,
 						user_id: user.id,
 						selection_text: selection,
+						file_references: JSON.stringify(fileReferences),
 					})
 					.select("*")
 					.single(),

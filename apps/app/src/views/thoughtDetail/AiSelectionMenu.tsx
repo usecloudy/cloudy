@@ -108,11 +108,12 @@ export const AiSelectionMenu = ({
 					<AiTextArea
 						onSubmit={threadId ? handleReply : handleSubmit}
 						onCancel={onCancel}
-						secondaryButtonText="Start new thread"
+						secondaryButtonText="New thread"
 						onSecondaryAction={threadId ? handleSubmit : undefined}
-						submitButtonText={threadId ? "Ask in thread" : "Start new thread"}
-						disableNewFileReference
+						submitButtonText={threadId ? "Ask in thread" : "New thread"}
 						existingLinkedFiles={existingLinkedFiles}
+						showConnectTooltip
+						addButtonText="Files"
 					/>
 				</div>
 			</div>

@@ -75,6 +75,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 			<div>
 				<ChatMessageContext.Provider value={{ message }}>
 					<Markdown
+						className="tiptap"
 						components={{
 							pre: SuggestionContent,
 						}}>

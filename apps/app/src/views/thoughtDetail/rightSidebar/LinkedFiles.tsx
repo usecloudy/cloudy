@@ -1,6 +1,6 @@
 import { RepoReference, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
-import { FolderCodeIcon, LinkIcon } from "lucide-react";
+import { FolderCodeIcon } from "lucide-react";
 import { useContext } from "react";
 
 import { queryClient } from "src/api/queryClient";
@@ -8,7 +8,7 @@ import { thoughtQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { HelpTooltip } from "src/components/HelpTooltip";
 import LoadingSpinner from "src/components/LoadingSpinner";
-import { FileReferenceRow } from "src/views/aiTextArea/FileReferenceRow";
+import { FileReferenceRowStandalone } from "src/views/aiTextArea/FileReferenceRow";
 
 import { useExistingLinkedFiles } from "../hooks";
 import { ThoughtContext } from "../thoughtContext";
@@ -107,7 +107,11 @@ export const LinkedFiles = () => {
 				/>
 				{isLoading && <LoadingSpinner size="xs" className="ml-2" />}
 			</h5>
-			<FileReferenceRow fileReferences={linkedFiles ?? []} setFileReferences={setFileReferencesMutation.mutate} />
+			<FileReferenceRowStandalone
+				fileReferences={linkedFiles ?? []}
+				setFileReferences={setFileReferencesMutation.mutate}
+				showUnlinkIconInsteadOfX
+			/>
 		</div>
 	);
 };

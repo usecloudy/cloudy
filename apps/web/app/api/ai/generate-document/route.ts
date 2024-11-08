@@ -97,7 +97,7 @@ const generateDocument = async (payload: Payload, supabase: SupabaseClient<Datab
 
 	const stream = await streamText({
 		model: heliconeAnthropic.languageModel("claude-3-5-sonnet-20241022"),
-		system: "You are an excellent technical documentation writer. You are given a set of files and a user instruction. You need to write documentation for the files.",
+		system: "You are an excellent technical documentation writer. You are given a set of files and a user instruction. You need to write documentation for the files. Write the document in rich markdown.",
 		prompt: `Follow this output format exactly:
 \`\`\`title:The title of the document
 Here you place the content of the document

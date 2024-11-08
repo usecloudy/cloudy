@@ -222,7 +222,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 	const [activeTab, setActiveTab] = useState<"diff" | "replacement">("diff");
 
 	return (
-		<pre className="my-1 rounded bg-card px-3 py-2 font-sans">
+		<pre className="my-1 rounded bg-card px-3 py-2 !font-sans">
 			{/* Tab Bar */}
 			<div className="flex border-b">
 				<button
