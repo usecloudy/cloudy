@@ -66,6 +66,7 @@ export const ChatSection = () => {
 					placeholder="Ask a question or describe the change you want to make"
 					submitButtonText={threadId ? "Reply in thread" : "Start new thread"}
 					addButtonText="Files"
+					showConnectTooltip
 				/>
 			</div>
 		</div>

@@ -6,15 +6,19 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { EditorContent, Extension, useEditor } from "@tiptap/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { Markdown } from "tiptap-markdown";
 
 import { Button } from "src/components/Button";
 import { useWorkspace } from "src/stores/workspace";
 import { makeNewProjectUrl, makeProjectSettingsUrl, useProjectRepos } from "src/utils/projects";
 
 import { useProject } from "../projects/ProjectContext";
+import { getAllMentionNodes } from "../thoughtDetail/mention";
+import { AiTextAreaContext, RepoReferenceWithMention } from "./AiTextAreaContext";
 import { FileReferenceRow } from "./FileReferenceRow";
+import { AiTextAreaMention, aiTextAreaMention } from "./aiTextAreaMention";
 
 interface AiTextAreaProps {
 	onSubmit: (text: string, references: RepoReference[]) => void;
@@ -28,6 +32,7 @@ interface AiTextAreaProps {
 	existingLinkedFiles?: { path: string; repoFullName: string; fileUrl: string }[];
 	disableNewFileReference?: boolean;
 	addButtonText?: string;
+	showConnectTooltip?: boolean;
 }
 
 const useHasGitRepoConnected = () => {
@@ -48,18 +53,20 @@ export const AiTextArea = ({
 	disableNewFileReference,
 	secondaryButtonText,
 	addButtonText,
+	showConnectTooltip = false,
 }: AiTextAreaProps) => {
 	const workspace = useWorkspace();
 	const project = useProject();
 
 	const hasGitRepoConnected = useHasGitRepoConnected();
 
-	const [fileReferences, setFileReferences] = useState<RepoReference[]>([]);
+	const [fileReferences, setFileReferences] = useState<RepoReferenceWithMention[]>([]);
+	const [mentionedPaths, setMentionedPaths] = useState<string[]>([]);
 
 	const handleSubmitRef = useRef<((isSecondaryAction?: boolean) => void) | null>(null);
 
-	const editor = useEditor({
-		extensions: [
+	const extensions = useMemo(() => {
+		const exts = [
 			Document,
 			Text,
 			Paragraph,
@@ -92,7 +99,18 @@ export const AiTextArea = ({
 					};
 				},
 			}),
-		],
+			Markdown,
+		];
+
+		if (!disableNewFileReference) {
+			exts.push(AiTextAreaMention.configure({ suggestion: aiTextAreaMention }));
+		}
+
+		return exts;
+	}, [disableNewFileReference]);
+
+	const editor = useEditor({
+		extensions,
 		content: "",
 		editable: true,
 		autofocus: true,
@@ -100,6 +118,21 @@ export const AiTextArea = ({
 			attributes: {
 				class: "no-scrollbar w-full resize-none appearance-none border-none bg-transparent text-sm outline-none",
 			},
+		},
+		onUpdate({ editor }) {
+			const newMentionedFiles = getAllMentionNodes(editor);
+
+			const newMentionedPaths = new Set(newMentionedFiles.map(file => file.id));
+			const currentMentionedPaths = new Set(mentionedPaths);
+
+			const removedPaths = Array.from(currentMentionedPaths).filter(path => !newMentionedPaths.has(path));
+
+			if (removedPaths.length > 0) {
+				const newFileReferences = fileReferences.filter(file => !(removedPaths.includes(file.path) && file.mentioned));
+				setFileReferences(newFileReferences);
+			}
+
+			setMentionedPaths(Array.from(newMentionedPaths));
 		},
 	});
 
@@ -113,13 +146,16 @@ export const AiTextArea = ({
 
 	const handleSubmit = useCallback(
 		(isSecondaryAction = false) => {
-			console.log("handleSubmit", isSecondaryAction);
 			if (editor && editor?.getText().trim()) {
+				const content = editor.storage.markdown.getMarkdown();
 				if (isSecondaryAction) {
-					onSecondaryAction?.(editor.getText(), fileReferences);
+					onSecondaryAction?.(content, fileReferences);
 				} else {
-					onSubmit(editor.getText(), fileReferences);
+					onSubmit(content, fileReferences);
 				}
+
+				setFileReferences([]);
+				setMentionedPaths([]);
 				editor.commands.clearContent();
 			}
 		},
@@ -129,52 +165,53 @@ export const AiTextArea = ({
 	handleSubmitRef.current = handleSubmit;
 
 	return (
-		<div className="relative flex w-full flex-col gap-4">
-			<EditorContent editor={editor} />
-			<div className="flex flex-row items-start justify-between gap-2">
-				{hasGitRepoConnected ? (
-					<FileReferenceRow
-						fileReferences={fileReferences}
-						setFileReferences={setFileReferences}
-						existingLinkedFiles={existingLinkedFiles}
-						disableAdd={disableNewFileReference}
-						addButtonText={addButtonText}
-					/>
-				) : project ? (
-					<Link to={makeProjectSettingsUrl(workspace.slug, project.slug)}>
-						<Button size="xs" variant="outline">
-							<SiGithub className="size-3" />
-							<span>Connect a git repo to reference files</span>
-						</Button>
-					</Link>
-				) : (
-					<div className="flex-1 overflow-hidden">
-						<Link to={makeNewProjectUrl(workspace.slug)} className="block">
-							<Button size="xs" variant="outline" className="mt-0.5 w-full">
-								<SiGithub className="size-3 shrink-0" />
-								<span className="truncate">Create a project with a git repo to reference files</span>
+		<AiTextAreaContext.Provider
+			value={{ fileReferences, setFileReferences, existingLinkedFiles: existingLinkedFiles ?? [] }}>
+			<div className="relative flex w-full flex-col gap-4">
+				<EditorContent editor={editor} />
+				<div className="flex flex-row items-start justify-between gap-2">
+					{hasGitRepoConnected ? (
+						<FileReferenceRow
+							disableAdd={disableNewFileReference}
+							addButtonText={addButtonText}
+							showConnectTooltip={showConnectTooltip}
+						/>
+					) : project ? (
+						<Link to={makeProjectSettingsUrl(workspace.slug, project.slug)}>
+							<Button size="xs" variant="outline">
+								<SiGithub className="size-3" />
+								<span>Connect a git repo to reference files</span>
 							</Button>
 						</Link>
-					</div>
-				)}
-				<div className="flex shrink-0 flex-row gap-1">
-					{onSecondaryAction && (
-						<Button
-							size="sm"
-							variant="ghost"
-							className="text-accent"
-							onClick={() => handleSubmit(true)}
-							disabled={!hasContent}>
-							<Hotkey keys={["cmd", "Enter"]} />
-							<span>{secondaryButtonText}</span>
-						</Button>
+					) : (
+						<div className="flex-1 overflow-hidden">
+							<Link to={makeNewProjectUrl(workspace.slug)} className="block">
+								<Button size="xs" variant="outline" className="mt-0.5 w-full">
+									<SiGithub className="size-3 shrink-0" />
+									<span className="truncate">Create a project with a git repo to reference files</span>
+								</Button>
+							</Link>
+						</div>
 					)}
-					<Button size="sm" variant="default" onClick={() => handleSubmit()} disabled={!hasContent}>
-						<Hotkey keys={["Enter"]} />
-						<span>{submitButtonText}</span>
-					</Button>
+					<div className="flex shrink-0 flex-row gap-1">
+						{onSecondaryAction && (
+							<Button
+								size="sm"
+								variant="ghost"
+								className="text-accent"
+								onClick={() => handleSubmit(true)}
+								disabled={!hasContent}>
+								<Hotkey keys={["cmd", "Enter"]} />
+								<span>{secondaryButtonText}</span>
+							</Button>
+						)}
+						<Button size="sm" variant="default" onClick={() => handleSubmit()} disabled={!hasContent}>
+							<Hotkey keys={["Enter"]} />
+							<span>{submitButtonText}</span>
+						</Button>
+					</div>
 				</div>
 			</div>
-		</div>
+		</AiTextAreaContext.Provider>
 	);
 };

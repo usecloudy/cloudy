@@ -262,7 +262,7 @@ export const useStartThread = () => {
 						role: ChatRole.User,
 						user_id: user.id,
 						selection_text: selection,
-						file_references: fileReferences,
+						file_references: JSON.stringify(fileReferences),
 					})
 					.select("*")
 					.single(),
@@ -306,7 +306,7 @@ export const useReplyToThread = () => {
 						role: ChatRole.User,
 						user_id: user.id,
 						selection_text: selection,
-						file_references: fileReferences,
+						file_references: JSON.stringify(fileReferences),
 					})
 					.select("*")
 					.single(),

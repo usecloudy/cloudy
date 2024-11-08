@@ -54,7 +54,7 @@ export const getFileContents = async (docId: string, supabase: SupabaseClient<Da
 		await supabase
 			.from("document_repo_links")
 			.select("path, repoConnectionId:repo_connection_id, type")
-			.eq("doc_id", docId),
+			.eq("document_id", docId),
 	);
 
 	return getContextForRepoReferences(repoReferences as RepoReference[], supabase);

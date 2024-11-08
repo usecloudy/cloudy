@@ -146,13 +146,19 @@ const respond = async (payload: ThreadRespondPostRequestBody, supabase: Supabase
 	}
 
 	const filesText = await getFileContentsPrompt(document.id, supabase);
-	const contextText = await getContextForThought(document.id, chatThread.workspace_id, supabase, {
+	let contextText = await getContextForThought(document.id, chatThread.workspace_id, supabase, {
 		...heliconeHeaders,
 		"Helicone-Session-Path": "respond-to-selection/context",
 	});
-	const messageContexts = threadMessages.map(message =>
-		message.file_references ? getContextForFileReferences(message.file_references as RepoReference[], supabase) : null,
+	const messageContexts = await Promise.all(
+		threadMessages.map(message =>
+			message.file_references
+				? getContextForFileReferences(JSON.parse(message.file_references as string) as RepoReference[], supabase)
+				: null,
+		),
 	);
+
+	contextText += messageContexts.filter(Boolean).join("\n\n");
 
 	const llmMessages = makeSelectionRespondPrompts({
 		filesText,

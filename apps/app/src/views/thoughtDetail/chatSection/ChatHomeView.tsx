@@ -3,6 +3,7 @@ import { SiGithub } from "@icons-pack/react-simple-icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowRightIcon, ExternalLinkIcon, MoreHorizontalIcon, TrashIcon, XIcon } from "lucide-react";
 import { useContext } from "react";
+import Markdown from "react-markdown";
 import { Link } from "react-router-dom";
 
 import { thoughtQueryKeys } from "src/api/queryKeys";
@@ -176,7 +177,9 @@ const ThreadButton = ({
 					{firstMessage.role === ChatRole.User && firstMessage.user_id && (
 						<ChatMessageUserHeader userId={firstMessage.user_id} />
 					)}
-					<div className="line-clamp-2 text-sm">{firstMessage.content || "Empty thread"}</div>
+					<div className="pointer-events-none line-clamp-2 text-sm">
+						<Markdown>{firstMessage.content || "Empty thread"}</Markdown>
+					</div>
 				</div>
 			)}
 			<div className="flex flex-row items-center justify-between gap-x-2">

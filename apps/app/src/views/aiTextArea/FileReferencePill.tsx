@@ -1,18 +1,33 @@
 import { SiGithub } from "@icons-pack/react-simple-icons";
-import { ExternalLinkIcon, XIcon } from "lucide-react";
+import { ExternalLinkIcon, LinkIcon, UnlinkIcon, XIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { Button } from "./Button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./Tooltip";
+import { Button } from "src/components/Button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip";
 
 export type FileReferencePillProps = {
 	repoFullName: string;
 	path: string;
 	fileUrl: string;
+	isExisting?: boolean;
 	onRemove?: () => void;
+	onConnect?: () => void;
+	onDisconnect?: () => void;
+	showConnectTooltip?: boolean;
+	showUnlinkIconInsteadOfX?: boolean;
 };
 
-export const FileReferencePill = ({ repoFullName, path, fileUrl, onRemove }: FileReferencePillProps) => {
+export const FileReferencePill = ({
+	repoFullName,
+	path,
+	fileUrl,
+	onRemove,
+	isExisting,
+	onConnect,
+	onDisconnect,
+	showConnectTooltip,
+	showUnlinkIconInsteadOfX,
+}: FileReferencePillProps) => {
 	return (
 		<Tooltip durationPreset="instant">
 			<TooltipTrigger>
@@ -24,7 +39,7 @@ export const FileReferencePill = ({ repoFullName, path, fileUrl, onRemove }: Fil
 							variant="ghost"
 							className="-mr-2 hover:bg-transparent hover:text-accent active:bg-transparent"
 							onClick={onRemove}>
-							<XIcon className="size-3" />
+							{showUnlinkIconInsteadOfX ? <UnlinkIcon className="size-3" /> : <XIcon className="size-3" />}
 						</Button>
 					)}
 				</div>
@@ -41,6 +56,21 @@ export const FileReferencePill = ({ repoFullName, path, fileUrl, onRemove }: Fil
 							<ExternalLinkIcon className="size-3" />
 						</div>
 					</Link>
+					{showConnectTooltip && (
+						<div className="mt-1">
+							{isExisting ? (
+								<Button size="xs" variant="outline" onClick={onDisconnect}>
+									<UnlinkIcon className="size-3" />
+									<span>Unlink from document</span>
+								</Button>
+							) : (
+								<Button size="xs" variant="outline" onClick={onConnect}>
+									<LinkIcon className="size-3" />
+									<span>Connect to document</span>
+								</Button>
+							)}
+						</div>
+					)}
 				</div>
 			</TooltipContent>
 		</Tooltip>

@@ -49,7 +49,7 @@ export const GET = async (request: NextRequest) => {
 									repoFullName: repoData.data.full_name,
 									path: treeItem.path,
 									type: treeItem.type === "blob" ? "file" : "directory",
-									fileUrl: treeItem.url ?? "", // TODO better handle this case
+									fileUrl: `https://github.com/${repoData.data.full_name}/blob/${repoData.data.default_branch}/${treeItem.path}`,
 								} satisfies RepoReference,
 							]
 						: [],
