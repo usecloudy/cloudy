@@ -17,7 +17,7 @@ export const AiTextAreaMentionHandler = forwardRef(({ query, command }: Suggesti
 	}));
 
 	return (
-		<div className="pointer-events-auto w-full rounded-md border border-border bg-background shadow-md md:w-[28rem]">
+		<div className="pointer-events-auto overflow-visible rounded-md border border-border bg-background shadow-md">
 			<FileSearch
 				ref={fileSearchRef}
 				query={query}

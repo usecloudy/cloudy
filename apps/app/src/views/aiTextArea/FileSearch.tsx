@@ -393,7 +393,7 @@ export const FileSearch = forwardRef(
 			<>
 				<div
 					ref={scrollContainerRef}
-					className="no-scrollbar flex max-h-[40dvh] min-h-36 flex-col gap-0.5 overflow-y-auto px-2 py-2">
+					className="no-scrollbar pointer-events-auto flex max-h-[40vh] min-h-36 w-[28rem] flex-col gap-0.5 overflow-y-auto overscroll-contain px-2 py-2">
 					{isLoading ? (
 						<LoadingState />
 					) : filteredFiles.length > 0 ? (

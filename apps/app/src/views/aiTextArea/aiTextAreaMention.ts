@@ -31,6 +31,38 @@ export const aiTextAreaMention = {
 					interactive: true,
 					trigger: "manual",
 					placement: "bottom-start",
+					maxWidth: "none",
+					theme: "mention-popup",
+					popperOptions: {
+						strategy: "fixed",
+						modifiers: [
+							{
+								name: "flip",
+								options: {
+									fallbackPlacements: ["top-start"],
+								},
+							},
+							{
+								name: "preventOverflow",
+								options: {
+									mainAxis: false, // Allows the popup to overflow the viewport
+								},
+							},
+						],
+					},
+					onCreate(instance) {
+						instance.popper.classList.add("pointer-events-auto");
+						instance.popper.classList.add("overflow-visible");
+
+						// Allow wheel events to propagate to scrollable content
+						instance.popper.addEventListener(
+							"wheel",
+							e => {
+								e.stopPropagation();
+							},
+							{ passive: true },
+						);
+					},
 				});
 			},
 
