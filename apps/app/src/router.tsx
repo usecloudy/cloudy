@@ -2,7 +2,9 @@ import { FC } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import { useChannelListeners } from "./channelListeners";
+import { useCodeThemeClass } from "./stores/theme";
 import { useUserGuard, useUserHandler } from "./stores/user";
+import { cn } from "./utils";
 import { useDebugQuery } from "./utils/debug";
 import { AuthView } from "./views/auth/AuthView";
 import { ForgotPassword } from "./views/auth/ForgotPassword";
@@ -41,6 +43,8 @@ const ProtectedLayout: FC = () => {
 
 	useChannelListeners();
 
+	const codeThemeClass = useCodeThemeClass();
+
 	if (isLoadingAuth) {
 		return <LoadingView />;
 	}
@@ -54,7 +58,7 @@ const ProtectedLayout: FC = () => {
 	}
 
 	return (
-		<div className="flex h-dvh w-screen flex-col">
+		<div className={cn("flex h-dvh w-screen flex-col", codeThemeClass)}>
 			<Outlet />
 		</div>
 	);

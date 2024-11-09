@@ -10,9 +10,8 @@ import { Dialog, DialogContent } from "src/components/Dialog";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { useWorkspace, useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
-import { makeHumanizedTime } from "src/utils/strings";
 import { useBreakpoint } from "src/utils/tailwind";
-import { makeDocUrl, makeThoughtUrl } from "src/utils/thought";
+import { makeDocUrl } from "src/utils/thought";
 
 import { useSearchBarStore } from "./searchBarStore";
 
@@ -190,7 +189,7 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
 							<SearchIcon className="size-5 text-secondary" />
 						</div>
 						<TextareaAutosize
-							className="min-h-10 w-full resize-none bg-white/30 py-4 pl-11 pr-16 font-sans outline-none hover:outline-none focus:outline-none"
+							className="min-h-10 w-full resize-none bg-white/30 py-4 pl-11 pr-16 font-sans outline-none hover:outline-none focus:outline-none dark:bg-card"
 							placeholder="Search for docs..."
 							value={query}
 							onChange={handleInputChange}

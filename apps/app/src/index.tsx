@@ -10,6 +10,8 @@ import { queryClient } from "./api/queryClient";
 import { ToastContainer } from "./components/Toast";
 import { TooltipProvider } from "./components/Tooltip";
 import { Router } from "./router";
+import { ThemeProvider } from "./stores/theme";
+import "./styles/codeThemes.css";
 import "./styles/index.css";
 import "./styles/tailwind.css";
 import "./styles/titlebar.css";
@@ -44,13 +46,15 @@ const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement)
 
 root.render(
 	<React.StrictMode>
-		<QueryClientProvider client={queryClient}>
-			<TooltipProvider>
-				<SidebarProvider>
-					<Router />
-				</SidebarProvider>
-			</TooltipProvider>
-			<ToastContainer />
-		</QueryClientProvider>
+		<ThemeProvider>
+			<QueryClientProvider client={queryClient}>
+				<TooltipProvider>
+					<SidebarProvider>
+						<Router />
+					</SidebarProvider>
+				</TooltipProvider>
+				<ToastContainer />
+			</QueryClientProvider>
+		</ThemeProvider>
 	</React.StrictMode>,
 );

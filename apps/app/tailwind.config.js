@@ -3,7 +3,7 @@ import tailwindcssAnimate from "tailwindcss-animate";
 /** @type {import('tailwindcss').Config} */
 const config = {
 	content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html", "../../packages/ui/src/**/*.{js,jsx,ts,tsx}"],
-	// darkMode: "class",
+	darkMode: "selector",
 	theme: {
 		container: {
 			center: true,
@@ -28,10 +28,23 @@ const config = {
 				placeholder: "rgb(var(--color-placeholder) / <alpha-value>)",
 				border: "rgb(var(--color-border) / <alpha-value>)",
 				background: "rgb(var(--color-background) / <alpha-value>)",
-				"background-secondary": "var(--color-background-secondary)",
+				"background-secondary": "rgb(var(--color-background-secondary) / <alpha-value>)",
 				card: "rgb(var(--color-card) / <alpha-value>)",
 				accent: "rgb(var(--color-accent) / <alpha-value>)",
 				"accent-secondary": "rgb(var(--color-accent-secondary) / <alpha-value>)",
+
+				// Keep the below for testing values easily
+
+				// primary: "var(--color-primary)",
+				// secondary: "var(--color-secondary)",
+				// tertiary: "var(--color-tertiary)",
+				// placeholder: "var(--color-placeholder)",
+				// border: "var(--color-border)",
+				// background: "var(--color-background)",
+				// "background-secondary": "var(--color-background-secondary)",
+				// card: "var(--color-card)",
+				// accent: "var(--color-accent)",
+				// "accent-secondary": "var(--color-accent-secondary)",
 			},
 			borderRadius: {
 				lg: `var(--radius)`,

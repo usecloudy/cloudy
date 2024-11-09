@@ -38,7 +38,7 @@ export const Hotkey: React.FC<HotkeyProps> = ({ keys, className }) => {
                     <React.Fragment key={index}>
                         <kbd
                             className={cn(
-                                "flex items-center justify-center text-xs font-sans font-normal text-secondary bg-background border border-border rounded",
+                                "flex items-center justify-center text-xs font-sans font-normal text-secondary bg-background dark:text-primary dark:bg-white/20 dark:border-white/10 border border-border rounded",
                                 IconComponent ? "size-5" : "h-5"
                             )}
                         >

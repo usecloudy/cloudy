@@ -57,7 +57,7 @@ export const FeedbackDropdown = () => {
 					</p>
 					<TextareaAutosize
 						{...register("feedback", { required: true })}
-						className="no-scrollbar min-h-36 w-full resize-none appearance-none rounded border border-border bg-white/10 px-3 py-2 text-sm outline-none"
+						className="no-scrollbar min-h-36 w-full resize-none appearance-none rounded border border-border bg-card px-3 py-2 text-sm outline-none"
 						placeholder="Share your thoughts..."
 						rows={4}
 					/>

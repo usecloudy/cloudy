@@ -12,10 +12,10 @@
 		--color-secondary: 116 113 111;
 		--color-tertiary: 177 175 172;
 		--color-placeholder: 186 186 182;
-		--color-border: 212 209 206;
-		--color-background: 232 231 229;
-		--color-background-secondary: #f1efea;
-		--color-card: 224 221 217;
+		--color-border: 226 224 222;
+		--color-background: 245 245 245;
+		--color-background-secondary: 241 239 234;
+		--color-card: 233 233 232;
 		--color-accent: 108 93 171;
 		--color-accent-secondary: 255 132 84;
 
@@ -23,18 +23,26 @@
 		--font-serif: "Noto Serif Display", serif;
 		--font-display: "Red Hat Display", sans-serif;
 		--radius: 1.25rem;
+
+		/* Light theme syntax highlighting */
+		@import "highlight.js/styles/github.css";
 	}
 
-	/* .dark:root {
-		--color-primary: #f3f3f3;
-		--color-secondary: #a2a2a2;
-		--color-tertiary: #707070;
-		--color-placeholder: #babab6;
-		--color-border: #363434;
-		--color-background: #1a1818;
-		--color-card: #2c2a2a;
-		--color-accent: #5d46b8;
-	} */
+	.dark:root {
+		--color-primary: 220 220 227;
+		--color-secondary: 135 135 144;
+		--color-tertiary: 86 86 93;
+		--color-placeholder: 73 73 77;
+		--color-border: 49 49 54;
+		--color-background: 24 24 27;
+		--color-background-secondary: 37 37 41;
+		--color-card: 38 38 42;
+		--color-accent: 116 97 192;
+		--color-accent-secondary: 255 132 84;
+
+		/* Dark theme syntax highlighting */
+		@import "highlight.js/styles/github-dark.css";
+	}
 
 	* {
 		@apply border-border;
