@@ -124,7 +124,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				name: "hotkeys",
 				addKeyboardShortcuts() {
 					return {
-						"Mod-i": () => {
+						"Mod-o": () => {
 							showAiEditor();
 							return true;
 						},
@@ -275,8 +275,9 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		}
 	}, [setIsAiSuggestionLoading, thought?.signals]);
 
-	useHotkeys("mod+i", e => {
+	useHotkeys("mod+o", e => {
 		e.preventDefault();
+		e.stopPropagation();
 		showAiEditor();
 	});
 
