@@ -107,6 +107,9 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const { isConnected, ydoc, provider } = useYProvider(thoughtId!, disableUpdatesRef);
 
 	const editor = useEditor({
+		editorProps: {
+			attributes: { class: "main-editor doc-editor" },
+		},
 		extensions: [
 			...tiptapExtensions,
 			createFileHandlerExtension(thoughtId),
@@ -452,7 +455,7 @@ const EditorView = ({
 							<EditorContent
 								editor={editor}
 								className={cn(
-									"main-editor w-full",
+									"w-full",
 									isAiWriting && "pointer-events-none opacity-70",
 									isGenerating && "opacity-0",
 								)}

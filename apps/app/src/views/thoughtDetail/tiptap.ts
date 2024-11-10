@@ -10,14 +10,21 @@ import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
 import { Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import hljs from "highlight.js";
 import { common, createLowlight } from "lowlight";
+import { useEffect } from "react";
 import { Markdown } from "tiptap-markdown";
 
+// Import default theme
 import { createCodeBlockPasteRule } from "src/utils/tiptapCodeBlockPasteRule";
 
 import { PendingAttachmentNode } from "./PendingAttachment";
 import { Mention, mention } from "./mention";
 import ResizableImageExtension from "./resizableImageExtension";
+
+hljs.configure({
+	cssSelector: "hljssss",
+});
 
 export const IndentNode = Node.create({
 	name: "indent",

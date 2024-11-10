@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 const config = {
 	content: ["./app/**/*.{js,ts,jsx,tsx}"],
-	// darkMode: "class",
+	darkMode: "selector",
 	theme: {
 		container: {
 			center: true,
@@ -26,10 +26,10 @@ const config = {
 				placeholder: "rgb(var(--color-placeholder) / <alpha-value>)",
 				border: "rgb(var(--color-border) / <alpha-value>)",
 				background: "rgb(var(--color-background) / <alpha-value>)",
-				"background-secondary": "var(--color-background-secondary)",
+				"background-secondary": "rgb(var(--color-background-secondary) / <alpha-value>)",
 				card: "rgb(var(--color-card) / <alpha-value>)",
 				accent: "rgb(var(--color-accent) / <alpha-value>)",
-				"accent-2": "rgb(var(--color-accent-2) / <alpha-value>)",
+				"accent-secondary": "rgb(var(--color-accent-secondary) / <alpha-value>)",
 			},
 			borderRadius: {
 				lg: `var(--radius)`,

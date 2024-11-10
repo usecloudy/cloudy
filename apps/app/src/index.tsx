@@ -1,4 +1,6 @@
 import * as amplitude from "@amplitude/analytics-browser";
+import "@cloudy/ui/styles/codeThemes.css";
+import "@cloudy/ui/styles/tailwind.css";
 import * as Sentry from "@sentry/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import posthog from "posthog-js";
@@ -10,9 +12,8 @@ import { queryClient } from "./api/queryClient";
 import { ToastContainer } from "./components/Toast";
 import { TooltipProvider } from "./components/Tooltip";
 import { Router } from "./router";
-import "./styles/index.css";
-import "./styles/tailwind.css";
-import "./styles/titlebar.css";
+import { ThemeProvider } from "./stores/theme";
+import "./styles/fonts.css";
 import { SidebarProvider } from "./views/navigation/SidebarProvider";
 
 Sentry.init({
@@ -44,13 +45,15 @@ const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement)
 
 root.render(
 	<React.StrictMode>
-		<QueryClientProvider client={queryClient}>
-			<TooltipProvider>
-				<SidebarProvider>
-					<Router />
-				</SidebarProvider>
-			</TooltipProvider>
-			<ToastContainer />
-		</QueryClientProvider>
+		<ThemeProvider>
+			<QueryClientProvider client={queryClient}>
+				<TooltipProvider>
+					<SidebarProvider>
+						<Router />
+					</SidebarProvider>
+				</TooltipProvider>
+				<ToastContainer />
+			</QueryClientProvider>
+		</ThemeProvider>
 	</React.StrictMode>,
 );
