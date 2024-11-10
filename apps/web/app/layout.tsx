@@ -1,10 +1,12 @@
+import "@cloudy/ui/styles/codeThemes.css";
+import "@cloudy/ui/styles/tailwind.css";
 import dynamic from "next/dynamic";
 import { Noto_Sans, Red_Hat_Display } from "next/font/google";
-import "styles/tailwind.css";
 
-import { PHProvider } from "./providers";
+import { Navbar } from "./components/Navbar";
+import { Providers } from "./providers";
 
-const inter = Noto_Sans({
+const noto = Noto_Sans({
 	subsets: ["latin"],
 	display: "swap",
 	variable: "--font-sans",
@@ -22,13 +24,14 @@ const PostHogPageView = dynamic(() => import("./PosthogPageView"), {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en" className={`${inter.variable} ${redHatDisplay.variable}`}>
-			<PHProvider>
-				<body>
+		<html lang="en" className={`${noto.variable} ${redHatDisplay.variable}`} suppressHydrationWarning>
+			<body>
+				<Providers>
 					<PostHogPageView />
+					<Navbar />
 					<div className="min-h-screen">{children}</div>
-				</body>
-			</PHProvider>
+				</Providers>
+			</body>
 		</html>
 	);
 }

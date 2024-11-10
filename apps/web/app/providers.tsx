@@ -1,16 +1,8 @@
-// app/providers.tsx
 "use client";
 
+import { ThemeProvider } from "next-themes";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
-
-// app/providers.tsx
-
-// app/providers.tsx
-
-// app/providers.tsx
-
-// app/providers.tsx
 
 if (typeof window !== "undefined") {
 	posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
@@ -25,6 +17,12 @@ if (typeof window !== "undefined") {
 	});
 }
 
-export function PHProvider({ children }: { children: React.ReactNode }) {
-	return <PostHogProvider client={posthog}>{children}</PostHogProvider>;
-}
+export const Providers = ({ children }: { children: React.ReactNode }) => {
+	return (
+		<PostHogProvider client={posthog}>
+			<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+				{children}
+			</ThemeProvider>
+		</PostHogProvider>
+	);
+};

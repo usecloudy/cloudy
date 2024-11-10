@@ -17,7 +17,9 @@
         "tailwind-merge": "^2.5.2"
     },
     "exports": {
-        ".": "./src/index.ts"
+        ".": "./src/index.ts",
+        "./styles/codeThemes.css": "./src/styles/codeThemes.css",
+        "./styles/tailwind.css": "./src/styles/tailwind.css"
     },
     "devDependencies": {
         "typescript": "^5.5.4"

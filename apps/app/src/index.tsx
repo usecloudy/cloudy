@@ -1,4 +1,6 @@
 import * as amplitude from "@amplitude/analytics-browser";
+import "@cloudy/ui/styles/codeThemes.css";
+import "@cloudy/ui/styles/tailwind.css";
 import * as Sentry from "@sentry/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import posthog from "posthog-js";
@@ -11,10 +13,7 @@ import { ToastContainer } from "./components/Toast";
 import { TooltipProvider } from "./components/Tooltip";
 import { Router } from "./router";
 import { ThemeProvider } from "./stores/theme";
-import "./styles/codeThemes.css";
-import "./styles/index.css";
-import "./styles/tailwind.css";
-import "./styles/titlebar.css";
+import "./styles/fonts.css";
 import { SidebarProvider } from "./views/navigation/SidebarProvider";
 
 Sentry.init({
