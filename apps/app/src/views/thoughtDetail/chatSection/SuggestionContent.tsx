@@ -245,7 +245,13 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 					{diff.map((part, index) => (
 						<span
 							key={index}
-							className={cn(part.added ? "bg-green-200" : part.removed ? "bg-red-200 line-through" : "")}>
+							className={cn(
+								part.added
+									? "bg-green-200 dark:bg-green-800"
+									: part.removed
+										? "bg-red-200 line-through dark:bg-red-800"
+										: "",
+							)}>
 							{part.value}
 						</span>
 					))}
