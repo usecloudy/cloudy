@@ -54,7 +54,6 @@ export const SignIn = () => {
 				</label>
 				<Input
 					type="email"
-					className="bg-white/30"
 					placeholder="founders@usecloudy.com"
 					{...register("email", { required: "Email is required" })}
 				/>
@@ -67,7 +66,6 @@ export const SignIn = () => {
 				<div className="relative">
 					<Input
 						type={showPassword ? "text" : "password"}
-						className="bg-white/30"
 						placeholder="•••••••"
 						{...register("password", { required: "Password is required" })}
 					/>
@@ -83,7 +81,7 @@ export const SignIn = () => {
 			<Button type="submit" className="self-stretch" disabled={signInMutation.isPending}>
 				{signInMutation.isPending ? <LoadingSpinner size="xs" variant="background" /> : "Sign In"}
 			</Button>
-			<div className="text-muted-foreground mt-4 flex flex-row items-center justify-between gap-2 text-sm">
+			<div className="mt-4 flex flex-row items-center justify-between gap-2 text-sm text-secondary">
 				<Link to="/auth/signup" className="text-left text-accent hover:text-accent/70 hover:underline">
 					Don't have an account?
 				</Link>

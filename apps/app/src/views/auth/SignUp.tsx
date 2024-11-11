@@ -61,19 +61,13 @@ export const SignUp = () => {
 			<label htmlFor="fullName" className="font-medium text-secondary">
 				Full Name
 			</label>
-			<Input
-				type="text"
-				className="bg-white/30"
-				placeholder="John Doe"
-				{...register("fullName", { required: "Full name is required" })}
-			/>
+			<Input type="text" placeholder="John Doe" {...register("fullName", { required: "Full name is required" })} />
 			{errors.fullName && <p className="text-sm text-red-500">{errors.fullName.message}</p>}
 			<label htmlFor="email" className="font-medium text-secondary">
 				Email
 			</label>
 			<Input
 				type="email"
-				className="bg-white/30"
 				placeholder="founders@usecloudy.com"
 				{...register("email", { required: "Email is required" })}
 			/>
@@ -84,7 +78,6 @@ export const SignUp = () => {
 			<div className="relative">
 				<Input
 					type={showPassword ? "text" : "password"}
-					className="bg-white/30"
 					placeholder="•••••••"
 					{...register("password", {
 						required: "Password is required",
@@ -105,7 +98,6 @@ export const SignUp = () => {
 			<div className="relative">
 				<Input
 					type={showConfirmPassword ? "text" : "password"}
-					className="bg-white/30"
 					placeholder="•••••••"
 					{...register("confirmPassword", {
 						required: "Please confirm your password",
@@ -132,7 +124,7 @@ export const SignUp = () => {
 			<Button type="submit" className="mt-4 self-stretch" disabled={signUpMutation.isPending}>
 				{signUpMutation.isPending ? <LoadingSpinner size="xs" variant="background" /> : "Sign Up"}
 			</Button>
-			<div className="text-muted-foreground mt-4 text-center text-sm">
+			<div className="mt-4 text-center text-sm text-secondary">
 				Already have an account?{" "}
 				<Link to="/auth" className="text-accent hover:text-accent/70 hover:underline">
 					Sign in
