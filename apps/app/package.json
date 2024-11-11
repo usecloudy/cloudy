@@ -135,7 +135,7 @@
 		"dev": "cross-env BROWSER=none craco start",
 		"dev:prod": "cross-env BROWSER=none craco start --mode production",
 		"format": "prettier --write .",
-		"sentry:sourcemaps": "npx -y @sentry/cli@latest sourcemaps inject --org cloudy-zo --project cra-app ./build && npx -y @sentry/cli@latest sourcemaps upload --org cloudy-zo --project cra-app ./build"
+		"sentry:sourcemaps": "npx -y @sentry/cli@latest sourcemaps inject --org brain-fog --project cra-app ./build && npx -y @sentry/cli@latest sourcemaps upload --org brain-fog --project cra-app ./build"
 	},
 	"build": {
 		"mac": {
