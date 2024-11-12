@@ -160,7 +160,7 @@ export const createDocumentUpdate = async (payload: DocumentUpdateSuggestPayload
 		documentTitle: document.title,
 	});
 
-	const { text } = await generateText({
+	let { text } = await generateText({
 		// model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
 		// model: heliconeOpenAI.languageModel("gpt-4o-mini"),
 		model: heliconeAnthropic.languageModel("claude-3-5-sonnet-20241022"),
@@ -175,9 +175,36 @@ export const createDocumentUpdate = async (payload: DocumentUpdateSuggestPayload
 		},
 	});
 
-	const parsedSuggestions = parseSuggestions(text);
+	let parsedSuggestions = parseSuggestions(text);
 
-	if (!parsedSuggestions.length) return;
+	if (!parsedSuggestions.length) {
+		if (text.includes("<replacement_snippet>")) {
+			console.log("Attempting second attempt");
+			({ text } = await generateText({
+				// model: heliconeOpenAI.languageModel("gpt-4o-2024-08-06"),
+				// model: heliconeOpenAI.languageModel("gpt-4o-mini"),
+				model: heliconeAnthropic.languageModel("claude-3-5-sonnet-20241022"),
+				messages: llmMessages,
+				temperature: 0.5,
+				experimental_telemetry: {
+					isEnabled: true,
+				},
+				headers: {
+					...heliconeHeaders,
+					"Helicone-Session-Path": "document-update-suggest/attempt-2",
+				},
+			}));
+			parsedSuggestions = parseSuggestions(text);
+
+			if (!parsedSuggestions.length) {
+				console.log("Second attempt failed");
+				return;
+			}
+		} else {
+			console.log("First attempt failed, but no <replacement_snippet> found");
+			return;
+		}
+	}
 
 	const chatThread = handleSupabaseError(
 		await supabase
@@ -252,7 +279,7 @@ Do the changes in the commit affect the document by making anything there out of
 	return object;
 };
 
-const parseSuggestions = (text: string) => {
+export const parseSuggestions = (text: string) => {
 	const suggestionBlocks = extractMultipleInnerTextFromXml(text, "suggestion");
 
 	return suggestionBlocks.flatMap(suggestion => {
