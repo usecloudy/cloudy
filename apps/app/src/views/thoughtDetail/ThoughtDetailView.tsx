@@ -10,7 +10,6 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { Navigate, useParams } from "react-router-dom";
 import { useAsync, useLocalStorage, useMount, usePrevious, useUnmount, useUpdateEffect } from "react-use";
 
-import LoadingSpinner from "src/components/LoadingSpinner";
 import { MainLayout } from "src/components/MainLayout";
 import { useUserRecord } from "src/stores/user";
 import { useWorkspace } from "src/stores/workspace";
@@ -24,6 +23,7 @@ import { useSidebarContext } from "../navigation/SidebarProvider";
 import { useProject } from "../projects/ProjectContext";
 import { ControlColumn } from "./ControlColumn";
 import { ControlRow } from "./ControlRow";
+import { DocumentLoadingPlaceholder } from "./DocumentLoadingPlaceholder";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { FooterRow } from "./FooterRow";
@@ -113,7 +113,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 
 	const { setIsSidebarCollapsed } = useSidebarContext({ isFixed: isShowingAiEditorMenu });
 
-	const { isConnected, ydoc, provider } = useYProvider(thoughtId!, disableUpdatesRef);
+	const { isLoading, isConnected, ydoc, provider } = useYProvider(thoughtId!, disableUpdatesRef);
 
 	const editor = useEditor({
 		editorProps: {
@@ -171,6 +171,11 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 
 		if (editor) {
 			updateMentionNodeNames(editor);
+
+			if (!isConnected) {
+				// Blur on disconnect
+				editor.commands.blur();
+			}
 		}
 	}, [isConnected]);
 
@@ -300,6 +305,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				editor,
 				disableUpdatesRef,
 				onUpdate,
+				isDocumentLoading: isLoading,
 				isConnected,
 				isEditingDisabled,
 				setIsEditingDisabled,
@@ -392,7 +398,7 @@ const EditorView = ({
 	latestRemoteTitleTs?: string;
 	onChange: (payload: ThoughtEditPayload) => void;
 }) => {
-	const { editor, isConnected, hideControlColumn, isAiWriting } = useContext(ThoughtContext);
+	const { editor, isConnected, isDocumentLoading, hideControlColumn, isAiWriting } = useContext(ThoughtContext);
 	const { isGenerating } = useContext(AiGenerationContext);
 
 	const { lastLocalThoughtTitleTs, setCurrentContent, setLastLocalThoughtContentTs, setLastLocalThoughtTitleTs } =
@@ -459,25 +465,21 @@ const EditorView = ({
 							</DragHandle>
 						</div>
 					)}
-					{isConnected ? (
-						<>
-							<EditorContent
-								editor={editor}
-								className={cn(
-									"w-full",
-									isAiWriting && "pointer-events-none opacity-70",
-									isGenerating && "opacity-0",
-								)}
-							/>
-							{isGenerating && (
-								<div className="absolute left-8 top-0 animate-pulse text-tertiary">Generating...</div>
-							)}
-						</>
-					) : (
-						<div className="flex h-full w-full items-center justify-center">
-							<LoadingSpinner size="sm" />
+					{isDocumentLoading ? (
+						<div className="w-full pl-8">
+							<DocumentLoadingPlaceholder />
 						</div>
+					) : (
+						<EditorContent
+							editor={editor}
+							className={cn(
+								"w-full",
+								(isAiWriting || !isConnected) && "pointer-events-none opacity-70",
+								isGenerating && "opacity-0",
+							)}
+						/>
 					)}
+					{isGenerating && <div className="absolute left-8 top-0 animate-pulse text-tertiary">Generating...</div>}
 				</div>
 				<div className="h-[75dvh]" />
 			</div>
