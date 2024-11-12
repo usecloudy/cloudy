@@ -1,23 +1,52 @@
-import { format, formatDistanceToNow, isToday, isYesterday } from "date-fns";
+import { Locale, format, formatDistanceToNow, isToday, isYesterday } from "date-fns";
 
 export const makeHeadTitle = (title: string) => {
 	return `${title} | Cloudy`;
 };
 
-export const makeHumanizedTime = (date: Date | string, options?: { hoursOnly?: boolean }) => {
+export const makeHumanizedTime = (
+	date: Date | string,
+	options?: {
+		hoursOnly?: boolean;
+		includeSeconds?: boolean;
+		locale?: Locale;
+	},
+) => {
 	if (typeof date === "string") {
 		date = new Date(date);
 	}
 
 	const now = new Date();
-	const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+	const diffInSeconds = Math.floor((date.getTime() - now.getTime()) / 1000);
+	const isInPast = diffInSeconds < 0;
+	const absDiff = Math.abs(diffInSeconds);
 
-	if (diffInSeconds <= 30) {
+	// Handle future dates
+	if (!isInPast) {
+		if (absDiff <= 30) return "in a few seconds";
+		return formatDistanceToNow(date, {
+			addSuffix: true,
+			locale: options?.locale,
+		});
+	}
+
+	// Handle past dates
+	if (absDiff <= 30) {
 		return "just now";
-	} else if (diffInSeconds < 60 * 60) {
-		// Less than an hour ago, use "X minutes/seconds ago"
-		return formatDistanceToNow(date, { addSuffix: true });
-	} else if (diffInSeconds < 24 * 60 * 60) {
+	} else if (absDiff < 60 * 60) {
+		// Less than an hour ago
+		if (options?.includeSeconds) {
+			return formatDistanceToNow(date, {
+				addSuffix: true,
+				includeSeconds: true,
+				locale: options?.locale,
+			});
+		}
+		return formatDistanceToNow(date, {
+			addSuffix: true,
+			locale: options?.locale,
+		});
+	} else if (absDiff < 24 * 60 * 60) {
 		if (options?.hoursOnly) {
 			// Less than a day ago, use time format
 			return format(date, "h:mm a");
