@@ -14,7 +14,6 @@ import { PendingAccountSetupView } from "./views/auth/PendingAccountSetupView";
 import { SignIn } from "./views/auth/SignIn";
 import { SignOutView } from "./views/auth/SignOutView";
 import { SignUp } from "./views/auth/SignUp";
-import { CollectionDetailView } from "./views/collectionDetail/CollectionDetailView";
 import { ConnectGithubToWorkspaceView } from "./views/github/ConnectGithubToWorkspaceView";
 import { HomeView } from "./views/home/HomeView";
 import { RedirectToDefaultOrg } from "./views/home/RedirectToDefaultOrg";
@@ -100,7 +99,6 @@ export const Router: FC = () => {
 							<Route path="/workspaces/:wsSlug" element={<HomeView />} />
 							<Route path="/workspaces/:wsSlug/settings" element={<WorkspaceSettingsView />} />
 							<Route path="/workspaces/:wsSlug/thoughts/:thoughtId" element={<ThoughtDetailView />} />
-							<Route path="/workspaces/:wsSlug/collections/:collectionId" element={<CollectionDetailView />} />
 							<Route path="/workspaces/:wsSlug/projects/new" element={<NewProjectView />} />
 							<Route path="/workspaces/:wsSlug/projects/:projectSlug" element={<ProjectOutlet />}>
 								<Route path="/workspaces/:wsSlug/projects/:projectSlug" element={<ProjectView />} />
