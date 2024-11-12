@@ -8,6 +8,7 @@ import { thoughtQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { Button } from "src/components/Button";
 import LoadingSpinner from "src/components/LoadingSpinner";
+import { ThoughtCard } from "src/components/ThoughtCard";
 
 const useRelatedThoughts = (thoughtId?: string) => {
 	useEffect(() => {
@@ -127,85 +128,81 @@ export const RelatedNotes = ({ thoughtId }: { thoughtId?: string }) => {
 
 	const manuallyLinked = relatedThoughts?.linkedData ?? [];
 
-	// TODO: Reimplement
-
-	// return (
-	// 	<div className="flex w-full flex-col gap-2 rounded-md border border-border p-4">
-	// 		{isLoading ? (
-	// 			<div className="flex w-full justify-center py-4">
-	// 				<LoadingSpinner size="sm" />
-	// 			</div>
-	// 		) : (
-	// 			<RelatedNotesSection
-	// 				title="Linked Docs"
-	// 				thoughts={manuallyLinked}
-	// 				icon={<LinkIcon className="mr-1 size-4 text-secondary" />}
-	// 				emptyMessage="No linked docs"
-	// 			/>
-	// 		)}
-	// 	</div>
-	// );
-
-	return null;
+	return (
+		<div className="flex w-full flex-col gap-2 rounded-md border border-border p-4">
+			{isLoading ? (
+				<div className="flex w-full justify-center py-4">
+					<LoadingSpinner size="sm" />
+				</div>
+			) : (
+				<RelatedNotesSection
+					title="Linked Docs"
+					thoughts={manuallyLinked}
+					icon={<LinkIcon className="mr-1 size-4 text-secondary" />}
+					emptyMessage="No linked docs"
+				/>
+			)}
+		</div>
+	);
 };
 
-// const RelatedNotesSection = ({
-// 	title,
-// 	thoughts,
-// 	icon,
-// 	emptyMessage,
-// 	isLoading,
-// }: {
-// 	title: string;
-// 	thoughts:
-// 		| NonNullable<ReturnType<typeof useRelatedThoughts>["data"]>["linkedData"]
-// 		| NonNullable<ReturnType<typeof useRelatedThoughts>["data"]>["relatedData"];
-// 	icon: React.ReactNode;
-// 	emptyMessage: string;
-// 	isLoading?: boolean;
-// }) => {
-// 	const [showAll, setShowAll] = useState(false);
-// 	const displayedThoughts = showAll ? thoughts : thoughts?.slice(0, 4);
+const RelatedNotesSection = ({
+	title,
+	thoughts,
+	icon,
+	emptyMessage,
+	isLoading,
+}: {
+	title: string;
+	thoughts:
+		| NonNullable<ReturnType<typeof useRelatedThoughts>["data"]>["linkedData"]
+		| NonNullable<ReturnType<typeof useRelatedThoughts>["data"]>["relatedData"];
+	icon: React.ReactNode;
+	emptyMessage: string;
+	isLoading?: boolean;
+}) => {
+	const [showAll, setShowAll] = useState(false);
+	const displayedThoughts = showAll ? thoughts : thoughts?.slice(0, 4);
 
-// 	return (
-// 		<div className="mb-4">
-// 			<h5 className="mb-2 flex items-center text-sm font-medium text-secondary">
-// 				{icon}
-// 				{title}
-// 				{isLoading && <LoadingSpinner size="xs" className="ml-2" />}
-// 			</h5>
-// 			<div className="flex w-full flex-col">
-// 				{thoughts && thoughts.length > 0 ? (
-// 					<>
-// 						{displayedThoughts?.map(thought => (
-// 							<ThoughtCard key={thought.id} thought={thought} variant="compact" hoursOnlyForUpdatedAt={false} />
-// 						))}
-// 						{thoughts.length > 4 ? (
-// 							!showAll ? (
-// 								<Button
-// 									variant="ghost"
-// 									size="sm"
-// 									className="mt-2 self-start text-secondary"
-// 									onClick={() => setShowAll(true)}>
-// 									<ChevronDownIcon className="size-4" />
-// 									<span>Show more</span>
-// 								</Button>
-// 							) : (
-// 								<Button
-// 									variant="ghost"
-// 									size="sm"
-// 									className="mt-2 self-start text-secondary"
-// 									onClick={() => setShowAll(false)}>
-// 									<ChevronUpIcon className="size-4" />
-// 									<span>Show less</span>
-// 								</Button>
-// 							)
-// 						) : null}
-// 					</>
-// 				) : (
-// 					<div className="text-sm text-tertiary">{emptyMessage}</div>
-// 				)}
-// 			</div>
-// 		</div>
-// 	);
-// };
+	return (
+		<div className="mb-4">
+			<h5 className="mb-2 flex items-center text-sm font-medium text-secondary">
+				{icon}
+				{title}
+				{isLoading && <LoadingSpinner size="xs" className="ml-2" />}
+			</h5>
+			<div className="flex w-full flex-col">
+				{thoughts && thoughts.length > 0 ? (
+					<>
+						{displayedThoughts?.map(thought => (
+							<ThoughtCard key={thought.id} thought={thought} variant="compact" hoursOnlyForUpdatedAt={false} />
+						))}
+						{thoughts.length > 4 ? (
+							!showAll ? (
+								<Button
+									variant="ghost"
+									size="sm"
+									className="mt-2 self-start text-secondary"
+									onClick={() => setShowAll(true)}>
+									<ChevronDownIcon className="size-4" />
+									<span>Show more</span>
+								</Button>
+							) : (
+								<Button
+									variant="ghost"
+									size="sm"
+									className="mt-2 self-start text-secondary"
+									onClick={() => setShowAll(false)}>
+									<ChevronUpIcon className="size-4" />
+									<span>Show less</span>
+								</Button>
+							)
+						) : null}
+					</>
+				) : (
+					<div className="text-sm text-tertiary">{emptyMessage}</div>
+				)}
+			</div>
+		</div>
+	);
+};
