@@ -9,13 +9,12 @@ import {
 	useSensors,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CircleHelpIcon, FolderPlusIcon } from "lucide-react";
+import { FolderPlusIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "src/components/Button";
 import { HelpTooltip } from "src/components/HelpTooltip";
-import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip";
 import { useWorkspace } from "src/stores/workspace";
 import { cn } from "src/utils";
 import {
