@@ -6,6 +6,7 @@ import { SupabaseProvider } from "src/utils/yjsSyncProvider";
 
 export const useYProvider = (thoughtId: string, disableUpdatesRef: MutableRefObject<boolean>) => {
 	const [isConnected, setIsConnected] = useState(false);
+	const [isLoading, setIsLoading] = useState(true);
 
 	const providerRef = useRef<SupabaseProvider | null>(null);
 
@@ -44,8 +45,12 @@ export const useYProvider = (thoughtId: string, disableUpdatesRef: MutableRefObj
 	useEffect(() => {
 		provider.on("synced", () => {
 			setIsConnected(true);
+			setIsLoading(false);
+		});
+		provider.on("disconnect", () => {
+			setIsConnected(false);
 		});
 	}, [provider]);
 
-	return { isConnected, ydoc, provider };
+	return { isLoading, isConnected, ydoc, provider };
 };

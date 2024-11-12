@@ -1,6 +1,16 @@
 import { Hotkey } from "@cloudy/ui";
 import { Editor } from "@tiptap/react";
-import { ChevronsLeftIcon, CopyIcon, MoreHorizontalIcon, PenIcon, PenOffIcon, RedoIcon, UndoIcon } from "lucide-react";
+import {
+	ChevronsLeftIcon,
+	CopyIcon,
+	MoreHorizontalIcon,
+	PenIcon,
+	PenOffIcon,
+	RedoIcon,
+	RefreshCwIcon,
+	TriangleAlertIcon,
+	UndoIcon,
+} from "lucide-react";
 import { useContext } from "react";
 import { toast } from "react-toastify";
 import { useCopyToClipboard } from "react-use";
@@ -19,7 +29,7 @@ import { ThoughtContext } from "./thoughtContext";
 
 export const ControlRow = ({ thoughtId, editor }: { thoughtId: string; editor?: Editor | null }) => {
 	const { data: thought } = useThought(thoughtId);
-	const { hideControlColumn, setHideControlColumn } = useContext(ThoughtContext);
+	const { isConnected, isDocumentLoading, hideControlColumn, setHideControlColumn } = useContext(ThoughtContext);
 	const [, copyToClipboard] = useCopyToClipboard();
 
 	const toggleDisableTitleSuggestionsMutation = useToggleDisableTitleSuggestions();
@@ -32,6 +42,29 @@ export const ControlRow = ({ thoughtId, editor }: { thoughtId: string; editor?: 
 				</div>
 			</div>
 			<div className="flex items-center gap-1 text-secondary">
+				{!isConnected && !isDocumentLoading && (
+					<Tooltip durationPreset="instant">
+						<TooltipTrigger>
+							<Button
+								variant="outline"
+								size="sm"
+								className="text-red-600"
+								onClick={() => {
+									window.location.reload();
+								}}>
+								<div className="flex flex-row items-center gap-1 group-hover:hidden">
+									<TriangleAlertIcon className="size-4" />
+									<span>Disconnected</span>
+								</div>
+								<div className="hidden flex-row items-center gap-1 group-hover:flex">
+									<RefreshCwIcon className="size-4" />
+									<span>Refresh page</span>
+								</div>
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>Editing disabled. Refresh the page to reconnect.</TooltipContent>
+					</Tooltip>
+				)}
 				<Tooltip durationPreset="short">
 					<TooltipTrigger asChild>
 						<Button

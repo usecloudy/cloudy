@@ -3,6 +3,7 @@ import { createContext } from "react";
 
 export interface ThoughtContextType {
 	thoughtId: string;
+	isDocumentLoading: boolean;
 	isConnected: boolean;
 	isEditingDisabled: boolean;
 	previewingKey: string | null;
@@ -35,6 +36,7 @@ export interface ThoughtContextType {
 
 export const ThoughtContext = createContext<ThoughtContextType>({
 	thoughtId: "",
+	isDocumentLoading: false,
 	isConnected: false,
 	editor: null,
 	isEditingDisabled: false,

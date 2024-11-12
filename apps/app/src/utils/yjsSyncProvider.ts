@@ -209,6 +209,7 @@ export class SupabaseProvider extends EventEmitter {
 					case "CHANNEL_ERROR":
 						// this.emit('error', this);
 						Sentry.captureException(err);
+						this.emit("disconnect", this);
 						break;
 					case "TIMED_OUT":
 						this.emit("disconnect", this);
@@ -240,6 +241,7 @@ export class SupabaseProvider extends EventEmitter {
 	}
 
 	public onDisconnect() {
+		console.log("onDisconnect");
 		this.emit("status", [{ status: "disconnected" }]);
 
 		if (this.awareness) {
