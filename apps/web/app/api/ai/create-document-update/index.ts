@@ -307,10 +307,10 @@ const makeChatMessageForUpdate = (parsedSuggestion: ParsedSuggestion) => {
 	return `${parsedSuggestion.reasoning}
 \`\`\`
 <original_content>
-${parsedSuggestion.selectedSnippet}
+${parsedSuggestion.selectedSnippet.replaceAll("`", "\\`")}
 </original_content>
 <replacement_content>
-${parsedSuggestion.replacementSnippet}
+${parsedSuggestion.replacementSnippet.replaceAll("`", "\\`")}
 </replacement_content>
 \`\`\``;
 };
