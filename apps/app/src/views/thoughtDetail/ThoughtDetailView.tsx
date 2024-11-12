@@ -13,12 +13,15 @@ import { useAsync, useLocalStorage, useMount, usePrevious, useUnmount, useUpdate
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { MainLayout } from "src/components/MainLayout";
 import { useUserRecord } from "src/stores/user";
+import { useWorkspace } from "src/stores/workspace";
 import { cn } from "src/utils";
+import { makeProjectHomeUrl } from "src/utils/projects";
 import { makeHeadTitle } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
 import { useSidebarContext } from "../navigation/SidebarProvider";
+import { useProject } from "../projects/ProjectContext";
 import { ControlColumn } from "./ControlColumn";
 import { ControlRow } from "./ControlRow";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
@@ -56,6 +59,9 @@ export const ThoughtDetailView = () => {
 };
 
 const ThoughtDetailInner = ({ thoughtId }: { thoughtId?: string }) => {
+	const workspace = useWorkspace();
+	const project = useProject();
+
 	const { data: thought, isLoading } = useThought(thoughtId);
 
 	const previousThought = usePrevious(thought);
@@ -65,6 +71,9 @@ const ThoughtDetailInner = ({ thoughtId }: { thoughtId?: string }) => {
 	const headTitle = title ? makeHeadTitle(ellipsizeText(title, 16)) : makeHeadTitle("New Thought");
 
 	if ((!thought && previousThought) || (!isLoading && !thought)) {
+		if (project) {
+			return <Navigate to={makeProjectHomeUrl(workspace.slug, project.slug)} />;
+		}
 		return <Navigate to="/" />;
 	}
 
