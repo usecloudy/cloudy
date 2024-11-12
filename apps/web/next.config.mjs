@@ -58,7 +58,7 @@ export default withSentryConfig(config, {
 	// For all available options, see:
 	// https://github.com/getsentry/sentry-webpack-plugin#options
 
-	org: "cloudy-zo",
+	org: "brain-fog",
 	project: "cloudy-web",
 
 	// Only print logs for uploading source maps in CI
