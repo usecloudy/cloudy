@@ -11,9 +11,7 @@ import { apiClient } from "../../api/client";
 import { queryClient } from "../../api/queryClient";
 import { supabase } from "../../clients/supabase";
 import { useProject } from "../projects/ProjectContext";
-// import { handleSubmitChat } from "./chat";
 import { ThoughtContext } from "./thoughtContext";
-import { useThoughtStore } from "./thoughtStore";
 import { useTitleStore } from "./titleStore";
 
 const MINIMUM_CONTENT_LENGTH = 3;

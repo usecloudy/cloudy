@@ -1,4 +1,4 @@
-import { ThoughtSignals, ellipsizeText } from "@cloudy/utils/common";
+import { ellipsizeText } from "@cloudy/utils/common";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
@@ -40,14 +40,7 @@ import {
 } from "./hooks";
 import { updateMentionNodeNames } from "./mention";
 import { AiGenerationContext, ThoughtContext } from "./thoughtContext";
-import { useThoughtStore } from "./thoughtStore";
-import {
-	backtickInputRegex,
-	clearAllApplyMarks,
-	clearAllEditMarks,
-	tiptapExtensions,
-	wrapSelectionAroundWords,
-} from "./tiptap";
+import { clearAllApplyMarks, clearAllEditMarks, tiptapExtensions, wrapSelectionAroundWords } from "./tiptap";
 import { useYProvider } from "./yProvider";
 
 type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
@@ -109,8 +102,6 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const disableUpdatesRef = useRef(false);
 	const storedContentRef = useRef<JSONContent | null>(null);
 	const contentAfterApplyRef = useRef<JSONContent | null>(null);
-
-	const { setIsAiSuggestionLoading } = useThoughtStore();
 
 	const { setIsSidebarCollapsed } = useSidebarContext({ isFixed: isShowingAiEditorMenu });
 
@@ -296,15 +287,6 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		disableUpdatesRef.current = false;
 	}, [editor, restoreFromLastContent, clearStoredContent, clearApplyContent, onFinishAiEdits]);
 
-	useEffect(() => {
-		const signals = (thought?.signals as string[] | null) ?? [];
-		if (signals.includes(ThoughtSignals.AI_SUGGESTIONS)) {
-			setIsAiSuggestionLoading(true);
-		} else {
-			setIsAiSuggestionLoading(false);
-		}
-	}, [setIsAiSuggestionLoading, thought?.signals]);
-
 	useHotkeys("mod+o", e => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -416,8 +398,6 @@ const EditorView = ({
 	const { editor, isConnected, isDocumentLoading, hideControlColumn, isAiWriting } = useContext(ThoughtContext);
 	const { isGenerating } = useContext(AiGenerationContext);
 
-	const { lastLocalThoughtTitleTs, setCurrentContent, setLastLocalThoughtContentTs, setLastLocalThoughtTitleTs } =
-		useThoughtStore();
 	const { title, setTitle, saveTitleKey } = useTitleStore();
 
 	useMount(() => {
@@ -428,32 +408,26 @@ const EditorView = ({
 		setTitle("");
 	});
 
-	useUpdateEffect(() => {
-		// If the remote title has changed, update the local title
-		if (
-			(latestRemoteTitleTs && lastLocalThoughtTitleTs && new Date(latestRemoteTitleTs) > lastLocalThoughtTitleTs) ||
-			!lastLocalThoughtTitleTs
-		) {
-			setTitle(remoteTitle ?? "");
-		}
-	}, [latestRemoteTitleTs]);
-
-	useUnmount(() => {
-		setCurrentContent(null);
-		setLastLocalThoughtContentTs(null);
-	});
-
+	// TODO: Implement title updates from remote
+	// useUpdateEffect(() => {
+	// 	// If the remote title has changed, update the local title
+	// 	if (
+	// 		(latestRemoteTitleTs && lastLocalThoughtTitleTs && new Date(latestRemoteTitleTs) > lastLocalThoughtTitleTs) ||
+	// 		!lastLocalThoughtTitleTs
+	// 	) {
+	// 		setTitle(remoteTitle ?? "");
+	// 	}
+	// }, [latestRemoteTitleTs]);
+	
 	useUpdateEffect(() => {
 		const ts = new Date();
 		onChange({ title, ts });
-		setLastLocalThoughtTitleTs(ts);
 	}, [saveTitleKey]);
 
 	const handleChangeTitle = (title: string) => {
 		const ts = new Date();
 		setTitle(title);
 		onChange({ title, ts });
-		setLastLocalThoughtTitleTs(ts);
 	};
 
 	return (
