@@ -63,8 +63,13 @@ export interface ThreadRespondPostRequestBody {
 }
 
 export interface ApplyChangePostRequestBody {
-    thoughtId: string;
+    documentId: string;
     suggestionContent: string;
+}
+
+export interface ApplyChangePostResponse {
+    originalSnippet: string | null;
+    replacementSnippet: string | null;
 }
 
 export interface CollectionSummaryPostRequestBody {

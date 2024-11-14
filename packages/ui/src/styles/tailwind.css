@@ -252,6 +252,10 @@
 	@apply rounded-sm bg-green-500/30;
 }
 
+.tiptap .editor-removal-highlight {
+	@apply rounded-sm line-through bg-red-500/30;
+}
+
 .tiptap .mention {
 	@apply cursor-pointer rounded-sm bg-accent/10 px-1 text-accent hover:bg-accent/20 hover:underline active:bg-accent/10;
 }

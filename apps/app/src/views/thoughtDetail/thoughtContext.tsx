@@ -32,6 +32,8 @@ export interface ThoughtContextType {
 	convertSelectionToEditMark: () => void;
 	hideAiSelectionMenu: () => void;
 	showAiSelectionMenu: () => void;
+	storeContentAsApplyContent: () => void;
+	clearApplyContent: () => void;
 }
 
 export const ThoughtContext = createContext<ThoughtContextType>({
@@ -65,6 +67,8 @@ export const ThoughtContext = createContext<ThoughtContextType>({
 	convertSelectionToEditMark: () => {},
 	hideAiSelectionMenu: () => {},
 	showAiSelectionMenu: () => {},
+	storeContentAsApplyContent: () => {},
+	clearApplyContent: () => {},
 });
 
 export const AiGenerationContext = createContext<{
