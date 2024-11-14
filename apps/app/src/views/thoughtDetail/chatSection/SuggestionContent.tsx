@@ -1,11 +1,18 @@
-import { ChatRole, extractInnerTextFromXml, handleSupabaseError } from "@cloudy/utils/common";
+import {
+	ApplyChangePostRequestBody,
+	ApplyChangePostResponse,
+	ChatRole,
+	extractInnerTextFromXml,
+	handleSupabaseError,
+} from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
-import { diffLines, diffWords } from "diff";
-import { CheckCircle2Icon, ChevronsLeftIcon, XCircleIcon } from "lucide-react";
+import { diffLines } from "diff";
+import { AlertCircleIcon, CheckCircle2Icon, ChevronsLeftIcon, XCircleIcon } from "lucide-react";
 import posthog from "posthog-js";
 import React, { useContext, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
+import { apiClient } from "src/api/client";
 import { queryClient } from "src/api/queryClient";
 import { chatThreadQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
@@ -15,46 +22,17 @@ import LoadingSpinner from "src/components/LoadingSpinner";
 import { useWorkspace } from "src/stores/workspace";
 import { cn } from "src/utils";
 import { simpleHash } from "src/utils/hash";
-import { processSearches } from "src/utils/tiptapSearchAndReplace";
 
 import { ThoughtContext } from "../thoughtContext";
 import { ChatMessageContext } from "./chat";
+import { showDiffInEditor } from "./utils";
 
 const useApplySuggestion = () => {
 	const workspace = useWorkspace();
-	const { editor } = useContext(ThoughtContext);
+	const { editor, thoughtId } = useContext(ThoughtContext);
 
 	return useMutation({
 		mutationFn: async ({ suggestionContent }: { suggestionContent: string }) => {
-			// const {
-			// 	data: { originalSnippet, replacementSnippet },
-			// } = await apiClient.post<{ originalSnippet: string; replacementSnippet: string | null }>("/api/ai/apply-change", {
-			// 	thoughtId,
-			// 	suggestionContent,
-			// });
-
-			// const currentHtml = editor?.getHTML();
-			// if (!currentHtml) {
-			// 	throw new Error("No current HTML");
-			// }
-			// const currentHtmlWithoutEditTags = currentHtml.replace(/<\/?edit>/g, "");
-
-			// if (!currentHtmlWithoutEditTags.includes(originalSnippet)) {
-			// 	throw new Error("Original snippet not found");
-			// }
-
-			// console.log("replacing", originalSnippet, "with", replacementSnippet);
-
-			// if (!replacementSnippet) {
-			// 	throw new Error("Replacement snippet not found");
-			// }
-
-			// const newHtml = currentHtmlWithoutEditTags.replace(originalSnippet, replacementSnippet);
-
-			// console.log("newHtml", newHtml);
-
-			// editor?.commands.setContent(newHtml ?? currentHtml ?? "", false, { preserveWhitespace: false });
-
 			let originalSnippet = extractInnerTextFromXml(suggestionContent, "original_content").trim();
 			let replacementSnippet = extractInnerTextFromXml(suggestionContent, "replacement_content").trim();
 			const contentMd = editor!.storage.markdown.getMarkdown() as string;
@@ -64,13 +42,27 @@ const useApplySuggestion = () => {
 
 			if (contentMd.includes(originalSnippet)) {
 				editor?.commands.setContent(contentMd.replace(originalSnippet, replacementSnippet));
-			} else {
-				console.log("Will need advanced replace.", contentMd, originalSnippet);
-				posthog.capture("advanced_replace_needed", {
+				posthog.capture("normal_replace_used", {
 					workspace_id: workspace.id,
 					workspace_slug: workspace.slug,
 				});
-				throw new Error("Advanced replace not implemented yet.");
+			} else {
+				console.log("Will need advanced replace.", contentMd, originalSnippet);
+				posthog.capture("advanced_replace_used", {
+					workspace_id: workspace.id,
+					workspace_slug: workspace.slug,
+				});
+
+				const result = await apiClient.post<ApplyChangePostResponse>("/api/ai/advanced-apply-change", {
+					suggestionContent,
+					documentId: thoughtId,
+				} satisfies ApplyChangePostRequestBody);
+
+				if (result.data.originalSnippet && result.data.replacementSnippet) {
+					editor?.commands.setContent(contentMd.replace(result.data.originalSnippet, result.data.replacementSnippet));
+				} else {
+					throw new Error("Advanced replace failed.");
+				}
 			}
 		},
 		throwOnError: false,
@@ -112,6 +104,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 	const {
 		previewingKey,
 		storeContentIfNeeded,
+		storeContentAsApplyContent,
 		setPreviewingKey,
 		setIsEditingDisabled,
 		restoreFromLastContent,
@@ -150,7 +143,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 			setPreviewingKey(suggestionHash);
 			onStartAiEdits();
 
-			const existingContentText = editor.getText() ?? "";
+			const existingContentMd = editor?.storage.markdown.getMarkdown() ?? "";
 
 			try {
 				await applySuggestionMutation.mutateAsync({ suggestionContent });
@@ -159,24 +152,10 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 				setPreviewingKey(null);
 			}
 
-			const newContentText = editor?.getText() ?? "";
-			const diff = diffLines(existingContentText, newContentText);
+			const newContentMd = editor?.storage.markdown.getMarkdown() ?? "";
+			storeContentAsApplyContent();
 
-			const addedLines = diff.filter(part => part.added);
-			addedLines.forEach(part => {
-				if (editor) {
-					const lines = part.value.split("\n").filter(line => line.trim().length > 0);
-					lines.forEach(line => {
-						const results = processSearches(editor.state.doc, line);
-
-						const firstResult = results?.at(0);
-
-						if (firstResult) {
-							editor.chain().blur().setTextSelection(firstResult).setMark("additionHighlight").run();
-						}
-					});
-				}
-			});
+			showDiffInEditor(existingContentMd, newContentMd, editor);
 
 			onFinishAiEdits();
 		}
@@ -215,16 +194,19 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 
 	const { original, replacement } = useMemo(() => parseSuggestionContent(suggestionContent || ""), [suggestionContent]);
 
-	// Compute the word-level diff
-	const diff = useMemo(() => diffWords(original, replacement), [original, replacement]);
+	const diff = useMemo(() => diffLines(original, replacement), [original, replacement]);
+	const canApply = useMemo(
+		() => original && (editor?.storage.markdown.getMarkdown() as string)?.includes(original),
+		[original, editor],
+	);
 
 	// Add state for active tab
 	const [activeTab, setActiveTab] = useState<"diff" | "replacement">("diff");
 
 	return (
-		<pre className="my-1 rounded bg-card px-3 py-2 !font-sans">
+		<pre className="my-1 rounded bg-card !px-0 !py-2 !font-sans">
 			{/* Tab Bar */}
-			<div className="flex border-b">
+			<div className="flex border-b px-4">
 				<button
 					className={`px-4 py-2 ${activeTab === "diff" ? "border-b-2 border-accent text-accent" : "text-gray-500"}`}
 					onClick={() => setActiveTab("diff")}>
@@ -241,7 +223,7 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 
 			{/* Conditional Rendering based on activeTab */}
 			{activeTab === "diff" ? (
-				<p className="text-wrap break-words">
+				<p className="text-wrap break-words px-4 font-mono text-xs">
 					{diff.map((part, index) => (
 						<span
 							key={index}
@@ -257,14 +239,14 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 					))}
 				</p>
 			) : (
-				<p className="text-wrap break-words">{replacement}</p>
+				<p className="text-wrap break-words px-4">{replacement}</p>
 			)}
 
 			{/* ... existing UI elements ... */}
-			<div className="mt-2 flex w-full flex-row items-center gap-1.5">
-				{applySuggestionMutation.isPending || isGenerating ? (
+			<div className="mt-2 flex w-full flex-row items-center gap-1.5 px-4">
+				{isGenerating ? (
 					<LoadingSpinner size="xs" />
-				) : currentIsPreviewing ? (
+				) : currentIsPreviewing && !applySuggestionMutation.isPending ? (
 					<>
 						<Button
 							size="sm"
@@ -281,25 +263,38 @@ export const SuggestionContent = ({ children }: JSX.IntrinsicElements["pre"]) =>
 					</>
 				) : (
 					<>
-						<Button
-							size="sm"
-							variant="outline"
-							className="bg-background text-accent hover:bg-accent/20"
-							onClick={applySuggestion}
-							disabled={isApplied}>
-							{isApplied ? (
-								<>
-									<CheckCircle2Icon className="size-4" />
-									<span>Applied</span>
-								</>
-							) : (
-								<>
+						{isApplied ? (
+							<Button
+								size="sm"
+								variant="outline"
+								className="bg-background text-accent"
+								onClick={() => {}}
+								disabled>
+								<CheckCircle2Icon className="size-4" />
+								<span>Applied</span>
+							</Button>
+						) : (
+							<Button
+								size="sm"
+								variant="outline"
+								className="bg-background text-accent hover:bg-accent/20"
+								onClick={applySuggestion}
+								disabled={applySuggestionMutation.isPending}>
+								{applySuggestionMutation.isPending ? (
+									<LoadingSpinner size="xs" />
+								) : (
 									<ChevronsLeftIcon className="size-4" />
-									<span>Apply</span>
-								</>
-							)}
-						</Button>
+								)}
+								<span>Apply</span>
+							</Button>
+						)}
 						<CopyButton textToCopy={replacement} size="sm" variant="outline" className="bg-background" />
+						{!canApply && !isApplied && (
+							<div className="flex flex-row items-center gap-1">
+								<AlertCircleIcon className="size-4 text-tertiary" />
+								<span className="text-xs text-tertiary">This apply may take longer.</span>
+							</div>
+						)}
 					</>
 				)}
 			</div>

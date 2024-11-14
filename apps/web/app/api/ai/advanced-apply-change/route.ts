@@ -1,4 +1,9 @@
-import { ApplyChangePostRequestBody, extractInnerTextFromXml, handleSupabaseError } from "@cloudy/utils/common";
+import {
+	ApplyChangePostRequestBody,
+	ApplyChangePostResponse,
+	extractInnerTextFromXml,
+	handleSupabaseError,
+} from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CoreMessage, streamText } from "ai";
@@ -17,17 +22,17 @@ export const POST = async (req: NextRequest) => {
 };
 
 const makeApplyOriginalSnippetPrompts = ({
-	contentHtml,
+	contentMd,
 	suggestionContent,
 	currentOriginalSnippet,
 }: {
-	contentHtml: string;
+	contentMd: string;
 	suggestionContent: string;
 	currentOriginalSnippet: string | null;
 }): CoreMessage[] => [
 	{
 		role: "system",
-		content: `You are Cloudy, an amazing writing tool that helps users write.
+		content: `You an amazing writing tool that helps users write.
 
 You will be asked to convert a markdown change into HTML to be applied to the original document html.
 - The original snippet and replacement snippet is the input you would place into a .replace() call for a string, where the original snippet is the string to be replaced and the replacement snippet is the string to replace it with.
@@ -35,17 +40,36 @@ You will be asked to convert a markdown change into HTML to be applied to the or
 - Some requested changes could be malformed, so you should try to correct them.
 - You can create code blocks with <pre><code class="language-[language]">...</code></pre>, it cannot be nested, so create them at the root level. Also, don't include a prefix newline after the opening <code> tag, as that newline will be included in the snippet.
 
-<example_1>
-For example, given this document in html format:
-\`\`\`
-<h1>This is a header.</h1><p>This is a paragraph.</p>
-<p>This is another paragraph.</p>
-<h2>This is another header.</h2>
-<p>This is the next section's paragraph.</p>
-\`\`\`
+<example>
+For example, given this document in markdown format:
+<document>
+# This is a header.
+
+This is a paragraph.
+
+This is another paragraph.
+
+This is another header.
+
+This is the next section's paragraph.
+</document>
 
 And this requested change, in markdown format:
-\`\`\`
+<change>
+<original_snippet>
+# This is a  header.
+
+This is aparagraph.
+</original_snippet>
+<replacement_snippet>
+## This is a replacement header.
+
+This is a replacement paragraph.
+</replacement_snippet>
+</change>
+
+The requested changes couldn't be applied because something was malformed or out of date. Fix any issues with the change request, and return the corrected/updated original markdown snippet, and replacement markdown snippet:
+<fixed_change>
 <original_snippet>
 # This is a header.
 
@@ -56,70 +80,24 @@ This is a paragraph.
 
 This is a replacement paragraph.
 </replacement_snippet>
-\`\`\`
-
-Convert the markdown change into HTML to be applied to the original document html.
-Return the corrected original HTML snippet, maintaining the same html formatting as the original document html, and replacement HTML snippet for the html:
-\`\`\`
-<original_snippet>
-<h1>This is a header.</h1><p>This is a paragraph.</p>
-</original_snippet>
-<replacement_snippet>
-<h2>This is a replacement header.</h2><p>This is a replacement paragraph.</p>
-</replacement_snippet>
-</example_1>
-
-<example_2>
-For example, given this document in html format:
-\`\`\`
-<h1>This is a header.</h1><p>This is a paragraph.</p>
-<p>This is another paragraph.</p>
-<h2>This is another header.</h2>
-<p>This is the next section's paragraph.</p>
-\`\`\`
-
-And this requested change, in markdown format:
-\`\`\`
-<original_snippet>
-This is header.
-
-This is a paragraph.
-</original_snippet>
-<replacement_snippet>
-## This is a replacement header.
-
-This is a replacement paragraph.
-</replacement_snippet>
-\`\`\`
-
-Convert the markdown change into HTML to be applied to the original document html.
-Return the corrected original HTML snippet, maintaining the same html formatting as the original document html, and replacement HTML snippet for the html:
-\`\`\`
-<original_snippet>
-<h1>This is a header.</h1><p>This is a paragraph.</p>
-</original_snippet>
-<replacement_snippet>
-<h2>This is a replacement header.</h2><p>This is a replacement paragraph.</p>
-</replacement_snippet>
-</example_2>\`\`\``,
+</example>`,
 	},
 	{
 		role: "user",
 		content: [
 			{
 				type: "text",
-				text: `Here is the document the user is writing, in html format:
-\`\`\`
-${contentHtml}
-\`\`\`
+				text: `Here is the document the user is writing, in markdown format:
+<document>
+${contentMd}
+</document>
 
 And this requested change, in markdown format:
-\`\`\`
+<change>
 ${suggestionContent}
-\`\`\`
+</change>
 
-Convert the markdown change into HTML to be applied to the original document html.
-Return the corrected original HTML snippet, maintaining the same html formatting as the original document html, and replacement HTML snippet for the html:`,
+The requested changes couldn't be applied because something was malformed or out of date. Fix any issues with the change request, and return the corrected/updated original markdown snippet, and replacement markdown snippet:`,
 				experimental_providerMetadata: {
 					anthropic: { cacheControl: { type: "ephemeral" } },
 				},
@@ -128,19 +106,19 @@ Return the corrected original HTML snippet, maintaining the same html formatting
 	},
 	{
 		role: "assistant",
-		content: `\`\`\`
+		content: `<change>
 <original_snippet>${currentOriginalSnippet ? "\n" + currentOriginalSnippet : ""}`,
 	},
 ];
 
 const runAttempt = async ({
-	contentHtml,
+	contentMd,
 	suggestionContent,
 	heliconeHeaders,
 	currentOriginalSnippet,
 	attempt,
 }: {
-	contentHtml: string;
+	contentMd: string;
 	suggestionContent: string;
 	heliconeHeaders: Record<string, string>;
 	currentOriginalSnippet: string | null;
@@ -149,8 +127,8 @@ const runAttempt = async ({
 	const abortController = new AbortController();
 
 	const { textStream } = await streamText({
-		model: heliconeAnthropic.languageModel("claude-3-haiku-20240307", { cacheControl: true }),
-		messages: makeApplyOriginalSnippetPrompts({ contentHtml, suggestionContent, currentOriginalSnippet }),
+		model: heliconeAnthropic.languageModel("claude-3-5-haiku-20241022", { cacheControl: true }),
+		messages: makeApplyOriginalSnippetPrompts({ contentMd, suggestionContent, currentOriginalSnippet }),
 		temperature: 0.7,
 		experimental_telemetry: {
 			isEnabled: true,
@@ -171,9 +149,11 @@ const runAttempt = async ({
 		const endsWithPartialTag = /<\/[^>]*$/.test(text);
 
 		if (!endsWithPartialTag && !text.includes("</original_snippet>")) {
-			const newOriginalSnippet = text.split("</original_snippet>")[0]?.trim().replaceAll("\n", "") ?? "";
+			const newOriginalSnippet = text.split("</original_snippet>")[0]?.trim() ?? "";
 
-			if (!contentHtml.includes(newOriginalSnippet)) {
+			console.log("newOriginalSnippet", newOriginalSnippet);
+
+			if (!contentMd.includes(newOriginalSnippet)) {
 				abortController.abort();
 				return { originalSnippet, replacementSnippet: null, success: false };
 			}
@@ -182,22 +162,19 @@ const runAttempt = async ({
 		}
 	}
 
-	originalSnippet =
-		extractInnerTextFromXml("<original_snippet>" + text, "original_snippet")
-			?.trim()
-			.replaceAll("\n", "") ?? "";
+	originalSnippet = extractInnerTextFromXml("<original_snippet>" + text, "original_snippet")?.trim() ?? "";
 	const replacementSnippet = extractInnerTextFromXml(text, "replacement_snippet")?.trim();
 
 	return { originalSnippet, replacementSnippet: replacementSnippet ?? null, success: true };
 };
 
 const applyChange = async (payload: ApplyChangePostRequestBody, supabase: SupabaseClient<Database>) => {
-	const { thoughtId, suggestionContent } = payload;
-	const { content: contentHtml } = handleSupabaseError(
-		await supabase.from("thoughts").select("content").eq("id", thoughtId).single(),
+	const { documentId, suggestionContent } = payload;
+	const { content_md: contentMd } = handleSupabaseError(
+		await supabase.from("thoughts").select("content_md").eq("id", documentId).single(),
 	);
 
-	if (!contentHtml) {
+	if (!contentMd) {
 		throw new Error("Content not found");
 	}
 
@@ -219,7 +196,7 @@ const applyChange = async (payload: ApplyChangePostRequestBody, supabase: Supaba
 
 	while (attempt < 12) {
 		const result = await runAttempt({
-			contentHtml,
+			contentMd,
 			suggestionContent,
 			heliconeHeaders,
 			currentOriginalSnippet: originalSnippet,
@@ -243,5 +220,5 @@ const applyChange = async (payload: ApplyChangePostRequestBody, supabase: Supaba
 	return NextResponse.json({
 		originalSnippet,
 		replacementSnippet,
-	});
+	} satisfies ApplyChangePostResponse);
 };

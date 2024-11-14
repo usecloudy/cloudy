@@ -10,9 +10,7 @@ import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
 import { Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import hljs from "highlight.js";
 import { common, createLowlight } from "lowlight";
-import { useEffect } from "react";
 import { Markdown } from "tiptap-markdown";
 
 // Import default theme
@@ -21,10 +19,6 @@ import { createCodeBlockPasteRule } from "src/utils/tiptapCodeBlockPasteRule";
 import { PendingAttachmentNode } from "./PendingAttachment";
 import { Mention, mention } from "./mention";
 import ResizableImageExtension from "./resizableImageExtension";
-
-hljs.configure({
-	cssSelector: "hljssss",
-});
 
 export const IndentNode = Node.create({
 	name: "indent",
@@ -117,6 +111,13 @@ const AdditionHighlight = Mark.create({
 	},
 });
 
+const RemovalHighlight = Mark.create({
+	name: "removalHighlight",
+	renderHTML({ HTMLAttributes }) {
+		return ["span", mergeAttributes(HTMLAttributes, { class: "editor-removal-highlight" }), 0];
+	},
+});
+
 const EditHighlight = Mark.create({
 	name: "editHighlight",
 	inclusive: true,
@@ -140,6 +141,7 @@ export const backtickInputRegex = /```([a-z]+)?\s*(.*?)```/;
 export const tildeInputRegex = /^~~~([a-z]+)?[\s\n]$/;
 
 const ExtendedCodeBlockLowlight = CodeBlockLowlight.extend({
+	marks: "additionHighlight removalHighlight editHighlight",
 	priority: 1000,
 	addPasteRules() {
 		return [
@@ -191,6 +193,7 @@ export const tiptapExtensions = [
 	}),
 	CommentHighlight,
 	AdditionHighlight,
+	RemovalHighlight,
 	EditHighlight,
 	Underline,
 	TaskList.configure({
@@ -240,6 +243,7 @@ export const clearAllApplyMarks = (editor: Editor) => {
 		.chain()
 		.setTextSelection({ from: 0, to: editor.state.doc.content.size })
 		.unsetMark("additionHighlight")
+		.unsetMark("removalHighlight")
 		.setTextSelection(currentSelection)
 		.run();
 };

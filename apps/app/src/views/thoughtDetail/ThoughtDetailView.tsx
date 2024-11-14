@@ -2,7 +2,7 @@ import { ThoughtSignals, ellipsizeText } from "@cloudy/utils/common";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
-import { EditorContent, Extension, useEditor } from "@tiptap/react";
+import { EditorContent, Extension, JSONContent, useEditor } from "@tiptap/react";
 import { GripVertical } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
@@ -107,7 +107,8 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const { onChange } = useSave(editThought, { debounceDurationMs: thoughtId ? 500 : 0 });
 
 	const disableUpdatesRef = useRef(false);
-	const storedContentRef = useRef<string | null>(null);
+	const storedContentRef = useRef<JSONContent | null>(null);
+	const contentAfterApplyRef = useRef<JSONContent | null>(null);
 
 	const { setIsAiSuggestionLoading } = useThoughtStore();
 
@@ -186,8 +187,6 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				const contentMd = editor?.storage.markdown.getMarkdown();
 				const contentPlainText = editor?.getText();
 
-				const matchAttempt = backtickInputRegex.exec(contentMd ?? "");
-
 				const ts = new Date();
 				onChange({ content, contentMd, contentPlainText, ts });
 			}
@@ -197,19 +196,28 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 
 	const storeContentIfNeeded = useCallback(() => {
 		if (!storedContentRef.current) {
-			storedContentRef.current = editor?.getHTML() ?? null;
+			storedContentRef.current = editor?.getJSON() ?? null;
 		}
+	}, [editor]);
+
+	const storeContentAsApplyContent = useCallback(() => {
+		contentAfterApplyRef.current = editor?.getJSON() ?? null;
 	}, [editor]);
 
 	const restoreFromLastContent = useCallback(() => {
 		if (storedContentRef.current) {
 			editor?.commands.setContent(storedContentRef.current);
 			storedContentRef.current = null;
+			contentAfterApplyRef.current = null;
 		}
 	}, [editor]);
 
 	const clearStoredContent = useCallback(() => {
 		storedContentRef.current = null;
+	}, []);
+
+	const clearApplyContent = useCallback(() => {
+		contentAfterApplyRef.current = null;
 	}, []);
 
 	const convertSelectionToEditMark = useCallback(() => {
@@ -252,36 +260,41 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 			return;
 		}
 
+		editor.commands.setContent(contentAfterApplyRef.current ?? "");
+
 		clearAllApplyMarks(editor);
 		setPreviewingKey(null);
 		setIsEditingDisabled(false);
+		clearApplyContent();
 		clearStoredContent();
 		onFinishAiEdits();
 		disableUpdatesRef.current = false;
 		onUpdate();
-	}, [editor, clearStoredContent, onFinishAiEdits, onUpdate]);
+	}, [editor, clearStoredContent, clearApplyContent, onFinishAiEdits, onUpdate]);
 
 	const hideAiEditor = useCallback(() => {
 		if (!editor) return;
 
 		setShowAiEditorMenu(false);
 		restoreFromLastContent();
+		clearApplyContent();
 		clearStoredContent();
 		clearAllEditMarks(editor);
 		onFinishAiEdits();
 		disableUpdatesRef.current = false;
-	}, [editor, restoreFromLastContent, clearStoredContent, onFinishAiEdits]);
+	}, [editor, restoreFromLastContent, clearStoredContent, clearApplyContent, onFinishAiEdits]);
 
 	const hideAiSelectionMenu = useCallback(() => {
 		if (!editor) return;
 
 		setIsShowingAiSelectionMenu(false);
 		restoreFromLastContent();
+		clearApplyContent();
 		clearStoredContent();
 		clearAllEditMarks(editor);
 		onFinishAiEdits();
 		disableUpdatesRef.current = false;
-	}, [editor, restoreFromLastContent, clearStoredContent, onFinishAiEdits]);
+	}, [editor, restoreFromLastContent, clearStoredContent, clearApplyContent, onFinishAiEdits]);
 
 	useEffect(() => {
 		const signals = (thought?.signals as string[] | null) ?? [];
@@ -312,8 +325,10 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				previewingKey,
 				setPreviewingKey,
 				storeContentIfNeeded,
+				storeContentAsApplyContent,
 				restoreFromLastContent,
 				clearStoredContent,
+				clearApplyContent,
 				hideControlColumn,
 				setHideControlColumn,
 				setShowAiEditorMenu,
