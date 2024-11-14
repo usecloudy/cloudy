@@ -10,6 +10,8 @@ import { useWorkspace } from "src/stores/workspace";
 import { apiClient } from "../../api/client";
 import { queryClient } from "../../api/queryClient";
 import { supabase } from "../../clients/supabase";
+import { useUser } from "../../stores/user";
+import { useDocumentContext } from "../documentDetail/DocumentContext";
 import { useProject } from "../projects/ProjectContext";
 import { ThoughtContext } from "./thoughtContext";
 import { useTitleStore } from "./titleStore";
@@ -473,6 +475,38 @@ export const useExistingLinkedFiles = (docId: string) => {
 					branch,
 					fileUrl: `https://github.com/${repoReference.repository_connections!.owner}/${repoReference.repository_connections!.name}/blob/${branch}/${repoReference.path}`,
 				};
+			});
+		},
+	});
+};
+
+export const usePublishDocumentVersion = () => {
+	const user = useUser();
+	const { documentId } = useDocumentContext();
+	const { data: document } = useThought(documentId);
+
+	const { editor } = useContext(ThoughtContext);
+
+	return useMutation({
+		mutationFn: async () => {
+			if (!editor) {
+				throw new Error("Editor not found");
+			}
+
+			handleSupabaseError(
+				await supabase.from("document_versions").insert({
+					document_id: documentId,
+					published_by: user.id,
+					title: document!.title!,
+					content_json: editor.getJSON(),
+					content_md: editor.storage.markdown.getMarkdown(),
+					content_html: editor.getHTML(),
+				}),
+			);
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: thoughtQueryKeys.latestPublishedVersion(documentId),
 			});
 		},
 	});

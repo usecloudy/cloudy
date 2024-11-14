@@ -1107,6 +1107,54 @@ export type Database = {
           },
         ]
       }
+      document_versions: {
+        Row: {
+          content_html: string
+          content_json: Json
+          content_md: string
+          created_at: string
+          document_id: string
+          id: string
+          published_by: string
+          title: string
+        }
+        Insert: {
+          content_html: string
+          content_json: Json
+          content_md: string
+          created_at?: string
+          document_id: string
+          id?: string
+          published_by: string
+          title?: string
+        }
+        Update: {
+          content_html?: string
+          content_json?: Json
+          content_md?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          published_by?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_version_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_version_published_by_fkey"
+            columns: ["published_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       folders: {
         Row: {
           created_at: string
