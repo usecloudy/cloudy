@@ -13,7 +13,6 @@ import StarterKit from "@tiptap/starter-kit";
 import { common, createLowlight } from "lowlight";
 import { Markdown } from "tiptap-markdown";
 
-// Import default theme
 import { createCodeBlockPasteRule } from "src/utils/tiptapCodeBlockPasteRule";
 
 import { PendingAttachmentNode } from "./PendingAttachment";
@@ -50,6 +49,11 @@ export const IndentExtension = Extension.create({
 				const { selection } = editor.state;
 				const { $from } = selection;
 
+				// If we're in a code block, forward the behavior to the code block editor extension
+				if (editor.isActive("codeBlock")) {
+					return false;
+				}
+
 				// Check if we're at the start of a list item
 				if (editor.isActive("listItem") && $from.parentOffset === 0) {
 					// Attempt to sink the list item
@@ -72,6 +76,11 @@ export const IndentExtension = Extension.create({
 				return true;
 			},
 			"Shift-Tab": ({ editor }) => {
+				// If we're in a code block, forward the behavior to the code block editor extension
+				if (editor.isActive("codeBlock")) {
+					return false;
+				}
+
 				const { selection } = editor.state;
 				const { $from } = selection;
 
@@ -90,6 +99,103 @@ export const IndentExtension = Extension.create({
 				}
 
 				// Prevent default behavior (losing focus)
+				return true;
+			},
+		};
+	},
+});
+
+const TAB_CHAR = "\t";
+
+export const CodeBlockEditorExtension = Extension.create({
+	name: "codeBlockEditor",
+
+	addKeyboardShortcuts() {
+		return {
+			Tab: ({ editor }) => {
+				// Only handle tabs inside code blocks
+				if (!editor.isActive("codeBlock")) {
+					console.log("Not in code block");
+					return false;
+				}
+
+				editor
+					.chain()
+					.command(({ tr }) => {
+						if (tr.selection.empty) {
+							// Insert a tab character for indentation
+							tr.insertText(TAB_CHAR);
+						} else {
+							// Indent the selected text
+							const { from: selectionFrom, to } = tr.selection;
+
+							// Find the start of the current line
+							let lineStart = selectionFrom;
+							while (lineStart > 0 && tr.doc.textBetween(lineStart - 1, lineStart) !== "\n") {
+								lineStart--;
+							}
+
+							// Find the end of the selection, extending to the start of the next line if needed
+							let lineEnd = to;
+							if (tr.doc.textBetween(lineEnd - 1, lineEnd) !== "\n") {
+								while (lineEnd < tr.doc.content.size && tr.doc.textBetween(lineEnd, lineEnd + 1) !== "\n") {
+									lineEnd++;
+								}
+							}
+
+							const text = tr.doc.textBetween(lineStart, lineEnd);
+							const lines = text.split("\n");
+							const indentedText = lines.map(line => TAB_CHAR + line).join("\n");
+							tr.replaceWith(lineStart, lineEnd, tr.doc.type.schema.text(indentedText));
+						}
+						return true;
+					})
+					.run();
+
+				return true;
+			},
+			"Shift-Tab": ({ editor }) => {
+				// Only handle shift+tab inside code blocks
+				if (!editor.isActive("codeBlock")) {
+					return false;
+				}
+
+				const { selection, doc } = editor.state;
+				const { from, to } = selection;
+
+				// Find the start of the current line
+				let lineStart = from;
+				while (lineStart > 0 && doc.textBetween(lineStart - 1, lineStart) !== "\n") {
+					lineStart--;
+				}
+
+				// Find the end of the selection, extending to the start of the next line if needed
+				let lineEnd = to;
+				if (doc.textBetween(lineEnd - 1, lineEnd) !== "\n") {
+					while (lineEnd < doc.content.size && doc.textBetween(lineEnd, lineEnd + 1) !== "\n") {
+						lineEnd++;
+					}
+				}
+
+				editor
+					.chain()
+					.command(({ tr }) => {
+						const text = doc.textBetween(lineStart, lineEnd);
+						const lines = text.split("\n");
+						const unindentedText = lines
+							.map(line => {
+								if (line.startsWith(TAB_CHAR)) {
+									return line.substring(TAB_CHAR.length);
+								}
+								return line;
+							})
+							.join("\n");
+
+						tr.replaceWith(lineStart, lineEnd, tr.doc.type.schema.text(unindentedText));
+						return true;
+					})
+					.run();
+
 				return true;
 			},
 		};
@@ -221,6 +327,7 @@ export const tiptapExtensions = [
 		linkOnPaste: true,
 		protocols: ["http", "https", "mailto"],
 	}),
+	CodeBlockEditorExtension,
 	ExtendedCodeBlockLowlight.configure({
 		lowlight,
 	}),
