@@ -13,9 +13,9 @@ import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
 import { useDocumentContext } from "../documentDetail/DocumentContext";
+import { NavBar } from "../documentDetail/navBar/NavBar";
 import { useSidebarContext } from "../navigation/SidebarProvider";
 import { ControlColumn } from "./ControlColumn";
-import { ControlRow } from "./ControlRow";
 import { DocumentLoadingPlaceholder } from "./DocumentLoadingPlaceholder";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { FooterRow } from "./FooterRow";
@@ -390,7 +390,7 @@ const EditorView = ({
 	return (
 		<div className="no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-y-scroll">
 			<nav className="sticky top-[-1px] z-30 -mr-2 w-full bg-background px-6 py-2 md:top-0 md:py-3">
-				<ControlRow editor={editor} />
+				<NavBar editor={editor} />
 			</nav>
 			<div
 				className={cn(

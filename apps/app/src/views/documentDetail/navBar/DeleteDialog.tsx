@@ -13,7 +13,7 @@ import {
 } from "src/components/AlertDialog";
 import { Button } from "src/components/Button";
 
-import { useDeleteThought } from "./hooks";
+import { useDeleteThought } from "../../thoughtDetail/hooks";
 
 export const DeleteDialog = ({ thoughtId }: { thoughtId: string }) => {
 	const { mutateAsync: deleteThought } = useDeleteThought();

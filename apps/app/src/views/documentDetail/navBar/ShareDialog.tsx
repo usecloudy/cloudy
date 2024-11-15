@@ -1,6 +1,6 @@
 import { AccessStrategies } from "@cloudy/utils/common";
 import { ChevronDownIcon, GlobeIcon, LockIcon, PlusIcon, UsersIcon, XIcon } from "lucide-react";
-import { useContext, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "src/components/Button";
 import { CopyButton } from "src/components/CopyButton";
@@ -12,11 +12,12 @@ import { Avatar } from "src/components/users/Avatar";
 import { useUser } from "src/stores/user";
 import { useWorkspace } from "src/stores/workspace";
 import { makeDocUrl } from "src/utils/thought";
+import { useProject } from "src/views/projects/ProjectContext";
 
-import { useProject } from "../projects/ProjectContext";
-import { useAddDocumentUser, useDocumentAccessControl, useRemoveDocumentUser } from "./accessControl";
-import { useEditThought, useThought } from "./hooks";
-import { ThoughtContext } from "./thoughtContext";
+import { useEditThought } from "../../thoughtDetail/hooks";
+import { useThought } from "../../thoughtDetail/hooks";
+import { useDocumentContext } from "../DocumentContext";
+import { useAddDocumentUser, useDocumentAccessControl, useRemoveDocumentUser } from "../accessControl";
 
 const makeAccessStrategyInfo = (accessStrategy: AccessStrategies) => {
 	switch (accessStrategy) {
@@ -34,25 +35,25 @@ export const ShareDialog = () => {
 	const project = useProject();
 	const user = useUser();
 
-	const { thoughtId } = useContext(ThoughtContext);
+	const { documentId } = useDocumentContext();
 
-	const { data: thought } = useThought(thoughtId);
+	const { data: thought } = useThought(documentId);
 
-	const { accessStrategy, users } = useDocumentAccessControl(thoughtId);
-	const editThoughtMutation = useEditThought(thoughtId);
+	const { accessStrategy, users } = useDocumentAccessControl(documentId);
+	const editThoughtMutation = useEditThought(documentId);
 
 	const [isOpen, setIsOpen] = useState(false);
 	const [email, setEmail] = useState("");
-	const addUserMutation = useAddDocumentUser(thoughtId);
-	const removeUserMutation = useRemoveDocumentUser(thoughtId);
+	const addUserMutation = useAddDocumentUser(documentId);
+	const removeUserMutation = useRemoveDocumentUser(documentId);
 
 	const shareLink = `https://app.usecloudy.com${makeDocUrl({
 		workspaceSlug: workspace.slug,
-		docId: thoughtId,
+		docId: documentId,
 		projectSlug: project?.slug,
 	})}`;
 
-	const publicLink = `https://usecloudy.com/pages/document/${thoughtId}`;
+	const publicLink = `https://usecloudy.com/pages/document/${documentId}`;
 
 	const isAuthor = thought?.author_id === user.id;
 

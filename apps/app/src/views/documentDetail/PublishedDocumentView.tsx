@@ -6,32 +6,16 @@ import { useEffect } from "react";
 import { thoughtQueryKeys } from "../../api/queryKeys";
 import { supabase } from "../../clients/supabase";
 import { MainLayout } from "../../components/MainLayout";
-import { ControlRow } from "../thoughtDetail/ControlRow";
 import { DocumentLoadingPlaceholder } from "../thoughtDetail/DocumentLoadingPlaceholder";
 import { tiptapExtensions } from "../thoughtDetail/tiptap";
 import { useDocumentContext } from "./DocumentContext";
+import { useLatestPublishedDocumentVersion } from "./hooks";
+import { NavBar } from "./navBar/NavBar";
 
-const useLatestPublishedVersion = () => {
-	const { documentId } = useDocumentContext();
 
-	return useQuery({
-		queryKey: thoughtQueryKeys.latestPublishedVersion(documentId),
-		queryFn: async () => {
-			return handleSupabaseError(
-				await supabase
-					.from("document_versions")
-					.select("content_json, title")
-					.eq("document_id", documentId)
-					.order("created_at", { ascending: false })
-					.limit(1)
-					.maybeSingle(),
-			);
-		},
-	});
-};
 
 export const PublishedDocumentView = () => {
-	const { data, isLoading } = useLatestPublishedVersion();
+	const { data, isLoading } = useLatestPublishedDocumentVersion();
 
 	const editor = useEditor({
 		editorProps: {
@@ -51,7 +35,7 @@ export const PublishedDocumentView = () => {
 	return (
 		<div className="no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-y-scroll">
 			<nav className="sticky top-[-1px] z-30 -mr-2 w-full bg-background px-6 py-2 md:top-0 md:py-3">
-				<ControlRow editor={editor} />
+            <NavBar editor={editor} />
 			</nav>
 			<div className="box-border flex w-full max-w-screen-lg grow flex-col px-3 md:px-20 md:pt-16 lg:flex-1">
 				<h1 className="mb-4 text-2xl font-bold leading-8 outline-none md:text-3xl md:leading-10">{data?.title}</h1>

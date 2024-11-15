@@ -21,19 +21,53 @@ import { Button } from "src/components/Button";
 import { Dropdown } from "src/components/Dropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip";
 import { makeHumanizedTime } from "src/utils/strings";
+import { usePublishDocumentVersion, useThought, useToggleDisableTitleSuggestions } from "src/views/thoughtDetail/hooks";
+import { ThoughtContext } from "src/views/thoughtDetail/thoughtContext";
 
-import { useDocumentContext } from "../documentDetail/DocumentContext";
+import { useUserProfile } from "../../../utils/users";
+import { useDocumentContext } from "../DocumentContext";
+import { useLatestPublishedDocumentVersion } from "../hooks";
 import { DeleteDialog } from "./DeleteDialog";
 import { ExportDialog } from "./ExportDialog";
 import { MoveWorkspaceDialog } from "./MoveWorkspaceDialog";
 import { ShareDialog } from "./ShareDialog";
-import { usePublishDocumentVersion, useThought, useToggleDisableTitleSuggestions } from "./hooks";
-import { ThoughtContext } from "./thoughtContext";
 
-export const ControlRow = ({ editor }: { editor?: Editor | null }) => {
+const PublishedDocumentName = ({ userId }: { userId: string }) => {
+	const { data: publishedBy } = useUserProfile(userId);
+	return <span>{publishedBy?.name ?? publishedBy?.email ?? "Unknown User"}</span>;
+};
+
+const DocumentPublishedTimestamp = () => {
+	const { documentId, isEditMode } = useDocumentContext();
+	const { data: latestPublishedDocumentVersion } = useLatestPublishedDocumentVersion();
+	const { data: document } = useThought(documentId);
+
+	return (
+		<div className="flex items-center gap-3">
+			{isEditMode ? (
+				<div className="text-xs text-tertiary">
+					{document && <span>Last edited {makeHumanizedTime(document.updated_at)}</span>}
+				</div>
+			) : (
+				<div className="text-xs text-tertiary">
+					{latestPublishedDocumentVersion && latestPublishedDocumentVersion.published_by && (
+						<span>
+							Published {makeHumanizedTime(latestPublishedDocumentVersion.created_at)} by{" "}
+							<PublishedDocumentName userId={latestPublishedDocumentVersion.published_by.id} />
+						</span>
+					)}
+				</div>
+			)}
+		</div>
+	);
+};
+
+export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 	const { documentId, isEditMode, setIsEditMode } = useDocumentContext();
 	const { data: thought } = useThought(documentId);
+
 	const { isConnected, isDocumentLoading, hideControlColumn, setHideControlColumn } = useContext(ThoughtContext);
+
 	const [, copyToClipboard] = useCopyToClipboard();
 
 	const toggleDisableTitleSuggestionsMutation = useToggleDisableTitleSuggestions();
@@ -41,11 +75,7 @@ export const ControlRow = ({ editor }: { editor?: Editor | null }) => {
 
 	return (
 		<div className="flex w-full flex-row items-center justify-between gap-2">
-			<div className="flex items-center gap-3">
-				<div className="text-xs text-tertiary">
-					{thought && <span>Last edited {makeHumanizedTime(thought.updated_at)}</span>}
-				</div>
-			</div>
+			<DocumentPublishedTimestamp />
 			<div className="flex items-center gap-1 text-secondary">
 				{isEditMode ? (
 					<>

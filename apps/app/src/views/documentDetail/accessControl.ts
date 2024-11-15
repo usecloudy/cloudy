@@ -6,7 +6,7 @@ import { thoughtKeys, thoughtQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
 import { fixOneToOne } from "src/utils";
 
-import { useThought } from "./hooks";
+import { useThought } from "../thoughtDetail/hooks";
 
 export interface DocumentAccessControlUser {
 	id: string;
