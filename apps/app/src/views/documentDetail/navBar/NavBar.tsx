@@ -1,9 +1,9 @@
 import { Hotkey } from "@cloudy/ui";
 import { Editor } from "@tiptap/react";
 import {
-	ChevronsLeftIcon,
 	CopyIcon,
 	FileCheckIcon,
+	FolderCodeIcon,
 	MoreHorizontalIcon,
 	PenIcon,
 	PenOffIcon,
@@ -29,6 +29,7 @@ import { useDocumentContext } from "../DocumentContext";
 import { useLatestPublishedDocumentVersion } from "../hooks";
 import { DeleteDialog } from "./DeleteDialog";
 import { ExportDialog } from "./ExportDialog";
+import { LinkedFilesDropdown } from "./LinkedFilesDropdown";
 import { MoveWorkspaceDialog } from "./MoveWorkspaceDialog";
 import { ShareDialog } from "./ShareDialog";
 
@@ -66,7 +67,7 @@ export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 	const { documentId, isEditMode, setIsEditMode } = useDocumentContext();
 	const { data: thought } = useThought(documentId);
 
-	const { isConnected, isDocumentLoading, hideControlColumn, setHideControlColumn } = useContext(ThoughtContext);
+	const { isConnected, isDocumentLoading } = useContext(ThoughtContext);
 
 	const [, copyToClipboard] = useCopyToClipboard();
 
@@ -184,6 +185,14 @@ export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 								</>
 							)}
 						</Button>
+						<LinkedFilesDropdown
+							trigger={
+								<Button variant="ghost" size="sm" className="w-full justify-start">
+									<FolderCodeIcon className="size-4" />
+									<span>Linked Code Files</span>
+								</Button>
+							}
+						/>
 						<MoveWorkspaceDialog />
 						<Button
 							variant="ghost"
@@ -204,12 +213,6 @@ export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 						<DeleteDialog thoughtId={documentId} />
 					</div>
 				</Dropdown>
-				{hideControlColumn && (
-					<Button className="hidden lg:flex" variant="outline" size="sm" onClick={() => setHideControlColumn(false)}>
-						<ChevronsLeftIcon className="size-5" />
-						<span>Show panel</span>
-					</Button>
-				)}
 			</div>
 		</div>
 	);

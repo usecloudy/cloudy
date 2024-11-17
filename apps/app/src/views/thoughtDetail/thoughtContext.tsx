@@ -9,7 +9,6 @@ export interface ThoughtContextType {
 	previewingKey: string | null;
 	editor: Editor | null;
 	disableUpdatesRef: React.MutableRefObject<boolean>;
-	hideControlColumn?: boolean;
 	isShowingAiEditorMenu?: boolean;
 	isShowingAiSelectionMenu?: boolean;
 	isAiWriting: boolean;
@@ -20,7 +19,6 @@ export interface ThoughtContextType {
 	storeContentIfNeeded: () => void;
 	restoreFromLastContent: () => void;
 	clearStoredContent: () => void;
-	setHideControlColumn: (hideControlColumn: boolean) => void;
 	setShowAiEditorMenu: (isShowingAiEditorMenu: boolean) => void;
 	showAiEditor: () => void;
 	hideAiEditor: () => void;
@@ -44,7 +42,6 @@ export const ThoughtContext = createContext<ThoughtContextType>({
 	isEditingDisabled: false,
 	previewingKey: null,
 	disableUpdatesRef: { current: false },
-	hideControlColumn: false,
 	isShowingAiEditorMenu: false,
 	isShowingAiSelectionMenu: false,
 	isAiWriting: false,
@@ -56,7 +53,6 @@ export const ThoughtContext = createContext<ThoughtContextType>({
 	storeContentIfNeeded: () => {},
 	restoreFromLastContent: () => {},
 	clearStoredContent: () => {},
-	setHideControlColumn: () => {},
 	setShowAiEditorMenu: () => {},
 	showAiEditor: () => {},
 	hideAiEditor: () => {},

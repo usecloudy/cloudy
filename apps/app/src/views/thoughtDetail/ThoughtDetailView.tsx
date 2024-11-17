@@ -5,7 +5,7 @@ import { EditorContent, Extension, JSONContent, useEditor } from "@tiptap/react"
 import { GripVertical } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
-import { useAsync, useLocalStorage, useMount, useUnmount, useUpdateEffect } from "react-use";
+import { useAsync, useMount, useUnmount, useUpdateEffect } from "react-use";
 
 import { useUserRecord } from "src/stores/user";
 import { cn } from "src/utils";
@@ -15,7 +15,6 @@ import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 import { useDocumentContext } from "../documentDetail/DocumentContext";
 import { NavBar } from "../documentDetail/navBar/NavBar";
 import { useSidebarContext } from "../navigation/SidebarProvider";
-import { ControlColumn } from "./ControlColumn";
 import { DocumentLoadingPlaceholder } from "./DocumentLoadingPlaceholder";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { FooterRow } from "./FooterRow";
@@ -44,8 +43,6 @@ export const ThoughtContent = ({ thought }: { thought: Thought }) => {
 	const userRecord = useUserRecord();
 
 	const { mutateAsync: editThought } = useEditThought(documentId);
-
-	const [hideControlColumn, setHideControlColumn] = useLocalStorage("hideControlColumn", false);
 
 	const [isAiWriting, setIsAiWriting] = useState(false);
 	const [isEditingDisabled, setIsEditingDisabled] = useState(false);
@@ -268,8 +265,6 @@ export const ThoughtContent = ({ thought }: { thought: Thought }) => {
 				restoreFromLastContent,
 				clearStoredContent,
 				clearApplyContent,
-				hideControlColumn,
-				setHideControlColumn,
 				setShowAiEditorMenu,
 				isShowingAiEditorMenu,
 				showAiEditor,
@@ -302,7 +297,6 @@ export const ThoughtContent = ({ thought }: { thought: Thought }) => {
 							latestRemoteTitleTs={thought?.title_ts ?? undefined}
 							onChange={onChange}
 						/>
-						<ControlColumn thoughtId={documentId} />
 					</AiDocumentGeneration>
 				</div>
 			</div>
@@ -352,7 +346,7 @@ const EditorView = ({
 	latestRemoteTitleTs?: string;
 	onChange: (payload: ThoughtEditPayload) => void;
 }) => {
-	const { editor, isConnected, isDocumentLoading, hideControlColumn, isAiWriting } = useContext(ThoughtContext);
+	const { editor, isConnected, isDocumentLoading, isAiWriting } = useContext(ThoughtContext);
 	const { isGenerating } = useContext(AiGenerationContext);
 
 	const { title, setTitle, saveTitleKey } = useTitleStore();
@@ -392,11 +386,7 @@ const EditorView = ({
 			<nav className="sticky top-[-1px] z-30 -mr-2 w-full bg-background px-6 py-2 md:top-0 md:py-3">
 				<NavBar editor={editor} />
 			</nav>
-			<div
-				className={cn(
-					"-ml-8 box-border flex w-full max-w-screen-lg grow flex-col px-3 md:pl-16 md:pt-16 lg:flex-1",
-					hideControlColumn ? "lg:pr-16" : "lg:pr-4",
-				)}>
+			<div className="box-border flex w-full max-w-screen-lg grow flex-col px-3 md:pl-12 md:pr-20 md:pt-16 lg:flex-1">
 				<TitleArea title={title} onChange={handleChangeTitle} />
 				<div
 					// On larger screens, we need left padding to avoid some characters being cut off

@@ -10,12 +10,13 @@ import { HelpTooltip } from "src/components/HelpTooltip";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { FileReferenceRowStandalone } from "src/views/aiTextArea/FileReferenceRow";
 
-import { useExistingLinkedFiles } from "../hooks";
-import { ThoughtContext } from "../thoughtContext";
+import { Dropdown } from "../../../components/Dropdown";
+import { useExistingLinkedFiles } from "../../thoughtDetail/hooks";
+import { useDocumentContext } from "../DocumentContext";
 
 const useExitingLinkedFilesAsRepoReferences = () => {
-	const { thoughtId } = useContext(ThoughtContext);
-	const queryResult = useExistingLinkedFiles(thoughtId);
+	const { documentId } = useDocumentContext();
+	const queryResult = useExistingLinkedFiles(documentId);
 
 	return {
 		...queryResult,
@@ -30,13 +31,13 @@ const useExitingLinkedFilesAsRepoReferences = () => {
 };
 
 const useSetFileReferences = () => {
-	const { thoughtId } = useContext(ThoughtContext);
+	const { documentId } = useDocumentContext();
 
 	return useMutation({
 		mutationFn: async (fileReferences: RepoReference[]) => {
 			// Get existing links
 			const existingLinks = handleSupabaseError(
-				await supabase.from("document_repo_links").select("*").eq("document_id", thoughtId),
+				await supabase.from("document_repo_links").select("*").eq("document_id", documentId),
 			);
 
 			// Find links to delete (ones that exist but aren't in new fileReferences)
@@ -51,7 +52,7 @@ const useSetFileReferences = () => {
 					await supabase
 						.from("document_repo_links")
 						.delete()
-						.eq("document_id", thoughtId)
+						.eq("document_id", documentId)
 						.in(
 							"path",
 							linksToDelete.map(link => link.path),
@@ -64,7 +65,7 @@ const useSetFileReferences = () => {
 				handleSupabaseError(
 					await supabase.from("document_repo_links").insert(
 						linksToAdd.map(file => ({
-							document_id: thoughtId,
+							document_id: documentId,
 							repo_connection_id: file.repoConnectionId,
 							path: file.path,
 							type: "file" as const,
@@ -74,44 +75,46 @@ const useSetFileReferences = () => {
 			}
 		},
 		onMutate: fileReferences => {
-			queryClient.setQueryData(thoughtQueryKeys.existingLinkedFiles(thoughtId), fileReferences);
+			queryClient.setQueryData(thoughtQueryKeys.existingLinkedFiles(documentId), fileReferences);
 			return { fileReferences };
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: thoughtQueryKeys.existingLinkedFiles(thoughtId) });
+			queryClient.invalidateQueries({ queryKey: thoughtQueryKeys.existingLinkedFiles(documentId) });
 		},
 	});
 };
 
-export const LinkedFiles = () => {
+export const LinkedFilesDropdown = ({ trigger }: { trigger: React.ReactNode }) => {
 	const { data: linkedFiles, isLoading } = useExitingLinkedFilesAsRepoReferences();
 
 	const setFileReferencesMutation = useSetFileReferences();
 
 	return (
-		<div className="flex w-full flex-col gap-2 rounded-md border border-border p-4">
-			<h5 className="mb-2 flex items-center gap-1 text-sm font-medium text-secondary">
-				<FolderCodeIcon className="size-4 text-secondary" />
-				<span>Linked Files</span>
-				<HelpTooltip
-					content={
-						<>
-							{"Link this document to files in your git repository."}
-							<br />
-							<br />
-							{
-								"Linked files will be included as context to all AI functionality and will be used to keep this document up to date."
-							}
-						</>
-					}
+		<Dropdown trigger={trigger}>
+			<div className="flex w-[28rem] flex-col gap-2 p-4">
+				<h5 className="mb-2 flex items-center gap-1 text-sm font-medium text-secondary">
+					<FolderCodeIcon className="size-4 text-secondary" />
+					<span>Linked Files</span>
+					<HelpTooltip
+						content={
+							<>
+								{"Link this document to files in your git repository."}
+								<br />
+								<br />
+								{
+									"Linked files will be included as context to all AI functionality and will be used to keep this document up to date."
+								}
+							</>
+						}
+					/>
+					{isLoading && <LoadingSpinner size="xs" className="ml-2" />}
+				</h5>
+				<FileReferenceRowStandalone
+					fileReferences={linkedFiles ?? []}
+					setFileReferences={setFileReferencesMutation.mutate}
+					showUnlinkIconInsteadOfX
 				/>
-				{isLoading && <LoadingSpinner size="xs" className="ml-2" />}
-			</h5>
-			<FileReferenceRowStandalone
-				fileReferences={linkedFiles ?? []}
-				setFileReferences={setFileReferencesMutation.mutate}
-				showUnlinkIconInsteadOfX
-			/>
-		</div>
+			</div>
+		</Dropdown>
 	);
 };

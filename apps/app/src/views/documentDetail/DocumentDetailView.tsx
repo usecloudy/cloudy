@@ -43,7 +43,11 @@ export const DocumentDetailView = () => {
 					<Helmet>
 						<title>{headTitle}</title>
 					</Helmet>
-					{isEditMode ? <ThoughtContent key={documentId} thought={document!} /> : <PublishedDocumentView />}
+					{isEditMode ? (
+						<ThoughtContent key={documentId} thought={document!} />
+					) : (
+						<PublishedDocumentView key={documentId} />
+					)}
 				</MainLayout>
 			</EditorErrorBoundary>
 		</DocumentContext.Provider>
