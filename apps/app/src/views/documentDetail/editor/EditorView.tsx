@@ -20,14 +20,7 @@ import { FooterRow } from "./FooterRow";
 import { TitleArea } from "./TitleArea";
 import { ChatSectionView } from "./chatSection/ChatSectionView";
 import { createFileHandlerExtension } from "./fileHandlerExtension";
-import {
-	ThoughtEditPayload,
-	useDefaultThreadId,
-	useEditThought,
-	useGenerateDocument,
-	useThought,
-	useThoughtChannelListeners,
-} from "./hooks";
+import { useDefaultThreadId, useEditDocument, useGenerateDocument, useThought, useThoughtChannelListeners } from "./hooks";
 import { updateMentionNodeNames } from "./mention";
 import { AiGenerationContext, ThoughtContext } from "./thoughtContext";
 import { clearAllApplyMarks, clearAllEditMarks, tiptapExtensions, wrapSelectionAroundWords } from "./tiptap";
@@ -41,7 +34,7 @@ export const EditorView = ({ thought }: { thought: Thought }) => {
 	useThoughtChannelListeners(documentId);
 	const userRecord = useUserRecord();
 
-	const { mutateAsync: editThought } = useEditThought(documentId);
+	const { mutateAsync: editThought } = useEditDocument(documentId);
 
 	const [title, setTitle] = useState(thought.title ?? "");
 	const [localTitleTs, setLocalTitleTs] = useState<Date>(new Date());
@@ -113,8 +106,8 @@ export const EditorView = ({ thought }: { thought: Thought }) => {
 	});
 
 	useEffect(() => {
-		if (isConnected && thought.content && !editor?.getText()) {
-			editor?.commands.setContent(thought.content);
+		if (isConnected && (thought.content_json || thought.content) && !editor?.getText()) {
+			editor?.commands.setContent((thought.content_json as JSONContent) ?? thought.content);
 		}
 
 		if (editor) {
@@ -130,12 +123,15 @@ export const EditorView = ({ thought }: { thought: Thought }) => {
 	const onUpdate = useCallback(
 		({ force = false }: { force?: boolean } = {}) => {
 			if (force || (isConnected && !disableUpdatesRef.current)) {
-				const content = editor?.getHTML();
-				const contentMd = editor?.storage.markdown.getMarkdown();
-				const contentPlainText = editor?.getText();
+				if (editor) {
+					const contentJson = editor.getJSON();
+					const contentHtml = editor.getHTML();
+					const contentMd = editor.storage.markdown.getMarkdown();
+					const contentPlainText = editor.getText();
 
-				const ts = new Date();
-				onChange({ content, contentMd, contentPlainText, ts });
+					const ts = new Date();
+					onChange({ contentHtml, contentJson, contentMd, contentPlainText, ts });
+				}
 			}
 		},
 		[isConnected, editor, onChange, disableUpdatesRef],
@@ -312,7 +308,7 @@ export const EditorView = ({ thought }: { thought: Thought }) => {
 				</div>
 				<div className="no-scrollbar relative flex w-full flex-grow flex-col lg:flex-row">
 					<AiDocumentGeneration thought={thought}>
-						<Editor thoughtId={documentId!} onChange={onChange} />
+						<Editor />
 					</AiDocumentGeneration>
 				</div>
 				<div
@@ -358,7 +354,7 @@ const AiDocumentGeneration = ({ thought, children }: { thought: Thought; childre
 	);
 };
 
-const Editor = ({ thoughtId, onChange }: { thoughtId: string; onChange: (payload: ThoughtEditPayload) => void }) => {
+const Editor = () => {
 	const { editor, isConnected, isConnecting, isAiWriting } = useContext(ThoughtContext);
 	const { isGenerating } = useContext(AiGenerationContext);
 
@@ -378,8 +374,8 @@ const Editor = ({ thoughtId, onChange }: { thoughtId: string; onChange: (payload
 						<div
 							// On larger screens, we need left padding to avoid some characters being cut off
 							className="relative flex flex-row md:pl-[2px]">
-							{editor && thoughtId && <EditorBubbleMenu />}
-							{editor && thoughtId && (
+							{editor && <EditorBubbleMenu />}
+							{editor && (
 								<div>
 									<DragHandle editor={editor} tippyOptions={{ offset: [-4, 4], zIndex: 10 }}>
 										<div className="hidden cursor-grab flex-row items-center rounded border border-transparent px-0.5 py-1 hover:border-border hover:bg-card active:cursor-grabbing active:bg-accent/20 md:flex">

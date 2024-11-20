@@ -1,0 +1,1 @@
+alter table "public"."thoughts" add column "content_json" jsonb;

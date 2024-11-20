@@ -13,7 +13,7 @@ import { cn } from "src/utils";
 import { makeHumanizedTime } from "src/utils/strings";
 import { makeThoughtLabel } from "src/utils/thought";
 
-import { useEditThought } from "./hooks";
+import { useEditDocument } from "./hooks";
 
 const useSearchThoughts = (query: string) => {
 	const workspace = useWorkspace();
@@ -67,7 +67,7 @@ const menuOptions = ["latest_notes", "new_note"];
 export const MentionHandler = forwardRef(({ query, command }: SuggestionProps, ref: React.Ref<any>) => {
 	const { data, isLoading: isLoadingThoughtSearch } = useSearchThoughts(query);
 	const { data: latestThoughts, isLoading: isLoadingLatestThoughts } = useLatestThoughts();
-	const editThoughtMutation = useEditThought();
+	const editDocumentMutation = useEditDocument();
 
 	const [currentView, setCurrentView] = useState<"latest_notes" | "default" | "search">("default");
 	const [selectedIndex, setSelectedIndex] = useState(0);
@@ -109,10 +109,10 @@ export const MentionHandler = forwardRef(({ query, command }: SuggestionProps, r
 			if (selectedIndex === 0) {
 				setCurrentView("latest_notes");
 			} else if (selectedIndex === 1) {
-				editThoughtMutation.mutateAsync().then(newThought => {
-					if (newThought) {
+				editDocumentMutation.mutateAsync().then(newDocument => {
+					if (newDocument) {
 						command({
-							id: newThought.id,
+							id: newDocument.id,
 							label: "Untitled",
 						});
 					}
