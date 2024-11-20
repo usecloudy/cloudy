@@ -143,8 +143,9 @@ export const useLibraryItems = () => {
 								depth,
 								index: doc.index,
 								parentId,
-								accessStrategy: doc.access_strategy,
-							}) as FlattenedItem,
+								accessStrategy: doc.access_strategy as AccessStrategies,
+								isPublished: !!fixOneToOne(doc.latest_version),
+							}) satisfies DocumentItem,
 					);
 
 				const childFolders = folders
@@ -158,7 +159,7 @@ export const useLibraryItems = () => {
 								depth,
 								index: folder.index,
 								parentId,
-							}) as FlattenedItem,
+							}) satisfies FolderItem,
 					);
 
 				const combinedItems = [...childDocs, ...childFolders];
@@ -189,8 +190,6 @@ export const useLibraryItems = () => {
 					new Date(aLatestVersion?.created_at ?? a.updated_at).getTime()
 				);
 			});
-
-			console.log(recentDocs);
 
 			// Separate recent docs into categories
 			const sharedDocs = recentDocs
