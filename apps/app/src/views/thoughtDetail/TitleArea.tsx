@@ -70,7 +70,7 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 					</div>
 				)}
 			</div>
-			{isGenerating && <div className="absolute left-0 top-0 h-10 w-1/2 animate-pulse rounded bg-card md:w-1/3" />}
+			{isGenerating && <div className="absolute left-8 top-0 h-10 w-1/2 animate-pulse rounded bg-card md:w-1/3" />}
 		</div>
 	);
 };
