@@ -1,6 +1,6 @@
 import { AccessStrategies } from "@cloudy/utils/common";
 import { ChevronDownIcon, GlobeIcon, LockIcon, PlusIcon, UsersIcon, XIcon } from "lucide-react";
-import { useContext, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "src/components/Button";
 import { CopyButton } from "src/components/CopyButton";
@@ -12,11 +12,12 @@ import { Avatar } from "src/components/users/Avatar";
 import { useUser } from "src/stores/user";
 import { useWorkspace } from "src/stores/workspace";
 import { makeDocUrl } from "src/utils/thought";
+import { useProject } from "src/views/projects/ProjectContext";
 
-import { useProject } from "../projects/ProjectContext";
-import { useAddDocumentUser, useDocumentAccessControl, useRemoveDocumentUser } from "./accessControl";
-import { useEditThought, useThought } from "./hooks";
-import { ThoughtContext } from "./thoughtContext";
+import { useDocumentContext } from "../DocumentContext";
+import { useAddDocumentUser, useDocumentAccessControl, useRemoveDocumentUser } from "../accessControl";
+import { useEditThought } from "../editor/hooks";
+import { useThought } from "../editor/hooks";
 
 const makeAccessStrategyInfo = (accessStrategy: AccessStrategies) => {
 	switch (accessStrategy) {
@@ -29,30 +30,48 @@ const makeAccessStrategyInfo = (accessStrategy: AccessStrategies) => {
 	}
 };
 
-export const ShareDialog = () => {
+type ShareDialogTriggerProps = {
+	accessStrategy: AccessStrategies;
+};
+
+export const ShareDialogTrigger = ({ accessStrategy }: ShareDialogTriggerProps) => {
+	const { label, icon } = makeAccessStrategyInfo(accessStrategy ?? AccessStrategies.PRIVATE);
+
+	return (
+		<Button variant="outline" size="sm" className="pr-1">
+			{icon}
+			<span>{label}</span>
+			<ChevronDownIcon className="size-4" />
+		</Button>
+	);
+};
+
+type ShareDialogProps = {
+	trigger?: React.ReactNode;
+};
+
+export const ShareDialog = ({ trigger }: ShareDialogProps) => {
 	const workspace = useWorkspace();
 	const project = useProject();
 	const user = useUser();
 
-	const { thoughtId } = useContext(ThoughtContext);
-
-	const { data: thought } = useThought(thoughtId);
-
-	const { accessStrategy, users } = useDocumentAccessControl(thoughtId);
-	const editThoughtMutation = useEditThought(thoughtId);
+	const { documentId } = useDocumentContext();
+	const { data: thought } = useThought(documentId);
+	const { accessStrategy, users } = useDocumentAccessControl(documentId);
+	const editThoughtMutation = useEditThought(documentId);
 
 	const [isOpen, setIsOpen] = useState(false);
 	const [email, setEmail] = useState("");
-	const addUserMutation = useAddDocumentUser(thoughtId);
-	const removeUserMutation = useRemoveDocumentUser(thoughtId);
+	const addUserMutation = useAddDocumentUser(documentId);
+	const removeUserMutation = useRemoveDocumentUser(documentId);
 
 	const shareLink = `https://app.usecloudy.com${makeDocUrl({
 		workspaceSlug: workspace.slug,
-		docId: thoughtId,
+		docId: documentId,
 		projectSlug: project?.slug,
 	})}`;
 
-	const publicLink = `https://usecloudy.com/pages/document/${thoughtId}`;
+	const publicLink = `https://usecloudy.com/pages/document/${documentId}`;
 
 	const isAuthor = thought?.author_id === user.id;
 
@@ -80,7 +99,6 @@ export const ShareDialog = () => {
 	};
 
 	const currentAccessStrategy = accessStrategy ?? AccessStrategies.PRIVATE;
-	const { label, icon } = makeAccessStrategyInfo(currentAccessStrategy);
 
 	const handleInviteUser = async () => {
 		try {
@@ -102,22 +120,14 @@ export const ShareDialog = () => {
 
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogTrigger>
-				<Tooltip durationPreset="short">
-					<TooltipTrigger asChild>
-						<span>
-							<Button variant="outline" size="sm" className="pr-1">
-								{icon}
-								<span>{label}</span>
-								<ChevronDownIcon className="size-4" />
-							</Button>
-						</span>
-					</TooltipTrigger>
-					<TooltipContent>
-						<span>Document access control</span>
-					</TooltipContent>
-				</Tooltip>
-			</DialogTrigger>
+			<Tooltip durationPreset="short">
+				<TooltipTrigger asChild>
+					<DialogTrigger>{trigger ?? <ShareDialogTrigger accessStrategy={currentAccessStrategy} />}</DialogTrigger>
+				</TooltipTrigger>
+				<TooltipContent>
+					<span>Control sharing and who has access</span>
+				</TooltipContent>
+			</Tooltip>
 			<DialogContent size="lg">
 				<DialogHeader>
 					<DialogTitle>Document Sharing</DialogTitle>

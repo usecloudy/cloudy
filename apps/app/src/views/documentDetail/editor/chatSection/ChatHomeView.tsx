@@ -1,7 +1,7 @@
 import { ChatRole, handleSupabaseError, makeHumanizedTime } from "@cloudy/utils/common";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowRightIcon, ExternalLinkIcon, MoreHorizontalIcon, TrashIcon, XIcon } from "lucide-react";
+import { ArrowRightIcon, ExternalLinkIcon, FileCodeIcon, MoreHorizontalIcon, TrashIcon, XIcon } from "lucide-react";
 import { useContext } from "react";
 import Markdown from "react-markdown";
 import { Link } from "react-router-dom";
@@ -13,6 +13,7 @@ import { Dropdown, DropdownItem } from "src/components/Dropdown";
 import { HelpTooltip } from "src/components/HelpTooltip";
 import LoadingSpinner from "src/components/LoadingSpinner";
 
+import { LinkedFilesDropdown } from "../../navBar/LinkedFilesDropdown";
 import { ThoughtContext } from "../thoughtContext";
 import { ChatMessageUserHeader } from "./ChatMessageUserHeader";
 import { UseThreadsForDocReturnType, useDeleteThread, useThreadsForDoc } from "./chat";
@@ -58,9 +59,19 @@ export const ChatHomeView = () => {
 
 	return (
 		<div className="no-scrollbar flex h-full w-full flex-col gap-2 overflow-y-auto py-4">
-			<div className="flex flex-row items-center gap-1">
-				<h3 className="text-lg font-semibold">Recent Changes</h3>
-				<HelpTooltip content="Cloudy will keep track of changes to files in your repositories that are linked to this document." />
+			<div className="flex flex-row items-center justify-between gap-1">
+				<div className="flex flex-row items-center gap-1">
+					<h3 className="text-lg font-semibold">Recent Changes</h3>
+					<HelpTooltip content="Cloudy will keep track of changes to files in your repositories that are linked to this document." />
+				</div>
+				<LinkedFilesDropdown
+					trigger={
+						<Button variant="ghost" size="xs" className="text-secondary">
+							<FileCodeIcon className="size-4" />
+							<span>Linked Files</span>
+						</Button>
+					}
+				/>
 			</div>
 			{isLoadingRecentChanges ? (
 				<LoadingSpinner size="sm" />

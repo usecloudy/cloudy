@@ -8,6 +8,7 @@ import tippy, { Instance } from "tippy.js";
 
 import { supabase } from "src/clients/supabase";
 import { makeThoughtLabel } from "src/utils/thought";
+import { getAllNodesWithType, updateNodeAttributes } from "src/utils/tiptap";
 
 import { MentionHandler } from "./MentionHandler";
 
@@ -348,38 +349,8 @@ export const Mention = Node.create<MentionOptions>({
 	},
 });
 
-export const getAllMentionNodes = (editor: Editor) => {
-	const mentions: { id: string; label: string; pos: number }[] = [];
-
-	editor.view.state.doc.descendants((node, pos) => {
-		if (node.type.name === "mention") {
-			mentions.push({
-				pos,
-				id: node.attrs.id,
-				label: node.attrs.label,
-			});
-		}
-	});
-
-	return mentions;
-};
-
-export const updateNodeAttributes = (editor: Editor, pos: number, attributes: Record<string, any>) => {
-	const { state } = editor;
-	const { tr } = state;
-	const node = state.doc.nodeAt(pos);
-
-	if (node) {
-		tr.setNodeMarkup(pos, null, {
-			...node.attrs,
-			...attributes,
-		});
-		editor.view.dispatch(tr);
-	}
-};
-
 export const updateMentionNodeNames = async (editor: Editor) => {
-	const mentions = getAllMentionNodes(editor);
+	const mentions = getAllNodesWithType(editor, "mention");
 
 	const potentialThoughtLabels = handleSupabaseError(
 		await supabase

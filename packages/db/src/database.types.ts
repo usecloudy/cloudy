@@ -1107,6 +1107,54 @@ export type Database = {
           },
         ]
       }
+      document_versions: {
+        Row: {
+          content_html: string
+          content_json: Json
+          content_md: string
+          created_at: string
+          document_id: string
+          id: string
+          published_by: string
+          title: string
+        }
+        Insert: {
+          content_html: string
+          content_json: Json
+          content_md: string
+          created_at?: string
+          document_id: string
+          id?: string
+          published_by: string
+          title?: string
+        }
+        Update: {
+          content_html?: string
+          content_json?: Json
+          content_md?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          published_by?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_version_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_version_published_by_fkey"
+            columns: ["published_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       folders: {
         Row: {
           created_at: string
@@ -1362,6 +1410,7 @@ export type Database = {
           index: number | null
           is_suggestion_paused: boolean
           last_suggestion_content_md: string | null
+          latest_version_id: string | null
           project_id: string | null
           signals: Json | null
           suggestion_index: number
@@ -1397,6 +1446,7 @@ export type Database = {
           index?: number | null
           is_suggestion_paused?: boolean
           last_suggestion_content_md?: string | null
+          latest_version_id?: string | null
           project_id?: string | null
           signals?: Json | null
           suggestion_index?: number
@@ -1432,6 +1482,7 @@ export type Database = {
           index?: number | null
           is_suggestion_paused?: boolean
           last_suggestion_content_md?: string | null
+          latest_version_id?: string | null
           project_id?: string | null
           signals?: Json | null
           suggestion_index?: number
@@ -1457,6 +1508,13 @@ export type Database = {
             columns: ["folder_id"]
             isOneToOne: false
             referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thoughts_latest_version_id_fkey"
+            columns: ["latest_version_id"]
+            isOneToOne: false
+            referencedRelation: "document_versions"
             referencedColumns: ["id"]
           },
           {

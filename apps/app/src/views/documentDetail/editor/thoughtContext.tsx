@@ -3,24 +3,24 @@ import { createContext } from "react";
 
 export interface ThoughtContextType {
 	thoughtId: string;
-	isDocumentLoading: boolean;
+	isConnecting: boolean;
 	isConnected: boolean;
 	isEditingDisabled: boolean;
 	previewingKey: string | null;
 	editor: Editor | null;
 	disableUpdatesRef: React.MutableRefObject<boolean>;
-	hideControlColumn?: boolean;
 	isShowingAiEditorMenu?: boolean;
 	isShowingAiSelectionMenu?: boolean;
 	isAiWriting: boolean;
 	threadId: string | null;
+	title: string;
+	setTitle: (title: string) => void;
 	onUpdate: (payload?: { force?: boolean }) => void;
 	setPreviewingKey: (previewingKey: string | null) => void;
 	setIsEditingDisabled: (isEditingDisabled: boolean) => void;
 	storeContentIfNeeded: () => void;
 	restoreFromLastContent: () => void;
 	clearStoredContent: () => void;
-	setHideControlColumn: (hideControlColumn: boolean) => void;
 	setShowAiEditorMenu: (isShowingAiEditorMenu: boolean) => void;
 	showAiEditor: () => void;
 	hideAiEditor: () => void;
@@ -38,17 +38,18 @@ export interface ThoughtContextType {
 
 export const ThoughtContext = createContext<ThoughtContextType>({
 	thoughtId: "",
-	isDocumentLoading: false,
+	isConnecting: true,
 	isConnected: false,
 	editor: null,
 	isEditingDisabled: false,
 	previewingKey: null,
 	disableUpdatesRef: { current: false },
-	hideControlColumn: false,
 	isShowingAiEditorMenu: false,
 	isShowingAiSelectionMenu: false,
 	isAiWriting: false,
 	threadId: null,
+	title: "",
+	setTitle: () => {},
 	onUpdate: () => {},
 	setIsAiWriting: () => {},
 	setIsEditingDisabled: () => {},
@@ -56,7 +57,6 @@ export const ThoughtContext = createContext<ThoughtContextType>({
 	storeContentIfNeeded: () => {},
 	restoreFromLastContent: () => {},
 	clearStoredContent: () => {},
-	setHideControlColumn: () => {},
 	setShowAiEditorMenu: () => {},
 	showAiEditor: () => {},
 	hideAiEditor: () => {},

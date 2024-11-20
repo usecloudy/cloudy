@@ -19,6 +19,7 @@ export const thoughtQueryKeys = {
 	threadsForDoc: (docId: string) => ["threadsForDoc", docId] as const,
 	defaultThreadId: (docId: string) => ["defaultThreadId", docId] as const,
 	recentChanges: (thoughtId: string) => ["recentChanges", thoughtId] as const,
+	latestPublishedVersion: (documentId: string) => ["publishedVersion", documentId] as const,
 };
 
 export const topicQueryKeys = {

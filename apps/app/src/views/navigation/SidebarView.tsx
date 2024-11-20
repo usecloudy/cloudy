@@ -20,12 +20,11 @@ import { cn } from "src/utils";
 import { useDebug } from "src/utils/debug";
 import { pluralize } from "src/utils/strings";
 import { useBreakpoint } from "src/utils/tailwind";
-import { useCreateThought } from "src/utils/thought";
 import { useCustomerStatus } from "src/utils/useCustomerStatus";
 
 import { useProject } from "../projects/ProjectContext";
 import { useSearchBarStore } from "../search/searchBarStore";
-import { GenerateDoc } from "../thoughtDetail/GenerateDoc";
+import { GenerateDoc } from "./GenerateDoc";
 import { LibraryView } from "./LibraryView";
 import { NewNote } from "./NewNote";
 import { ProjectSelector } from "./ProjectSelector";

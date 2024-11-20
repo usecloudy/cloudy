@@ -1,4 +1,4 @@
-import { AccessStrategies, handleSupabaseError } from "@cloudy/utils/common";
+import { AccessStrategies, fixOneToOne, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { produce } from "immer";
 
@@ -10,6 +10,27 @@ import { useWorkspace } from "src/stores/workspace";
 import { useProject } from "src/views/projects/ProjectContext";
 
 import { deepEqual, keyBy } from "./object";
+
+type BaseItem = {
+	id: string;
+	name?: string | null;
+	depth: number;
+	index?: number | null;
+	parentId: string | null;
+	category?: "shared" | "private" | "workspace";
+};
+
+type FolderItem = BaseItem & {
+	type: "folder";
+};
+
+type DocumentItem = BaseItem & {
+	type: "document";
+	isPublished: boolean;
+	accessStrategy?: AccessStrategies;
+};
+
+export type FlattenedItem = FolderItem | DocumentItem;
 
 export const assignDocumentToFolder = async (docId: string, folderId: string) => {
 	await supabase
@@ -42,22 +63,6 @@ export const getFolderChildrenCount = async (folderId: string) => {
 	return handleSupabaseError(await supabase.rpc("get_folder_children_count", { p_folder_id: folderId }));
 };
 
-export type FlattenedItem = {
-	id: string;
-	type: "folder" | "document";
-	name: string;
-	depth: number;
-	index: number;
-	parentId: string | null;
-	category?: "shared" | "private" | "workspace";
-	accessStrategy?: AccessStrategies;
-};
-
-export type PreFlattenedFolder = FlattenedItem & {
-	type: "folder";
-	children: FlattenedItem[];
-};
-
 export const useLibraryItems = () => {
 	const workspace = useWorkspace();
 	const project = useProject();
@@ -68,14 +73,39 @@ export const useLibraryItems = () => {
 		queryFn: async () => {
 			let recentDocsQuery = supabase
 				.from("thoughts")
-				.select("id, title, access_strategy, author_id, updated_at")
-				.order("updated_at", { ascending: false })
+				.select(
+					`
+					id, 
+					access_strategy,
+					author_id,
+					title,
+					updated_at,
+					latest_version:document_versions!latest_version_id(
+						id,
+						title,
+						created_at
+					)
+				`,
+				)
 				.eq("workspace_id", workspace.id)
 				.is("folder_id", null);
 
 			let docsQuery = supabase
 				.from("thoughts")
-				.select("id, title, index, folder:folders!inner(id, is_root), access_strategy")
+				.select(
+					`
+					id, 
+					title, 
+					index, 
+					folder:folders!inner(id, is_root), 
+					access_strategy,
+					latest_version:document_versions!latest_version_id(
+						id,
+						title,
+						created_at
+					)
+				`,
+				)
 				.eq("workspace_id", workspace.id)
 				.not("folder_id", "is", null);
 
@@ -111,10 +141,11 @@ export const useLibraryItems = () => {
 								type: "document",
 								name: doc.title,
 								depth,
-								index: doc.index!,
+								index: doc.index,
 								parentId,
-								accessStrategy: doc.access_strategy,
-							}) as FlattenedItem,
+								accessStrategy: doc.access_strategy as AccessStrategies,
+								isPublished: !!fixOneToOne(doc.latest_version),
+							}) satisfies DocumentItem,
 					);
 
 				const childFolders = folders
@@ -126,14 +157,14 @@ export const useLibraryItems = () => {
 								type: "folder",
 								name: folder.name,
 								depth,
-								index: folder.index!,
+								index: folder.index,
 								parentId,
-							}) as FlattenedItem,
+							}) satisfies FolderItem,
 					);
 
 				const combinedItems = [...childDocs, ...childFolders];
 
-				const sortedItemsAtThisDepth = combinedItems.sort((a, b) => a.index - b.index);
+				const sortedItemsAtThisDepth = combinedItems.sort((a, b) => a.index! - b.index!);
 
 				// Get children for each folder and insert them after their parent folder
 				let result: FlattenedItem[] = [];
@@ -150,42 +181,64 @@ export const useLibraryItems = () => {
 
 			const rootItems = rootFolder ? getFolderChildren(rootFolder.id, 0) : [];
 
+			recentDocs.sort((a, b) => {
+				const aLatestVersion = fixOneToOne(a.latest_version);
+				const bLatestVersion = fixOneToOne(b.latest_version);
+
+				return (
+					new Date(bLatestVersion?.created_at ?? b.updated_at).getTime() -
+					new Date(aLatestVersion?.created_at ?? a.updated_at).getTime()
+				);
+			});
+
 			// Separate recent docs into categories
 			const sharedDocs = recentDocs
 				.filter(doc => doc.access_strategy === AccessStrategies.PRIVATE && doc.author_id !== user.id)
-				.map(doc => ({
-					id: doc.id,
-					type: "document" as const,
-					name: doc.title,
-					depth: 0,
-					parentId: null,
-					category: "shared" as const,
-					accessStrategy: doc.access_strategy,
-				}));
+				.map(
+					doc =>
+						({
+							id: doc.id,
+							type: "document",
+							name: fixOneToOne(doc.latest_version)?.title ?? doc.title,
+							depth: 0,
+							parentId: null,
+							category: "shared" as const,
+							accessStrategy: doc.access_strategy as AccessStrategies,
+							isPublished: !!fixOneToOne(doc.latest_version),
+						}) satisfies DocumentItem,
+				);
 
 			const privateDocs = recentDocs
 				.filter(doc => doc.access_strategy === AccessStrategies.PRIVATE && doc.author_id === user.id)
-				.map(doc => ({
-					id: doc.id,
-					type: "document" as const,
-					name: doc.title,
-					depth: 0,
-					parentId: null,
-					category: "private" as const,
-					accessStrategy: doc.access_strategy,
-				}));
+				.map(
+					doc =>
+						({
+							id: doc.id,
+							type: "document",
+							name: fixOneToOne(doc.latest_version)?.title ?? doc.title,
+							depth: 0,
+							parentId: null,
+							category: "private" as const,
+							accessStrategy: doc.access_strategy as AccessStrategies,
+							isPublished: !!fixOneToOne(doc.latest_version),
+						}) satisfies DocumentItem,
+				);
 
 			const workspaceDocs = recentDocs
 				.filter(doc => doc.access_strategy !== AccessStrategies.PRIVATE)
-				.map(doc => ({
-					id: doc.id,
-					type: "document" as const,
-					name: doc.title,
-					depth: 0,
-					parentId: null,
-					category: "workspace" as const,
-					accessStrategy: doc.access_strategy,
-				}));
+				.map(
+					doc =>
+						({
+							id: doc.id,
+							type: "document",
+							name: fixOneToOne(doc.latest_version)?.title ?? doc.title,
+							depth: 0,
+							parentId: null,
+							category: "workspace" as const,
+							accessStrategy: doc.access_strategy as AccessStrategies,
+							isPublished: !!fixOneToOne(doc.latest_version),
+						}) satisfies DocumentItem,
+				);
 
 			let items = [...rootItems, ...sharedDocs, ...privateDocs, ...workspaceDocs];
 
@@ -377,13 +430,13 @@ export const useRenameItem = () => {
 	const project = useProject();
 
 	return useMutation({
-		mutationFn: async (payload: { id: string; name: string; type: "document" | "folder" }) => {
+		mutationFn: async (payload: { id: string; name: string; type: "document" | "folder" | "document-not-published" }) => {
 			const { id, name, type } = payload;
 
-			if (type === "document") {
-				handleSupabaseError(await supabase.from("thoughts").update({ title: name }).eq("id", id));
-			} else {
+			if (type === "folder") {
 				handleSupabaseError(await supabase.from("folders").update({ name }).eq("id", id));
+			} else {
+				handleSupabaseError(await supabase.from("thoughts").update({ title: name }).eq("id", id));
 			}
 		},
 		onSuccess: (_, payload) => {
@@ -400,17 +453,17 @@ export const useDeleteItem = () => {
 	const project = useProject();
 
 	return useMutation({
-		mutationFn: async (payload: { id: string; type: "document" | "folder" }) => {
+		mutationFn: async (payload: { id: string; type: "document" | "folder" | "document-not-published" }) => {
 			const { id, type } = payload;
-			if (type === "document") {
-				handleSupabaseError(await supabase.from("thoughts").delete().eq("id", id));
-			} else {
+			if (type === "folder") {
 				handleSupabaseError(await supabase.from("folders").delete().eq("id", id));
+			} else {
+				handleSupabaseError(await supabase.from("thoughts").delete().eq("id", id));
 			}
 		},
 		onSuccess: (_, payload) => {
 			queryClient.invalidateQueries({ queryKey: projectQueryKeys.library(workspace.id, project?.id) });
-			if (payload.type === "document") {
+			if (payload.type !== "folder") {
 				queryClient.invalidateQueries({ queryKey: thoughtQueryKeys.thoughtDetail(payload.id) });
 			}
 		},

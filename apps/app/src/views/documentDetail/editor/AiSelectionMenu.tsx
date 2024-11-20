@@ -1,14 +1,12 @@
 import { RepoReference } from "@cloudy/utils/common";
 import { FloatingFocusManager, offset, shift, useFloating } from "@floating-ui/react";
 import { SparklesIcon } from "lucide-react";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { useContext, useRef } from "react";
 import { useMount } from "react-use";
 
-import { Button } from "src/components/Button";
-import LoadingSpinner from "src/components/LoadingSpinner";
+import { AiTextArea } from "src/views/aiTextArea/AiTextArea";
 
-import { AiTextArea } from "../aiTextArea/AiTextArea";
 import { useReplyToThread, useStartThread } from "./chatSection/chat";
 import { useExistingLinkedFiles } from "./hooks";
 import { ThoughtContext } from "./thoughtContext";

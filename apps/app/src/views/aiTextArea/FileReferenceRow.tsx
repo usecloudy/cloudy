@@ -6,7 +6,7 @@ import { Button } from "src/components/Button";
 import { Dropdown } from "src/components/Dropdown";
 import { Input } from "src/components/Input";
 
-import { useConnectFileToDocument, useDisconnectFileFromDocument } from "../thoughtDetail/linking";
+import { useConnectFileToDocument, useDisconnectFileFromDocument } from "../documentDetail/editor/linking";
 import { AiTextAreaContext, useAiTextAreaContext } from "./AiTextAreaContext";
 import { FileReferencePill } from "./FileReferencePill";
 import { FileSearch, FileSearchRef } from "./FileSearch";

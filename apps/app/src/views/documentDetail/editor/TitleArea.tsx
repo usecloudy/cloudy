@@ -10,8 +10,8 @@ import { cn } from "src/utils";
 import { useThought, useToggleDisableTitleSuggestions } from "./hooks";
 import { AiGenerationContext, ThoughtContext } from "./thoughtContext";
 
-export const TitleArea = ({ title, onChange }: { title?: string | null; onChange: (title: string) => void }) => {
-	const { thoughtId, isAiWriting } = useContext(ThoughtContext);
+export const TitleArea = () => {
+	const { thoughtId, isAiWriting, title, setTitle } = useContext(ThoughtContext);
 	const { isGenerating } = useContext(AiGenerationContext);
 	const { data: thought } = useThought(thoughtId);
 
@@ -21,12 +21,12 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 
 	const handleAcceptTitleSuggestion = () => {
 		if (thought?.title_suggestion) {
-			onChange(thought.title_suggestion);
+			setTitle(thought.title_suggestion);
 		}
 	};
 
 	return (
-		<div className={cn("relative ml-8 flex flex-col gap-3 pb-4", (isGenerating || isAiWriting) && "animate-pulse")}>
+		<div className={cn("relative flex flex-col gap-3 pb-4 md:pl-8", (isGenerating || isAiWriting) && "animate-pulse")}>
 			<div className={cn("flex-start flex", isGenerating && "opacity-0")}>
 				<TextareaAutosize
 					className="no-scrollbar w-full resize-none appearance-none border-none bg-transparent text-2xl font-bold leading-8 outline-none md:text-3xl md:leading-10"
@@ -36,7 +36,7 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 					onFocus={() => setIsFocused(true)}
 					onBlur={() => setIsFocused(false)}
 					onChange={e => {
-						onChange(e.target.value);
+						setTitle(e.target.value);
 					}}
 					onKeyDown={e => {
 						if (e.key === "Tab") {
@@ -70,7 +70,7 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 					</div>
 				)}
 			</div>
-			{isGenerating && <div className="absolute left-0 top-0 h-10 w-1/2 animate-pulse rounded bg-card md:w-1/3" />}
+			{isGenerating && <div className="absolute left-8 top-0 h-10 w-1/2 animate-pulse rounded bg-card md:w-1/3" />}
 		</div>
 	);
 };

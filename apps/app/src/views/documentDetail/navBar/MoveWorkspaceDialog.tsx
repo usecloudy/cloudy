@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 import { ArrowRightIcon, CheckIcon } from "lucide-react";
-import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { queryClient } from "src/api/queryClient";
@@ -12,10 +11,10 @@ import { useAllUserWorkspaces } from "src/stores/user";
 import { useWorkspace } from "src/stores/workspace";
 import { makeThoughtUrl } from "src/utils/thought";
 
-import { ThoughtContext } from "./thoughtContext";
+import { useDocumentContext } from "../DocumentContext";
 
 export const MoveWorkspaceDialog = () => {
-	const { thoughtId } = useContext(ThoughtContext);
+	const { documentId } = useDocumentContext();
 	const currentWorkspace = useWorkspace();
 	const navigate = useNavigate();
 
@@ -23,15 +22,15 @@ export const MoveWorkspaceDialog = () => {
 
 	const moveThoughtMutation = useMutation({
 		mutationFn: async (newWorkspaceId: string) => {
-			await supabase.from("thoughts").update({ workspace_id: newWorkspaceId }).eq("id", thoughtId);
-			await supabase.from("collection_thoughts").delete().eq("thought_id", thoughtId); // Delete from all collections because they dont span workspaces
+			await supabase.from("thoughts").update({ workspace_id: newWorkspaceId }).eq("id", documentId);
+			await supabase.from("collection_thoughts").delete().eq("thought_id", documentId); // Delete from all collections because they dont span workspaces
 		},
 		onSuccess: (_, newWorkspaceId) => {
 			const newWorkspace = allUserWorkspaces?.find(w => w.id === newWorkspaceId);
 			if (newWorkspace) {
-				navigate(makeThoughtUrl(newWorkspace.slug, thoughtId));
+				navigate(makeThoughtUrl(newWorkspace.slug, documentId));
 			}
-			queryClient.invalidateQueries({ queryKey: thoughtQueryKeys.thoughtDetail(thoughtId) });
+			queryClient.invalidateQueries({ queryKey: thoughtQueryKeys.thoughtDetail(documentId) });
 		},
 	});
 

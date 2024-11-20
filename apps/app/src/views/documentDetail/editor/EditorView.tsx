@@ -1,31 +1,21 @@
-import { ThoughtSignals, ellipsizeText } from "@cloudy/utils/common";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import { EditorContent, Extension, JSONContent, useEditor } from "@tiptap/react";
 import { GripVertical } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { Helmet } from "react-helmet";
 import { useHotkeys } from "react-hotkeys-hook";
-import { Navigate, useParams } from "react-router-dom";
-import { useAsync, useLocalStorage, useMount, usePrevious, useUnmount, useUpdateEffect } from "react-use";
+import { useAsync } from "react-use";
 
-import { MainLayout } from "src/components/MainLayout";
 import { useUserRecord } from "src/stores/user";
-import { useWorkspace } from "src/stores/workspace";
 import { cn } from "src/utils";
-import { makeProjectHomeUrl } from "src/utils/projects";
-import { makeHeadTitle } from "src/utils/strings";
 import { useSave } from "src/utils/useSave";
-import { useTitleStore } from "src/views/thoughtDetail/titleStore";
+import { useSidebarContext } from "src/views/navigation/SidebarProvider";
 
-import { useSidebarContext } from "../navigation/SidebarProvider";
-import { useProject } from "../projects/ProjectContext";
-import { ControlColumn } from "./ControlColumn";
-import { ControlRow } from "./ControlRow";
-import { DocumentLoadingPlaceholder } from "./DocumentLoadingPlaceholder";
+import { useDocumentContext } from "../DocumentContext";
+import { DocumentLoadingPlaceholder } from "../DocumentLoadingPlaceholder";
+import { NavBar } from "../navBar/NavBar";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
-import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { FooterRow } from "./FooterRow";
 import { TitleArea } from "./TitleArea";
 import { ChatSectionView } from "./chatSection/ChatSectionView";
@@ -40,62 +30,21 @@ import {
 } from "./hooks";
 import { updateMentionNodeNames } from "./mention";
 import { AiGenerationContext, ThoughtContext } from "./thoughtContext";
-import { useThoughtStore } from "./thoughtStore";
-import {
-	backtickInputRegex,
-	clearAllApplyMarks,
-	clearAllEditMarks,
-	tiptapExtensions,
-	wrapSelectionAroundWords,
-} from "./tiptap";
+import { clearAllApplyMarks, clearAllEditMarks, tiptapExtensions, wrapSelectionAroundWords } from "./tiptap";
 import { useYProvider } from "./yProvider";
 
 type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
 
-export const ThoughtDetailView = () => {
-	const { thoughtId } = useParams<{ thoughtId: string }>();
+export const EditorView = ({ thought }: { thought: Thought }) => {
+	const { documentId, isEditMode } = useDocumentContext();
 
-	return <ThoughtDetailInner key={thoughtId} thoughtId={thoughtId} />;
-};
-
-const ThoughtDetailInner = ({ thoughtId }: { thoughtId?: string }) => {
-	const workspace = useWorkspace();
-	const project = useProject();
-
-	const { data: thought, isLoading } = useThought(thoughtId);
-
-	const previousThought = usePrevious(thought);
-
-	const title = useTitleStore(s => s.title);
-
-	const headTitle = title ? makeHeadTitle(ellipsizeText(title, 16)) : makeHeadTitle("New Thought");
-
-	if ((!thought && previousThought) || (!isLoading && !thought)) {
-		if (project) {
-			return <Navigate to={makeProjectHomeUrl(workspace.slug, project.slug)} />;
-		}
-		return <Navigate to="/" />;
-	}
-
-	return (
-		<EditorErrorBoundary>
-			<MainLayout className="no-scrollbar relative flex h-full w-screen flex-col overflow-hidden px-0 md:w-full md:px-0 lg:px-0">
-				<Helmet>
-					<title>{headTitle}</title>
-				</Helmet>
-				{thought && <ThoughtContent key={thoughtId} thoughtId={thoughtId!} thought={thought} />}
-			</MainLayout>
-		</EditorErrorBoundary>
-	);
-};
-
-const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Thought }) => {
-	useThoughtChannelListeners(thoughtId);
+	useThoughtChannelListeners(documentId);
 	const userRecord = useUserRecord();
 
-	const { mutateAsync: editThought } = useEditThought(thoughtId);
+	const { mutateAsync: editThought } = useEditThought(documentId);
 
-	const [hideControlColumn, setHideControlColumn] = useLocalStorage("hideControlColumn", false);
+	const [title, setTitle] = useState(thought.title ?? "");
+	const [localTitleTs, setLocalTitleTs] = useState<Date>(new Date());
 
 	const [isAiWriting, setIsAiWriting] = useState(false);
 	const [isEditingDisabled, setIsEditingDisabled] = useState(false);
@@ -104,17 +53,15 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	const [isShowingAiSelectionMenu, setIsShowingAiSelectionMenu] = useState(false);
 	const [threadId, setThreadId] = useState<string | null>(null);
 
-	const { onChange } = useSave(editThought, { debounceDurationMs: thoughtId ? 500 : 0 });
+	const { onChange } = useSave(editThought, { debounceDurationMs: documentId ? 500 : 0 });
 
 	const disableUpdatesRef = useRef(false);
 	const storedContentRef = useRef<JSONContent | null>(null);
 	const contentAfterApplyRef = useRef<JSONContent | null>(null);
 
-	const { setIsAiSuggestionLoading } = useThoughtStore();
-
 	const { setIsSidebarCollapsed } = useSidebarContext({ isFixed: isShowingAiEditorMenu });
 
-	const { isLoading, isConnected, ydoc, provider } = useYProvider(thoughtId!, disableUpdatesRef);
+	const { isLoading, isConnected, ydoc, provider } = useYProvider(documentId!, disableUpdatesRef);
 
 	const editor = useEditor({
 		editorProps: {
@@ -122,7 +69,7 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		},
 		extensions: [
 			...tiptapExtensions,
-			createFileHandlerExtension(thoughtId),
+			createFileHandlerExtension(documentId),
 			Collaboration.configure({
 				document: ydoc,
 			}),
@@ -161,8 +108,8 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 			}
 			onUpdate();
 		},
-		autofocus: !thoughtId,
-		editable: !isEditingDisabled,
+		autofocus: !documentId,
+		editable: isEditMode && !isEditingDisabled,
 	});
 
 	useEffect(() => {
@@ -296,14 +243,22 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 		disableUpdatesRef.current = false;
 	}, [editor, restoreFromLastContent, clearStoredContent, clearApplyContent, onFinishAiEdits]);
 
+	const handleSetTitle = useCallback(
+		(title: string) => {
+			const ts = new Date();
+			setTitle(title);
+			onChange({ title, ts });
+			setLocalTitleTs(ts);
+		},
+		[setTitle, onChange],
+	);
+
 	useEffect(() => {
-		const signals = (thought?.signals as string[] | null) ?? [];
-		if (signals.includes(ThoughtSignals.AI_SUGGESTIONS)) {
-			setIsAiSuggestionLoading(true);
-		} else {
-			setIsAiSuggestionLoading(false);
+		if (thought.title_ts && new Date(thought.title_ts) > localTitleTs) {
+			setTitle(thought.title ?? "");
+			setLocalTitleTs(new Date(thought.title_ts));
 		}
-	}, [setIsAiSuggestionLoading, thought?.signals]);
+	}, [thought.title_ts, localTitleTs, setTitle, thought.title]);
 
 	useHotkeys("mod+o", e => {
 		e.preventDefault();
@@ -314,11 +269,11 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 	return (
 		<ThoughtContext.Provider
 			value={{
-				thoughtId,
+				thoughtId: documentId,
+				isConnecting: isLoading,
 				editor,
 				disableUpdatesRef,
 				onUpdate,
-				isDocumentLoading: isLoading,
 				isConnected,
 				isEditingDisabled,
 				setIsEditingDisabled,
@@ -329,8 +284,6 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				restoreFromLastContent,
 				clearStoredContent,
 				clearApplyContent,
-				hideControlColumn,
-				setHideControlColumn,
 				setShowAiEditorMenu,
 				isShowingAiEditorMenu,
 				showAiEditor,
@@ -346,25 +299,28 @@ const ThoughtContent = ({ thoughtId, thought }: { thoughtId: string; thought: Th
 				isShowingAiSelectionMenu,
 				hideAiSelectionMenu,
 				showAiSelectionMenu,
+				title,
+				setTitle: handleSetTitle,
 			}}>
-			<div className="flex h-full flex-row">
+			<div className="relative flex h-full flex-row">
 				<div
 					className={cn(
-						"relative w-[33vw] shrink-0 transition-[width] duration-300 ease-in-out",
+						"relative hidden w-[33vw] shrink-0 bg-background transition-[width] duration-300 ease-in-out md:block",
 						!isShowingAiEditorMenu && "w-0",
 					)}>
 					{isShowingAiEditorMenu && <ChatSectionView />}
 				</div>
 				<div className="no-scrollbar relative flex w-full flex-grow flex-col lg:flex-row">
 					<AiDocumentGeneration thought={thought}>
-						<EditorView
-							thoughtId={thoughtId!}
-							remoteTitle={thought?.title ?? undefined}
-							latestRemoteTitleTs={thought?.title_ts ?? undefined}
-							onChange={onChange}
-						/>
-						<ControlColumn thoughtId={thoughtId} />
+						<Editor thoughtId={documentId!} onChange={onChange} />
 					</AiDocumentGeneration>
+				</div>
+				<div
+					className={cn(
+						"absolute top-0 z-40 block h-full w-screen bg-background md:hidden",
+						!isShowingAiEditorMenu && "hidden",
+					)}>
+					{isShowingAiEditorMenu && <ChatSectionView />}
 				</div>
 			</div>
 		</ThoughtContext.Provider>
@@ -402,101 +358,51 @@ const AiDocumentGeneration = ({ thought, children }: { thought: Thought; childre
 	);
 };
 
-const EditorView = ({
-	thoughtId,
-	remoteTitle,
-	latestRemoteTitleTs,
-	onChange,
-}: {
-	thoughtId: string;
-	remoteTitle?: string;
-	latestRemoteTitleTs?: string;
-	onChange: (payload: ThoughtEditPayload) => void;
-}) => {
-	const { editor, isConnected, isDocumentLoading, hideControlColumn, isAiWriting } = useContext(ThoughtContext);
+const Editor = ({ thoughtId, onChange }: { thoughtId: string; onChange: (payload: ThoughtEditPayload) => void }) => {
+	const { editor, isConnected, isConnecting, isAiWriting } = useContext(ThoughtContext);
 	const { isGenerating } = useContext(AiGenerationContext);
-
-	const { lastLocalThoughtTitleTs, setCurrentContent, setLastLocalThoughtContentTs, setLastLocalThoughtTitleTs } =
-		useThoughtStore();
-	const { title, setTitle, saveTitleKey } = useTitleStore();
-
-	useMount(() => {
-		setTitle(remoteTitle ?? "");
-	});
-
-	useUnmount(() => {
-		setTitle("");
-	});
-
-	useUpdateEffect(() => {
-		// If the remote title has changed, update the local title
-		if (
-			(latestRemoteTitleTs && lastLocalThoughtTitleTs && new Date(latestRemoteTitleTs) > lastLocalThoughtTitleTs) ||
-			!lastLocalThoughtTitleTs
-		) {
-			setTitle(remoteTitle ?? "");
-		}
-	}, [latestRemoteTitleTs]);
-
-	useUnmount(() => {
-		setCurrentContent(null);
-		setLastLocalThoughtContentTs(null);
-	});
-
-	useUpdateEffect(() => {
-		const ts = new Date();
-		onChange({ title, ts });
-		setLastLocalThoughtTitleTs(ts);
-	}, [saveTitleKey]);
-
-	const handleChangeTitle = (title: string) => {
-		const ts = new Date();
-		setTitle(title);
-		onChange({ title, ts });
-		setLastLocalThoughtTitleTs(ts);
-	};
 
 	return (
 		<div className="no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-y-scroll">
 			<nav className="sticky top-[-1px] z-30 -mr-2 w-full bg-background px-6 py-2 md:top-0 md:py-3">
-				<ControlRow thoughtId={thoughtId} editor={editor} />
+				<NavBar editor={editor} />
 			</nav>
-			<div
-				className={cn(
-					"-ml-8 box-border flex w-full max-w-screen-lg grow flex-col px-3 md:pl-16 md:pt-16 lg:flex-1",
-					hideControlColumn ? "lg:pr-16" : "lg:pr-4",
-				)}>
-				<TitleArea title={title} onChange={handleChangeTitle} />
-				<div
-					// On larger screens, we need left padding to avoid some characters being cut off
-					className="relative flex flex-row md:pl-[2px]">
-					{editor && thoughtId && <EditorBubbleMenu />}
-					{editor && thoughtId && (
-						<div>
-							<DragHandle editor={editor} tippyOptions={{ offset: [-4, 4], zIndex: 10 }}>
-								<div className="hidden cursor-grab flex-row items-center rounded border border-transparent px-0.5 py-1 hover:border-border hover:bg-card active:cursor-grabbing active:bg-accent/20 md:flex">
-									<GripVertical className="h-5 w-5 text-tertiary" />
+			<div className="box-border flex w-full max-w-screen-lg grow flex-col px-6 md:pl-12 md:pr-20 md:pt-16 lg:flex-1">
+				{isConnecting ? (
+					<div className="w-full pl-8">
+						<DocumentLoadingPlaceholder />
+					</div>
+				) : (
+					<>
+						<TitleArea />
+						<div
+							// On larger screens, we need left padding to avoid some characters being cut off
+							className="relative flex flex-row md:pl-[2px]">
+							{editor && thoughtId && <EditorBubbleMenu />}
+							{editor && thoughtId && (
+								<div>
+									<DragHandle editor={editor} tippyOptions={{ offset: [-4, 4], zIndex: 10 }}>
+										<div className="hidden cursor-grab flex-row items-center rounded border border-transparent px-0.5 py-1 hover:border-border hover:bg-card active:cursor-grabbing active:bg-accent/20 md:flex">
+											<GripVertical className="h-5 w-5 text-tertiary" />
+										</div>
+									</DragHandle>
 								</div>
-							</DragHandle>
-						</div>
-					)}
-					{isDocumentLoading ? (
-						<div className="w-full pl-8">
-							<DocumentLoadingPlaceholder />
-						</div>
-					) : (
-						<EditorContent
-							editor={editor}
-							className={cn(
-								"w-full",
-								(isAiWriting || !isConnected) && "pointer-events-none opacity-70",
-								isGenerating && "opacity-0",
 							)}
-						/>
-					)}
-					{isGenerating && <div className="absolute left-8 top-0 animate-pulse text-tertiary">Generating...</div>}
-				</div>
-				<div className="h-[75dvh]" />
+							<EditorContent
+								editor={editor}
+								className={cn(
+									"w-full",
+									(isAiWriting || !isConnected) && "pointer-events-none opacity-70",
+									isGenerating && "opacity-0",
+								)}
+							/>
+							{isGenerating && (
+								<div className="absolute left-8 top-0 animate-pulse text-tertiary">Generating...</div>
+							)}
+						</div>
+						<div className="h-[75dvh]" />
+					</>
+				)}
 			</div>
 			<FooterRow />
 		</div>
