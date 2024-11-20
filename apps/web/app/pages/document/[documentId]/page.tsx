@@ -1,4 +1,4 @@
-import { ellipsizeText, handleSupabaseError } from "@cloudy/utils/common";
+import { ellipsizeText, fixOneToOne, handleSupabaseError } from "@cloudy/utils/common";
 
 import { getSupabaseAnonClient } from "app/utils/supabase";
 
@@ -7,34 +7,30 @@ import { DocumentView } from "./DocumentView";
 export const generateMetadata = async ({ params }: { params: { documentId: string } }) => {
 	const supabase = await getSupabaseAnonClient();
 	const document = handleSupabaseError(
-		await supabase
-			.from("thoughts")
-			.select("id, title, content_plaintext")
-			.eq("id", params.documentId)
-			.eq("access_strategy", "public")
-			.maybeSingle(),
+		await supabase.from("document_versions").select("id, title, content_md").eq("id", params.documentId).maybeSingle(),
 	);
 
 	return {
 		title: `${document?.title || "Untitled"} | Cloudy Pages`,
-		description: ellipsizeText(document?.content_plaintext, 128),
+		description: ellipsizeText(document?.content_md ?? "", 128),
 	};
 };
 
 export default async function PublicDocumentPage({ params }: { params: { documentId: string } }) {
 	const supabase = await getSupabaseAnonClient();
-	const document = handleSupabaseError(
+	let tmpDocumentVersion = handleSupabaseError(
 		await supabase
 			.from("thoughts")
-			.select("id, title, content")
+			.select("latest_version:document_versions!latest_version_id(id, title, content_json)")
 			.eq("id", params.documentId)
-			.eq("access_strategy", "public")
 			.maybeSingle(),
-	);
+	)?.latest_version;
 
-	if (!document) {
+	if (!tmpDocumentVersion) {
 		return <div>Document not found or not public</div>;
 	}
 
-	return <DocumentView document={document} />;
+	const documentVersion = fixOneToOne(tmpDocumentVersion)!;
+
+	return <DocumentView documentVersion={documentVersion} />;
 }

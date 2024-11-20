@@ -26,7 +26,7 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 	};
 
 	return (
-		<div className={cn("relative ml-8 flex flex-col gap-3 pb-4", (isGenerating || isAiWriting) && "animate-pulse")}>
+		<div className={cn("relative flex flex-col gap-3 pb-4 md:pl-8", (isGenerating || isAiWriting) && "animate-pulse")}>
 			<div className={cn("flex-start flex", isGenerating && "opacity-0")}>
 				<TextareaAutosize
 					className="no-scrollbar w-full resize-none appearance-none border-none bg-transparent text-2xl font-bold leading-8 outline-none md:text-3xl md:leading-10"

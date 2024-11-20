@@ -219,7 +219,7 @@ export const LibraryView = () => {
 	// Add the navigateToDocument callback near other hooks
 	const navigateToDocument = useCallback(
 		(item: FlattenedItem) => {
-			if (item.type === "document") {
+			if (item.type !== "folder") {
 				navigate(
 					makeDocUrl({
 						workspaceSlug: workspace.slug,
@@ -266,16 +266,12 @@ export const LibraryView = () => {
 									return (
 										<SortableItem
 											key={item.id}
-											id={item.id}
-											depth={item.depth}
-											type={item.type}
-											name={item.name}
+											item={item}
 											expanded={expandedFolders.has(item.id)}
 											toggleFolder={toggleFolder}
 											navigateToDoc={() => navigateToDocument(item)}
 											hasAfterDroppable={index === arr.length - 1 || isLastItemWithParent}
 											isInLibrary
-											accessStrategy={item.accessStrategy}
 										/>
 									);
 								})}
@@ -309,15 +305,11 @@ export const LibraryView = () => {
 										.map((item, index, arr) => (
 											<SortableItem
 												key={item.id}
-												id={item.id}
-												depth={item.depth}
-												type={item.type}
-												name={item.name}
+												item={item}
 												expanded={false}
 												toggleFolder={toggleFolder}
 												navigateToDoc={() => navigateToDocument(item)}
 												hasAfterDroppable={index === arr.length - 1}
-												accessStrategy={item.accessStrategy}
 											/>
 										))}
 								</ul>
@@ -343,15 +335,11 @@ export const LibraryView = () => {
 									{sharedItems.slice(0, expandedSections.shared ? undefined : 5).map((item, index, arr) => (
 										<SortableItem
 											key={item.id}
-											id={item.id}
-											depth={item.depth}
-											type={item.type}
-											name={item.name}
+											item={item}
 											expanded={false}
 											toggleFolder={toggleFolder}
 											navigateToDoc={() => navigateToDocument(item)}
 											hasAfterDroppable={index === arr.length - 1}
-											accessStrategy={item.accessStrategy}
 										/>
 									))}
 								</ul>
@@ -377,15 +365,11 @@ export const LibraryView = () => {
 									{privateItems.slice(0, expandedSections.private ? undefined : 5).map((item, index, arr) => (
 										<SortableItem
 											key={item.id}
-											id={item.id}
-											depth={item.depth}
-											type={item.type}
-											name={item.name}
+											item={item}
 											expanded={false}
 											toggleFolder={toggleFolder}
 											navigateToDoc={() => navigateToDocument(item)}
 											hasAfterDroppable={index === arr.length - 1}
-											accessStrategy={item.accessStrategy}
 										/>
 									))}
 								</ul>
@@ -396,15 +380,7 @@ export const LibraryView = () => {
 				<DragOverlay>
 					{activeItem ? (
 						<div className="opacity-40 shadow-md">
-							<SortableItem
-								id={activeItem.id}
-								depth={activeItem.depth}
-								type={activeItem.type}
-								name={activeItem.name}
-								expanded={false}
-								toggleFolder={() => {}}
-								isOverlay={true}
-							/>
+							<SortableItem item={activeItem} expanded={false} toggleFolder={() => {}} isOverlay={true} />
 						</div>
 					) : null}
 				</DragOverlay>

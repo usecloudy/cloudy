@@ -482,6 +482,9 @@ export const useExistingLinkedFiles = (docId: string) => {
 
 export const usePublishDocumentVersion = () => {
 	const user = useUser();
+	const workspace = useWorkspace();
+	const project = useProject();
+
 	const { documentId } = useDocumentContext();
 	const { data: document } = useThought(documentId);
 
@@ -493,20 +496,28 @@ export const usePublishDocumentVersion = () => {
 				throw new Error("Editor not found");
 			}
 
-			handleSupabaseError(
-				await supabase.from("document_versions").insert({
-					document_id: documentId,
-					published_by: user.id,
-					title: document!.title!,
-					content_json: editor.getJSON(),
-					content_md: editor.storage.markdown.getMarkdown(),
-					content_html: editor.getHTML(),
-				}),
+			const result = handleSupabaseError(
+				await supabase
+					.from("document_versions")
+					.insert({
+						document_id: documentId,
+						published_by: user.id,
+						title: document!.title!,
+						content_json: editor.getJSON(),
+						content_md: editor.storage.markdown.getMarkdown(),
+						content_html: editor.getHTML(),
+					})
+					.select("id")
+					.single(),
 			);
+			handleSupabaseError(await supabase.from("thoughts").update({ latest_version_id: result.id }).eq("id", documentId));
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: thoughtQueryKeys.latestPublishedVersion(documentId),
+			});
+			queryClient.invalidateQueries({
+				queryKey: projectQueryKeys.library(workspace.id, project?.id),
 			});
 		},
 	});

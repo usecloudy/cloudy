@@ -30,15 +30,33 @@ const makeAccessStrategyInfo = (accessStrategy: AccessStrategies) => {
 	}
 };
 
-export const ShareDialog = () => {
+type ShareDialogTriggerProps = {
+	accessStrategy: AccessStrategies;
+};
+
+export const ShareDialogTrigger = ({ accessStrategy }: ShareDialogTriggerProps) => {
+	const { label, icon } = makeAccessStrategyInfo(accessStrategy ?? AccessStrategies.PRIVATE);
+
+	return (
+		<Button variant="outline" size="sm" className="pr-1">
+			{icon}
+			<span>{label}</span>
+			<ChevronDownIcon className="size-4" />
+		</Button>
+	);
+};
+
+type ShareDialogProps = {
+	trigger?: React.ReactNode;
+};
+
+export const ShareDialog = ({ trigger }: ShareDialogProps) => {
 	const workspace = useWorkspace();
 	const project = useProject();
 	const user = useUser();
 
 	const { documentId } = useDocumentContext();
-
 	const { data: thought } = useThought(documentId);
-
 	const { accessStrategy, users } = useDocumentAccessControl(documentId);
 	const editThoughtMutation = useEditThought(documentId);
 
@@ -81,7 +99,6 @@ export const ShareDialog = () => {
 	};
 
 	const currentAccessStrategy = accessStrategy ?? AccessStrategies.PRIVATE;
-	const { label, icon } = makeAccessStrategyInfo(currentAccessStrategy);
 
 	const handleInviteUser = async () => {
 		try {
@@ -103,22 +120,14 @@ export const ShareDialog = () => {
 
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogTrigger>
-				<Tooltip durationPreset="short">
-					<TooltipTrigger asChild>
-						<span>
-							<Button variant="outline" size="sm" className="pr-1">
-								{icon}
-								<span>{label}</span>
-								<ChevronDownIcon className="size-4" />
-							</Button>
-						</span>
-					</TooltipTrigger>
-					<TooltipContent>
-						<span>Document access control</span>
-					</TooltipContent>
-				</Tooltip>
-			</DialogTrigger>
+			<Tooltip durationPreset="short">
+				<TooltipTrigger asChild>
+					<DialogTrigger>{trigger ?? <ShareDialogTrigger accessStrategy={currentAccessStrategy} />}</DialogTrigger>
+				</TooltipTrigger>
+				<TooltipContent>
+					<span>Control sharing and who has access</span>
+				</TooltipContent>
+			</Tooltip>
 			<DialogContent size="lg">
 				<DialogHeader>
 					<DialogTitle>Document Sharing</DialogTitle>

@@ -13,9 +13,9 @@ import { useSave } from "src/utils/useSave";
 import { useTitleStore } from "src/views/thoughtDetail/titleStore";
 
 import { useDocumentContext } from "../documentDetail/DocumentContext";
+import { DocumentLoadingPlaceholder } from "../documentDetail/DocumentLoadingPlaceholder";
 import { NavBar } from "../documentDetail/navBar/NavBar";
 import { useSidebarContext } from "../navigation/SidebarProvider";
-import { DocumentLoadingPlaceholder } from "./DocumentLoadingPlaceholder";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { FooterRow } from "./FooterRow";
 import { TitleArea } from "./TitleArea";
@@ -251,10 +251,10 @@ export const ThoughtContent = ({ thought }: { thought: Thought }) => {
 		<ThoughtContext.Provider
 			value={{
 				thoughtId: documentId,
+				isConnecting: isLoading,
 				editor,
 				disableUpdatesRef,
 				onUpdate,
-				isDocumentLoading: isLoading,
 				isConnected,
 				isEditingDisabled,
 				setIsEditingDisabled,
@@ -281,23 +281,30 @@ export const ThoughtContent = ({ thought }: { thought: Thought }) => {
 				hideAiSelectionMenu,
 				showAiSelectionMenu,
 			}}>
-			<div className="flex h-full flex-row">
+			<div className="relative flex h-full flex-row">
 				<div
 					className={cn(
-						"relative w-[33vw] shrink-0 transition-[width] duration-300 ease-in-out",
+						"relative hidden w-[33vw] shrink-0 bg-background transition-[width] duration-300 ease-in-out md:block",
 						!isShowingAiEditorMenu && "w-0",
 					)}>
 					{isShowingAiEditorMenu && <ChatSectionView />}
 				</div>
 				<div className="no-scrollbar relative flex w-full flex-grow flex-col lg:flex-row">
 					<AiDocumentGeneration thought={thought}>
-						<EditorView
+						<Editor
 							thoughtId={documentId!}
 							remoteTitle={thought?.title ?? undefined}
 							latestRemoteTitleTs={thought?.title_ts ?? undefined}
 							onChange={onChange}
 						/>
 					</AiDocumentGeneration>
+				</div>
+				<div
+					className={cn(
+						"absolute top-0 z-40 block h-full w-screen bg-background md:hidden",
+						!isShowingAiEditorMenu && "hidden",
+					)}>
+					{isShowingAiEditorMenu && <ChatSectionView />}
 				</div>
 			</div>
 		</ThoughtContext.Provider>
@@ -335,7 +342,7 @@ const AiDocumentGeneration = ({ thought, children }: { thought: Thought; childre
 	);
 };
 
-const EditorView = ({
+const Editor = ({
 	thoughtId,
 	remoteTitle,
 	latestRemoteTitleTs,
@@ -346,7 +353,7 @@ const EditorView = ({
 	latestRemoteTitleTs?: string;
 	onChange: (payload: ThoughtEditPayload) => void;
 }) => {
-	const { editor, isConnected, isDocumentLoading, isAiWriting } = useContext(ThoughtContext);
+	const { editor, isConnected, isConnecting, isAiWriting } = useContext(ThoughtContext);
 	const { isGenerating } = useContext(AiGenerationContext);
 
 	const { title, setTitle, saveTitleKey } = useTitleStore();
@@ -386,38 +393,42 @@ const EditorView = ({
 			<nav className="sticky top-[-1px] z-30 -mr-2 w-full bg-background px-6 py-2 md:top-0 md:py-3">
 				<NavBar editor={editor} />
 			</nav>
-			<div className="box-border flex w-full max-w-screen-lg grow flex-col px-3 md:pl-12 md:pr-20 md:pt-16 lg:flex-1">
-				<TitleArea title={title} onChange={handleChangeTitle} />
-				<div
-					// On larger screens, we need left padding to avoid some characters being cut off
-					className="relative flex flex-row md:pl-[2px]">
-					{editor && thoughtId && <EditorBubbleMenu />}
-					{editor && thoughtId && (
-						<div>
-							<DragHandle editor={editor} tippyOptions={{ offset: [-4, 4], zIndex: 10 }}>
-								<div className="hidden cursor-grab flex-row items-center rounded border border-transparent px-0.5 py-1 hover:border-border hover:bg-card active:cursor-grabbing active:bg-accent/20 md:flex">
-									<GripVertical className="h-5 w-5 text-tertiary" />
+			<div className="box-border flex w-full max-w-screen-lg grow flex-col px-6 md:pl-12 md:pr-20 md:pt-16 lg:flex-1">
+				{isConnecting ? (
+					<div className="w-full pl-8">
+						<DocumentLoadingPlaceholder />
+					</div>
+				) : (
+					<>
+						<TitleArea title={title} onChange={handleChangeTitle} />
+						<div
+							// On larger screens, we need left padding to avoid some characters being cut off
+							className="relative flex flex-row md:pl-[2px]">
+							{editor && thoughtId && <EditorBubbleMenu />}
+							{editor && thoughtId && (
+								<div>
+									<DragHandle editor={editor} tippyOptions={{ offset: [-4, 4], zIndex: 10 }}>
+										<div className="hidden cursor-grab flex-row items-center rounded border border-transparent px-0.5 py-1 hover:border-border hover:bg-card active:cursor-grabbing active:bg-accent/20 md:flex">
+											<GripVertical className="h-5 w-5 text-tertiary" />
+										</div>
+									</DragHandle>
 								</div>
-							</DragHandle>
-						</div>
-					)}
-					{isDocumentLoading ? (
-						<div className="w-full pl-8">
-							<DocumentLoadingPlaceholder />
-						</div>
-					) : (
-						<EditorContent
-							editor={editor}
-							className={cn(
-								"w-full",
-								(isAiWriting || !isConnected) && "pointer-events-none opacity-70",
-								isGenerating && "opacity-0",
 							)}
-						/>
-					)}
-					{isGenerating && <div className="absolute left-8 top-0 animate-pulse text-tertiary">Generating...</div>}
-				</div>
-				<div className="h-[75dvh]" />
+							<EditorContent
+								editor={editor}
+								className={cn(
+									"w-full",
+									(isAiWriting || !isConnected) && "pointer-events-none opacity-70",
+									isGenerating && "opacity-0",
+								)}
+							/>
+							{isGenerating && (
+								<div className="absolute left-8 top-0 animate-pulse text-tertiary">Generating...</div>
+							)}
+						</div>
+						<div className="h-[75dvh]" />
+					</>
+				)}
 			</div>
 			<FooterRow />
 		</div>

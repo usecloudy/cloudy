@@ -11,6 +11,7 @@ import {
 	RefreshCwIcon,
 	TriangleAlertIcon,
 	UndoIcon,
+	UsersIcon,
 	XIcon,
 } from "lucide-react";
 import { useContext } from "react";
@@ -21,12 +22,14 @@ import { Button } from "src/components/Button";
 import { Dropdown } from "src/components/Dropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip";
 import { makeHumanizedTime } from "src/utils/strings";
+import { useBreakpoint } from "src/utils/tailwind";
 import { usePublishDocumentVersion, useThought, useToggleDisableTitleSuggestions } from "src/views/thoughtDetail/hooks";
 import { ThoughtContext } from "src/views/thoughtDetail/thoughtContext";
 
 import { useUserProfile } from "../../../utils/users";
 import { useDocumentContext } from "../DocumentContext";
-import { useLatestPublishedDocumentVersion } from "../hooks";
+import { useLatestDocumentVersionContext } from "../LatestDocumentVersionContext";
+import { useDocumentAccessControl } from "../accessControl";
 import { DeleteDialog } from "./DeleteDialog";
 import { ExportDialog } from "./ExportDialog";
 import { LinkedFilesDropdown } from "./LinkedFilesDropdown";
@@ -40,24 +43,20 @@ const PublishedDocumentName = ({ userId }: { userId: string }) => {
 
 const DocumentPublishedTimestamp = () => {
 	const { documentId, isEditMode } = useDocumentContext();
-	const { data: latestPublishedDocumentVersion } = useLatestPublishedDocumentVersion();
+	const { latestDocumentVersion } = useLatestDocumentVersionContext();
 	const { data: document } = useThought(documentId);
 
-	return (
-		<div className="flex items-center gap-3">
-			{isEditMode ? (
-				<div className="text-xs text-tertiary">
-					{document && <span>Last edited {makeHumanizedTime(document.updated_at)}</span>}
-				</div>
-			) : (
-				<div className="text-xs text-tertiary">
-					{latestPublishedDocumentVersion && latestPublishedDocumentVersion.published_by && (
-						<span>
-							Published {makeHumanizedTime(latestPublishedDocumentVersion.created_at)} by{" "}
-							<PublishedDocumentName userId={latestPublishedDocumentVersion.published_by.id} />
-						</span>
-					)}
-				</div>
+	return isEditMode ? (
+		<div className="flex-1 truncate text-xs text-tertiary">
+			{document && <span>Last edited {makeHumanizedTime(document.updated_at)}</span>}
+		</div>
+	) : (
+		<div className="flex-1 truncate text-xs text-tertiary">
+			{latestDocumentVersion && latestDocumentVersion.published_by && (
+				<span>
+					Published {makeHumanizedTime(latestDocumentVersion.created_at)} by{" "}
+					<PublishedDocumentName userId={latestDocumentVersion.published_by.id} />
+				</span>
 			)}
 		</div>
 	);
@@ -65,14 +64,19 @@ const DocumentPublishedTimestamp = () => {
 
 export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 	const { documentId, isEditMode, setIsEditMode } = useDocumentContext();
-	const { data: thought } = useThought(documentId);
+	const isMd = useBreakpoint("md");
 
-	const { isConnected, isDocumentLoading } = useContext(ThoughtContext);
+	const { data: thought } = useThought(documentId);
+	const { latestDocumentVersion } = useLatestDocumentVersionContext();
+
+	const { isConnected, isConnecting } = useContext(ThoughtContext);
 
 	const [, copyToClipboard] = useCopyToClipboard();
 
 	const toggleDisableTitleSuggestionsMutation = useToggleDisableTitleSuggestions();
 	const publishDocumentVersionMutation = usePublishDocumentVersion();
+
+	const hasNoPublishedVersions = !latestDocumentVersion;
 
 	return (
 		<div className="flex w-full flex-row items-center justify-between gap-2">
@@ -80,7 +84,7 @@ export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 			<div className="flex items-center gap-1 text-secondary">
 				{isEditMode ? (
 					<>
-						{!isConnected && !isDocumentLoading && (
+						{!isConnected && !isConnecting && (
 							<Tooltip durationPreset="instant">
 								<TooltipTrigger>
 									<Button
@@ -137,10 +141,12 @@ export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 								</div>
 							</TooltipContent>
 						</Tooltip>
-						<Button variant="outline" size="sm" onClick={() => setIsEditMode(false)}>
-							<XIcon className="size-4" />
-							Leave edit mode
-						</Button>
+						{!hasNoPublishedVersions && (
+							<Button variant="outline" size={isMd ? "sm" : "icon-sm"} onClick={() => setIsEditMode(false)}>
+								<XIcon className="size-4" />
+								{isMd && "Leave edit mode"}
+							</Button>
+						)}
 						<Button
 							size="sm"
 							onClick={() => {
@@ -148,7 +154,7 @@ export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 								setIsEditMode(false);
 							}}>
 							<FileCheckIcon className="size-4" />
-							Publish
+							{hasNoPublishedVersions ? "Publish first version" : "Publish"}
 						</Button>
 					</>
 				) : (
@@ -159,8 +165,9 @@ export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 						</Button>
 					</>
 				)}
-
-				<ShareDialog />
+				<div className="hidden md:block">
+					<ShareDialog />
+				</div>
 				<Dropdown
 					trigger={
 						<Button variant="ghost" size="icon-sm" disabled={!documentId}>
@@ -185,6 +192,14 @@ export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 								</>
 							)}
 						</Button>
+						<ShareDialog
+							trigger={
+								<Button variant="ghost" size="sm" className="w-full justify-start">
+									<UsersIcon className="size-4" />
+									<span>Document Sharing</span>
+								</Button>
+							}
+						/>
 						<LinkedFilesDropdown
 							trigger={
 								<Button variant="ghost" size="sm" className="w-full justify-start">

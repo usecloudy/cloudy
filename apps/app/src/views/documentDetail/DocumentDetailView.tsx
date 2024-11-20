@@ -2,7 +2,6 @@ import { ellipsizeText } from "@cloudy/utils/common";
 import { useState } from "react";
 import { Helmet } from "react-helmet";
 import { Navigate, useParams } from "react-router-dom";
-import { usePrevious } from "react-use";
 
 import { MainLayout } from "../../components/MainLayout";
 import { useWorkspace } from "../../stores/workspace";
@@ -13,23 +12,22 @@ import { EditorErrorBoundary } from "../thoughtDetail/EditorErrorBoundary";
 import { ThoughtContent } from "../thoughtDetail/ThoughtDetailView";
 import { useThought } from "../thoughtDetail/hooks";
 import { DocumentContext } from "./DocumentContext";
+import { DocumentLoadingPlaceholderWithPadding } from "./DocumentLoadingPlaceholder";
+import { LatestDocumentVersionContext, useLatestDocumentVersion } from "./LatestDocumentVersionContext";
 import { PublishedDocumentView } from "./PublishedDocumentView";
 
-export const DocumentDetailView = () => {
-	const { documentId } = useParams<{ documentId: string }>();
-
+const DocumentDetailInner = ({ documentId }: { documentId: string }) => {
 	const workspace = useWorkspace();
 	const project = useProject();
 
 	const { data: document, isLoading } = useThought(documentId);
-
-	const previousDocument = usePrevious(document);
+	const { data: latestDocumentVersion, isLoading: isLatestDocumentVersionLoading } = useLatestDocumentVersion(documentId);
 
 	const [isEditMode, setIsEditMode] = useState(false);
 
 	const headTitle = document?.title ? makeHeadTitle(ellipsizeText(document.title, 16)) : makeHeadTitle("New Doc");
 
-	if ((!document && previousDocument) || (!isLoading && !document)) {
+	if (!isLoading && !document) {
 		if (project) {
 			return <Navigate to={makeProjectHomeUrl(workspace.slug, project.slug)} />;
 		}
@@ -37,19 +35,29 @@ export const DocumentDetailView = () => {
 	}
 
 	return (
-		<DocumentContext.Provider value={{ documentId: documentId!, isEditMode, setIsEditMode }}>
-			<EditorErrorBoundary>
-				<MainLayout className="no-scrollbar relative flex h-full w-screen flex-col overflow-hidden px-0 md:w-full md:px-0 lg:px-0">
-					<Helmet>
-						<title>{headTitle}</title>
-					</Helmet>
-					{isEditMode ? (
-						<ThoughtContent key={documentId} thought={document!} />
-					) : (
-						<PublishedDocumentView key={documentId} />
-					)}
-				</MainLayout>
-			</EditorErrorBoundary>
+		<DocumentContext.Provider value={{ documentId, isEditMode, setIsEditMode }}>
+			<LatestDocumentVersionContext.Provider value={{ latestDocumentVersion }}>
+				<EditorErrorBoundary>
+					<MainLayout className="no-scrollbar relative flex h-full w-screen flex-col overflow-hidden px-0 md:w-full md:px-0 lg:px-0">
+						<Helmet>
+							<title>{headTitle}</title>
+						</Helmet>
+						{isLoading || isLatestDocumentVersionLoading ? (
+							<DocumentLoadingPlaceholderWithPadding />
+						) : isEditMode ? (
+							<ThoughtContent thought={document!} />
+						) : (
+							<PublishedDocumentView />
+						)}
+					</MainLayout>
+				</EditorErrorBoundary>
+			</LatestDocumentVersionContext.Provider>
 		</DocumentContext.Provider>
 	);
+};
+
+export const DocumentDetailView = () => {
+	const { documentId } = useParams<{ documentId: string }>();
+
+	return <DocumentDetailInner key={documentId} documentId={documentId!} />;
 };

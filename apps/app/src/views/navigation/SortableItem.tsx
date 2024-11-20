@@ -6,6 +6,7 @@ import {
 	ChevronRightIcon,
 	FileIcon,
 	FileLock2Icon,
+	FilePenLineIcon,
 	FolderIcon,
 	FolderOpenIcon,
 	GlobeIcon,
@@ -18,14 +19,11 @@ import { useLocation } from "react-router-dom";
 
 import { Button } from "src/components/Button";
 import { cn } from "src/utils";
-import { useDeleteItem, useRenameItem } from "src/utils/folders";
+import { FlattenedItem, useDeleteItem, useRenameItem } from "src/utils/folders";
 import { useClickOutside } from "src/utils/hooks/useClickOutside";
 
 type SortableItemProps = {
-	id: string;
-	depth: number;
-	type: "folder" | "document";
-	name: string;
+	item: FlattenedItem;
 	expanded: boolean;
 	toggleFolder: (id: string) => void;
 	isOverlay?: boolean;
@@ -37,10 +35,7 @@ type SortableItemProps = {
 };
 
 export const SortableItem = ({
-	id,
-	depth,
-	type,
-	name,
+	item,
 	expanded,
 	toggleFolder,
 	navigateToDoc,
@@ -57,7 +52,7 @@ export const SortableItem = ({
 
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
-	const [editedName, setEditedName] = useState(name);
+	const [editedName, setEditedName] = useState(item.name ?? "");
 
 	const {
 		attributes,
@@ -66,16 +61,16 @@ export const SortableItem = ({
 		transition,
 		isDragging,
 	} = useSortable({
-		id,
-		data: { isInLibrary, type },
+		id: item.id,
+		data: { isInLibrary, type: item.type },
 		disabled: isEditing, // Add this line to disable dragging while editing
 	});
 
-	const { isOver: isOverBefore, setNodeRef: droppableBeforeRef } = useDroppable({ id: `before:${id}` });
+	const { isOver: isOverBefore, setNodeRef: droppableBeforeRef } = useDroppable({ id: `before:${item.id}` });
 	const { isOver, setNodeRef: droppableRef } = useDroppable({
-		id,
+		id: item.id,
 	});
-	const { isOver: isOverAfter, setNodeRef: droppableAfterRef } = useDroppable({ id: `after:${id}` });
+	const { isOver: isOverAfter, setNodeRef: droppableAfterRef } = useDroppable({ id: `after:${item.id}` });
 
 	const inputRef = useRef<HTMLInputElement>(null);
 
@@ -85,7 +80,7 @@ export const SortableItem = ({
 
 	const setRefs = (node: HTMLElement | null) => {
 		sortableRef(node);
-		if (type === "folder") {
+		if (item.type === "folder") {
 			droppableRef(node);
 		}
 	};
@@ -112,12 +107,12 @@ export const SortableItem = ({
 	const handleDoubleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		setIsEditing(true);
-		setEditedName(name);
+		setEditedName(item.name ?? "");
 	};
 
 	const handleSubmit = () => {
-		if (editedName !== name) {
-			renameItemMutation.mutate({ id, name: editedName.trim(), type });
+		if (editedName !== item.name) {
+			renameItemMutation.mutate({ id: item.id, name: editedName ? editedName.trim() : "", type: item.type });
 		}
 		setIsEditing(false);
 	};
@@ -127,17 +122,17 @@ export const SortableItem = ({
 			handleSubmit();
 		} else if (e.key === "Escape") {
 			setIsEditing(false);
-			setEditedName(name);
+			setEditedName(item.name ?? "");
 		}
 	};
 
-	const isCurrentlyOpen = location.pathname.includes(id);
+	const isCurrentlyOpen = location.pathname.includes(item.id);
 
 	return (
 		<li style={style} className="list-none">
 			{isInLibrary && (
 				<div ref={setBeforeRefs} className="pointer-events-none -my-4 flex h-8 flex-col justify-center">
-					{isOverBefore && <div className="h-0.5 bg-border" style={{ marginLeft: `${depth * 16 + 8}px` }} />}
+					{isOverBefore && <div className="h-0.5 bg-border" style={{ marginLeft: `${item.depth * 16 + 8}px` }} />}
 				</div>
 			)}
 			<div
@@ -149,20 +144,20 @@ export const SortableItem = ({
 					isEditing ? "cursor-text" : undefined, // Add cursor-text when editing
 					isCurrentlyOpen ? "bg-card" : undefined,
 				)}
-				style={{ paddingLeft: `${depth * 1.33 + 0.5}rem` }}
+				style={{ paddingLeft: `${item.depth * 1.33 + 0.5}rem` }}
 				onClick={() => {
 					if (!isEditing) {
 						// Only handle clicks when not editing
-						if (type === "folder" && !isDragging) {
-							toggleFolder(id);
-						} else if (type === "document") {
-							navigateToDoc?.(id);
+						if (item.type === "folder" && !isDragging) {
+							toggleFolder(item.id);
+						} else {
+							navigateToDoc?.(item.id);
 						}
 					}
 				}}
 				{...(!isOverlay && !isEditing ? { ...attributes, ...listeners } : {})} // Only spread drag listeners if not editing
 			>
-				{type === "folder" && (
+				{item.type === "folder" && (
 					<>
 						{expanded ? (
 							<>
@@ -177,17 +172,24 @@ export const SortableItem = ({
 						)}
 					</>
 				)}
-				{type === "document" && (
+				{item.type === "document" && (
 					<>
-						{accessStrategy === AccessStrategies.PRIVATE ? (
-							<FileLock2Icon className="size-4 shrink-0" />
-						) : accessStrategy === AccessStrategies.PUBLIC ? (
-							<GlobeIcon className="size-4 shrink-0" />
+						{item.isPublished ? (
+							<>
+								{accessStrategy === AccessStrategies.PRIVATE ? (
+									<FileLock2Icon className="size-4 shrink-0" />
+								) : accessStrategy === AccessStrategies.PUBLIC ? (
+									<GlobeIcon className="size-4 shrink-0" />
+								) : (
+									<FileIcon className="size-4 shrink-0" />
+								)}
+							</>
 						) : (
-							<FileIcon className="size-4 shrink-0" />
+							<FilePenLineIcon className="size-4 shrink-0" />
 						)}
 					</>
 				)}
+
 				{isEditing ? (
 					<input
 						ref={inputRef}
@@ -201,8 +203,8 @@ export const SortableItem = ({
 						autoFocus
 					/>
 				) : (
-					<span className={cn("flex-1 truncate", !name && "text-secondary")} onDoubleClick={handleDoubleClick}>
-						{name || "Untitled"}
+					<span className={cn("flex-1 truncate", !item.name && "text-secondary")} onDoubleClick={handleDoubleClick}>
+						{item.name || "Untitled"}
 					</span>
 				)}
 				<Button
@@ -220,14 +222,14 @@ export const SortableItem = ({
 					setIsOpen={setIsDropdownOpen}
 					onStartEditing={() => {
 						setIsEditing(true);
-						setEditedName(name);
+						setEditedName(item.name ?? "");
 					}}
-					onDelete={() => deleteItemMutation.mutate({ id, type })}
+					onDelete={() => deleteItemMutation.mutate({ id: item.id, type: item.type })}
 				/>
 			</div>
 			{isInLibrary && hasAfterDroppable && (
 				<div ref={setAfterRefs} className="pointer-events-none -my-4 flex h-8 flex-col justify-center">
-					{isOverAfter && <div className="h-0.5 bg-border" style={{ marginLeft: `${depth * 16 + 8}px` }} />}
+					{isOverAfter && <div className="h-0.5 bg-border" style={{ marginLeft: `${item.depth * 16 + 8}px` }} />}
 				</div>
 			)}
 		</li>
