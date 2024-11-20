@@ -1,20 +1,22 @@
-import { AccessStrategies, RepoReference, handleSupabaseError } from "@cloudy/utils/common";
+import { AccessStrategies, handleSupabaseError } from "@cloudy/utils/common";
 import { useIsMutating, useMutation, useQuery } from "@tanstack/react-query";
 import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
 import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
-import { collectionQueryKeys, commentThreadQueryKeys, projectQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
-import { useWorkspace } from "src/stores/workspace";
+import { apiClient } from "src/api/client";
+import { queryClient } from "src/api/queryClient";
+import { collectionQueryKeys, projectQueryKeys, thoughtQueryKeys } from "src/api/queryKeys";
+import { supabase } from "src/clients/supabase";
+import { useUser } from "src/stores/user";
+import { useWorkspace, useWorkspaceStore } from "src/stores/workspace";
+import { makeDocUrl } from "src/utils/thought";
+import { useProject } from "src/views/projects/ProjectContext";
 
-import { apiClient } from "../../api/client";
-import { queryClient } from "../../api/queryClient";
-import { supabase } from "../../clients/supabase";
-import { useUser } from "../../stores/user";
-import { useDocumentContext } from "../documentDetail/DocumentContext";
-import { useProject } from "../projects/ProjectContext";
+import { useDocumentContext } from "../DocumentContext";
 import { ThoughtContext } from "./thoughtContext";
-import { useTitleStore } from "./titleStore";
 
 const MINIMUM_CONTENT_LENGTH = 3;
 const MINIMUM_EDIT_DISTANCE = 64;
@@ -371,8 +373,7 @@ export const useToggleDisableTitleSuggestions = () => {
 };
 
 export const useGenerateDocument = () => {
-	const { editor } = useContext(ThoughtContext);
-	const { setTitle } = useTitleStore();
+	const { editor, setTitle } = useContext(ThoughtContext);
 
 	const [hasStarted, setHasStarted] = useState(false);
 
@@ -519,6 +520,38 @@ export const usePublishDocumentVersion = () => {
 			queryClient.invalidateQueries({
 				queryKey: projectQueryKeys.library(workspace.id, project?.id),
 			});
+		},
+	});
+};
+
+export const useCreateDocument = () => {
+	const workspace = useWorkspaceStore(s => s.workspace);
+	const project = useProject();
+
+	const editThoughtMutation = useEditThought();
+	const navigate = useNavigate();
+
+	return useMutation({
+		mutationFn: async (payload: { collectionId?: string }) => {
+			if (!workspace) {
+				throw new Error("Workspace not found");
+			}
+
+			const newThought = await editThoughtMutation.mutateAsync({
+				collectionId: payload.collectionId,
+				ts: new Date(),
+			});
+
+			return newThought;
+		},
+		onError: e => {
+			console.error(e);
+			toast.error("Failed to create document");
+		},
+		onSuccess: newThought => {
+			if (workspace && newThought) {
+				navigate(makeDocUrl({ workspaceSlug: workspace.slug, projectSlug: project?.slug, docId: newThought.id }));
+			}
 		},
 	});
 };

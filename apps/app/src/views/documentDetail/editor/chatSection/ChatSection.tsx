@@ -4,7 +4,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 import { cn } from "src/utils";
 
-import { AiTextArea } from "../../aiTextArea/AiTextArea";
+import { AiTextArea } from "../../../aiTextArea/AiTextArea";
 import { useExistingLinkedFiles } from "../hooks";
 import { ThoughtContext } from "../thoughtContext";
 import { ChatContent } from "./ChatContent";

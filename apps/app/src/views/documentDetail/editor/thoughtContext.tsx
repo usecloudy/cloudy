@@ -13,6 +13,8 @@ export interface ThoughtContextType {
 	isShowingAiSelectionMenu?: boolean;
 	isAiWriting: boolean;
 	threadId: string | null;
+	title: string;
+	setTitle: (title: string) => void;
 	onUpdate: (payload?: { force?: boolean }) => void;
 	setPreviewingKey: (previewingKey: string | null) => void;
 	setIsEditingDisabled: (isEditingDisabled: boolean) => void;
@@ -46,6 +48,8 @@ export const ThoughtContext = createContext<ThoughtContextType>({
 	isShowingAiSelectionMenu: false,
 	isAiWriting: false,
 	threadId: null,
+	title: "",
+	setTitle: () => {},
 	onUpdate: () => {},
 	setIsAiWriting: () => {},
 	setIsEditingDisabled: () => {},

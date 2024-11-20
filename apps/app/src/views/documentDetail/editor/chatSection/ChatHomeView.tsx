@@ -13,7 +13,7 @@ import { Dropdown, DropdownItem } from "src/components/Dropdown";
 import { HelpTooltip } from "src/components/HelpTooltip";
 import LoadingSpinner from "src/components/LoadingSpinner";
 
-import { LinkedFilesDropdown } from "../../documentDetail/navBar/LinkedFilesDropdown";
+import { LinkedFilesDropdown } from "../../navBar/LinkedFilesDropdown";
 import { ThoughtContext } from "../thoughtContext";
 import { ChatMessageUserHeader } from "./ChatMessageUserHeader";
 import { UseThreadsForDocReturnType, useDeleteThread, useThreadsForDoc } from "./chat";

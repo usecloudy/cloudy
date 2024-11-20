@@ -23,13 +23,12 @@ import { Dropdown } from "src/components/Dropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip";
 import { makeHumanizedTime } from "src/utils/strings";
 import { useBreakpoint } from "src/utils/tailwind";
-import { usePublishDocumentVersion, useThought, useToggleDisableTitleSuggestions } from "src/views/thoughtDetail/hooks";
-import { ThoughtContext } from "src/views/thoughtDetail/thoughtContext";
 
 import { useUserProfile } from "../../../utils/users";
 import { useDocumentContext } from "../DocumentContext";
 import { useLatestDocumentVersionContext } from "../LatestDocumentVersionContext";
-import { useDocumentAccessControl } from "../accessControl";
+import { usePublishDocumentVersion, useThought, useToggleDisableTitleSuggestions } from "../editor/hooks";
+import { ThoughtContext } from "../editor/thoughtContext";
 import { DeleteDialog } from "./DeleteDialog";
 import { ExportDialog } from "./ExportDialog";
 import { LinkedFilesDropdown } from "./LinkedFilesDropdown";
@@ -149,8 +148,8 @@ export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 						)}
 						<Button
 							size="sm"
-							onClick={() => {
-								publishDocumentVersionMutation.mutate();
+							onClick={async () => {
+								await publishDocumentVersionMutation.mutateAsync();
 								setIsEditMode(false);
 							}}>
 							<FileCheckIcon className="size-4" />

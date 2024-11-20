@@ -1,18 +1,17 @@
 import { RepoReference, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation } from "@tanstack/react-query";
 import { FolderCodeIcon } from "lucide-react";
-import { useContext } from "react";
 
 import { queryClient } from "src/api/queryClient";
 import { thoughtQueryKeys } from "src/api/queryKeys";
 import { supabase } from "src/clients/supabase";
+import { Dropdown } from "src/components/Dropdown";
 import { HelpTooltip } from "src/components/HelpTooltip";
 import LoadingSpinner from "src/components/LoadingSpinner";
 import { FileReferenceRowStandalone } from "src/views/aiTextArea/FileReferenceRow";
 
-import { Dropdown } from "../../../components/Dropdown";
-import { useExistingLinkedFiles } from "../../thoughtDetail/hooks";
 import { useDocumentContext } from "../DocumentContext";
+import { useExistingLinkedFiles } from "../editor/hooks";
 
 const useExitingLinkedFilesAsRepoReferences = () => {
 	const { documentId } = useDocumentContext();

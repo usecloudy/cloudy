@@ -1,5 +1,5 @@
 import { ellipsizeText } from "@cloudy/utils/common";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import { Navigate, useParams } from "react-router-dom";
 
@@ -8,13 +8,13 @@ import { useWorkspace } from "../../stores/workspace";
 import { makeProjectHomeUrl } from "../../utils/projects";
 import { makeHeadTitle } from "../../utils/strings";
 import { useProject } from "../projects/ProjectContext";
-import { EditorErrorBoundary } from "../thoughtDetail/EditorErrorBoundary";
-import { ThoughtContent } from "../thoughtDetail/ThoughtDetailView";
-import { useThought } from "../thoughtDetail/hooks";
 import { DocumentContext } from "./DocumentContext";
 import { DocumentLoadingPlaceholderWithPadding } from "./DocumentLoadingPlaceholder";
 import { LatestDocumentVersionContext, useLatestDocumentVersion } from "./LatestDocumentVersionContext";
 import { PublishedDocumentView } from "./PublishedDocumentView";
+import { EditorErrorBoundary } from "./editor/EditorErrorBoundary";
+import { EditorView } from "./editor/EditorView";
+import { useThought } from "./editor/hooks";
 
 const DocumentDetailInner = ({ documentId }: { documentId: string }) => {
 	const workspace = useWorkspace();
@@ -24,8 +24,18 @@ const DocumentDetailInner = ({ documentId }: { documentId: string }) => {
 	const { data: latestDocumentVersion, isLoading: isLatestDocumentVersionLoading } = useLatestDocumentVersion(documentId);
 
 	const [isEditMode, setIsEditMode] = useState(false);
+	const [isReady, setIsReady] = useState(false);
 
 	const headTitle = document?.title ? makeHeadTitle(ellipsizeText(document.title, 16)) : makeHeadTitle("New Doc");
+
+	useEffect(() => {
+		if (!isLatestDocumentVersionLoading) {
+			if (!latestDocumentVersion) {
+				setIsEditMode(true);
+			}
+			setIsReady(true);
+		}
+	}, [latestDocumentVersion, isLatestDocumentVersionLoading]);
 
 	if (!isLoading && !document) {
 		if (project) {
@@ -42,10 +52,10 @@ const DocumentDetailInner = ({ documentId }: { documentId: string }) => {
 						<Helmet>
 							<title>{headTitle}</title>
 						</Helmet>
-						{isLoading || isLatestDocumentVersionLoading ? (
+						{isLoading || isLatestDocumentVersionLoading || !isReady ? (
 							<DocumentLoadingPlaceholderWithPadding />
 						) : isEditMode ? (
-							<ThoughtContent thought={document!} />
+							<EditorView thought={document!} />
 						) : (
 							<PublishedDocumentView />
 						)}

@@ -14,10 +14,10 @@ import { useWorkspace } from "src/stores/workspace";
 import { makeDocUrl } from "src/utils/thought";
 import { useProject } from "src/views/projects/ProjectContext";
 
-import { useEditThought } from "../../thoughtDetail/hooks";
-import { useThought } from "../../thoughtDetail/hooks";
 import { useDocumentContext } from "../DocumentContext";
 import { useAddDocumentUser, useDocumentAccessControl, useRemoveDocumentUser } from "../accessControl";
+import { useEditThought } from "../editor/hooks";
+import { useThought } from "../editor/hooks";
 
 const makeAccessStrategyInfo = (accessStrategy: AccessStrategies) => {
 	switch (accessStrategy) {

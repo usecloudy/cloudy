@@ -3,19 +3,24 @@ import { Link, useLocation } from "react-router-dom";
 
 import { useWorkspaceStore } from "src/stores/workspace";
 import { cn } from "src/utils";
-import { makeThoughtUrl, useCreateThought } from "src/utils/thought";
+
+import { useCreateDocument } from "../documentDetail/editor/hooks";
 
 export const MobileTabBar = () => {
 	const { workspace } = useWorkspaceStore();
 
-	const createThoughtMutation = useCreateThought();
+	const createDocumentMutation = useCreateDocument();
 
 	return (
 		<nav className="relative z-50 flex w-screen flex-row items-center justify-between border-t border-border bg-background py-3 md:hidden">
 			<Tab icon={<HomeIcon className="size-5" />} label="Home" href="/" />
 			{/* <Tab icon={<LightbulbIcon className="size-5" />} label="Quick note" onClick={() => {}} /> */}
 			{workspace && (
-				<Tab icon={<PlusIcon className="size-5" />} label="New note" onClick={() => createThoughtMutation.mutate({})} />
+				<Tab
+					icon={<PlusIcon className="size-5" />}
+					label="New note"
+					onClick={() => createDocumentMutation.mutate({})}
+				/>
 			)}
 		</nav>
 	);

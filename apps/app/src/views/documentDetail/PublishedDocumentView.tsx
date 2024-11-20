@@ -3,9 +3,9 @@ import { PenIcon } from "lucide-react";
 import { useEffect } from "react";
 
 import { Button } from "../../components/Button";
-import { tiptapExtensions } from "../thoughtDetail/tiptap";
 import { useDocumentContext } from "./DocumentContext";
 import { useLatestDocumentVersionContext } from "./LatestDocumentVersionContext";
+import { tiptapExtensions } from "./editor/tiptap";
 import { NavBar } from "./navBar/NavBar";
 
 export const PublishedDocumentView = () => {
@@ -28,10 +28,8 @@ export const PublishedDocumentView = () => {
 					? (latestDocumentVersion.content_json as JSONContent)
 					: latestDocumentVersion.content_html,
 			);
-		} else {
-			setIsEditMode(true);
 		}
-	}, [latestDocumentVersion, editor, setIsEditMode]);
+	}, [latestDocumentVersion, editor]);
 
 	return (
 		<div className="no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-y-scroll">

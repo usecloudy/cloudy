@@ -13,9 +13,9 @@ import { Markdown } from "tiptap-markdown";
 import { Button } from "src/components/Button";
 import { useWorkspace } from "src/stores/workspace";
 import { makeNewProjectUrl, makeProjectSettingsUrl, useProjectRepos } from "src/utils/projects";
+import { getAllNodesWithType } from "src/utils/tiptap";
 
 import { useProject } from "../projects/ProjectContext";
-import { getAllMentionNodes } from "../thoughtDetail/mention";
 import { AiTextAreaContext, RepoReferenceWithMention } from "./AiTextAreaContext";
 import { FileReferenceRow } from "./FileReferenceRow";
 import { AiTextAreaMention, aiTextAreaMention } from "./aiTextAreaMention";
@@ -120,7 +120,7 @@ export const AiTextArea = ({
 			},
 		},
 		onUpdate({ editor }) {
-			const newMentionedFiles = getAllMentionNodes(editor);
+			const newMentionedFiles = getAllNodesWithType(editor, "mention");
 
 			const newMentionedPaths = new Set(newMentionedFiles.map(file => file.id));
 			const currentMentionedPaths = new Set(mentionedPaths);

@@ -5,17 +5,16 @@ import { EditorContent, Extension, JSONContent, useEditor } from "@tiptap/react"
 import { GripVertical } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
-import { useAsync, useMount, useUnmount, useUpdateEffect } from "react-use";
+import { useAsync } from "react-use";
 
 import { useUserRecord } from "src/stores/user";
 import { cn } from "src/utils";
 import { useSave } from "src/utils/useSave";
-import { useTitleStore } from "src/views/thoughtDetail/titleStore";
+import { useSidebarContext } from "src/views/navigation/SidebarProvider";
 
-import { useDocumentContext } from "../documentDetail/DocumentContext";
-import { DocumentLoadingPlaceholder } from "../documentDetail/DocumentLoadingPlaceholder";
-import { NavBar } from "../documentDetail/navBar/NavBar";
-import { useSidebarContext } from "../navigation/SidebarProvider";
+import { useDocumentContext } from "../DocumentContext";
+import { DocumentLoadingPlaceholder } from "../DocumentLoadingPlaceholder";
+import { NavBar } from "../navBar/NavBar";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { FooterRow } from "./FooterRow";
 import { TitleArea } from "./TitleArea";
@@ -36,13 +35,16 @@ import { useYProvider } from "./yProvider";
 
 type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
 
-export const ThoughtContent = ({ thought }: { thought: Thought }) => {
+export const EditorView = ({ thought }: { thought: Thought }) => {
 	const { documentId, isEditMode } = useDocumentContext();
 
 	useThoughtChannelListeners(documentId);
 	const userRecord = useUserRecord();
 
 	const { mutateAsync: editThought } = useEditThought(documentId);
+
+	const [title, setTitle] = useState(thought.title ?? "");
+	const [localTitleTs, setLocalTitleTs] = useState<Date>(new Date());
 
 	const [isAiWriting, setIsAiWriting] = useState(false);
 	const [isEditingDisabled, setIsEditingDisabled] = useState(false);
@@ -241,6 +243,23 @@ export const ThoughtContent = ({ thought }: { thought: Thought }) => {
 		disableUpdatesRef.current = false;
 	}, [editor, restoreFromLastContent, clearStoredContent, clearApplyContent, onFinishAiEdits]);
 
+	const handleSetTitle = useCallback(
+		(title: string) => {
+			const ts = new Date();
+			setTitle(title);
+			onChange({ title, ts });
+			setLocalTitleTs(ts);
+		},
+		[setTitle, onChange],
+	);
+
+	useEffect(() => {
+		if (thought.title_ts && new Date(thought.title_ts) > localTitleTs) {
+			setTitle(thought.title ?? "");
+			setLocalTitleTs(new Date(thought.title_ts));
+		}
+	}, [thought.title_ts, localTitleTs, setTitle, thought.title]);
+
 	useHotkeys("mod+o", e => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -280,6 +299,8 @@ export const ThoughtContent = ({ thought }: { thought: Thought }) => {
 				isShowingAiSelectionMenu,
 				hideAiSelectionMenu,
 				showAiSelectionMenu,
+				title,
+				setTitle: handleSetTitle,
 			}}>
 			<div className="relative flex h-full flex-row">
 				<div
@@ -291,12 +312,7 @@ export const ThoughtContent = ({ thought }: { thought: Thought }) => {
 				</div>
 				<div className="no-scrollbar relative flex w-full flex-grow flex-col lg:flex-row">
 					<AiDocumentGeneration thought={thought}>
-						<Editor
-							thoughtId={documentId!}
-							remoteTitle={thought?.title ?? undefined}
-							latestRemoteTitleTs={thought?.title_ts ?? undefined}
-							onChange={onChange}
-						/>
+						<Editor thoughtId={documentId!} onChange={onChange} />
 					</AiDocumentGeneration>
 				</div>
 				<div
@@ -342,51 +358,9 @@ const AiDocumentGeneration = ({ thought, children }: { thought: Thought; childre
 	);
 };
 
-const Editor = ({
-	thoughtId,
-	remoteTitle,
-	latestRemoteTitleTs,
-	onChange,
-}: {
-	thoughtId: string;
-	remoteTitle?: string;
-	latestRemoteTitleTs?: string;
-	onChange: (payload: ThoughtEditPayload) => void;
-}) => {
+const Editor = ({ thoughtId, onChange }: { thoughtId: string; onChange: (payload: ThoughtEditPayload) => void }) => {
 	const { editor, isConnected, isConnecting, isAiWriting } = useContext(ThoughtContext);
 	const { isGenerating } = useContext(AiGenerationContext);
-
-	const { title, setTitle, saveTitleKey } = useTitleStore();
-
-	useMount(() => {
-		setTitle(remoteTitle ?? "");
-	});
-
-	useUnmount(() => {
-		setTitle("");
-	});
-
-	// TODO: Implement title updates from remote
-	// useUpdateEffect(() => {
-	// 	// If the remote title has changed, update the local title
-	// 	if (
-	// 		(latestRemoteTitleTs && lastLocalThoughtTitleTs && new Date(latestRemoteTitleTs) > lastLocalThoughtTitleTs) ||
-	// 		!lastLocalThoughtTitleTs
-	// 	) {
-	// 		setTitle(remoteTitle ?? "");
-	// 	}
-	// }, [latestRemoteTitleTs]);
-
-	useUpdateEffect(() => {
-		const ts = new Date();
-		onChange({ title, ts });
-	}, [saveTitleKey]);
-
-	const handleChangeTitle = (title: string) => {
-		const ts = new Date();
-		setTitle(title);
-		onChange({ title, ts });
-	};
 
 	return (
 		<div className="no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-y-scroll">
@@ -400,7 +374,7 @@ const Editor = ({
 					</div>
 				) : (
 					<>
-						<TitleArea title={title} onChange={handleChangeTitle} />
+						<TitleArea />
 						<div
 							// On larger screens, we need left padding to avoid some characters being cut off
 							className="relative flex flex-row md:pl-[2px]">

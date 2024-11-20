@@ -10,8 +10,8 @@ import { cn } from "src/utils";
 import { useThought, useToggleDisableTitleSuggestions } from "./hooks";
 import { AiGenerationContext, ThoughtContext } from "./thoughtContext";
 
-export const TitleArea = ({ title, onChange }: { title?: string | null; onChange: (title: string) => void }) => {
-	const { thoughtId, isAiWriting } = useContext(ThoughtContext);
+export const TitleArea = () => {
+	const { thoughtId, isAiWriting, title, setTitle } = useContext(ThoughtContext);
 	const { isGenerating } = useContext(AiGenerationContext);
 	const { data: thought } = useThought(thoughtId);
 
@@ -21,7 +21,7 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 
 	const handleAcceptTitleSuggestion = () => {
 		if (thought?.title_suggestion) {
-			onChange(thought.title_suggestion);
+			setTitle(thought.title_suggestion);
 		}
 	};
 
@@ -36,7 +36,7 @@ export const TitleArea = ({ title, onChange }: { title?: string | null; onChange
 					onFocus={() => setIsFocused(true)}
 					onBlur={() => setIsFocused(false)}
 					onChange={e => {
-						onChange(e.target.value);
+						setTitle(e.target.value);
 					}}
 					onKeyDown={e => {
 						if (e.key === "Tab") {
