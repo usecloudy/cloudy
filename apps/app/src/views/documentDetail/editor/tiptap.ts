@@ -115,7 +115,6 @@ export const CodeBlockEditorExtension = Extension.create({
 			Tab: ({ editor }) => {
 				// Only handle tabs inside code blocks
 				if (!editor.isActive("codeBlock")) {
-					console.log("Not in code block");
 					return false;
 				}
 

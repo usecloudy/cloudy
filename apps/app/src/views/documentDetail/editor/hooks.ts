@@ -290,7 +290,6 @@ export const useThought = (thoughtId?: string) => {
 	return useQuery({
 		queryKey: thoughtQueryKeys.thoughtDetail(thoughtId),
 		queryFn: async () => {
-			console.log("Fetching thought", thoughtId);
 			if (!thoughtId) {
 				return null;
 			}
