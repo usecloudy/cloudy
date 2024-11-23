@@ -16,7 +16,7 @@ import { useProject } from "src/views/projects/ProjectContext";
 
 import { useDocumentContext } from "../DocumentContext";
 import { useAddDocumentUser, useDocumentAccessControl, useRemoveDocumentUser } from "../accessControl";
-import { useEditThought } from "../editor/hooks";
+import { useEditDocument } from "../editor/hooks";
 import { useThought } from "../editor/hooks";
 
 const makeAccessStrategyInfo = (accessStrategy: AccessStrategies) => {
@@ -58,7 +58,7 @@ export const ShareDialog = ({ trigger }: ShareDialogProps) => {
 	const { documentId } = useDocumentContext();
 	const { data: thought } = useThought(documentId);
 	const { accessStrategy, users } = useDocumentAccessControl(documentId);
-	const editThoughtMutation = useEditThought(documentId);
+	const editDocumentMutation = useEditDocument(documentId);
 
 	const [isOpen, setIsOpen] = useState(false);
 	const [email, setEmail] = useState("");
@@ -95,7 +95,7 @@ export const ShareDialog = ({ trigger }: ShareDialogProps) => {
 		if (accessStrategy === AccessStrategies.PRIVATE && !isAuthor) {
 			return;
 		}
-		await editThoughtMutation.mutateAsync({ accessStrategy, ts: new Date() });
+		await editDocumentMutation.mutateAsync({ accessStrategy, ts: new Date() });
 	};
 
 	const currentAccessStrategy = accessStrategy ?? AccessStrategies.PRIVATE;

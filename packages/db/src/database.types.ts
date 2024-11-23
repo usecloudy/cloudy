@@ -1392,6 +1392,7 @@ export type Database = {
           author_id: string
           collection_suggestions: Json | null
           content: string | null
+          content_json: Json | null
           content_md: string | null
           content_plaintext: string | null
           content_ts: string
@@ -1428,6 +1429,7 @@ export type Database = {
           author_id?: string
           collection_suggestions?: Json | null
           content?: string | null
+          content_json?: Json | null
           content_md?: string | null
           content_plaintext?: string | null
           content_ts?: string
@@ -1464,6 +1466,7 @@ export type Database = {
           author_id?: string
           collection_suggestions?: Json | null
           content?: string | null
+          content_json?: Json | null
           content_md?: string | null
           content_plaintext?: string | null
           content_ts?: string

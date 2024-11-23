@@ -1,5 +1,6 @@
 import { AccessStrategies, handleSupabaseError } from "@cloudy/utils/common";
 import { useIsMutating, useMutation, useQuery } from "@tanstack/react-query";
+import { JSONContent } from "@tiptap/react";
 import { distance } from "fastest-levenshtein";
 import posthog from "posthog-js";
 import { useContext, useEffect, useState } from "react";
@@ -55,25 +56,26 @@ const triggerAiUpdatesWhenChangeIsSignificant = async (
 	);
 };
 
-export interface ThoughtEditPayload {
+export interface DocumentEditPayload {
 	title?: string;
-	content?: string;
+	contentHtml?: string;
 	contentMd?: string;
 	contentPlainText?: string;
+	contentJson?: JSONContent;
 	collectionId?: string;
 	accessStrategy?: AccessStrategies;
 	ts: Date;
 }
 
-export const useEditThought = (thoughtId?: string) => {
+export const useEditDocument = (documentId?: string) => {
 	const workspace = useWorkspace();
 	const project = useProject();
 
-	const isMutating = Boolean(useIsMutating({ mutationKey: ["editThought"] }));
+	const isMutating = Boolean(useIsMutating({ mutationKey: ["editDocument"] }));
 
 	return useMutation({
-		mutationKey: ["editThought"],
-		mutationFn: async (payload?: ThoughtEditPayload | void) => {
+		mutationKey: ["editDocument"],
+		mutationFn: async (payload?: DocumentEditPayload | void) => {
 			if (isMutating) {
 				console.log("Return on edit thought to prevent race conditions");
 				return;
@@ -84,9 +86,14 @@ export const useEditThought = (thoughtId?: string) => {
 				titleObj = { title: payload.title, title_ts: payload.ts, title_suggestion: null };
 			}
 
-			let contentObj = {};
-			if (payload?.content !== undefined) {
-				contentObj = { content: payload.content, content_ts: payload.ts };
+			let contentHtmlObj = {};
+			if (payload?.contentHtml !== undefined) {
+				contentHtmlObj = { content: payload.contentHtml };
+			}
+
+			let contentJsonObj = {};
+			if (payload?.contentJson !== undefined) {
+				contentJsonObj = { content_json: payload.contentJson, content_ts: payload.ts };
 			}
 
 			let contentMdObj = {};
@@ -104,16 +111,17 @@ export const useEditThought = (thoughtId?: string) => {
 				accessStrategyObj = { access_strategy: payload.accessStrategy };
 			}
 
-			const newThought = handleSupabaseError(
+			const newDocument = handleSupabaseError(
 				await supabase
 					.from("thoughts")
 					.upsert({
-						id: thoughtId,
+						id: documentId,
 						workspace_id: workspace.id,
 						project_id: project?.id ?? null,
 						updated_at: payload?.ts.toISOString() ?? new Date().toISOString(),
 						...titleObj,
-						...contentObj,
+						...contentHtmlObj,
+						...contentJsonObj,
 						...contentMdObj,
 						...contentPlainTextObj,
 						...accessStrategyObj,
@@ -123,32 +131,16 @@ export const useEditThought = (thoughtId?: string) => {
 			);
 
 			triggerAiUpdatesWhenChangeIsSignificant(
-				newThought.id,
-				newThought.content_md ?? "",
-				newThought.last_suggestion_content_md,
+				newDocument.id,
+				newDocument.content_md ?? "",
+				newDocument.last_suggestion_content_md,
 			);
 
-			if (payload?.collectionId) {
-				// TODO: make sure this doesn't cause duplicate entries
-				await supabase.from("collection_thoughts").insert({
-					collection_id: payload.collectionId,
-					thought_id: newThought.id,
-					workspace_id: workspace.id,
-				});
-			}
-
-			await supabase
-				.from("collections")
-				.update({
-					updated_at: new Date().toISOString(),
-				})
-				.in("id", newThought.collections.map(collection => collection.collection?.id).filter(Boolean));
-
 			posthog.capture("edit_thought", {
-				thoughtId,
+				documentId,
 			});
 
-			return newThought;
+			return newDocument;
 		},
 		onError: e => {
 			console.error(e);
@@ -528,7 +520,7 @@ export const useCreateDocument = () => {
 	const workspace = useWorkspaceStore(s => s.workspace);
 	const project = useProject();
 
-	const editThoughtMutation = useEditThought();
+	const editDocumentMutation = useEditDocument();
 	const navigate = useNavigate();
 
 	return useMutation({
@@ -537,20 +529,20 @@ export const useCreateDocument = () => {
 				throw new Error("Workspace not found");
 			}
 
-			const newThought = await editThoughtMutation.mutateAsync({
+			const newDocument = await editDocumentMutation.mutateAsync({
 				collectionId: payload.collectionId,
 				ts: new Date(),
 			});
 
-			return newThought;
+			return newDocument;
 		},
 		onError: e => {
 			console.error(e);
 			toast.error("Failed to create document");
 		},
-		onSuccess: newThought => {
-			if (workspace && newThought) {
-				navigate(makeDocUrl({ workspaceSlug: workspace.slug, projectSlug: project?.slug, docId: newThought.id }));
+		onSuccess: newDocument => {
+			if (workspace && newDocument) {
+				navigate(makeDocUrl({ workspaceSlug: workspace.slug, projectSlug: project?.slug, docId: newDocument.id }));
 			}
 		},
 	});
