@@ -68,6 +68,7 @@ export const useDocumentAccessControl = (docId: string): DocumentAccessControl =
 	const { data: users } = useQuery({
 		queryKey: thoughtQueryKeys.sharedWith(docId),
 		queryFn: async () => {
+			console.log("Fetching shared with users for doc", docId);
 			if (!doc) {
 				return [];
 			}

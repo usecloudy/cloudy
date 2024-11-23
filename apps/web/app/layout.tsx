@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 			<body>
 				<Providers>
 					<PostHogPageView />
-					<Navbar />
+
 					<div className="min-h-screen">{children}</div>
 				</Providers>
 			</body>

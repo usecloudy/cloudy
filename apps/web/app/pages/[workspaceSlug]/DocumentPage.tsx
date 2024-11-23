@@ -3,6 +3,7 @@ import { ellipsizeText, fixOneToOne, handleSupabaseError } from "@cloudy/utils/c
 import { getSupabaseAnonClient } from "app/utils/supabase";
 
 import { DocumentView } from "./DocumentView";
+import { PagesLayout } from "./PagesLayout";
 
 export const generateMetadata = async ({ params }: { params: { documentId: string } }) => {
 	const supabase = await getSupabaseAnonClient();
@@ -23,7 +24,11 @@ export const generateMetadata = async ({ params }: { params: { documentId: strin
 	};
 };
 
-export default async function PublicDocumentPage({ params }: { params: { documentId: string } }) {
+export const DocumentPage = async ({
+	params,
+}: {
+	params: { documentId: string; workspaceSlug: string; projectSlug?: string };
+}) => {
 	const supabase = await getSupabaseAnonClient();
 	const document = handleSupabaseError(
 		await supabase
@@ -40,5 +45,9 @@ export default async function PublicDocumentPage({ params }: { params: { documen
 
 	const documentVersion = fixOneToOne(document.latest_version)!;
 
-	return <DocumentView documentVersion={documentVersion} />;
-}
+	return (
+		<PagesLayout params={params}>
+			<DocumentView documentVersion={documentVersion} />
+		</PagesLayout>
+	);
+};

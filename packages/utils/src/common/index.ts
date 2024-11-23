@@ -5,6 +5,7 @@ export * from "./collections";
 export * from "./datetime";
 export * from "./db";
 export * from "./docs";
+export * from "./library";
 export * from "./pricing";
 export * from "./strings";
 export * from "./supabase";

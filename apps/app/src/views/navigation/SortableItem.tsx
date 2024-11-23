@@ -1,4 +1,4 @@
-import { AccessStrategies } from "@cloudy/utils/common";
+import { AccessStrategies, FlattenedItem } from "@cloudy/utils/common";
 import { useDroppable } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import {
@@ -19,7 +19,7 @@ import { useLocation } from "react-router-dom";
 
 import { Button } from "src/components/Button";
 import { cn } from "src/utils";
-import { FlattenedItem, useDeleteItem, useRenameItem } from "src/utils/folders";
+import { useDeleteItem, useRenameItem } from "src/utils/folders";
 import { useClickOutside } from "src/utils/hooks/useClickOutside";
 
 type SortableItemProps = {
@@ -31,7 +31,6 @@ type SortableItemProps = {
 	hasAfterDroppable?: boolean;
 	isInLibrary?: boolean;
 	navigateToDoc?: (id: string) => void;
-	accessStrategy?: AccessStrategies;
 };
 
 export const SortableItem = ({
@@ -39,7 +38,6 @@ export const SortableItem = ({
 	expanded,
 	toggleFolder,
 	navigateToDoc,
-	accessStrategy,
 	isOverlay = false,
 	isOverFolder = false,
 	hasAfterDroppable = false,
@@ -176,9 +174,9 @@ export const SortableItem = ({
 					<>
 						{item.isPublished ? (
 							<>
-								{accessStrategy === AccessStrategies.PRIVATE ? (
+								{item.accessStrategy === AccessStrategies.PRIVATE ? (
 									<FileLock2Icon className="size-4 shrink-0" />
-								) : accessStrategy === AccessStrategies.PUBLIC ? (
+								) : item.accessStrategy === AccessStrategies.PUBLIC ? (
 									<GlobeIcon className="size-4 shrink-0" />
 								) : (
 									<FileIcon className="size-4 shrink-0" />

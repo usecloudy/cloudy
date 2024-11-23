@@ -1157,32 +1157,38 @@ export type Database = {
       }
       folders: {
         Row: {
+          access_strategy: string | null
           created_at: string
           id: string
           index: number | null
           is_root: boolean
           name: string | null
           parent_id: string | null
+          path: unknown | null
           project_id: string | null
           workspace_id: string
         }
         Insert: {
+          access_strategy?: string | null
           created_at?: string
           id?: string
           index?: number | null
           is_root?: boolean
           name?: string | null
           parent_id?: string | null
+          path?: unknown | null
           project_id?: string | null
           workspace_id: string
         }
         Update: {
+          access_strategy?: string | null
           created_at?: string
           id?: string
           index?: number | null
           is_root?: boolean
           name?: string | null
           parent_id?: string | null
+          path?: unknown | null
           project_id?: string | null
           workspace_id?: string
         }
@@ -1736,6 +1742,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _ltree_compress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      _ltree_gist_options: {
+        Args: {
+          "": unknown
+        }
+        Returns: undefined
+      }
       binary_quantize:
         | {
             Args: {
@@ -1777,6 +1795,28 @@ export type Database = {
         Returns: {
           id: string
           title: string
+        }[]
+      }
+      get_document_folder_path: {
+        Args: {
+          document_id: string
+        }
+        Returns: {
+          id: string
+          name: string
+          parent_id: string
+          workspace_id: string
+          project_id: string
+          access_strategy: string
+        }[]
+      }
+      get_folder_ancestors: {
+        Args: {
+          folder_ids: string[]
+        }
+        Returns: {
+          id: string
+          parent_id: string
         }[]
       }
       get_folder_children_count: {
@@ -1883,6 +1923,126 @@ export type Database = {
             }
             Returns: unknown
           }
+      lca: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: unknown
+      }
+      lquery_in: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      lquery_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      lquery_recv: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      lquery_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      ltree_compress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ltree_decompress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ltree_gist_in: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ltree_gist_options: {
+        Args: {
+          "": unknown
+        }
+        Returns: undefined
+      }
+      ltree_gist_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ltree_in: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ltree_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ltree_recv: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ltree_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      ltree2text: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      ltxtq_in: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ltxtq_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ltxtq_recv: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ltxtq_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      nlevel: {
+        Args: {
+          "": unknown
+        }
+        Returns: number
+      }
       search_docs: {
         Args: {
           search_query: string
@@ -1929,6 +2089,12 @@ export type Database = {
           "": unknown[]
         }
         Returns: number
+      }
+      text2ltree: {
+        Args: {
+          "": string
+        }
+        Returns: unknown
       }
       vector_avg: {
         Args: {

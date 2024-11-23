@@ -20,7 +20,7 @@ import { FooterRow } from "./FooterRow";
 import { TitleArea } from "./TitleArea";
 import { ChatSectionView } from "./chatSection/ChatSectionView";
 import { createFileHandlerExtension } from "./fileHandlerExtension";
-import { useDefaultThreadId, useEditDocument, useGenerateDocument, useThought, useThoughtChannelListeners } from "./hooks";
+import { useDefaultThreadId, useEditDocument, useGenerateDocument, useThought } from "./hooks";
 import { updateMentionNodeNames } from "./mention";
 import { AiGenerationContext, ThoughtContext } from "./thoughtContext";
 import { clearAllApplyMarks, clearAllEditMarks, tiptapExtensions, wrapSelectionAroundWords } from "./tiptap";
@@ -31,7 +31,6 @@ type Thought = NonNullable<ReturnType<typeof useThought>["data"]>;
 export const EditorView = ({ thought }: { thought: Thought }) => {
 	const { documentId, isEditMode } = useDocumentContext();
 
-	useThoughtChannelListeners(documentId);
 	const userRecord = useUserRecord();
 
 	const { mutateAsync: editThought } = useEditDocument(documentId);

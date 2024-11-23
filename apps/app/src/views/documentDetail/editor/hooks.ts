@@ -145,18 +145,26 @@ export const useEditDocument = (documentId?: string) => {
 		onError: e => {
 			console.error(e);
 		},
-		onSuccess: () => {
+		onSuccess: doc => {
 			queryClient.invalidateQueries({
 				queryKey: ["thoughtEmbeddings"],
 			});
+
 			setTimeout(() => {
 				queryClient.invalidateQueries({
 					queryKey: ["thoughtEmbeddings"],
 				});
 			}, 2500);
+
 			queryClient.invalidateQueries({
 				queryKey: projectQueryKeys.library(workspace.id, project?.id),
 			});
+
+			if (doc) {
+				queryClient.invalidateQueries({
+					queryKey: thoughtQueryKeys.sharedWith(doc.id),
+				});
+			}
 		},
 	});
 };
@@ -282,6 +290,7 @@ export const useThought = (thoughtId?: string) => {
 	return useQuery({
 		queryKey: thoughtQueryKeys.thoughtDetail(thoughtId),
 		queryFn: async () => {
+			console.log("Fetching thought", thoughtId);
 			if (!thoughtId) {
 				return null;
 			}
