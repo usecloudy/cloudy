@@ -14,7 +14,9 @@
                 "REACT_APP_SUPABASE_URL",
                 "REACT_APP_API_BASE_URL",
                 "REACT_APP_SUPABASE_ANON_KEY",
-                "REACT_APP_POSTHOG_KEY"
+                "REACT_APP_POSTHOG_KEY",
+                "REACT_APP_PAGES_PUBLIC_URL",
+                "REACT_APP_PUBLIC_URL"
             ]
         },
         "@cloudy/web#build": {
