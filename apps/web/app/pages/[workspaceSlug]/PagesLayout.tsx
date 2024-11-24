@@ -1,11 +1,10 @@
 import { getLibraryItems, handleSupabaseError } from "@cloudy/utils/common";
 
-import { PagesSidebar } from "app/pages/[workspaceSlug]/PagesSidebar";
 import { getSupabaseAnonClient } from "app/utils/supabase";
 
 import { MobileSidebar } from "./MobileSidebar";
 import { Navbar } from "./Navbar";
-import { NavigationContext, NavigationProvider } from "./NavigationContext";
+import { NavigationProvider } from "./NavigationContext";
 import { Sidebar } from "./Sidebar";
 
 export const PagesLayout = async ({
