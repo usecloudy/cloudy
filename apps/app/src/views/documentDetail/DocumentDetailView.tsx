@@ -14,7 +14,7 @@ import { LatestDocumentVersionContext, useLatestDocumentVersion } from "./Latest
 import { PublishedDocumentView } from "./PublishedDocumentView";
 import { EditorErrorBoundary } from "./editor/EditorErrorBoundary";
 import { EditorView } from "./editor/EditorView";
-import { useThought } from "./editor/hooks";
+import { useThought, useThoughtChannelListeners } from "./editor/hooks";
 
 const DocumentDetailInner = ({ documentId }: { documentId: string }) => {
 	const workspace = useWorkspace();
@@ -22,6 +22,7 @@ const DocumentDetailInner = ({ documentId }: { documentId: string }) => {
 
 	const { data: document, isLoading } = useThought(documentId);
 	const { data: latestDocumentVersion, isLoading: isLatestDocumentVersionLoading } = useLatestDocumentVersion(documentId);
+	useThoughtChannelListeners(documentId);
 
 	const [isEditMode, setIsEditMode] = useState(false);
 	const [isReady, setIsReady] = useState(false);

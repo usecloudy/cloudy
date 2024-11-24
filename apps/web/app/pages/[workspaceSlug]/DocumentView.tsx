@@ -52,7 +52,7 @@ export const DocumentView = ({ documentVersion }: DocumentViewProps) => {
 				codeThemeClass,
 			)}>
 			<div className="no-scrollbar relative box-border flex flex-grow flex-col items-center overflow-y-scroll">
-				<div className="box-border flex w-full max-w-screen-lg grow flex-col px-3 md:px-16 md:pt-16">
+				<div className="box-border flex w-full max-w-screen-lg grow flex-col px-6 md:px-16 md:pt-16">
 					<h1 className="mb-8 text-3xl font-semibold">{documentVersion.title || "Untitled"}</h1>
 					<div className="relative flex flex-row md:pl-[2px]">
 						<EditorContent editor={editor} className="w-full" />

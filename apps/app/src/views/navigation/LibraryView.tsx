@@ -1,3 +1,4 @@
+import { FlattenedItem } from "@cloudy/utils/common";
 import {
 	DndContext,
 	DragOverlay,
@@ -18,7 +19,6 @@ import { HelpTooltip } from "src/components/HelpTooltip";
 import { useWorkspace } from "src/stores/workspace";
 import { cn } from "src/utils";
 import {
-	FlattenedItem,
 	syncItemIndices,
 	useCreateFolder,
 	useLibraryItems,

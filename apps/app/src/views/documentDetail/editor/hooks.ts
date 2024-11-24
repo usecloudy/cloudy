@@ -145,18 +145,26 @@ export const useEditDocument = (documentId?: string) => {
 		onError: e => {
 			console.error(e);
 		},
-		onSuccess: () => {
+		onSuccess: doc => {
 			queryClient.invalidateQueries({
 				queryKey: ["thoughtEmbeddings"],
 			});
+
 			setTimeout(() => {
 				queryClient.invalidateQueries({
 					queryKey: ["thoughtEmbeddings"],
 				});
 			}, 2500);
+
 			queryClient.invalidateQueries({
 				queryKey: projectQueryKeys.library(workspace.id, project?.id),
 			});
+
+			if (doc) {
+				queryClient.invalidateQueries({
+					queryKey: thoughtQueryKeys.sharedWith(doc.id),
+				});
+			}
 		},
 	});
 };
