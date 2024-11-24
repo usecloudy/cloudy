@@ -2,7 +2,7 @@ import { getLibraryItems, handleSupabaseError } from "@cloudy/utils/common";
 
 import { getSupabaseAnonClient } from "app/utils/supabase";
 
-import { LibraryView } from "./LibraryView";
+import { Sidebar } from "./Sidebar";
 
 export const PagesSidebar = async ({ workspaceSlug, projectSlug }: { workspaceSlug: string; projectSlug?: string }) => {
 	const supabase = await getSupabaseAnonClient();
@@ -14,11 +14,7 @@ export const PagesSidebar = async ({ workspaceSlug, projectSlug }: { workspaceSl
 		? (handleSupabaseError(await supabase.from("projects").select("id").eq("slug", projectSlug).maybeSingle())?.id ?? null)
 		: null;
 
-	const libraryItems = await getLibraryItems({ workspaceId, projectId }, supabase);
+	const libraryItems = await getLibraryItems({ workspaceId, projectId, publishedOnly: true, noEmptyFolders: true }, supabase);
 
-	return (
-		<div className="flex flex-col w-1/3 border-r border-border h-dvh sticky top-0 pt-12">
-			<LibraryView items={libraryItems} />
-		</div>
-	);
+	return <Sidebar libraryItems={libraryItems} />;
 };

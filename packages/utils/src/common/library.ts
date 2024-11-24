@@ -78,10 +78,14 @@ export const getLibraryItems = async (
         workspaceId,
         projectId,
         userId,
+        publishedOnly,
+        noEmptyFolders,
     }: {
         workspaceId: string;
         projectId?: string | null;
         userId?: string | null;
+        publishedOnly?: boolean;
+        noEmptyFolders?: boolean;
     },
     supabase: SupabaseClient<Database>
 ) => {
@@ -139,6 +143,11 @@ export const getLibraryItems = async (
         foldersQuery = foldersQuery.is("project_id", null);
     }
 
+    if (publishedOnly) {
+        recentDocsQuery = recentDocsQuery.not("latest_version", "is", null);
+        docsQuery = docsQuery.not("latest_version", "is", null);
+    }
+
     const recentDocs = userId ? handleSupabaseError(await recentDocsQuery) : [];
     const docs = handleSupabaseError(await docsQuery);
     const rootFolder = await getRootFolder(
@@ -190,16 +199,20 @@ export const getLibraryItems = async (
         );
 
         // Get children for each folder and insert them after their parent folder
-        let result: FlattenedItem[] = [];
+        let results: FlattenedItem[] = [];
         for (const item of sortedItemsAtThisDepth) {
-            result.push(item);
             if (item.type === "folder") {
                 const folderChildren = getFolderChildren(item.id, depth + 1);
-                result.push(...folderChildren);
+                if (!noEmptyFolders || folderChildren.length > 0) {
+                    results.push(item);
+                    results.push(...folderChildren);
+                }
+            } else {
+                results.push(item);
             }
         }
 
-        return result;
+        return results;
     };
 
     const rootItems = rootFolder ? getFolderChildren(rootFolder.id, 0) : [];
@@ -276,4 +289,8 @@ export const getLibraryItems = async (
     return items as (FlattenedItem & {
         category?: "shared" | "private" | "workspace";
     })[];
+};
+
+export type LibraryItem = FlattenedItem & {
+    category?: "shared" | "private" | "workspace";
 };

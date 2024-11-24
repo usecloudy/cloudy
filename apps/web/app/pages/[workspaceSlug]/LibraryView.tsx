@@ -1,14 +1,12 @@
 "use client";
 
-import { FlattenedItem } from "@cloudy/utils/common";
+import { FlattenedItem, makePublicDocPath } from "@cloudy/utils/common";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { cn } from "app/utils/cn";
-
-import { makeDocUrl } from "../urls";
 
 const findDescendantFolderIds = (items: FlattenedItem[], folderId: string): string[] => {
 	const descendants: string[] = [];
@@ -29,10 +27,23 @@ const findDescendantFolderIds = (items: FlattenedItem[], folderId: string): stri
 	return descendants;
 };
 
-const LibraryItemInner = ({ item, isOpen, onClick }: { item: FlattenedItem; isOpen?: boolean; onClick: () => void }) => {
+const LibraryItemInner = ({
+	item,
+	isOpen,
+	onClick,
+	isSelected,
+}: {
+	item: FlattenedItem;
+	isOpen?: boolean;
+	onClick: () => void;
+	isSelected?: boolean;
+}) => {
 	return (
 		<button
-			className={cn("flex flex-row hover:bg-card pr-3 py-2 rounded-md justify-between items-center w-full")}
+			className={cn(
+				"flex flex-row hover:bg-card pr-3 py-2 rounded-md justify-between items-center w-full",
+				isSelected && "bg-accent/10",
+			)}
 			style={{
 				paddingLeft: `${0.75 + item.depth * 0.5}rem`,
 			}}
@@ -52,7 +63,7 @@ const LibraryItem = ({
 	isOpen: boolean;
 	toggleFolder: (folderId: string) => void;
 }) => {
-	const { workspaceSlug, projectSlug } = useParams();
+	const { workspaceSlug, projectSlug, documentId } = useParams();
 
 	const onClick = () => {
 		if (item.type === "folder") {
@@ -63,12 +74,12 @@ const LibraryItem = ({
 	if (item.type === "document") {
 		return (
 			<Link
-				href={makeDocUrl({
+				href={makePublicDocPath({
 					workspaceSlug: workspaceSlug as string,
 					projectSlug: projectSlug as string | null,
 					documentId: item.id,
 				})}>
-				<LibraryItemInner item={item} onClick={onClick} />
+				<LibraryItemInner item={item} onClick={onClick} isSelected={item.id === documentId} />
 			</Link>
 		);
 	}
@@ -77,7 +88,20 @@ const LibraryItem = ({
 };
 
 export const LibraryView = ({ items }: { items: FlattenedItem[] }) => {
-	const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+	const { workspaceSlug } = useParams();
+	const storageKey = `expanded-folders-${workspaceSlug}`;
+
+	const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => {
+		if (typeof window === "undefined") return new Set();
+		const stored = sessionStorage.getItem(storageKey);
+		const parsedData = stored ? (JSON.parse(stored) as string[]) : [];
+		return new Set(parsedData);
+	});
+
+	useEffect(() => {
+		const folderArray = Array.from(expandedFolders);
+		sessionStorage.setItem(storageKey, JSON.stringify(folderArray));
+	}, [expandedFolders, storageKey]);
 
 	const visibleItems = items.filter(item => {
 		if (item.parentId === "<ROOT>") return true;

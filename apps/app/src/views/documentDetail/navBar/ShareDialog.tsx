@@ -1,4 +1,4 @@
-import { AccessStrategies } from "@cloudy/utils/common";
+import { AccessStrategies, makeDocUrl, makePublicDocUrl } from "@cloudy/utils/common";
 import { ChevronDownIcon, GlobeIcon, LockIcon, PlusIcon, UsersIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 
@@ -11,7 +11,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "src/components/Tooltip"
 import { Avatar } from "src/components/users/Avatar";
 import { useUser } from "src/stores/user";
 import { useWorkspace } from "src/stores/workspace";
-import { makeDocUrl } from "src/utils/thought";
 import { useProject } from "src/views/projects/ProjectContext";
 
 import { useDocumentContext } from "../DocumentContext";
@@ -65,13 +64,17 @@ export const ShareDialog = ({ trigger }: ShareDialogProps) => {
 	const addUserMutation = useAddDocumentUser(documentId);
 	const removeUserMutation = useRemoveDocumentUser(documentId);
 
-	const shareLink = `https://app.usecloudy.com${makeDocUrl({
+	const shareLink = makeDocUrl(process.env.REACT_APP_PUBLIC_URL!, {
 		workspaceSlug: workspace.slug,
-		docId: documentId,
+		documentId,
 		projectSlug: project?.slug,
-	})}`;
+	});
 
-	const publicLink = `https://usecloudy.com/pages/document/${documentId}`;
+	const publicLink = makePublicDocUrl(process.env.REACT_APP_PAGES_PUBLIC_URL!, {
+		workspaceSlug: workspace.slug,
+		documentId,
+		projectSlug: project?.slug,
+	});
 
 	const isAuthor = thought?.author_id === user.id;
 
