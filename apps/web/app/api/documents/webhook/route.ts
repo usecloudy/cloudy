@@ -65,16 +65,6 @@ const handleThoughtChange = async (payload: InsertPayload | UpdatePayload, supab
 		await updateFolderPublicStatus(affectedFolderIds, supabase);
 	}
 
-	if (payload.record.access_strategy === AccessStrategies.PUBLIC && payload.record.folder_id) {
-		console.log("Document is public, ensure all parent folders are public");
-		await ensureParentFoldersArePublic(
-			payload.record.folder_id,
-			payload.record.workspace_id,
-			payload.record.project_id,
-			supabase,
-		);
-	}
-
 	return NextResponse.json({ success: true });
 };
 
