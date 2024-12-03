@@ -4,7 +4,7 @@ The monorepo for Cloudy, Self-updating tech docs that sync with your codebase. Y
 
 We're a two person bootstrapped team.
 
-We just [launched on PH] (https://www.producthunt.com/posts/cloudy-2) today 12/03/2024. If you see value in what we're building, please support us by upvoting, commenting, and sharing with others. Would mean a lot!
+We just [launched on PH](https://www.producthunt.com/posts/cloudy-2) today 12/03/2024. If you see value in what we're building, please support us by upvoting, commenting, and sharing with others. Would mean a lot!
 
 
 
