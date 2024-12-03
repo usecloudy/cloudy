@@ -9,11 +9,11 @@ import {
 } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { generateText, tool } from "ai";
+import { generateObject, generateText, tool } from "ai";
 import { z } from "zod";
 
 import { getOctokitAppClient } from "app/api/utils/github";
-import { heliconeAnthropic } from "app/api/utils/helicone";
+import { heliconeAnthropic, heliconeOpenAI } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
 import { getAppBaseUrl } from "app/api/utils/url";
 
@@ -80,6 +80,22 @@ ${payload.diffText}
 Generate a draft of the documentation for the pull request. Use the tools as needed to create the documentation.`;
 };
 
+const makePrDocsDecisionPrompt = (payload: PullRequestDocsGenerationDetails) => {
+	return `Given the following pull request, determine whether the pull request needs any docs.
+
+<pull_request>
+<title>
+${payload.title}
+</title>
+<description>
+${payload.description}
+</description>
+<diff>
+${payload.diffText}
+</diff>
+</pull_request>`;
+};
+
 export const createDraftForPr = async (
 	repositoryConnection: RepositoryConnectionRecord,
 	pullRequestNumber: number,
@@ -110,13 +126,19 @@ export const createDraftForPr = async (
 
 	const diffText = comparison.data.files?.map(file => file.patch).join("\n\n") ?? "";
 
-	// generateObject({
-	//     model: heliconeOpenAI.languageModel('gpt-4o-mini-2024-07-18'),
-	//     prompt: makePrDocsDecisionPrompt(diffText),
-	//     schema: z.object({
+	const {
+		object: { needsDocs },
+	} = await generateObject({
+		model: heliconeOpenAI.languageModel("gpt-4o-mini-2024-07-18"),
+		prompt: makePrDocsDecisionPrompt({ title, description: description ?? "", diffText }),
+		schema: z.object({
+			needsDocs: z.boolean().describe("Whether the pull request needs any docs"),
+		}),
+	});
 
-	//     })
-	// })
+	if (!needsDocs) {
+		return;
+	}
 
 	// 1. Determine whether the pr needs any docs
 	// 2. Generate the docs, we'll need to support as many pages as needed
