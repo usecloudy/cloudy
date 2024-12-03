@@ -137,6 +137,14 @@ export const createDraftForPr = async (
 	});
 
 	if (!needsDocs) {
+		// Create a comment saying we don't need docs
+		await octokit.rest.issues.createComment({
+			owner: repositoryConnection.owner,
+			repo: repositoryConnection.name,
+			issue_number: pullRequestNumber,
+			body: `👋 Looks like your changes don't need any docs, you're all clear!`,
+		});
+
 		return;
 	}
 
