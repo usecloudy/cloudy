@@ -29,6 +29,7 @@ import {
 import { makeDocUrl } from "src/utils/thought";
 
 import { useProject } from "../projects/ProjectContext";
+import { CategoryHeader } from "./SidebarCategoryHeader";
 import { SortableItem } from "./SortableItem";
 
 const findDescendantFolderIds = (items: FlattenedItem[], folderId: string): string[] => {
@@ -49,13 +50,6 @@ const findDescendantFolderIds = (items: FlattenedItem[], folderId: string): stri
 
 	return descendants;
 };
-
-// Add this helper component for the category headers
-const CategoryHeader = ({ title }: { title: string }) => (
-	<div className="flex flex-row items-center gap-1">
-		<h3 className="whitespace-nowrap text-sm font-semibold text-secondary">{title}</h3>
-	</div>
-);
 
 export const LibraryView = () => {
 	const navigate = useNavigate();
@@ -242,14 +236,13 @@ export const LibraryView = () => {
 				<SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
 					<div className="flex w-full flex-col gap-1">
 						<div className="flex flex-row items-center justify-between gap-1">
-							<div className="flex flex-row items-center gap-1">
-								<h3 className="whitespace-nowrap text-sm font-semibold text-secondary">Library</h3>
+							<CategoryHeader title="Library">
 								<HelpTooltip
 									content={`Drag files and folders around to build this ${
 										project?.name ? `project's` : "workspace's"
 									} library. This is where you can structure your knowledgebase.`}
 								/>
-							</div>
+							</CategoryHeader>
 							<Button
 								variant="ghost"
 								size="icon-sm"

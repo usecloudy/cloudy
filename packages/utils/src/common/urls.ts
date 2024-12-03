@@ -31,3 +31,25 @@ export const makeDocUrl = (
 ) => {
     return `${baseUrl}${makeDocPath(params)}`;
 };
+
+export const makePrDraftPath = (params: {
+    workspaceSlug: string;
+    projectSlug: string | null;
+    prMetadataId: string;
+}) => {
+    return `/workspaces/${params.workspaceSlug}/projects/${params.projectSlug}/prs/${params.prMetadataId}`;
+};
+
+export const makePrDraftUrl = (
+    baseUrl: string,
+    params: Parameters<typeof makePrDraftPath>[0]
+) => {
+    return `${baseUrl}${makePrDraftPath(params)}`;
+};
+
+export const makeSkipDocsUrl = (
+    baseUrl: string,
+    params: { prMetadataId: string }
+) => {
+    return `${baseUrl}/skip-docs/${params.prMetadataId}`;
+};

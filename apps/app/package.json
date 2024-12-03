@@ -78,7 +78,6 @@
 		"@trivago/prettier-plugin-sort-imports": "^4.3.0",
 		"@types/react-helmet": "^6.1.11",
 		"@vercel/blob": "^0.24.0",
-		"ai": "^3.4.7",
 		"auto-launch": "^5.0.5",
 		"axios": "^1.7.2",
 		"better-sqlite3": "^11.1.2",

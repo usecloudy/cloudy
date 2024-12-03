@@ -16,6 +16,7 @@ export type BaseItem = {
     index?: number | null;
     parentId: string | null;
     category?: "shared" | "private" | "workspace";
+    path?: string | null;
 };
 
 export type FolderItem = BaseItem & {
@@ -55,6 +56,25 @@ export const getRootFolder = async (
     return handleSupabaseError(await rootFolderQuery.maybeSingle());
 };
 
+export const createRootFolder = async (
+    { workspaceId, projectId }: { workspaceId: string; projectId?: string },
+    supabase: SupabaseClient<Database>
+) => {
+    return handleSupabaseError(
+        await supabase
+            .from("folders")
+            .insert({
+                project_id: projectId ?? null,
+                name: "<ROOT>",
+                is_root: true,
+                workspace_id: workspaceId,
+                access_strategy: FolderAccessStrategies.PUBLIC,
+            })
+            .select()
+            .single()
+    );
+};
+
 export const getFolderBranch = <
     T extends { id: string; parentId: string | null },
 >(
@@ -80,12 +100,16 @@ export const getLibraryItems = async (
         userId,
         publishedOnly,
         noEmptyFolders,
+        documentExtension,
+        includePrDrafts,
     }: {
         workspaceId: string;
         projectId?: string | null;
         userId?: string | null;
         publishedOnly?: boolean;
         noEmptyFolders?: boolean;
+        documentExtension?: string;
+        includePrDrafts?: boolean;
     },
     supabase: SupabaseClient<Database>
 ) => {
@@ -102,6 +126,9 @@ export const getLibraryItems = async (
 						id,
 						title,
 						created_at
+					),
+					document_pr_drafts(
+						id
 					)
 				`
         )
@@ -148,7 +175,13 @@ export const getLibraryItems = async (
         docsQuery = docsQuery.not("latest_version", "is", null);
     }
 
+    if (!includePrDrafts) {
+        recentDocsQuery = recentDocsQuery.is("document_pr_drafts", null);
+        // docsQuery = docsQuery.is("document_pr_drafts", null);
+    }
+
     const recentDocs = userId ? handleSupabaseError(await recentDocsQuery) : [];
+    console.log("recentDocs", recentDocs);
     const docs = handleSupabaseError(await docsQuery);
     const rootFolder = await getRootFolder(
         { workspaceId, projectId },
@@ -158,25 +191,27 @@ export const getLibraryItems = async (
 
     const getFolderChildren = (
         folderId: string,
-        depth: number
+        depth: number,
+        parentPath: string = ""
     ): FlattenedItem[] => {
         const parentId = folderId === rootFolder!.id ? "<ROOT>" : folderId;
         const childDocs = docs
             .filter((doc) => doc.folder?.id === folderId)
-            .map(
-                (doc) =>
-                    ({
-                        id: doc.id,
-                        type: "document",
-                        name:
-                            fixOneToOne(doc.latest_version)?.title ?? doc.title,
-                        depth,
-                        index: doc.index,
-                        parentId,
-                        accessStrategy: doc.access_strategy as AccessStrategies,
-                        isPublished: !!fixOneToOne(doc.latest_version),
-                    }) satisfies DocumentItem
-            );
+            .map((doc) => {
+                const name =
+                    fixOneToOne(doc.latest_version)?.title ?? doc.title;
+                return {
+                    id: doc.id,
+                    type: "document",
+                    name,
+                    depth,
+                    index: doc.index,
+                    parentId,
+                    path: `${parentPath}/${name}${documentExtension || ""}`,
+                    accessStrategy: doc.access_strategy as AccessStrategies,
+                    isPublished: !!fixOneToOne(doc.latest_version),
+                } satisfies DocumentItem;
+            });
 
         const childFolders = folders
             .filter((folder) => folder.parent_id === folderId)
@@ -189,6 +224,7 @@ export const getLibraryItems = async (
                         depth,
                         index: folder.index,
                         parentId,
+                        path: `${parentPath}/${folder.name}`,
                     }) satisfies FolderItem
             );
 
@@ -202,7 +238,11 @@ export const getLibraryItems = async (
         let results: FlattenedItem[] = [];
         for (const item of sortedItemsAtThisDepth) {
             if (item.type === "folder") {
-                const folderChildren = getFolderChildren(item.id, depth + 1);
+                const folderChildren = getFolderChildren(
+                    item.id,
+                    depth + 1,
+                    item.path
+                );
                 if (!noEmptyFolders || folderChildren.length > 0) {
                     results.push(item);
                     results.push(...folderChildren);
@@ -242,6 +282,7 @@ export const getLibraryItems = async (
                     name: fixOneToOne(doc.latest_version)?.title ?? doc.title,
                     depth: 0,
                     parentId: null,
+                    path: null,
                     category: "shared" as const,
                     accessStrategy: doc.access_strategy as AccessStrategies,
                     isPublished: !!fixOneToOne(doc.latest_version),
@@ -262,6 +303,7 @@ export const getLibraryItems = async (
                     name: fixOneToOne(doc.latest_version)?.title ?? doc.title,
                     depth: 0,
                     parentId: null,
+                    path: null,
                     category: "private" as const,
                     accessStrategy: doc.access_strategy as AccessStrategies,
                     isPublished: !!fixOneToOne(doc.latest_version),
@@ -278,6 +320,7 @@ export const getLibraryItems = async (
                     name: fixOneToOne(doc.latest_version)?.title ?? doc.title,
                     depth: 0,
                     parentId: null,
+                    path: null,
                     category: "workspace" as const,
                     accessStrategy: doc.access_strategy as AccessStrategies,
                     isPublished: !!fixOneToOne(doc.latest_version),
