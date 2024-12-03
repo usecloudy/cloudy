@@ -1,6 +1,6 @@
 # ☁️ Cloudy
 
-The monorepo for Cloudy, the AI technical document writing tool. You can access the live product at [usecloudy.com](https://usecloudy.com).
+The monorepo for Cloudy, Self-updating tech docs that sync with your codebase. You can access the live product at [usecloudy.com](https://usecloudy.com).
 
 > ⚠️ Although this repo is open source, we are currently not ready for self hosting or have a clear guide on how to run it locally. This is a WIP and we will update this README with instructions on how to run it locally when we are ready.
 
