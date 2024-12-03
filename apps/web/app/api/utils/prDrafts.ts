@@ -83,7 +83,7 @@ export const publishPrDocsOnMerge = async (
 						published_by: null, // TODO: Add the user who published the document
 						title: document!.title!,
 						content_json: document!.content_json,
-						content_md: document!.content_md,
+						content_md: document!.content_md!,
 						content_html: document!.content,
 					})
 					.select("id")
