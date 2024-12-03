@@ -231,6 +231,10 @@ export const createDraftForPr = async (
 		})})
 
 
-[🚫 Skip docs for this PR](${makeSkipDocsUrl(getAppBaseUrl(), { prMetadataId: prMetadata.id })})`,
+[🚫 Skip docs for this PR](${makeSkipDocsUrl(getAppBaseUrl(), {
+			workspaceSlug: workspace.slug,
+			projectSlug: project.slug,
+			prMetadataId: prMetadata.id,
+		})})`,
 	});
 };
