@@ -12,9 +12,9 @@ export const DraftingTitle = ({ documentDraft }: { documentDraft: DocumentPrDraf
 	};
 
 	return (
-		<div className="flex flex-row items-center gap-1">
-			{iconStates[status]}
-			<span className="text-sm font-medium text-secondary">{documentDraft?.path}</span>
+		<div className="flex flex-1 flex-row items-start gap-1">
+			<div className="shrink-0 pt-0.5">{iconStates[status]}</div>
+			<span className="flex-1 truncate text-sm font-medium text-secondary">{documentDraft?.path}</span>
 		</div>
 	);
 };

@@ -17,8 +17,8 @@ export const DocumentCard = ({ documentDraft }: DocumentCardProps) => {
 			className={cn(
 				"flex h-[200px] flex-col gap-2 overflow-hidden rounded-lg border border-border p-4 text-left transition-all hover:border-border hover:bg-card",
 			)}>
-			<div className="flex w-full flex-row items-start justify-between">
-				<div className="flex flex-col">
+			<div className="flex w-full flex-row items-start justify-between gap-2">
+				<div className="flex flex-1 flex-col">
 					<DraftingTitle documentDraft={documentDraft} />
 					<h3 className="mb-2 font-medium">{documentDraft.document?.title}</h3>
 				</div>
