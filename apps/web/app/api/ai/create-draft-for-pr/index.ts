@@ -15,6 +15,7 @@ import { z } from "zod";
 import { getOctokitAppClient } from "app/api/utils/github";
 import { heliconeAnthropic } from "app/api/utils/helicone";
 import { getSupabase } from "app/api/utils/supabase";
+import { getAppBaseUrl } from "app/api/utils/url";
 
 export interface PullRequestDocsGenerationDetails {
 	title: string;
@@ -90,7 +91,11 @@ export const createDraftForPr = async (
 ) => {
 	const supabase = await getSupabase({ mode: "service", bypassAuth: true });
 	const project = handleSupabaseError(
-		await supabase.from("projects").select("id, workspaces(id, slug)").eq("id", repositoryConnection.project_id).single(),
+		await supabase
+			.from("projects")
+			.select("id, slug, workspaces(id, slug)")
+			.eq("id", repositoryConnection.project_id)
+			.single(),
 	);
 	const workspace = project.workspaces!;
 
@@ -189,13 +194,13 @@ export const createDraftForPr = async (
 		issue_number: pullRequestNumber,
 		body: `👋 Looks like your changes could use some docs! ${documents.length > 1 ? `I've drafted **${documents.length} pages** for you.` : "I've drafted a page for you."}
 
-[**📝 Confirm & edit on Cloudy**](${makePrDraftUrl("http://localhost:3000", {
+[**📝 Confirm & edit on Cloudy**](${makePrDraftUrl(getAppBaseUrl(), {
 			workspaceSlug: workspace.slug,
-			projectSlug: repositoryConnection.project_id,
+			projectSlug: project.slug,
 			prMetadataId: prMetadata.id,
 		})})
 
 
-[🚫 Skip docs for this PR](${makeSkipDocsUrl("http://localhost:3000", { prMetadataId: prMetadata.id })})`,
+[🚫 Skip docs for this PR](${makeSkipDocsUrl(getAppBaseUrl(), { prMetadataId: prMetadata.id })})`,
 	});
 };
