@@ -49,7 +49,7 @@ export const makePrDraftUrl = (
 
 export const makeSkipDocsUrl = (
     baseUrl: string,
-    params: { prMetadataId: string }
+    params: Parameters<typeof makePrDraftPath>[0]
 ) => {
-    return `${baseUrl}/skip-docs/${params.prMetadataId}`;
+    return `${baseUrl}${makePrDraftPath(params)}?shouldSkipDocs=true`;
 };

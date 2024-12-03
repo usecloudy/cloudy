@@ -1,6 +1,7 @@
 import { makeDocPath, makeGithubPrUrl } from "@cloudy/utils/common";
 import { ExternalLinkIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 
 import { Button } from "src/components/Button";
@@ -9,13 +10,24 @@ import { useWorkspace } from "src/stores/workspace";
 
 import { useProject } from "../projects/ProjectContext";
 import { DocumentCard } from "./DocumentCard";
-import { usePrDetail } from "./hooks";
+import { usePrDetail, useSkipPrDocs } from "./hooks";
 
 export const PrDetailView = () => {
 	const workspace = useWorkspace();
 	const project = useProject();
 	const { data: prData, isLoading } = usePrDetail();
 	const navigate = useNavigate();
+
+	const skipPrDocsMutation = useSkipPrDocs();
+
+	const [searchParams] = useSearchParams();
+	const shouldSkipDocs = searchParams.get("skipDocs") === "true";
+
+	useEffect(() => {
+		if (shouldSkipDocs) {
+			skipPrDocsMutation.mutate({ prMetadataId: prData!.id });
+		}
+	}, [shouldSkipDocs, skipPrDocsMutation, prData]);
 
 	if (isLoading) {
 		return (
