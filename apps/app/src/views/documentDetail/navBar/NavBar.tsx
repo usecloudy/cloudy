@@ -27,6 +27,7 @@ import { useBreakpoint } from "src/utils/tailwind";
 import { useUserProfile } from "../../../utils/users";
 import { useDocumentContext } from "../DocumentContext";
 import { useLatestDocumentVersionContext } from "../LatestDocumentVersionContext";
+import { useDocumentDraft } from "../drafting";
 import { usePublishDocumentVersion, useThought, useToggleDisableTitleSuggestions } from "../editor/hooks";
 import { ThoughtContext } from "../editor/thoughtContext";
 import { DeleteDialog } from "./DeleteDialog";
@@ -67,6 +68,7 @@ export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 
 	const { data: thought } = useThought(documentId);
 	const { latestDocumentVersion } = useLatestDocumentVersionContext();
+	const { data: documentDraft } = useDocumentDraft();
 
 	const { isConnected, isConnecting } = useContext(ThoughtContext);
 
@@ -140,21 +142,29 @@ export const NavBar = ({ editor }: { editor?: Editor | null }) => {
 								</div>
 							</TooltipContent>
 						</Tooltip>
-						{!hasNoPublishedVersions && (
-							<Button variant="outline" size={isMd ? "sm" : "icon-sm"} onClick={() => setIsEditMode(false)}>
-								<XIcon className="size-4" />
-								{isMd && "Leave edit mode"}
-							</Button>
+
+						{!documentDraft && (
+							<>
+								{!hasNoPublishedVersions && (
+									<Button
+										variant="outline"
+										size={isMd ? "sm" : "icon-sm"}
+										onClick={() => setIsEditMode(false)}>
+										<XIcon className="size-4" />
+										{isMd && "Leave edit mode"}
+									</Button>
+								)}
+								<Button
+									size="sm"
+									onClick={async () => {
+										await publishDocumentVersionMutation.mutateAsync();
+										setIsEditMode(false);
+									}}>
+									<FileCheckIcon className="size-4" />
+									{hasNoPublishedVersions ? "Publish first version" : "Publish"}
+								</Button>
+							</>
 						)}
-						<Button
-							size="sm"
-							onClick={async () => {
-								await publishDocumentVersionMutation.mutateAsync();
-								setIsEditMode(false);
-							}}>
-							<FileCheckIcon className="size-4" />
-							{hasNoPublishedVersions ? "Publish first version" : "Publish"}
-						</Button>
 					</>
 				) : (
 					<>

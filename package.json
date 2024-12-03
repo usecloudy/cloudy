@@ -6,8 +6,8 @@
         "dev": "turbo dev",
         "lint": "turbo lint",
         "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-        "db:sync": "cd packages/db && npm run sync",
-        "db:sync:local": "cd packages/db && npm run sync:local"
+        "db:sync": "cd apps/supabase && npm run sync",
+        "db:sync:local": "cd apps/supabase && npm run sync:local"
     },
     "devDependencies": {
         "eslint-config-prettier": "^9.1.0",

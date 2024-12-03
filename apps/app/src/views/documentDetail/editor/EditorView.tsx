@@ -16,6 +16,7 @@ import { useDocumentContext } from "../DocumentContext";
 import { DocumentLoadingPlaceholder } from "../DocumentLoadingPlaceholder";
 import { NavBar } from "../navBar/NavBar";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
+import { EditorDraftingCard } from "./EditorDraftingCard";
 import { FooterRow } from "./FooterRow";
 import { TitleArea } from "./TitleArea";
 import { ChatSectionView } from "./chatSection/ChatSectionView";
@@ -105,8 +106,8 @@ export const EditorView = ({ thought }: { thought: Thought }) => {
 	});
 
 	useEffect(() => {
-		if (isConnected && (thought.content_json || thought.content) && !editor?.getText()) {
-			editor?.commands.setContent((thought.content_json as JSONContent) ?? thought.content);
+		if (isConnected && (thought.content_json || thought.content || thought.content_md) && !editor?.getText()) {
+			editor?.commands.setContent((thought.content_json as JSONContent) ?? thought.content ?? thought.content_md);
 		}
 
 		if (editor) {
@@ -369,6 +370,9 @@ const Editor = () => {
 					</div>
 				) : (
 					<>
+						<div className="mb-8 md:pl-8">
+							<EditorDraftingCard />
+						</div>
 						<TitleArea />
 						<div
 							// On larger screens, we need left padding to avoid some characters being cut off

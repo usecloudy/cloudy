@@ -8,7 +8,11 @@ export const ConnectGithubCard = () => {
 
 	return (
 		<a
-			href={`https://github.com/apps/usecloudyai/installations/new`}
+			href={
+				process.env.NODE_ENV === "development"
+					? `https://github.com/apps/cloudy-ai-dev/installations/new`
+					: `https://github.com/apps/usecloudyai/installations/new`
+			}
 			className="text-medium flex h-14 w-full flex-row items-center justify-between gap-4 rounded-md border border-border px-4 text-sm hover:bg-card">
 			<div className="flex flex-row items-center gap-4">
 				<SiGithub className="size-6 text-secondary" />

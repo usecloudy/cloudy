@@ -1,6 +1,7 @@
 import {
 	FlattenedItem,
 	FolderAccessStrategies,
+	createRootFolder,
 	getLibraryItems,
 	getRootFolder,
 	handleSupabaseError,
@@ -22,22 +23,6 @@ export const assignDocumentToFolder = async (docId: string, folderId: string) =>
 		.from("thoughts")
 		.update({ folder_id: folderId, index: await getFolderChildrenCount(folderId) })
 		.eq("id", docId);
-};
-
-export const createRootFolder = async (workspaceId: string, projectId?: string) => {
-	return handleSupabaseError(
-		await supabase
-			.from("folders")
-			.insert({
-				project_id: projectId ?? null,
-				name: "<ROOT>",
-				is_root: true,
-				workspace_id: workspaceId,
-				access_strategy: FolderAccessStrategies.PUBLIC,
-			})
-			.select()
-			.single(),
-	);
 };
 
 export const getFolderChildrenCount = async (folderId: string) => {
@@ -145,7 +130,7 @@ export const useMakeInitialLibrary = () => {
 		mutationFn: async (initialDocId?: string) => {
 			let rootFolder = await getRootFolder({ workspaceId: workspace.id, projectId: project?.id }, supabase);
 			if (!rootFolder) {
-				rootFolder = await createRootFolder(workspace.id, project?.id);
+				rootFolder = await createRootFolder({ workspaceId: workspace.id, projectId: project?.id }, supabase);
 			}
 
 			if (initialDocId) {

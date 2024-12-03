@@ -26,7 +26,7 @@ export const PublishedDocumentView = () => {
 			editor?.commands.setContent(
 				latestDocumentVersion.content_json
 					? (latestDocumentVersion.content_json as JSONContent)
-					: latestDocumentVersion.content_html,
+					: latestDocumentVersion.content_html || latestDocumentVersion.content_md,
 			);
 		}
 	}, [latestDocumentVersion, editor]);

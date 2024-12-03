@@ -54,7 +54,7 @@ export const suggestTitle = async (thoughtRecord: ThoughtRecord, supabase: Supab
 
 		const heliconeSessionId = randomUUID();
 		const heliconeHeaders = {
-			"Helicone-User-Id": thoughtRecord.author_id,
+			"Helicone-User-Id": thoughtRecord.author_id!,
 			"Helicone-Session-Name": "Suggest Title",
 			"Helicone-Session-Id": `thought-suggest-title/${heliconeSessionId}`,
 		};

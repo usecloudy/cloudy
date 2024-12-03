@@ -1,8 +1,11 @@
-import { handleSupabaseError } from "@cloudy/utils/common";
+import { PrStatus, handleSupabaseError } from "@cloudy/utils/common";
+import { components } from "@octokit/openapi-webhooks-types";
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { createDocumentUpdate } from "app/api/ai/create-document-update";
+import { createDraftForPr } from "app/api/ai/create-draft-for-pr";
+import { publishPrDocsOnMerge, skipPrDocsOnClose } from "app/api/utils/prDrafts";
 import { getSupabase } from "app/api/utils/supabase";
 
 interface WebhookPushEvent {
@@ -42,6 +45,9 @@ interface WebhookInstallationEvent {
 		full_name: string;
 	}>;
 }
+
+type GithubPullRequestOpenedWebhookEvent = components["schemas"]["webhook-pull-request-opened"];
+type GithubPullRequestClosedWebhookEvent = components["schemas"]["webhook-pull-request-closed"];
 
 export const maxDuration = 60;
 
@@ -243,6 +249,55 @@ export const POST = async (request: NextRequest) => {
 					success: true,
 					processedDocs: affectedDocs.length,
 				});
+			}
+
+			case "pull_request": {
+				const data = JSON.parse(payload) as GithubPullRequestOpenedWebhookEvent | GithubPullRequestClosedWebhookEvent;
+
+				const installationId = data.installation?.id;
+				if (!installationId) {
+					return NextResponse.json({
+						message: "No installation ID found",
+					});
+				}
+
+				const supabase = await getSupabase({ mode: "service", bypassAuth: true });
+				const repositoryConnection = handleSupabaseError(
+					await supabase
+						.from("repository_connections")
+						.select("*")
+						.eq("installation_id", installationId)
+						.eq("external_id", data.repository.id.toString())
+						.single(),
+				);
+
+				if (data?.action === "opened") {
+					const pr = data.pull_request;
+
+					await createDraftForPr(
+						repositoryConnection,
+						pr.number,
+						pr.title,
+						pr.body,
+						pr.state as PrStatus,
+						pr.head.ref,
+						pr.base.ref,
+					);
+
+					console.log("Pull request opened", pr.head.ref, pr.base.ref);
+				} else if (data?.action === "closed") {
+					const pr = data.pull_request;
+					console.log("Pull request closed", pr.number);
+
+					if (pr.merged) {
+						// Merge
+						await publishPrDocsOnMerge(repositoryConnection, pr.number, supabase);
+					} else {
+						// Closed
+						await skipPrDocsOnClose(repositoryConnection, pr.number, supabase);
+					}
+				}
+				break;
 			}
 
 			default:

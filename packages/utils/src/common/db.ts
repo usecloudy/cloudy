@@ -31,3 +31,9 @@ export interface RepositoryConnection {
     name: string;
     default_branch: string;
 }
+
+export type RepositoryConnectionRecord =
+    Database["public"]["Tables"]["repository_connections"]["Row"];
+
+export type DocumentPrDraftRecord =
+    Database["public"]["Tables"]["document_pr_drafts"]["Row"];

@@ -73,9 +73,9 @@ export const useDocumentAccessControl = (docId: string): DocumentAccessControl =
 			}
 
 			// Get the document's author
-			const author = handleSupabaseError(
-				await supabase.from("users").select("id, name, email").eq("id", doc.author_id).single(),
-			);
+			const author = doc.author_id
+				? handleSupabaseError(await supabase.from("users").select("id, name, email").eq("id", doc.author_id).single())
+				: null;
 
 			// Get document shares with users and their workspace membership in a single query
 			const documentShares = handleSupabaseError(
@@ -107,11 +107,15 @@ export const useDocumentAccessControl = (docId: string): DocumentAccessControl =
 
 			// Map all users and mark them as external if not in workspace
 			const usersWithAccess = [
-				{
-					...author,
-					isExternal: false,
-					isAuthor: true,
-				},
+				...(author
+					? [
+							{
+								...author,
+								isExternal: false,
+								isAuthor: true,
+							},
+						]
+					: []),
 				...documentShares?.map(share => ({
 					...fixOneToOne(share.user)!,
 					isExternal: !workspaceUsers.has(fixOneToOne(share.user)?.id),

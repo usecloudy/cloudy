@@ -20,6 +20,7 @@ export const thoughtQueryKeys = {
 	defaultThreadId: (docId: string) => ["defaultThreadId", docId] as const,
 	recentChanges: (thoughtId: string) => ["recentChanges", thoughtId] as const,
 	latestPublishedVersion: (documentId: string) => ["publishedVersion", documentId] as const,
+	documentDraft: (docId: string) => ["thought", docId, "documentDraft"] as const,
 };
 
 export const topicQueryKeys = {
@@ -64,3 +65,8 @@ export const thoughtKeys = {
 	details: () => [...thoughtKeys.all, "detail"] as const,
 	detail: (id: string) => [...thoughtKeys.details(), id] as const,
 } as const;
+
+export const prQueryKeys = {
+	prs: () => ["prs"] as const,
+	prDetail: (prMetadataId: string) => ["pr-detail", prMetadataId] as const,
+};

@@ -24,6 +24,7 @@ import { MobileTabBar } from "./views/navigation/MobileTabBar";
 import { Navbar } from "./views/navigation/Navbar";
 import { SidebarView } from "./views/navigation/SidebarView";
 import { NotFoundView } from "./views/notFound/NotFoundView";
+import { PrDetailView } from "./views/prDetail/PrDetailView";
 import { PaymentSuccessDialog } from "./views/pricing/PaymentSuccessDialog";
 import { NewProjectView } from "./views/projects/NewProjectView";
 import { ProjectOutlet } from "./views/projects/ProjectContext";
@@ -106,6 +107,10 @@ export const Router: FC = () => {
 								<Route
 									path="/workspaces/:wsSlug/projects/:projectSlug/docs/:documentId"
 									element={<DocumentDetailView />}
+								/>
+								<Route
+									path="/workspaces/:wsSlug/projects/:projectSlug/prs/:prMetadataId"
+									element={<PrDetailView />}
 								/>
 								<Route
 									path="/workspaces/:wsSlug/projects/:projectSlug/settings"

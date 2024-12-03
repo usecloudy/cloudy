@@ -948,6 +948,48 @@ export type Database = {
           },
         ]
       }
+      document_pr_drafts: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          path: string | null
+          pr_metadata_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          path?: string | null
+          pr_metadata_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          path?: string | null
+          pr_metadata_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pr_draft_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "thoughts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pr_draft_documents_pr_metadata_id_fkey"
+            columns: ["pr_metadata_id"]
+            isOneToOne: false
+            referencedRelation: "pull_request_metadata"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_repo_links: {
         Row: {
           branch: string | null
@@ -1109,33 +1151,33 @@ export type Database = {
       }
       document_versions: {
         Row: {
-          content_html: string
-          content_json: Json
+          content_html: string | null
+          content_json: Json | null
           content_md: string
           created_at: string
           document_id: string
           id: string
-          published_by: string
+          published_by: string | null
           title: string
         }
         Insert: {
-          content_html: string
-          content_json: Json
+          content_html?: string | null
+          content_json?: Json | null
           content_md: string
           created_at?: string
           document_id: string
           id?: string
-          published_by: string
+          published_by?: string | null
           title?: string
         }
         Update: {
-          content_html?: string
-          content_json?: Json
+          content_html?: string | null
+          content_json?: Json | null
           content_md?: string
           created_at?: string
           document_id?: string
           id?: string
-          published_by?: string
+          published_by?: string | null
           title?: string
         }
         Relationships: [
@@ -1277,6 +1319,51 @@ export type Database = {
           },
         ]
       }
+      pull_request_metadata: {
+        Row: {
+          created_at: string
+          docs_status: string
+          id: string
+          pr_number: number
+          pr_status: string
+          project_id: string
+          repository_connection_id: string
+        }
+        Insert: {
+          created_at?: string
+          docs_status?: string
+          id?: string
+          pr_number: number
+          pr_status?: string
+          project_id: string
+          repository_connection_id: string
+        }
+        Update: {
+          created_at?: string
+          docs_status?: string
+          id?: string
+          pr_number?: number
+          pr_status?: string
+          project_id?: string
+          repository_connection_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pull_request_metadata_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pull_request_metadata_repo_connection_id_fkey"
+            columns: ["repository_connection_id"]
+            isOneToOne: false
+            referencedRelation: "repository_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       repository_connections: {
         Row: {
           created_at: string
@@ -1392,7 +1479,7 @@ export type Database = {
       thoughts: {
         Row: {
           access_strategy: string
-          author_id: string
+          author_id: string | null
           collection_suggestions: Json | null
           content: string | null
           content_json: Json | null
@@ -1429,7 +1516,7 @@ export type Database = {
         }
         Insert: {
           access_strategy?: string
-          author_id?: string
+          author_id?: string | null
           collection_suggestions?: Json | null
           content?: string | null
           content_json?: Json | null
@@ -1466,7 +1553,7 @@ export type Database = {
         }
         Update: {
           access_strategy?: string
-          author_id?: string
+          author_id?: string | null
           collection_suggestions?: Json | null
           content?: string | null
           content_json?: Json | null
@@ -1603,15 +1690,7 @@ export type Database = {
           options?: Json
           stripe_customer_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "users_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       workspace_github_connections: {
         Row: {
@@ -1755,13 +1834,6 @@ export type Database = {
       check_thought_access: {
         Args: {
           thought_id: string
-          user_id: string
-        }
-        Returns: boolean
-      }
-      check_workspace_membership: {
-        Args: {
-          workspace_id: string
           user_id: string
         }
         Returns: boolean
@@ -2078,5 +2150,20 @@ export type Enums<
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 

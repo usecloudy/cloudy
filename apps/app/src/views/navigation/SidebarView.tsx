@@ -27,6 +27,7 @@ import { useSearchBarStore } from "../search/searchBarStore";
 import { GenerateDoc } from "./GenerateDoc";
 import { LibraryView } from "./LibraryView";
 import { NewNote } from "./NewNote";
+import { PendingPullRequests } from "./PendingPullRequests";
 import { ProjectSelector } from "./ProjectSelector";
 import { ProjectsList } from "./ProjectsList";
 import { SidebarDropdown } from "./SidebarDropdown";
@@ -107,6 +108,7 @@ export const SidebarView = () => {
 							<LibraryView />
 							{/* <LatestThoughts /> */}
 							{/* <Collections /> */}
+							{project && <PendingPullRequests />}
 							<div className="h-4" />
 						</div>
 					</>

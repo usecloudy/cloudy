@@ -12,7 +12,7 @@ export const useLatestDocumentVersion = (documentId: string) => {
 			return handleSupabaseError(
 				await supabase
 					.from("document_versions")
-					.select("content_json, content_html, title, created_at, published_by:users(id)")
+					.select("content_json, content_html, content_md, title, created_at, published_by:users(id)")
 					.eq("document_id", documentId)
 					.order("created_at", { ascending: false })
 					.limit(1)

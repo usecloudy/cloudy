@@ -2,7 +2,8 @@
     "name": "cloudy-supabase",
     "version": "1.0.0",
     "scripts": {
-        "sync": "supabase gen types --lang=typescript --project-id \"tdpwkwzytyfwpojbbsyt\" --schema public > supabase/functions/_shared/database.types.ts",
+        "sync": "supabase gen types typescript --schema public,auth --project-id \"tdpwkwzytyfwpojbbsyt\" > ../../packages/db/src/database.types.ts",
+        "sync:local": "supabase gen types typescript --schema public,auth --local > ../../packages/db/src/database.types.ts",
         "deploy:function": "supabase functions deploy",
         "dev": "supabase start",
         "stop": "supabase stop"
