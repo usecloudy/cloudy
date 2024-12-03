@@ -2,6 +2,12 @@
 
 The monorepo for Cloudy, Self-updating tech docs that sync with your codebase. You can access the live product at [usecloudy.com](https://usecloudy.com).
 
+We're a two person bootstrapped team.
+
+We just [launched on PH] (https://www.producthunt.com/posts/cloudy-2) today 12/03/2024. If you see value in what we're building, please support us by upvoting, commenting, and sharing with others. Would mean a lot!
+
+
+
 > ⚠️ Although this repo is open source, we are currently not ready for self hosting or have a clear guide on how to run it locally. This is a WIP and we will update this README with instructions on how to run it locally when we are ready.
 
 This monorepo contains the following apps:
