@@ -2,10 +2,11 @@ import { DocumentPrDraftRecord, PrDraftDocumentStatus } from "@cloudy/utils/comm
 import { BookDashedIcon, FileCheckIcon, XIcon } from "lucide-react";
 
 import { Button } from "src/components/Button";
-import { useUpdateDocumentDraft } from "src/utils/prDrafts";
+import { useConvertBackToDraft, useUpdateDocumentDraft } from "src/utils/prDrafts";
 
 export const DraftingButtons = ({ documentDraft }: { documentDraft: DocumentPrDraftRecord }) => {
 	const updateDocumentDraftMutation = useUpdateDocumentDraft();
+	const convertBackToDraftMutation = useConvertBackToDraft();
 
 	if (!documentDraft) {
 		return null;
@@ -33,6 +34,8 @@ export const DraftingButtons = ({ documentDraft }: { documentDraft: DocumentPrDr
 				</Button>
 				<Button
 					size="sm"
+					variant="outline"
+					className="text-accent"
 					onClick={e => {
 						e.preventDefault();
 						e.stopPropagation();
@@ -54,9 +57,9 @@ export const DraftingButtons = ({ documentDraft }: { documentDraft: DocumentPrDr
 					onClick={e => {
 						e.preventDefault();
 						e.stopPropagation();
-						updateDocumentDraftMutation.mutate({
+						convertBackToDraftMutation.mutate({
 							docId: documentDraft.document_id,
-							update: { status: PrDraftDocumentStatus.DRAFT },
+							prMetadataId: documentDraft.pr_metadata_id,
 						});
 					}}>
 					<BookDashedIcon className="size-4" />
@@ -68,12 +71,14 @@ export const DraftingButtons = ({ documentDraft }: { documentDraft: DocumentPrDr
 			<>
 				<Button
 					size="sm"
+					variant="outline"
+					className="text-accent"
 					onClick={e => {
 						e.preventDefault();
 						e.stopPropagation();
-						updateDocumentDraftMutation.mutate({
+						convertBackToDraftMutation.mutate({
 							docId: documentDraft.document_id,
-							update: { status: PrDraftDocumentStatus.DRAFT },
+							prMetadataId: documentDraft.pr_metadata_id,
 						});
 					}}>
 					<BookDashedIcon className="size-4" />
