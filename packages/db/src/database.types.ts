@@ -953,6 +953,7 @@ export type Database = {
           created_at: string
           document_id: string
           id: string
+          modification_type: string
           path: string | null
           pr_metadata_id: string
           status: string
@@ -961,6 +962,7 @@ export type Database = {
           created_at?: string
           document_id: string
           id?: string
+          modification_type?: string
           path?: string | null
           pr_metadata_id: string
           status?: string
@@ -969,6 +971,7 @@ export type Database = {
           created_at?: string
           document_id?: string
           id?: string
+          modification_type?: string
           path?: string | null
           pr_metadata_id?: string
           status?: string

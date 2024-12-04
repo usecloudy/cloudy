@@ -24,7 +24,7 @@ export const useOpenPrs = () => {
 				await supabase
 					.from("pull_request_metadata")
 					.select(
-						"id, pr_number, pr_status, repo:repository_connections(owner,name), document_pr_drafts(*, document:thoughts(id, title, content_md))",
+						"id, pr_number, pr_status, repo:repository_connections(owner,name), document_pr_drafts(*, document:thoughts!document_id(id, title, content_md))",
 					)
 					.eq("project_id", project!.id),
 			);

@@ -127,7 +127,7 @@ export const getLibraryItems = async (
 						title,
 						created_at
 					),
-					document_pr_drafts(
+					document_pr_drafts!document_id(
 						id
 					)
 				`

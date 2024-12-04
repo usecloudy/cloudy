@@ -17,6 +17,11 @@ export enum PrDraftDocumentStatus {
     SKIPPED = "skipped",
 }
 
+export enum PrDraftDocumentModificationType {
+    CREATE = "create",
+    EDIT = "edit",
+}
+
 export const makeGithubPrUrl = (
     owner: string,
     repo: string,
