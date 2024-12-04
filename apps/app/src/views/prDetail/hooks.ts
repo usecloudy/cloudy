@@ -1,4 +1,4 @@
-import { PrDocsStatus, PrDraftDocumentStatus, handleSupabaseError } from "@cloudy/utils/common";
+import { PrDocsStatus, PrDraftDocumentStatus, fixOneToOne, handleSupabaseError } from "@cloudy/utils/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 
@@ -83,15 +83,23 @@ export const usePrDetail = () => {
 	return useQuery({
 		queryKey: prQueryKeys.prDetail(prMetadataId!),
 		queryFn: async () => {
-			return handleSupabaseError(
+			const data = handleSupabaseError(
 				await supabase
 					.from("pull_request_metadata")
 					.select(
-						"*, repo:repository_connections(owner,name), document_pr_drafts(*, document:thoughts(id, title, content_md))",
+						"*, repo:repository_connections(owner,name), document_pr_drafts(*, document:thoughts!document_id(id, title, content_md))",
 					)
 					.eq("id", prMetadataId!)
 					.single(),
 			);
+
+			return {
+				...data,
+				document_pr_drafts: data.document_pr_drafts.map(draft => ({
+					...draft,
+					document: fixOneToOne(draft.document),
+				})),
+			};
 		},
 	});
 };

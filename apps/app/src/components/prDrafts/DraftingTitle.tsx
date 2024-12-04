@@ -1,4 +1,4 @@
-import { DocumentPrDraftRecord, PrDraftDocumentStatus } from "@cloudy/utils/common";
+import { DocumentPrDraftRecord, PrDraftDocumentModificationType, PrDraftDocumentStatus } from "@cloudy/utils/common";
 import { BookDashedIcon, FileCheckIcon, XIcon } from "lucide-react";
 
 export const DraftingTitle = ({ documentDraft }: { documentDraft: DocumentPrDraftRecord }) => {
@@ -11,10 +11,20 @@ export const DraftingTitle = ({ documentDraft }: { documentDraft: DocumentPrDraf
 		[PrDraftDocumentStatus.SKIPPED]: <XIcon className="size-4 text-secondary" />,
 	};
 
+	const prefixStates = {
+		[PrDraftDocumentModificationType.CREATE]: "Creating",
+		[PrDraftDocumentModificationType.EDIT]: "Editing",
+	};
+
 	return (
 		<div className="flex flex-1 flex-row items-start gap-1">
 			<div className="shrink-0 pt-0.5">{iconStates[status]}</div>
-			<span className="flex-1 truncate text-sm font-medium text-secondary">{documentDraft?.path}</span>
+			<div className="flex-1 truncate text-sm font-medium text-secondary">
+				<span className="font-normal text-tertiary">
+					{prefixStates[documentDraft.modification_type as PrDraftDocumentModificationType] + " "}
+				</span>
+				<span>{documentDraft?.path}</span>
+			</div>
 		</div>
 	);
 };

@@ -1,4 +1,6 @@
 import {
+	LibraryItem,
+	PrDraftDocumentModificationType,
 	PrStatus,
 	RepositoryConnectionRecord,
 	getLibraryItems,
@@ -8,6 +10,7 @@ import {
 	zip,
 } from "@cloudy/utils/common";
 import { Database } from "@repo/db";
+import * as Sentry from "@sentry/nextjs";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { generateObject, generateText, tool } from "ai";
 import { z } from "zod";
@@ -28,14 +31,28 @@ const documentSchema = z.object({
 		.string()
 		.describe('The path to the document within the library, for example "/folder1/Folder 2/Document title here"'),
 	title: z.string().describe("The title of the document"),
-	content: z.string().describe("The markdown contents of the document"),
+	content: z.string().describe("The entire markdown contents of the document"),
+	type: z.enum(["create", "edit"]).describe("Whether to create or edit an existing document"),
 });
 
-type Document = z.infer<typeof documentSchema>;
+type DocumentEdit = z.infer<typeof documentSchema>;
 
-const getLibraryAsPrompt = async (workspaceId: string, projectId: string, supabase: SupabaseClient<Database>) => {
-	const libraryItems = await getLibraryItems({ workspaceId, projectId }, supabase);
+const getDocumentAsPrompt = async (documentId: string, supabase: SupabaseClient<Database>) => {
+	const document = handleSupabaseError(
+		await supabase.from("thoughts").select("title, content_md").eq("id", documentId).single(),
+	);
 
+	return `<document>
+<title>
+${document.title}
+</title>
+<content>
+${document.content_md}
+</content>
+</document>`;
+};
+
+const getLibraryAsPrompt = async (libraryItems: LibraryItem[]) => {
 	if (libraryItems.length === 0) {
 		return `There currently isn't any existing documentation for this project.`;
 	}
@@ -50,16 +67,14 @@ ${libraryItems.map(item => `- ${item.type} ID "${item.id.slice(0, 6)}": "${item.
 const makeSystemPrompt = () => {
 	return `You are an expert at creating documentation for projects. You are able to create folders/paths and markdown documents.
 - You can create documents in the root of the library ("/Document name") or in any subfolder: ("/path/to/folder/Document title here").
-- You do not need to create a /docs folder, the root folder is already for docs.`;
+- You do not need to create a /docs folder, the root folder is already for docs.
+- You have tools to view existing documents and to create/edit documents.
+
+Create effective documentation for a whole project's codebase, not just for the pull request.`;
 };
 
-const makePrDocsGenerationPrompt = async (
-	payload: PullRequestDocsGenerationDetails,
-	workspaceId: string,
-	projectId: string,
-	supabase: SupabaseClient<Database>,
-) => {
-	return `${await getLibraryAsPrompt(workspaceId, projectId, supabase)}
+const makePrDocsGenerationPrompt = async (payload: PullRequestDocsGenerationDetails, libraryItems: LibraryItem[]) => {
+	return `${await getLibraryAsPrompt(libraryItems)}
 
 - You don't need to provide a h1 title again in the document contents, place the title in the title field.
 	
@@ -126,6 +141,27 @@ export const createDraftForPr = async (
 
 	const diffText = comparison.data.files?.map(file => file.patch).join("\n\n") ?? "";
 
+	if (diffText.length > 60000) {
+		await octokit.rest.issues.createComment({
+			owner: repositoryConnection.owner,
+			repo: repositoryConnection.name,
+			issue_number: pullRequestNumber,
+			body: `👋 Looks like your changes are too big to generate docs for, I'm skipping this PR. We're working on supporting larger diffs soon!`,
+		});
+
+		console.log("Diff text is too long, currently not supported");
+
+		Sentry.captureMessage("Diff text is too long, currently not supported", {
+			extra: {
+				workspace,
+				repositoryConnectionId: repositoryConnection.id,
+				pullRequestNumber,
+			},
+		});
+
+		return;
+	}
+
 	const {
 		object: { needsDocs },
 	} = await generateObject({
@@ -145,33 +181,58 @@ export const createDraftForPr = async (
 			body: `👋 Looks like your changes don't need any docs, you're all clear!`,
 		});
 
+		console.log("No docs needed");
+
 		return;
 	}
 
-	// 1. Determine whether the pr needs any docs
-	// 2. Generate the docs, we'll need to support as many pages as needed
-	// 2.1. Also, ideally we get a folder structure for the docs
-	// 3. Somehow we also make these docs only draft documents, that get deleted when the PR is closed and published when the PR is merged
+	const libraryItems = await getLibraryItems({ workspaceId: workspace.id, projectId: project.id }, supabase);
 
-	const documents: Document[] = [];
+	const libraryPathsToItems = Object.fromEntries(libraryItems.map(item => [item.path, item]));
+
+	const documents: DocumentEdit[] = [];
 
 	const { text } = await generateText({
 		model: heliconeAnthropic.languageModel("claude-3-5-haiku-20241022"),
 		system: makeSystemPrompt(),
-		prompt: await makePrDocsGenerationPrompt(
-			{ title, description: description ?? "", diffText },
-			workspace.id,
-			project.id,
-			supabase,
-		),
+		prompt: await makePrDocsGenerationPrompt({ title, description: description ?? "", diffText }, libraryItems),
 		tools: {
-			createDocument: tool({
-				description: "Create a document",
-				parameters: documentSchema,
-				execute: async ({ path, title, content }) => {
-					documents.push({ path, title, content });
+			viewDocuments: tool({
+				description: "View documents",
+				parameters: z.object({
+					paths: z.array(z.string()).describe("The paths to the documents within the library"),
+				}),
+				execute: async ({ paths }) => {
+					return await Promise.all(
+						paths.map(async path => {
+							const item = libraryPathsToItems[path];
 
-					return "Document created";
+							if (!item) {
+								return `Error: ${path} is not a valid path`;
+							}
+
+							if (item.type === "folder") {
+								return `Error: ${item.path} is a folder, not a document`;
+							}
+
+							return await getDocumentAsPrompt(item.id, supabase);
+						}),
+					);
+				},
+			}),
+			modifyDocument: tool({
+				description: "Edit or create a document",
+				parameters: documentSchema,
+				execute: async ({ path, title, content, type }) => {
+					if (type === "edit" && !libraryPathsToItems[path]) {
+						return `Error: ${path} is not a valid path, cannot edit`;
+					} else if (type === "create" && libraryPathsToItems[path]) {
+						return `Error: ${path} is already a document, cannot create`;
+					}
+
+					documents.push({ path, title, content, type });
+
+					return "Done";
 				},
 			}),
 		},
@@ -213,6 +274,8 @@ export const createDraftForPr = async (
 					pr_metadata_id: prMetadata.id,
 					document_id: documentId,
 					path: document.path,
+					type: document.type as PrDraftDocumentModificationType,
+					original_document_id: document.type === "create" ? null : libraryPathsToItems[document.path]!.id,
 				})),
 			)
 			.select("id"),
