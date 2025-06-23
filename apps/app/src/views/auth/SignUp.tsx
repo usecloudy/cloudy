@@ -18,6 +18,18 @@ type SignUpFormData = {
 };
 
 export const SignUp = () => {
+	return (
+		<div>
+		<h1>Wanted to sign up?</h1>
+		<p>Please email us <a href="mailto:cinthya@usecloudy.com"> here</a> for your use case or why you're interested in Cloudy. Who knows, maybe we'll bring it back!</p>
+	</div>
+);
+};
+
+
+
+/* NO LONGER ADDING NEW USERS TO THE DATABASE
+export const SignUp = () => {
 	const {
 		register,
 		handleSubmit,
@@ -133,3 +145,4 @@ export const SignUp = () => {
 		</form>
 	);
 };
+*/
