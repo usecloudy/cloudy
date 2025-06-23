@@ -1,3 +1,4 @@
+/*
 import { AuthError } from "@supabase/supabase-js";
 import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";
@@ -9,6 +10,7 @@ import { supabase } from "../../clients/supabase";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
 import LoadingSpinner from "../../components/LoadingSpinner";
+*/
 
 type SignUpFormData = {
 	fullName: string;
