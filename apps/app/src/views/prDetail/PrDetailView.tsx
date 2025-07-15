@@ -99,7 +99,7 @@ export const PrDetailView = () => {
 	};
 
 	return (
-		<div className="w-full px-16 pb-8 pt-24">
+		<div className="mx-auto w-full max-w-screen-lg px-16 pb-8 pt-24">
 			<div className="mb-6 flex flex-col gap-2">
 				<div className="flex flex-row justify-between gap-2">
 					<div className="flex flex-col gap-1">
